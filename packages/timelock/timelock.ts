@@ -143,7 +143,10 @@ export default class Timelock {
   ): Promise<TransactionSignature> {
     const program = initProgram(connection, wallet);
     const escrow = await connection.getAccountInfo(stream);
-    const data = decode(escrow?.data);
+    if (!escrow?.data) {
+      throw new Error("Couldn't get account info")
+    }
+    const data = decode(escrow.data);
 
     return await program.rpc.withdraw(amount, {
       accounts: {
@@ -164,6 +167,9 @@ export default class Timelock {
   ): Promise<TransactionSignature> {
     const program = initProgram(connection, wallet);
     let escrow_acc = await connection.getAccountInfo(stream);
+    if (!escrow_acc?.data) {
+      throw new Error("Couldn't get account info")
+    }
     let data = decode(escrow_acc?.data);
 
     return await program.rpc.cancel({
@@ -188,6 +194,9 @@ export default class Timelock {
   ): Promise<TransactionSignature> {
     const program = initProgram(connection, wallet);
     let escrow = await connection.getAccountInfo(stream);
+    if (!escrow?.data) {
+      throw new Error("Couldn't get account info")
+    }
     let data = decode(escrow?.data);
 
     const mint = data.mint;

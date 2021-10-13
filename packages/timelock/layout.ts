@@ -1,9 +1,8 @@
-const BufferLayout = require("buffer-layout");
-const { PublicKey } = require("@solana/web3.js");
-const anchor = require("@project-serum/anchor");
-const { BN } = anchor;
+import BufferLayout from "buffer-layout";
+import { PublicKey } from "@solana/web3.js";
+import {BN} from "@project-serum/anchor";
 
-const StreamInstructionLayout = BufferLayout.struct([
+const instructionsFields = [
   BufferLayout.blob(8, "start_time"),
   BufferLayout.blob(8, "end_time"),
   BufferLayout.blob(8, "deposited_amount"),
@@ -11,9 +10,11 @@ const StreamInstructionLayout = BufferLayout.struct([
   BufferLayout.blob(8, "period"),
   BufferLayout.blob(8, "cliff"),
   BufferLayout.blob(8, "cliff_amount"),
-]);
+]
 
-function decode_stream_instruction(buf) {
+const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>(instructionsFields);
+
+function decode_stream_instruction(buf: Buffer) {
   let raw = StreamInstructionLayout.decode(buf);
   return {
     start_time: new BN(raw.start_time),
@@ -26,15 +27,9 @@ function decode_stream_instruction(buf) {
   };
 }
 
-const TokenStreamDataLayout = BufferLayout.struct([
+const TokenStreamDataLayout = BufferLayout.struct<Stream>([
   BufferLayout.blob(8, "magic"),
-  BufferLayout.blob(8, "start_time"),
-  BufferLayout.blob(8, "end_time"),
-  BufferLayout.blob(8, "deposited_amount"),
-  BufferLayout.blob(8, "total_amount"),
-  BufferLayout.blob(8, "period"),
-  BufferLayout.blob(8, "cliff"),
-  BufferLayout.blob(8, "cliff_amount"),
+  ...instructionsFields,
   BufferLayout.blob(8, "created_at"),
   BufferLayout.blob(8, "withdrawn"),
   BufferLayout.blob(8, "cancel_time"),
@@ -46,7 +41,7 @@ const TokenStreamDataLayout = BufferLayout.struct([
   BufferLayout.blob(32, "escrow_tokens"),
 ]);
 
-export function decode(buf) {
+export function decode(buf: Buffer) {
   let raw = TokenStreamDataLayout.decode(buf);
   return {
     magic: new BN(raw.magic),
@@ -67,6 +62,16 @@ export function decode(buf) {
     mint: new PublicKey(raw.mint),
     escrow_tokens: new PublicKey(raw.escrow_tokens),
   };
+}
+
+export interface StreamInstruction {
+  start_time: BN;
+  end_time: BN;
+  deposited_amount: BN;
+  total_amount: BN;
+  period: BN;
+  cliff: BN;
+  cliff_amount: BN;
 }
 
 export interface Stream {
