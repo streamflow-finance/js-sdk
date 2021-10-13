@@ -1,0 +1,23 @@
+[package]
+name = "timelock"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "timelock"
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.17.0"
+anchor-spl = "0.17.0"
+
+[dependencies.streamflow-timelock]
+git = "https://github.com/streamflow-finance/streamflow-timelock"
+rev = "769a2629168ec273710a66e150ecb0a0124f3723"
