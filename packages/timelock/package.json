@@ -2,6 +2,8 @@
   "name": "timelock",
   "version": "0.1.0",
   "description": "SDK to interact with StreamFlow Finance's Timelock program on Solana.",
+  "main": "dist/timelock.js",
+  "types": "dist/timelock.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
