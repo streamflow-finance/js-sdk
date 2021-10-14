@@ -1,7 +1,8 @@
 import BufferLayout from "buffer-layout";
 import { PublicKey } from "@solana/web3.js";
-import {BN} from "@project-serum/anchor";
+import { BN } from "@project-serum/anchor";
 
+const LE = "le"; //little endian
 const instructionsFields = [
   BufferLayout.blob(8, "start_time"),
   BufferLayout.blob(8, "end_time"),
@@ -10,20 +11,21 @@ const instructionsFields = [
   BufferLayout.blob(8, "period"),
   BufferLayout.blob(8, "cliff"),
   BufferLayout.blob(8, "cliff_amount"),
-]
+];
 
-const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>(instructionsFields);
+const StreamInstructionLayout =
+  BufferLayout.struct<StreamInstruction>(instructionsFields);
 
 function decode_stream_instruction(buf: Buffer) {
   let raw = StreamInstructionLayout.decode(buf);
   return {
-    start_time: new BN(raw.start_time),
-    end_time: new BN(raw.end_time),
-    deposited_amount: new BN(raw.deposited_amount),
-    total_amount: new BN(raw.total_amount),
-    period: new BN(raw.period),
-    cliff: new BN(raw.cliff),
-    cliff_amount: new BN(raw.cliff_amount),
+    start_time: new BN(raw.start_time, LE),
+    end_time: new BN(raw.end_time, LE),
+    deposited_amount: new BN(raw.deposited_amount, LE),
+    total_amount: new BN(raw.total_amount, LE),
+    period: new BN(raw.period, LE),
+    cliff: new BN(raw.cliff, LE),
+    cliff_amount: new BN(raw.cliff_amount, LE),
   };
 }
 
@@ -44,17 +46,17 @@ const TokenStreamDataLayout = BufferLayout.struct<Stream>([
 export function decode(buf: Buffer) {
   let raw = TokenStreamDataLayout.decode(buf);
   return {
-    magic: new BN(raw.magic),
-    start_time: new BN(raw.start_time),
-    end_time: new BN(raw.end_time),
-    deposited_amount: new BN(raw.deposited_amount),
-    total_amount: new BN(raw.total_amount),
-    period: new BN(raw.period),
-    cliff: new BN(raw.cliff),
-    cliff_amount: new BN(raw.cliff_amount),
-    created_at: new BN(raw.created_at),
-    withdrawn: new BN(raw.withdrawn),
-    cancel_time: new BN(raw.cancel_time),
+    magic: new BN(raw.magic, LE),
+    start_time: new BN(raw.start_time, LE),
+    end_time: new BN(raw.end_time, LE),
+    deposited_amount: new BN(raw.deposited_amount, LE),
+    total_amount: new BN(raw.total_amount, LE),
+    period: new BN(raw.period, LE),
+    cliff: new BN(raw.cliff, LE),
+    cliff_amount: new BN(raw.cliff_amount, LE),
+    created_at: new BN(raw.created_at, LE),
+    withdrawn: new BN(raw.withdrawn, LE),
+    cancel_time: new BN(raw.cancel_time, LE),
     sender: new PublicKey(raw.sender),
     sender_tokens: new PublicKey(raw.sender_tokens),
     recipient: new PublicKey(raw.recipient),
