@@ -25,8 +25,6 @@ import {
 import idl from "./idl";
 import { decode } from "./layout";
 
-const DEFAULT_PROGRAM_ID = idl.metadata.address; //todo: make optional.
-
 function initProgram(
   connection: Connection,
   wallet: Wallet,
@@ -40,6 +38,7 @@ export default class Timelock {
   static async create(
     connection: Connection,
     wallet: Wallet,
+    timelockProgramId: Address,
     newAcc: Keypair,
     recipient: PublicKey,
     mint: PublicKey,
@@ -48,15 +47,10 @@ export default class Timelock {
     end: BN,
     period: BN,
     cliff: BN,
-    cliffAmount: BN,
-    timelockProgramId?: Address
+    cliffAmount: BN
   ): Promise<TransactionSignature> {
     console.log("program", timelockProgramId);
-    const program = initProgram(
-      connection,
-      wallet,
-      timelockProgramId || DEFAULT_PROGRAM_ID
-    );
+    const program = initProgram(connection, wallet, timelockProgramId);
     console.log("program", program.programId);
     const metadata = newAcc;
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
@@ -156,15 +150,11 @@ export default class Timelock {
   static async withdraw(
     connection: Connection,
     wallet: Wallet,
+    timelockProgramId: Address,
     stream: PublicKey,
-    amount: BN,
-    timelockProgramId?: Address
+    amount: BN
   ): Promise<TransactionSignature> {
-    const program = initProgram(
-      connection,
-      wallet,
-      timelockProgramId || DEFAULT_PROGRAM_ID
-    );
+    const program = initProgram(connection, wallet, timelockProgramId);
     const escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
@@ -186,14 +176,10 @@ export default class Timelock {
   static async cancel(
     connection: Connection,
     wallet: Wallet,
-    stream: PublicKey,
-    timelockProgramId?: Address
+    timelockProgramId: Address,
+    stream: PublicKey
   ): Promise<TransactionSignature> {
-    const program = initProgram(
-      connection,
-      wallet,
-      timelockProgramId || DEFAULT_PROGRAM_ID
-    );
+    const program = initProgram(connection, wallet, timelockProgramId);
     let escrow_acc = await connection.getAccountInfo(stream);
     if (!escrow_acc?.data) {
       throw new Error("Couldn't get account info");
@@ -217,15 +203,11 @@ export default class Timelock {
   static async transferRecipient(
     connection: Connection,
     wallet: Wallet,
+    timelockProgramId: Address,
     stream: PublicKey,
-    newRecipient: PublicKey,
-    timelockProgramId?: Address
+    newRecipient: PublicKey
   ): Promise<TransactionSignature> {
-    const program = initProgram(
-      connection,
-      wallet,
-      timelockProgramId || DEFAULT_PROGRAM_ID
-    );
+    const program = initProgram(connection, wallet, timelockProgramId);
     let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");

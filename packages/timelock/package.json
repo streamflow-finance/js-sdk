@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/timelock",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "description": "SDK to interact with StreamFlow Finance's Timelock program on Solana.",
   "main": "dist/timelock.js",
   "types": "dist/timelock.d.ts",
