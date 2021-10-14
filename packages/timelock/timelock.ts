@@ -1,4 +1,11 @@
-import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
+import {
+  Address,
+  BN,
+  Idl,
+  Program,
+  Provider,
+  web3,
+} from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import {
   AccountLayout,
@@ -18,38 +25,49 @@ import {
 import idl from "./idl";
 import { decode } from "./layout";
 
-const PROGRAM_ID = idl.metadata.address; //todo: make optional.
+const DEFAULT_PROGRAM_ID = idl.metadata.address; //todo: make optional.
 
-function initProgram(connection: Connection, wallet: Wallet): Program {
+function initProgram(
+  connection: Connection,
+  wallet: Wallet,
+  timelockProgramId: Address
+): Program {
   const provider = new Provider(connection, wallet, {});
-  return new Program(idl as Idl, PROGRAM_ID, provider);
+  return new Program(idl as Idl, timelockProgramId, provider);
 }
 
 export default class Timelock {
   static async create(
-      connection: Connection,
-      wallet: Wallet,
-      newAcc: Keypair,
-      recipient: PublicKey,
-      mint: PublicKey,
-      depositedAmount: BN,
-      start: BN,
-      end: BN,
-      period: BN,
-      cliff: BN,
-      cliffAmount: BN
+    connection: Connection,
+    wallet: Wallet,
+    newAcc: Keypair,
+    recipient: PublicKey,
+    mint: PublicKey,
+    depositedAmount: BN,
+    start: BN,
+    end: BN,
+    period: BN,
+    cliff: BN,
+    cliffAmount: BN,
+    timelockProgramId?: Address
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet);
+    console.log("program", timelockProgramId);
+    const program = initProgram(
+      connection,
+      wallet,
+      timelockProgramId || DEFAULT_PROGRAM_ID
+    );
+    console.log("program", program.programId);
     const metadata = newAcc;
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
-        [metadata.publicKey.toBuffer()],
-        program.programId
+      [metadata.publicKey.toBuffer()],
+      program.programId
     );
     let senderTokens = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mint,
-        wallet.publicKey
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      wallet.publicKey
     );
     let signers = [metadata];
     let instructions = undefined;
@@ -57,7 +75,7 @@ export default class Timelock {
       //this effectively means new account is created for each wSOL stream, as we can't derive it.
       instructions = [];
       const balanceNeeded = await Token.getMinBalanceRentForExemptAccount(
-          connection
+        connection
       );
       // Create a new account
       const newAccount = Keypair.generate(); //todo this is not an associated token account????
@@ -66,85 +84,90 @@ export default class Timelock {
 
       senderTokens = newAccount.publicKey;
       instructions.push(
-          SystemProgram.createAccount({
-            fromPubkey: wallet.publicKey,
-            newAccountPubkey: newAccount.publicKey,
-            lamports: balanceNeeded,
-            space: AccountLayout.span,
-            programId: TOKEN_PROGRAM_ID,
-          })
+        SystemProgram.createAccount({
+          fromPubkey: wallet.publicKey,
+          newAccountPubkey: newAccount.publicKey,
+          lamports: balanceNeeded,
+          space: AccountLayout.span,
+          programId: TOKEN_PROGRAM_ID,
+        })
       );
 
       // Send lamports to it (these will be wrapped into native tokens by the token program)
       instructions.push(
-          SystemProgram.transfer({
-            fromPubkey: wallet.publicKey,
-            toPubkey: newAccount.publicKey,
-            lamports: depositedAmount.toNumber(),
-          })
+        SystemProgram.transfer({
+          fromPubkey: wallet.publicKey,
+          toPubkey: newAccount.publicKey,
+          lamports: depositedAmount.toNumber(),
+        })
       );
 
       // Assign the new account to the native token mint.
       // the account will be initialized with a balance equal to the native token balance.
       // (i.e. amount)
       instructions.push(
-          Token.createInitAccountInstruction(
-              TOKEN_PROGRAM_ID,
-              NATIVE_MINT,
-              newAccount.publicKey,
-              wallet.publicKey
-          )
+        Token.createInitAccountInstruction(
+          TOKEN_PROGRAM_ID,
+          NATIVE_MINT,
+          newAccount.publicKey,
+          wallet.publicKey
+        )
       );
       //TODO: figure out a way to create wrapped SOL account as an associated token account
       //instructions.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, newAccount.publicKey, wallet.publicKey, wallet.publicKey))
     }
     const recipientTokens = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mint,
-        recipient
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      recipient
     );
 
     return await program.rpc.create(
-        // Order of the parameters must match the ones in program
-        depositedAmount,
-        start,
-        end,
-        period,
-        cliff,
-        cliffAmount,
-        {
-          accounts: {
-            sender: wallet.publicKey,
-            senderTokens,
-            recipient,
-            recipientTokens,
-            metadata: metadata.publicKey,
-            escrowTokens,
-            mint,
-            rent: SYSVAR_RENT_PUBKEY,
-            timelockProgram: program.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: web3.SystemProgram.programId,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          },
-          signers,
-          instructions,
-        }
+      // Order of the parameters must match the ones in program
+      depositedAmount,
+      start,
+      end,
+      period,
+      cliff,
+      cliffAmount,
+      {
+        accounts: {
+          sender: wallet.publicKey,
+          senderTokens,
+          recipient,
+          recipientTokens,
+          metadata: metadata.publicKey,
+          escrowTokens,
+          mint,
+          rent: SYSVAR_RENT_PUBKEY,
+          timelockProgram: program.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: web3.SystemProgram.programId,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        },
+        signers,
+        instructions,
+      }
     );
   }
 
   //TODO: docs. 0 == max
   static async withdraw(
-      connection: Connection,
-      wallet: Wallet,
-      stream: PublicKey,
-      amount: BN
+    connection: Connection,
+    wallet: Wallet,
+    stream: PublicKey,
+    amount: BN,
+    timelockProgramId?: Address
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet);
+    const program = initProgram(
+      connection,
+      wallet,
+      timelockProgramId || DEFAULT_PROGRAM_ID
+    );
     const escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
-      throw new Error("Couldn't get account info")
+      throw new Error("Couldn't get account info");
     }
     const data = decode(escrow.data);
 
@@ -161,14 +184,19 @@ export default class Timelock {
   }
 
   static async cancel(
-      connection: Connection,
-      wallet: Wallet,
-      stream: PublicKey
+    connection: Connection,
+    wallet: Wallet,
+    stream: PublicKey,
+    timelockProgramId?: Address
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet);
+    const program = initProgram(
+      connection,
+      wallet,
+      timelockProgramId || DEFAULT_PROGRAM_ID
+    );
     let escrow_acc = await connection.getAccountInfo(stream);
     if (!escrow_acc?.data) {
-      throw new Error("Couldn't get account info")
+      throw new Error("Couldn't get account info");
     }
     let data = decode(escrow_acc?.data);
 
@@ -187,24 +215,29 @@ export default class Timelock {
   }
 
   static async transferRecipient(
-      connection: Connection,
-      wallet: Wallet,
-      stream: PublicKey,
-      newRecipient: PublicKey
+    connection: Connection,
+    wallet: Wallet,
+    stream: PublicKey,
+    newRecipient: PublicKey,
+    timelockProgramId?: Address
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet);
+    const program = initProgram(
+      connection,
+      wallet,
+      timelockProgramId || DEFAULT_PROGRAM_ID
+    );
     let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
-      throw new Error("Couldn't get account info")
+      throw new Error("Couldn't get account info");
     }
     let data = decode(escrow?.data);
 
     const mint = data.mint;
     const newRecipientTokens = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mint,
-        newRecipient
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      newRecipient
     );
 
     return await program.rpc.transferRecipient({
