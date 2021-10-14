@@ -39,7 +39,7 @@ describe("timelock", () => {
   let senderTokens;
 
   // Divide by 1000 since Unix timestamp is seconds
-  const start = new BN(+new Date() / 1000 + 1);
+  const start = new BN(+new Date() / 1000 + 5);
   // +60 seconds
   const end = new BN(+new Date() / 1000 + 60);
   // In seconds
