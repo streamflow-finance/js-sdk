@@ -6,7 +6,9 @@ Backed by Serum and Solana.
 
 ## Important:
 
-This software is under heavy development. It's provided as is, without any warranty. The code is not audited.
+This software is under active development. It's provided as is, without any warranty.
+
+**The code is not audited.**
 
 ### System overview
 
