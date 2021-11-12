@@ -1,12 +1,12 @@
 # StreamFlow Timelock
 
-Token Vesting and Streaming Payments for SPL tokens. **Free and open-source.**
+Token Vesting and Streaming Payments for SPL tokens.
 
-Backed by Serum and Solana.
+Backed by Solana Foundation and Serum.
 
 ## Important:
 
-This software is under active development. It's provided as is, without any warranty.
+This software is under active development.
 
 **The code is not yet audited.**
 
