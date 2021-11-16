@@ -1153,8 +1153,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "streamflow-timelock"
-version = "0.2.0"
-source = "git+https://github.com/streamflow-finance/streamflow-timelock?rev=769a2629168ec273710a66e150ecb0a0124f3723#769a2629168ec273710a66e150ecb0a0124f3723"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "333a1996e69051722b576fa3f78a35e46ca85955c5546f2a593947c93801a3b6"
 dependencies = [
  "borsh",
  "solana-program",
