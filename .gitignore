@@ -15,5 +15,6 @@ target/
 .idea/
 .gitattributes
 test-ledger/
+docker-target
 
 packages/*/dist/

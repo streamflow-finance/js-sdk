@@ -17,7 +17,5 @@ default = []
 [dependencies]
 anchor-lang = "0.17.0"
 anchor-spl = "0.17.0"
+streamflow-timelock = "0.3.0"
 
-[dependencies.streamflow-timelock]
-git = "https://github.com/streamflow-finance/streamflow-timelock"
-rev = "769a2629168ec273710a66e150ecb0a0124f3723"

@@ -25,7 +25,7 @@ const { BN } = anchor;
 const recipient = Keypair.generate();
 
 describe("timelock", () => {
-  const provider = anchor.Provider.local(); //todo use env()
+  const provider = anchor.Provider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Timelock;

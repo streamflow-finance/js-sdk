@@ -1,5 +1,9 @@
 [programs.localnet]
 timelock = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+[programs.devnet]
+timelock = "BBbP5MHFSfcoygAtaPpWUmiEdb7yW2mZHDzg2MTnAsVa"
+#[programs.mainnet]
+#timelock = ""
 
 [registry]
 url = "https://anchor.projectserum.com"

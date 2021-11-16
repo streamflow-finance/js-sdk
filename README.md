@@ -23,6 +23,17 @@ System has 4 composable layers. There are (top to bottom):
 
 ![Platform overview](/misc/platform.png)
 
+### Development
+
+#### Tests
+
+Run tests from the: 
+   - Command line using `anchor test`.
+   - IDE using run configuration.
+     IntelliJ IDEA will automatically load `.run/timelock.run.xml`.
+     Start the local validator with `anchor localnet` (Anchor 0.18+) or `anchor test --detach` and run/debug configuration `tests`
+
+
 ### Legal
 
 This file is part of `streamflow-finance/timelock`
