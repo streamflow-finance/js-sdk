@@ -28,12 +28,11 @@ pub mod timelock {
             period,
             cliff,
             cliff_amount,
-            //TODO: make following parameters programmable in the future release
-            is_cancelable_by_sender: true,
-            is_cancelable_by_recipient: false,
-            is_withdrawal_public: false,
-            is_transferable: true,
-            padding: 0,
+            cancelable_by_sender: true,
+            cancelable_by_recipient: false,
+            withdrawal_public: false,
+            transferable: true,
+            stream_name: "Stream".to_string(),
         };
 
         let acc = InitializeAccounts {

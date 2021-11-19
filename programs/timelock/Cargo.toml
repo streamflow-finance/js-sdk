@@ -15,7 +15,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.17.0"
-anchor-spl = "0.17.0"
-streamflow-timelock = "0.3.0"
+anchor-lang = "0.18.2"
+anchor-spl = "0.18.2"
+streamflow-timelock = { git = "https://github.com/StreamFlow-Finance/timelock-crate", branch = "ibrica/recurring", features = ["no-entrypoint"] }
+# streamflow-timelock = "0.3.0"
 
