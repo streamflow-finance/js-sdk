@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use streamflow_timelock::{
-    state::{CancelAccounts, InitializeAccounts, StreamInstruction, TransferAccounts, WithdrawAccounts}
+    state::{CancelAccounts, InitializeAccounts, StreamInstruction, TransferAccounts, WithdrawAccounts, TopUpAccounts}
 };
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -98,7 +98,22 @@ pub mod timelock {
 
         streamflow_timelock::token::transfer_recipient(ctx.program_id, acc)
     }
+
+    pub fn topup(ctx: Context<TopUp>, amount: u64) -> ProgramResult {
+        let acc = TopUpAccounts {
+            sender: ctx.accounts.sender.to_account_info(),
+            sender_tokens: ctx.accounts.sender_tokens.to_account_info(),
+            metadata: ctx.accounts.metadata.to_account_info(),
+            escrow_tokens: ctx.accounts.escrow_tokens.to_account_info(),
+            mint: ctx.accounts.mint.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+        };
+    
+        streamflow_timelock::token::topup_stream(acc, amount)
+    }
 }
+
+
 
 #[derive(Accounts)]
 pub struct Create<'info> {
@@ -177,4 +192,18 @@ pub struct Transfer<'info> {
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct TopUp<'info> {
+    #[account(mut)]
+    pub sender: AccountInfo<'info>,
+    #[account(mut)]
+    pub sender_tokens: AccountInfo<'info>,
+    #[account(mut)]
+    pub metadata: AccountInfo<'info>,
+    #[account(mut)]
+    pub escrow_tokens: Account<'info, TokenAccount>,
+    pub mint: Account<'info, Mint>,
+    pub token_program: Program<'info, Token>,
 }

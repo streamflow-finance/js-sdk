@@ -265,6 +265,91 @@ describe("timelock", () => {
       assert.ok(data.withdrawn.eq(withdrawAmount));
     }, 6100);
   });
+ 
+  it("Tops up stream", async () => {
+    setTimeout(async () => {
+      console.log("Top up:\n");
+      const oldEscrowAta = await program.provider.connection.getAccountInfo(
+        escrowTokens
+      );
+      const oldEscrowAmount = common.token.parseTokenAccountData(
+        oldEscrowAta.data
+      ).amount;
+      const topupAmount = new BN(1 * LAMPORTS_PER_SOL); //1e9 or 10Tokens with 8 decimals
+
+      const old_metadata = await program.provider.connection.getAccountInfo(
+        metadata.publicKey
+      );
+      let old_strm_data = decode(old_metadata.data);
+
+      // console.log("Stream Data:\n", strm_data);
+
+      console.log(
+        "Old escrow amount",
+        oldEscrowAmount
+      );
+      console.log("\nseed", metadata.publicKey.toBuffer());
+      console.log("metadata", metadata.publicKey.toBase58());
+      await program.rpc.topUp(topupAmount, {
+        accounts: {
+          sender: sender.publicKey,
+          mintTokens,
+          metadata: metadata.publicKey,
+          escrowTokens,
+          mint,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+        signers: [recipient],
+      });
+      const _metadata = await program.provider.connection.getAccountInfo(
+        metadata.publicKey
+      );
+
+ 
+      const escrow = await program.provider.connection.getAccountInfo(
+        metadata.publicKey
+      );
+      const data = decode(escrow.data);
+      const newDepositedAmount = data.deposited_amount.amount;
+      console.log("deposited amount", newDepositedAmount);
+
+      let newEscrowAmount = null;
+      const newEscrowAta = await program.provider.connection.getAccountInfo(
+        escrowTokens
+      );
+
+      if (newEscrowAta) {
+        newEscrowAmount = common.token.parseTokenAccountData(
+          newEscrowAta.data
+        ).amount;
+      }
+      console.log(
+        "depositedAmount",
+        depositedAmount.toNumber(),
+      );
+      console.log(
+        "Escrow token balance: previous: ",
+        oldEscrowAmount,
+        "after: ",
+        newEscrowAmount
+      );
+      // New state on token acc
+      assert.ok(
+        topupAmount.eq(new BN(newEscrowAmount - oldEscrowAmount))
+      );
+      // New state in data acc
+      assert.ok(
+        data.deposited_amount.eq(topupAmount + old_strm_data.deposited_amount)
+      );
+      console.log(
+        "Deposited amount",
+        strm_data.deposited_amount.toNumber(),
+        "Old deposited number",
+        old_strm_data.deposited_amount.toNumber(),
+      )
+    }, 6100);
+  });
+  
 
   it("Transfers vesting contract recipient", async () => {
     let escrow = await program.provider.connection.getAccountInfo(
