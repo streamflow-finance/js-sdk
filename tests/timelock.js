@@ -30,6 +30,7 @@ describe("timelock", () => {
 
   const program = anchor.workspace.Timelock;
   const sender = provider.wallet;
+
   const metadata = Keypair.generate();
   const MINT_DECIMALS = 8;
   let escrowTokens;
@@ -47,7 +48,6 @@ describe("timelock", () => {
   // Amount to deposit
   // const depositedAmount = new BN(1337_000_000);
   const depositedAmount = new BN(1 * LAMPORTS_PER_SOL);
-  //const depositedAmount = new BN(133769 * 10 ** MINT_DECIMALS);
 
   it("Initialize test state", async () => {
     [mint, senderTokens] = await common.createMintAndVault(
@@ -118,12 +118,14 @@ describe("timelock", () => {
 
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
-      depositedAmount,
       start,
       end,
+      depositedAmount,
+      depositedAmount,
       period,
       new BN(0), //cliff
       new BN(0), //cliff amount
+      new BN(0), // release rate (when > 0 - recurring payment)
       {
         accounts: {
           sender: sender.publicKey,
@@ -136,8 +138,8 @@ describe("timelock", () => {
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
         },
         signers: [metadata],
       }
@@ -161,8 +163,10 @@ describe("timelock", () => {
     );
 
     let strm_data = decode(_metadata.data);
+    
     console.log("Raw data:\n", _metadata.data);
     console.log("Stream Data:\n", strm_data);
+    
 
     console.log(
       "deposited during contract creation: ",
@@ -170,6 +174,7 @@ describe("timelock", () => {
       _escrowTokensData.amount
     );
 
+    assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
   });
 
