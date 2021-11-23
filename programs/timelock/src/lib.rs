@@ -13,18 +13,20 @@ pub mod timelock {
 
     pub fn create(
         ctx: Context<Create>,
-        amount: u64,
         start_time: u64,
         end_time: u64,
+        deposited_amount: u64,
+        total_amount: u64,
         period: u64,
         cliff: u64,
         cliff_amount: u64,
+        release_rate: u64,
     ) -> ProgramResult {
         let ix = StreamInstruction {
             start_time,
             end_time,
-            deposited_amount: amount,
-            total_amount: amount,
+            deposited_amount: deposited_amount,
+            total_amount: total_amount,
             period,
             cliff,
             cliff_amount,
@@ -32,6 +34,7 @@ pub mod timelock {
             cancelable_by_recipient: false,
             withdrawal_public: false,
             transferable: true,
+            release_rate,
             stream_name: "Stream".to_string(),
         };
 
