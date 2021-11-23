@@ -200,7 +200,7 @@ pub struct Transfer<'info> {
 #[derive(Accounts)]
 pub struct TopUp<'info> {
     #[account(mut)]
-    pub sender: AccountInfo<'info>,
+    pub sender: Signer<'info>,
     #[account(mut)]
     pub sender_tokens: AccountInfo<'info>,
     #[account(mut)]
