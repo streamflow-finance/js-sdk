@@ -99,9 +99,19 @@ exports.default = {
             name: "withdraw",
             accounts: [
                 {
+                    name: "withdrawAuthority",
+                    isMut: false,
+                    isSigner: true,
+                },
+                {
+                    name: "sender",
+                    isMut: true,
+                    isSigner: false,
+                },
+                {
                     name: "recipient",
                     isMut: true,
-                    isSigner: true,
+                    isSigner: false,
                 },
                 {
                     name: "recipientTokens",
@@ -140,9 +150,14 @@ exports.default = {
             name: "cancel",
             accounts: [
                 {
+                    name: "cancelAuthority",
+                    isMut: false,
+                    isSigner: true,
+                },
+                {
                     name: "sender",
                     isMut: true,
-                    isSigner: true,
+                    isSigner: false,
                 },
                 {
                     name: "senderTokens",
