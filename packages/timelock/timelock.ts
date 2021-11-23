@@ -47,6 +47,7 @@ export default class Timelock {
    * @param {BN} period - Time step (period) in seconds per which the vesting occurs
    * @param {BN} cliff - Vesting contract "cliff" timestamp
    * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
+   * @param {BN} releaseRate - Period rate in recurring payment
    */
   static async create(
     connection: Connection,
@@ -60,7 +61,8 @@ export default class Timelock {
     end: BN,
     period: BN,
     cliff: BN,
-    cliffAmount: BN
+    cliffAmount: BN,
+    releaseRate: BN,
   ): Promise<TransactionSignature> {
     console.log("program", timelockProgramId);
     const program = initProgram(connection, wallet, timelockProgramId);
@@ -133,12 +135,14 @@ export default class Timelock {
 
     return await program.rpc.create(
       // Order of the parameters must match the ones in program
-      depositedAmount,
       start,
       end,
+      depositedAmount,
+      depositedAmount,
       period,
       cliff,
       cliffAmount,
+      releaseRate,
       {
         accounts: {
           sender: wallet.publicKey,
@@ -225,9 +229,8 @@ export default class Timelock {
         recipientTokens: data.recipient_tokens,
         metadata: stream,
         escrowTokens: data.escrow_tokens,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
         mint: data.mint,
+        tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
   }
@@ -278,4 +281,39 @@ export default class Timelock {
       },
     });
   }
+
+  /**
+ * Tops up stream account deposited amount
+ * @param {Connection} connection
+ * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
+ * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
+ * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
+ */
+  static async topup(
+    connection: Connection,
+    wallet: Wallet,
+    timelockProgramId: Address,
+    stream: PublicKey,
+  ): Promise<TransactionSignature> {
+    const program = initProgram(connection, wallet, timelockProgramId);
+    let escrow = await connection.getAccountInfo(stream);
+    if (!escrow?.data) {
+      throw new Error("Couldn't get account info");
+    }
+    let data = decode(escrow?.data);
+
+    const mint = data.mint;
+
+    return await program.rpc.topup({
+      accounts: {
+        sender: wallet.publicKey,
+        senderTokens: data.sender_tokens,
+        metadata: stream,
+        escrowTokens: data.escrow_tokens,
+        mint,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      },
+    });
+  }
+  
 }
