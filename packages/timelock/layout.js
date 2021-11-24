@@ -16,11 +16,12 @@ var StreamInstructionLayout = buffer_layout_1.default.struct([
     buffer_layout_1.default.blob(8, "period"),
     buffer_layout_1.default.blob(8, "cliff"),
     buffer_layout_1.default.blob(8, "cliff_amount"),
-    buffer_layout_1.default.blob(1, "is_cancelable_by_sender"),
-    buffer_layout_1.default.blob(1, "is_cancelable_by_recipient"),
-    buffer_layout_1.default.blob(1, "is_withdrawal_public"),
-    buffer_layout_1.default.blob(1, "is_transferable"),
-    buffer_layout_1.default.blob(4, "padding"),
+    buffer_layout_1.default.blob(1, "cancelable_by_sender"),
+    buffer_layout_1.default.blob(1, "cancelable_by_recipient"),
+    buffer_layout_1.default.blob(1, "withdrawal_public"),
+    buffer_layout_1.default.blob(1, "transferable"),
+    buffer_layout_1.default.blob(4, "release_rate"),
+    buffer_layout_1.default.cstr("stream_name"), //  NUL-terminated C string
 ]);
 function decode_stream_instruction(buf) {
     var raw = StreamInstructionLayout.decode(buf);
@@ -32,6 +33,12 @@ function decode_stream_instruction(buf) {
         period: new anchor_1.BN(raw.period, LE),
         cliff: new anchor_1.BN(raw.cliff, LE),
         cliff_amount: new anchor_1.BN(raw.cliff_amount, LE),
+        cancelable_by_sender: new anchor_1.BN(raw.cancelable_by_sender, LE),
+        cancelable_by_recipient: new anchor_1.BN(raw.cancelable_by_recipient, LE),
+        withdrawal_public: new anchor_1.BN(raw.withdrawal_public, LE),
+        transferable: new anchor_1.BN(raw.transferable, LE),
+        release_rate: new anchor_1.BN(raw.release_rate, LE),
+        stream_name: new String(raw.stream_name),
     };
 }
 var TokenStreamDataLayout = buffer_layout_1.default.struct([
@@ -39,7 +46,7 @@ var TokenStreamDataLayout = buffer_layout_1.default.struct([
     buffer_layout_1.default.blob(8, "created_at"),
     buffer_layout_1.default.blob(8, "withdrawn_amount"),
     buffer_layout_1.default.blob(8, "canceled_at"),
-    buffer_layout_1.default.blob(8, "cancellable_at"),
+    buffer_layout_1.default.blob(8, "closable_at"),
     buffer_layout_1.default.blob(8, "last_withdrawn_at"),
     buffer_layout_1.default.blob(32, "sender"),
     buffer_layout_1.default.blob(32, "sender_tokens"),
@@ -54,11 +61,12 @@ var TokenStreamDataLayout = buffer_layout_1.default.struct([
     buffer_layout_1.default.blob(8, "period"),
     buffer_layout_1.default.blob(8, "cliff"),
     buffer_layout_1.default.blob(8, "cliff_amount"),
-    buffer_layout_1.default.blob(1, "is_cancelable_by_sender"),
-    buffer_layout_1.default.blob(1, "is_cancelable_by_recipient"),
-    buffer_layout_1.default.blob(1, "is_withdrawal_public"),
-    buffer_layout_1.default.blob(1, "is_transferable"),
-    buffer_layout_1.default.blob(4, "padding"),
+    buffer_layout_1.default.blob(1, "cancelable_by_sender"),
+    buffer_layout_1.default.blob(1, "cancelable_by_recipient"),
+    buffer_layout_1.default.blob(1, "withdrawal_public"),
+    buffer_layout_1.default.blob(1, "transferable"),
+    buffer_layout_1.default.blob(8, "release_rate"),
+    buffer_layout_1.default.cstr("stream_name"), //  NUL-terminated C string
 ]);
 function decode(buf) {
     var raw = TokenStreamDataLayout.decode(buf);
@@ -67,7 +75,7 @@ function decode(buf) {
         created_at: new anchor_1.BN(raw.created_at, LE),
         withdrawn_amount: new anchor_1.BN(raw.withdrawn_amount, LE),
         canceled_at: new anchor_1.BN(raw.canceled_at, LE),
-        cancellable_at: new anchor_1.BN(raw.cancellable_at, LE),
+        cancellable_at: new anchor_1.BN(raw.closable_at, LE),
         last_withdrawn_at: new anchor_1.BN(raw.last_withdrawn_at, LE),
         sender: new web3_js_1.PublicKey(raw.sender),
         sender_tokens: new web3_js_1.PublicKey(raw.sender_tokens),
