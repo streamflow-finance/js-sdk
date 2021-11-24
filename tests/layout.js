@@ -21,7 +21,7 @@ var StreamInstructionLayout = buffer_layout_1.default.struct([
     buffer_layout_1.default.blob(1, "withdrawal_public"),
     buffer_layout_1.default.blob(1, "transferable"),
     buffer_layout_1.default.blob(4, "release_rate"),
-    buffer_layout_1.default.cstr("stream_name"), //  NUL-terminated C string
+    buffer_layout_1.default.utf8(60, "stream_name"), //  NUL-terminated C string
 ]);
 function decode_stream_instruction(buf) {
     var raw = StreamInstructionLayout.decode(buf);
@@ -66,7 +66,7 @@ var TokenStreamDataLayout = buffer_layout_1.default.struct([
     buffer_layout_1.default.blob(1, "withdrawal_public"),
     buffer_layout_1.default.blob(1, "transferable"),
     buffer_layout_1.default.blob(8, "release_rate"),
-    buffer_layout_1.default.cstr("stream_name"), //  NUL-terminated C string
+    buffer_layout_1.default.utf8(60, "stream_name"), //  it is not NUL-terminated C string
 ]);
 function decode(buf) {
     var raw = TokenStreamDataLayout.decode(buf);

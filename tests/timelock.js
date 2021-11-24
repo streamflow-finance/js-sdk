@@ -177,7 +177,8 @@ describe("timelock", () => {
       _escrowTokensData.amount
     );
 
-    // assert.ok(strm_data.strea === _escrowTokensData.amount);
+    console.log("Stream name: ", strm_data.stream_name.toString());
+    // assert.ok(strm_data.stream_name.toString().trim() === "Stream");
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
     assert.ok(depositedAmount.toNumber() === strm_data.deposited_amount.toNumber());
   }).timeout(4000);
