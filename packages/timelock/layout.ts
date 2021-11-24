@@ -12,11 +12,12 @@ const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>([
   BufferLayout.blob(8, "period"),
   BufferLayout.blob(8, "cliff"),
   BufferLayout.blob(8, "cliff_amount"),
-  BufferLayout.blob(1, "is_cancelable_by_sender"),
-  BufferLayout.blob(1, "is_cancelable_by_recipient"),
-  BufferLayout.blob(1, "is_withdrawal_public"),
-  BufferLayout.blob(1, "is_transferable"),
-  BufferLayout.blob(4, "padding"),
+  BufferLayout.blob(1, "cancelable_by_sender"),
+  BufferLayout.blob(1, "cancelable_by_recipient"),
+  BufferLayout.blob(1, "withdrawal_public"),
+  BufferLayout.blob(1, "transferable"),
+  BufferLayout.blob(4, "release_rate"),
+  BufferLayout.cstr("stream_name"),  //  NUL-terminated C string
 ]);
 
 function decode_stream_instruction(buf: Buffer) {
@@ -29,6 +30,12 @@ function decode_stream_instruction(buf: Buffer) {
     period: new BN(raw.period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
+    cancelable_by_sender: new BN(raw.cancelable_by_sender, LE),
+    cancelable_by_recipient: new BN(raw.cancelable_by_recipient, LE),
+    withdrawal_public: new BN(raw.withdrawal_public, LE),
+    transferable: new BN(raw.transferable, LE),
+    release_rate: new BN(raw.release_rate, LE),
+    stream_name: new String(raw.stream_name),
   };
 }
 
@@ -40,6 +47,12 @@ interface StreamInstruction {
   period: BN;
   cliff: BN;
   cliff_amount: BN;
+  cancelable_by_sender: BN;
+  cancelable_by_recipient: BN;
+  withdrawal_public: BN;
+  transferable: BN;
+  release_rate: BN;
+  stream_name: string;
 }
 
 const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
@@ -47,7 +60,7 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(8, "created_at"),
   BufferLayout.blob(8, "withdrawn_amount"),
   BufferLayout.blob(8, "canceled_at"),
-  BufferLayout.blob(8, "cancellable_at"),
+  BufferLayout.blob(8, "closable_at"),
   BufferLayout.blob(8, "last_withdrawn_at"),
   BufferLayout.blob(32, "sender"),
   BufferLayout.blob(32, "sender_tokens"),
@@ -62,11 +75,12 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(8, "period"),
   BufferLayout.blob(8, "cliff"),
   BufferLayout.blob(8, "cliff_amount"),
-  BufferLayout.blob(1, "is_cancelable_by_sender"),
-  BufferLayout.blob(1, "is_cancelable_by_recipient"),
-  BufferLayout.blob(1, "is_withdrawal_public"),
-  BufferLayout.blob(1, "is_transferable"),
-  BufferLayout.blob(4, "padding"),
+  BufferLayout.blob(1, "cancelable_by_sender"),
+  BufferLayout.blob(1, "cancelable_by_recipient"),
+  BufferLayout.blob(1, "withdrawal_public"),
+  BufferLayout.blob(1, "transferable"),
+  BufferLayout.blob(8, "release_rate"),
+  BufferLayout.cstr("stream_name"),  //  NUL-terminated C string
 ]);
 
 export function decode(buf: Buffer) {
@@ -76,7 +90,7 @@ export function decode(buf: Buffer) {
     created_at: new BN(raw.created_at, LE),
     withdrawn_amount: new BN(raw.withdrawn_amount, LE),
     canceled_at: new BN(raw.canceled_at, LE),
-    cancellable_at: new BN(raw.cancellable_at, LE),
+    cancellable_at: new BN(raw.closable_at, LE),
     last_withdrawn_at: new BN(raw.last_withdrawn_at, LE),
     sender: new PublicKey(raw.sender),
     sender_tokens: new PublicKey(raw.sender_tokens),
@@ -99,7 +113,7 @@ export interface TokenStreamData {
   created_at: BN;
   withdrawn_amount: BN;
   canceled_at: BN;
-  cancellable_at: BN;
+  closable_at: BN;
   last_withdrawn_at: BN;
   sender: PublicKey;
   sender_tokens: PublicKey;

@@ -28,7 +28,7 @@ export interface TokenStreamData {
     created_at: BN;
     withdrawn_amount: BN;
     canceled_at: BN;
-    cancellable_at: BN;
+    closable_at: BN;
     last_withdrawn_at: BN;
     sender: PublicKey;
     sender_tokens: PublicKey;
