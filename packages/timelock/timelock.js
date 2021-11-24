@@ -67,7 +67,7 @@ var Timelock = /** @class */ (function () {
      * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
      * @param {BN} releaseRate - Period rate in recurring payment
      */
-    Timelock.create = function (connection, wallet, timelockProgramId, newAcc, recipient, mint, depositedAmount, start, end, period, cliff, cliffAmount, releaseRate) {
+    Timelock.create = function (connection, wallet, timelockProgramId, newAcc, recipient, mint, depositedAmount, start, end, period, cliff, cliffAmount, cancelable_by_sender, cancelable_by_recipient, withdrawal_public, transferable, release_rate, stream_name) {
         return __awaiter(this, void 0, void 0, function () {
             var program, metadata, escrowTokens, senderTokens, signers, instructions, recipientTokens;
             return __generator(this, function (_a) {
@@ -90,7 +90,7 @@ var Timelock = /** @class */ (function () {
                         recipientTokens = _a.sent();
                         return [4 /*yield*/, program.rpc.create(
                             // Order of the parameters must match the ones in program
-                            start, end, depositedAmount, depositedAmount, period, cliff, cliffAmount, releaseRate, {
+                            start, end, depositedAmount, depositedAmount, period, cliff, cliffAmount, cancelable_by_sender, cancelable_by_recipient, withdrawal_public, transferable, release_rate, stream_name, {
                                 accounts: {
                                     sender: wallet.publicKey,
                                     senderTokens: senderTokens,

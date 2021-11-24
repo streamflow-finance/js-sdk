@@ -19,7 +19,7 @@ export default class Timelock {
      * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
      * @param {BN} releaseRate - Period rate in recurring payment
      */
-    static create(connection: Connection, wallet: Wallet, timelockProgramId: Address, newAcc: Keypair, recipient: PublicKey, mint: PublicKey, depositedAmount: BN, start: BN, end: BN, period: BN, cliff: BN, cliffAmount: BN, releaseRate: BN): Promise<TransactionSignature>;
+    static create(connection: Connection, wallet: Wallet, timelockProgramId: Address, newAcc: Keypair, recipient: PublicKey, mint: PublicKey, depositedAmount: BN, start: BN, end: BN, period: BN, cliff: BN, cliffAmount: BN, cancelable_by_sender: boolean, cancelable_by_recipient: boolean, withdrawal_public: boolean, transferable: boolean, release_rate: BN, stream_name: String): Promise<TransactionSignature>;
     /**
      * Attempts withdrawal from a specified stream.
      * @param {Connection} connection
