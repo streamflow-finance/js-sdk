@@ -22,6 +22,12 @@ export declare function decode(buf: Buffer): {
     period: BN;
     cliff: BN;
     cliff_amount: BN;
+    cancelable_by_sender: BN;
+    cancelable_by_recipient: BN;
+    withdrawal_public: BN;
+    transferable: BN;
+    release_rate: BN;
+    stream_name: String;
 };
 export interface TokenStreamData {
     magic: BN;
@@ -43,4 +49,10 @@ export interface TokenStreamData {
     period: BN;
     cliff: BN;
     cliff_amount: BN;
+    cancelable_by_sender: BN;
+    cancelable_by_recipient: BN;
+    withdrawal_public: BN;
+    transferable: BN;
+    release_rate: BN;
+    stream_name: string;
 }
