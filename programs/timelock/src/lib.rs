@@ -20,7 +20,12 @@ pub mod timelock {
         period: u64,
         cliff: u64,
         cliff_amount: u64,
+        cancelable_by_sender: bool,
+        cancelable_by_recipient: bool,
+        withdrawal_public: bool,
+        transferable: bool,
         release_rate: u64,
+        stream_name: String,
     ) -> ProgramResult {
         let ix = StreamInstruction {
             start_time,
@@ -30,12 +35,12 @@ pub mod timelock {
             period,
             cliff,
             cliff_amount,
-            cancelable_by_sender: true,
-            cancelable_by_recipient: false,
-            withdrawal_public: false,
-            transferable: true,
+            cancelable_by_sender,
+            cancelable_by_recipient,
+            withdrawal_public,
+            transferable,
             release_rate,
-            stream_name: "Stream".to_string(),
+            stream_name,
         };
 
         let acc = InitializeAccounts {
