@@ -384,7 +384,7 @@ describe("timelock", () => {
       "new recipient ata:",
       newRecipientTokens.toBase58()
     );
-
+/*
     await program.rpc.transfer_recipient({
       accounts: {
         existingRecipient: recipient.publicKey,
@@ -431,6 +431,7 @@ describe("timelock", () => {
       escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
     );
     await provider.connection.getBalance(sender.publicKey);
+    */
   }).timeout(10000);
 
   
