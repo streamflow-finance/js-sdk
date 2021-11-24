@@ -125,8 +125,13 @@ describe("timelock", () => {
       depositedAmount,
       period,
       new BN(0), //cliff
-      new BN(0), //cliff amount
+      new BN(0), //cliff amount 
+      true, // cancelable_by_sender,
+      false, // cancelable_by_recipient,
+      false, //nwithdrawal_public,
+      false, //transferable,
       new BN(0), // release rate (when > 0 - recurring payment)
+      "Stream", // stream name
       {
         accounts: {
           sender: sender.publicKey,
@@ -545,7 +550,12 @@ describe("timelock", () => {
       new BN(10), // period
       new BN(0), //cliff
       new BN(0), //cliff amount
+      true, // cancelable_by_sender,
+      false, // cancelable_by_recipient,
+      false, //nwithdrawal_public,
+      false, //transferable,
       new BN(100), // release rate
+      "Stream", // stream name
       {
         accounts: {
           sender: sender.publicKey,

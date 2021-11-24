@@ -62,7 +62,12 @@ export default class Timelock {
     period: BN,
     cliff: BN,
     cliffAmount: BN,
-    releaseRate: BN,
+    cancelable_by_sender: boolean,
+    cancelable_by_recipient: boolean,
+    withdrawal_public: boolean,
+    transferable: boolean,
+    release_rate: BN,
+    stream_name: String,
   ): Promise<TransactionSignature> {
     console.log("program", timelockProgramId);
     const program = initProgram(connection, wallet, timelockProgramId);
@@ -142,7 +147,12 @@ export default class Timelock {
       period,
       cliff,
       cliffAmount,
-      releaseRate,
+      cancelable_by_sender,
+      cancelable_by_recipient,
+      withdrawal_public,
+      transferable,
+      release_rate,
+      stream_name,
       {
         accounts: {
           sender: wallet.publicKey,
