@@ -18,7 +18,7 @@ System has 4 composable layers. There are (top to bottom):
 - `@streamflow/timelock` — a [NPM package](https://www.npmjs.com/package/@streamflow/timelock) used by the web app.
   Interacts with provided `timelock` program deployed on Solana chain.
 - `timelock` — simple implementation of Solana/Anchor program that integrates `timelock-crate` (described below).
-- `timelock-crate` — a crate that provides `create`, `withdraw`, `cancel`, `transfer` stream/vesting contract
+- `timelock-crate` — a crate that provides `create`, `withdraw`, `cancel`, `transfer`, `topup` stream/vesting contract
   functionalities out of the box. Can be used in other Solana/Anchor programs, as demonstrated here.
 
 ![Platform overview](/misc/platform.png)

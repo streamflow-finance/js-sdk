@@ -2,4 +2,4 @@
 
 JavaScript SDK to interact with the `timelock` Anchor program.
 
-You can `create`, `withdraw`, `cancel` a Stream, as well as `transfer_recipient`
+You can `create`, `withdraw`, `cancel`, `topup` a Stream, as well as `transfer_recipient`
