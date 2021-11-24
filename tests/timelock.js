@@ -24,6 +24,7 @@ const { BN } = anchor;
 // The stream recipient main wallet
 const recipient = Keypair.generate();
 
+
 describe("timelock", () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
@@ -163,7 +164,6 @@ describe("timelock", () => {
     );
 
     let strm_data = decode(_metadata.data);
-    
     console.log("Raw data:\n", _metadata.data);
     console.log("Stream Data:\n", strm_data);
     
@@ -171,11 +171,15 @@ describe("timelock", () => {
     console.log(
       "deposited during contract creation: ",
       depositedAmount.toNumber(),
+      "saved in deposit data",
+      strm_data.deposited_amount,
+      "Escrow tokens balance",
       _escrowTokensData.amount
     );
 
+    // assert.ok(strm_data.strea === _escrowTokensData.amount);
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
-    assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
+    assert.ok(depositedAmount.toNumber() === strm_data.deposited_amount.toNumber());
   }).timeout(4000);
 
   it("Tops up stream", async () => {
@@ -585,6 +589,7 @@ describe("timelock", () => {
     console.log("Stream Data:\n", strm_data);
     
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
+    assert.ok(strm_data.release_rate.eq(new BN(100)));
 
     // assert.ok(strm_data.period === new BN(10));
 

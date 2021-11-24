@@ -90,6 +90,12 @@ function decode(buf) {
         period: new anchor_1.BN(raw.period, LE),
         cliff: new anchor_1.BN(raw.cliff, LE),
         cliff_amount: new anchor_1.BN(raw.cliff_amount, LE),
+        cancelable_by_sender: new anchor_1.BN(raw.cancelable_by_sender, LE),
+        cancelable_by_recipient: new anchor_1.BN(raw.cancelable_by_recipient, LE),
+        withdrawal_public: new anchor_1.BN(raw.withdrawal_public, LE),
+        transferable: new anchor_1.BN(raw.transferable, LE),
+        release_rate: new anchor_1.BN(raw.release_rate, LE),
+        stream_name: new String(raw.stream_name),
     };
 }
 exports.decode = decode;
