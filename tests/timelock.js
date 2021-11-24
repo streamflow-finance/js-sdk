@@ -258,7 +258,6 @@ describe("timelock", () => {
         metadata_data.deposited_amount.eq(topupAmount + old_strm_data.deposited_amount)
       );
       */
- 
   }).timeout(6000);
 
   it("Withdraws from a contract", async () => { // With set time out it didn't catch errors???
@@ -372,70 +371,67 @@ describe("timelock", () => {
       recipient.publicKey,
       2 * LAMPORTS_PER_SOL
     );
-    //wait for the airdrop
-    setTimeout(async () => {
-      console.log(
-        "\nTransfer:\n"
-        // "SOL balance: ",
-        // await program.provider.connection.getBalance(recipient.publicKey)
-      );
+    console.log(
+      "\nTransfer:\n"
+      // "SOL balance: ",
+      // await program.provider.connection.getBalance(recipient.publicKey)
+    );
 
-      console.log("old recipient", oldRecipient.toBase58());
-      console.log(
-        "new recipient",
-        newRecipient.publicKey.toBase58(),
-        "new recipient ata:",
-        newRecipientTokens.toBase58()
-      );
+    console.log("old recipient", oldRecipient.toBase58());
+    console.log(
+      "new recipient",
+      newRecipient.publicKey.toBase58(),
+      "new recipient ata:",
+      newRecipientTokens.toBase58()
+    );
 
-      await program.rpc.transfer_recipient({
-        accounts: {
-          existingRecipient: recipient.publicKey,
-          newRecipient: newRecipient.publicKey,
-          newRecipientTokens,
-          metadata: metadata.publicKey,
-          escrowTokens,
-          mint,
-          rent: SYSVAR_RENT_PUBKEY,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          system: SystemProgram.programId,
-        },
-        signers: [recipient],
-      });
-      console.log("Update recipient success.");
-      escrow = await program.provider.connection.getAccountInfo(
-        metadata.publicKey
-      );
-      console.log("parsed", decode(escrow.data));
-      const escrowNewRecipient = decode(escrow.data).recipient;
-      console.log(
-        "Transfer: old recipient:",
-        oldRecipient.toBase58(),
-        "new recipient: ",
-        escrowNewRecipient.toBase58()
-      );
-      console.log(
-        "Transfer: old recipient:",
-        recipient.publicKey.toBase58(),
-        "new recipient: ",
-        newRecipient.publicKey.toBase58()
-      );
-      console.log(
-        "old recipient tokens:",
-        recipientTokens.toBase58(),
-        "new recipient tokens: ",
-        newRecipientTokens.toBase58(),
-        "new recipient tokens",
-        escrowNewRecipient.recipient_tokens.toBase58()
-      );
-      assert.ok(oldRecipient !== escrowNewRecipient);
-      assert.ok(
-        escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
-      );
-      await provider.connection.getBalance(sender.publicKey);
-    }, 7000);
-  });
+    await program.rpc.transfer_recipient({
+      accounts: {
+        existingRecipient: recipient.publicKey,
+        newRecipient: newRecipient.publicKey,
+        newRecipientTokens,
+        metadata: metadata.publicKey,
+        escrowTokens,
+        mint,
+        rent: SYSVAR_RENT_PUBKEY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        system: SystemProgram.programId,
+      },
+      signers: [recipient],
+    });
+    console.log("Update recipient success.");
+    escrow = await program.provider.connection.getAccountInfo(
+      metadata.publicKey
+    );
+    console.log("parsed", decode(escrow.data));
+    const escrowNewRecipient = decode(escrow.data).recipient;
+    console.log(
+      "Transfer: old recipient:",
+      oldRecipient.toBase58(),
+      "new recipient: ",
+      escrowNewRecipient.toBase58()
+    );
+    console.log(
+      "Transfer: old recipient:",
+      recipient.publicKey.toBase58(),
+      "new recipient: ",
+      newRecipient.publicKey.toBase58()
+    );
+    console.log(
+      "old recipient tokens:",
+      recipientTokens.toBase58(),
+      "new recipient tokens: ",
+      newRecipientTokens.toBase58(),
+      "new recipient tokens",
+      escrowNewRecipient.recipient_tokens.toBase58()
+    );
+    assert.ok(oldRecipient !== escrowNewRecipient);
+    assert.ok(
+      escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
+    );
+    await provider.connection.getBalance(sender.publicKey);
+  }).timeout(10000);
 
   
   it("Cancels the stream", async () => {
@@ -590,6 +586,7 @@ describe("timelock", () => {
     console.log("Stream Data:\n", strm_data);
     
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
+    assert.ok(strm_data.period.eq(new BN(10)));
     assert.ok(strm_data.release_rate.eq(new BN(100)));
 
     // assert.ok(strm_data.period === new BN(10));
