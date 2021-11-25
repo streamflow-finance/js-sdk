@@ -4,9 +4,9 @@ Token Vesting and Streaming Payments for SPL tokens.
 
 Backed by Solana Foundation and Serum.
 
-## Important:
+Relies heavily on timelock token escrow service aptly named [Timelock Crate](https://github.com/streamflow-finance/timelock-crate/).
 
-This software is under active development.
+## Important:
 
 **The code is not yet audited.**
 
