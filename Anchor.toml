@@ -2,8 +2,8 @@
 timelock = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 [programs.devnet]
 timelock = "BBbP5MHFSfcoygAtaPpWUmiEdb7yW2mZHDzg2MTnAsVa"
-#[programs.mainnet]
-#timelock = ""
+[programs.mainnet]
+timelock = "8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX"
 
 [registry]
 url = "https://anchor.projectserum.com"
