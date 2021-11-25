@@ -131,7 +131,7 @@ describe("timelock", () => {
       false, //nwithdrawal_public,
       false, //transferable,
       new BN(0), // release rate (when > 0 - recurring payment)
-      "Stream", // stream name
+      "Stream New", // stream name
       {
         accounts: {
           sender: sender.publicKey,
@@ -182,8 +182,13 @@ describe("timelock", () => {
       _escrowTokensData.amount
     );
 
-    console.log("Stream name: ", strm_data.stream_name.toString());
-    // assert.ok(strm_data.stream_name.toString().trim() === "Stream");
+    let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
+    bytesStreamName = bytesStreamName.slice(4).filter(x => x !== 0);
+    let stream_name =  new TextDecoder().decode(bytesStreamName);
+    console.log("Stream name: ", stream_name);
+    console.log("Bytes literal: ", (new TextEncoder().encode('Stream New')).length);
+    console.log("Bytes solana string: ", (new TextEncoder().encode(strm_data.stream_name)).length);
+    assert.ok(stream_name === "Stream New");
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
     assert.ok(depositedAmount.toNumber() === strm_data.deposited_amount.toNumber());
   }).timeout(4000);

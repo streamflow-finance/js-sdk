@@ -80,7 +80,7 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(1, "withdrawal_public"),
   BufferLayout.blob(1, "transferable"),
   BufferLayout.blob(8, "release_rate"),
-  BufferLayout.utf8(60, "stream_name"),  //  it is not NUL-terminated C string
+  BufferLayout.utf8(200, "stream_name"),  //  it is not NUL-terminated C string
 ]);
 
 export function decode(buf: Buffer) {
