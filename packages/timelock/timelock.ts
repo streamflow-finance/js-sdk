@@ -47,7 +47,12 @@ export default class Timelock {
    * @param {BN} period - Time step (period) in seconds per which the vesting occurs
    * @param {BN} cliff - Vesting contract "cliff" timestamp
    * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
+   * @param {boolean} cancelable_by_sender - Can sender cancel stream
+   * @param {boolean} cancelable_by_recipient - Can recepient cancel stream
+   * @param {boolean} withdrawal_public - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
+   * @param {boolean} transferable - Whether or not recipient can transfer the stream 
    * @param {BN} releaseRate - Period rate in recurring payment
+   * @param {String} streamName - Name or subject of the stream
    */
   static async create(
     connection: Connection,

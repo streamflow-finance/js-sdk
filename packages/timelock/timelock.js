@@ -65,7 +65,12 @@ var Timelock = /** @class */ (function () {
      * @param {BN} period - Time step (period) in seconds per which the vesting occurs
      * @param {BN} cliff - Vesting contract "cliff" timestamp
      * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
+     * @param {boolean} cancelable_by_sender - Can sender cancel stream
+     * @param {boolean} cancelable_by_recipient - Can recepient cancel stream
+     * @param {boolean} withdrawal_public - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
+     * @param {boolean} transferable - Whether or not recipient can transfer the stream
      * @param {BN} releaseRate - Period rate in recurring payment
+     * @param {String} streamName - Name or subject of the stream
      */
     Timelock.create = function (connection, wallet, timelockProgramId, newAcc, recipient, mint, depositedAmount, start, end, period, cliff, cliffAmount, cancelable_by_sender, cancelable_by_recipient, withdrawal_public, transferable, release_rate, stream_name) {
         return __awaiter(this, void 0, void 0, function () {
