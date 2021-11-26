@@ -17,7 +17,12 @@ export default class Timelock {
      * @param {BN} period - Time step (period) in seconds per which the vesting occurs
      * @param {BN} cliff - Vesting contract "cliff" timestamp
      * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
+     * @param {boolean} cancelable_by_sender - Can sender cancel stream
+     * @param {boolean} cancelable_by_recipient - Can recepient cancel stream
+     * @param {boolean} withdrawal_public - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
+     * @param {boolean} transferable - Whether or not recipient can transfer the stream
      * @param {BN} releaseRate - Period rate in recurring payment
+     * @param {String} streamName - Name or subject of the stream
      */
     static create(connection: Connection, wallet: Wallet, timelockProgramId: Address, newAcc: Keypair, recipient: PublicKey, mint: PublicKey, depositedAmount: BN, start: BN, end: BN, period: BN, cliff: BN, cliffAmount: BN, cancelable_by_sender: boolean, cancelable_by_recipient: boolean, withdrawal_public: boolean, transferable: boolean, release_rate: BN, stream_name: String): Promise<TransactionSignature>;
     /**
