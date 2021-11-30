@@ -90,7 +90,7 @@ export function decode(buf: Buffer) {
     created_at: new BN(raw.created_at, LE),
     withdrawn_amount: new BN(raw.withdrawn_amount, LE),
     canceled_at: new BN(raw.canceled_at, LE),
-    cancellable_at: new BN(raw.closable_at, LE),
+    closable_at: new BN(raw.closable_at, LE),
     last_withdrawn_at: new BN(raw.last_withdrawn_at, LE),
     sender: new PublicKey(raw.sender),
     sender_tokens: new PublicKey(raw.sender_tokens),
