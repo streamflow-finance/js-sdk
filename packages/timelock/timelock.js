@@ -248,8 +248,9 @@ var Timelock = /** @class */ (function () {
    * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
    * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
+   * @param {BN} amount - Requested amount to withdraw. If BN(0), program attempts to withdraw maximum available amount.
    */
-    Timelock.topup = function (connection, wallet, timelockProgramId, stream) {
+    Timelock.topup = function (connection, wallet, timelockProgramId, stream, amount) {
         return __awaiter(this, void 0, void 0, function () {
             var program, escrow, data, mint;
             return __generator(this, function (_a) {
@@ -264,7 +265,7 @@ var Timelock = /** @class */ (function () {
                         }
                         data = (0, layout_1.decode)(escrow === null || escrow === void 0 ? void 0 : escrow.data);
                         mint = data.mint;
-                        return [4 /*yield*/, program.rpc.topup({
+                        return [4 /*yield*/, program.rpc.topup(amount, {
                                 accounts: {
                                     sender: wallet.publicKey,
                                     senderTokens: data.sender_tokens,
