@@ -303,12 +303,14 @@ export default class Timelock {
  * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
  * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
  * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
+ * @param {BN} amount - Requested amount to withdraw. If BN(0), program attempts to withdraw maximum available amount.
  */
   static async topup(
     connection: Connection,
     wallet: Wallet,
     timelockProgramId: Address,
     stream: PublicKey,
+    amount: BN
   ): Promise<TransactionSignature> {
     const program = initProgram(connection, wallet, timelockProgramId);
     let escrow = await connection.getAccountInfo(stream);
@@ -319,7 +321,7 @@ export default class Timelock {
 
     const mint = data.mint;
 
-    return await program.rpc.topup({
+    return await program.rpc.topup(amount, {
       accounts: {
         sender: wallet.publicKey,
         senderTokens: data.sender_tokens,

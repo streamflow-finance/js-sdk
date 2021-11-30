@@ -1,7 +1,7 @@
 export default {
   version: "0.0.0",
   name: "timelock",
-  instructions: [
+  "instructions": [
     {
       "name": "create",
       "accounts": [
@@ -96,8 +96,28 @@ export default {
           "type": "u64"
         },
         {
+          "name": "cancelableBySender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelableByRecipient",
+          "type": "bool"
+        },
+        {
+          "name": "withdrawalPublic",
+          "type": "bool"
+        },
+        {
+          "name": "transferable",
+          "type": "bool"
+        },
+        {
           "name": "releaseRate",
           "type": "u64"
+        },
+        {
+          "name": "streamName",
+          "type": "string"
         }
       ]
     },
