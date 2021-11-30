@@ -30,10 +30,10 @@ function decode_stream_instruction(buf: Buffer) {
     period: new BN(raw.period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
-    cancelable_by_sender: new BN(raw.cancelable_by_sender, LE),
-    cancelable_by_recipient: new BN(raw.cancelable_by_recipient, LE),
-    withdrawal_public: new BN(raw.withdrawal_public, LE),
-    transferable: new BN(raw.transferable, LE),
+    cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
+    cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
+    withdrawal_public: new Boolean(raw.withdrawal_public),
+    transferable: new Boolean(raw.transferable),
     release_rate: new BN(raw.release_rate, LE),
     stream_name: new String(raw.stream_name),
   };
@@ -47,10 +47,10 @@ interface StreamInstruction {
   period: BN;
   cliff: BN;
   cliff_amount: BN;
-  cancelable_by_sender: BN;
-  cancelable_by_recipient: BN;
-  withdrawal_public: BN;
-  transferable: BN;
+  cancelable_by_sender: boolean;
+  cancelable_by_recipient: boolean;
+  withdrawal_public: boolean;
+  transferable: boolean;
   release_rate: BN;
   stream_name: string;
 }
@@ -105,10 +105,10 @@ export function decode(buf: Buffer) {
     period: new BN(raw.period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
-    cancelable_by_sender: new BN(raw.cancelable_by_sender, LE),
-    cancelable_by_recipient: new BN(raw.cancelable_by_recipient, LE),
-    withdrawal_public: new BN(raw.withdrawal_public, LE),
-    transferable: new BN(raw.transferable, LE),
+    cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
+    cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
+    withdrawal_public: new Boolean(raw.withdrawal_public),
+    transferable: new Boolean(raw.transferable),
     release_rate: new BN(raw.release_rate, LE),
     stream_name: new String(raw.stream_name),
   };
@@ -134,10 +134,10 @@ export interface TokenStreamData {
   period: BN;
   cliff: BN;
   cliff_amount: BN;
-  cancelable_by_sender: BN;
-  cancelable_by_recipient: BN;
-  withdrawal_public: BN;
-  transferable: BN;
+  cancelable_by_sender: boolean;
+  cancelable_by_recipient: boolean;
+  withdrawal_public: boolean;
+  transferable: boolean;
   release_rate: BN;
   stream_name: string;
 }

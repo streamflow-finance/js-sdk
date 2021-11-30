@@ -21,16 +21,21 @@ const { decode } = require("./layout");
 const { SystemProgram, Keypair } = anchor.web3;
 const { BN } = anchor;
 
+/* Test IDL
+const idl = require("../packages/timelock/dist/idl");
+function initProgram(connection, wallet, timelockProgramId) {
+  var provider = new anchor.Provider(connection, wallet, {});
+  return new anchor.Program(idl.default, timelockProgramId, provider);
+}
+*/
+
 // The stream recipient main wallet
 const recipient = Keypair.generate();
-
 
 describe("timelock", () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
-
   const program = anchor.workspace.Timelock;
-  const sender = provider.wallet;
 
   const metadata = Keypair.generate();
   const MINT_DECIMALS = 8;
@@ -41,9 +46,9 @@ describe("timelock", () => {
   let senderTokens;
 
   // Divide by 1000 since Unix timestamp is seconds
-  const start = new BN(+new Date() / 1000 + 4);
+  let start = new BN(+new Date() / 1000 + 4);
   // +60 seconds
-  const end = new BN(+new Date() / 1000 + 60);
+  let end = new BN(+new Date() / 1000 + 60);
   // In seconds
   const period = new BN(1);
   // Amount to deposit
@@ -117,6 +122,12 @@ describe("timelock", () => {
     console.log("metadata:", metadata.publicKey.toBase58());
     console.log("buffer:", metadata.publicKey.toBuffer());
 
+
+    start = new BN(1638292620);
+    end = new BN(1638292920);
+    let cliff = new BN(1638292620);
+    console.log("Start: ", start.toNumber());
+    console.log("End: ", end.toNumber());
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
       start,
@@ -124,7 +135,7 @@ describe("timelock", () => {
       depositedAmount,
       depositedAmount,
       period,
-      new BN(0), //cliff
+      cliff, //cliff
       new BN(0), //cliff amount 
       true, // cancelable_by_sender,
       false, // cancelable_by_recipient,
