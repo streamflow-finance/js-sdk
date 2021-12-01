@@ -383,79 +383,6 @@ describe("timelock", () => {
       assert.ok(data.withdrawn_amount.eq(withdrawAmount));
   }).timeout(6000);
  
-  it("Transfers vesting contract recipient", async () => {
-    let escrow = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    const oldRecipient = decode(escrow.data).recipient;
-    let newRecipient = Keypair.generate();
-    let newRecipientTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      newRecipient.publicKey
-    );
-
-    console.log("old recipient", oldRecipient.toBase58());
-    console.log(
-      "new recipient",
-      newRecipient.publicKey.toBase58(),
-      "new recipient ata:",
-      newRecipientTokens.toBase58()
-    );
-
-    await program.rpc.transferRecipient({ // It changes to camel case!!!
-      accounts: {
-        existingRecipient: recipient.publicKey,
-        newRecipient: newRecipient.publicKey,
-        newRecipientTokens,
-        metadata: metadata.publicKey,
-        escrowTokens,
-        mint,
-        rent: SYSVAR_RENT_PUBKEY,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        system: SystemProgram.programId,
-      },
-      signers: [recipient],
-    });
-    console.log("Update recipient success.");
-    escrow = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    console.log("parsed", decode(escrow.data));
-    const escrowNewRecipient = decode(escrow.data).recipient;
-    const escrowNewRecipientTokens = decode(escrow.data).recipient_tokens;
-    console.log(
-      "Transfer: old recipient:",
-      oldRecipient.toBase58(),
-      "new recipient: ",
-      escrowNewRecipient.toBase58()
-    );
-    console.log(
-      "Transfer: old recipient:",
-      recipient.publicKey.toBase58(),
-      "new recipient: ",
-      newRecipient.publicKey.toBase58()
-    );
-    console.log(
-      "old recipient tokens:",
-      recipientTokens.toBase58(),
-      "new recipient tokens: ",
-      newRecipientTokens.toBase58(),
-      "new recipient tokens",
-      escrowNewRecipientTokens.toBase58()
-    );
-    assert.ok(oldRecipient !== escrowNewRecipient);
-    assert.ok(
-      escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
-    );
-    assert.ok(
-      escrowNewRecipientTokens.toBase58() === newRecipientTokens.toBase58()
-    );
-    await provider.connection.getBalance(sender.publicKey);
-  }).timeout(10000);
-
   it("Cancels the stream", async () => {
     const oldBalance = await provider.connection.getBalance(sender.publicKey);
       console.log("\nCancel:\n");
@@ -547,6 +474,132 @@ describe("timelock", () => {
       // assert.ok(decode(escrow.data).amount.eq(0));
       assert.ok((newRecipientAmount + newSenderAmount - oldSenderAmount) === oldEscrowAmount);
   }).timeout(8000);
+
+  it("Transfers vesting contract recipient", async () => {
+    console.log("\nTransfer");
+
+    const metadata = Keypair.generate();
+    [escrowTokens, nonce] = await PublicKey.findProgramAddress(
+      [metadata.publicKey.toBuffer()],
+      program.programId
+    );
+
+    const tx = await program.rpc.create(
+      // Order of the parameters must match the ones in the program
+      start,
+      end,
+      depositedAmount,
+      depositedAmount,
+      period,
+      new BN(0), //cliff
+      new BN(0), //cliff amount 
+      true, // cancelable_by_sender,
+      false, // cancelable_by_recipient,
+      false, //nwithdrawal_public,
+      false, //transferable,
+      new BN(0), // release rate (when > 0 - recurring payment)
+      "Stream to transfer", // stream name
+      {
+        accounts: {
+          sender: sender.publicKey,
+          senderTokens,
+          recipient: recipient.publicKey,
+          recipientTokens,
+          metadata: metadata.publicKey,
+          escrowTokens,
+          mint,
+          rent: SYSVAR_RENT_PUBKEY,
+          timelockProgram: program.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        },
+        signers: [metadata],
+      }
+    );
+  
+    const _metadata = await program.provider.connection.getAccountInfo(
+      metadata.publicKey
+    );
+
+    let strm_data = decode(_metadata.data);
+    console.log("Stream Data:\n", strm_data)
+    let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
+    bytesStreamName = bytesStreamName.slice(4).filter(x => x !== 0);
+    let stream_name =  new TextDecoder().decode(bytesStreamName);
+    assert.ok(stream_name === "Stream to transfer");
+    // Now transfer recipient
+    let escrow = await program.provider.connection.getAccountInfo(
+      metadata.publicKey
+    );
+    const oldRecipient = decode(escrow.data).recipient;
+    let newRecipient = Keypair.generate();
+    let newRecipientTokens = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      newRecipient.publicKey
+    );
+
+    console.log("old recipient", oldRecipient.toBase58());
+    console.log(
+      "new recipient",
+      newRecipient.publicKey.toBase58(),
+      "new recipient ata:",
+      newRecipientTokens.toBase58()
+    );
+
+    await program.rpc.transferRecipient({ // It changes to camel case!!!
+      accounts: {
+        existingRecipient: recipient.publicKey,
+        newRecipient: newRecipient.publicKey,
+        newRecipientTokens,
+        metadata: metadata.publicKey,
+        escrowTokens,
+        mint,
+        rent: SYSVAR_RENT_PUBKEY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        system: SystemProgram.programId,
+      },
+      signers: [recipient],
+    });
+    console.log("Update recipient success.");
+    escrow = await program.provider.connection.getAccountInfo(
+      metadata.publicKey
+    );
+    console.log("parsed", decode(escrow.data));
+    const escrowNewRecipient = decode(escrow.data).recipient;
+    const escrowNewRecipientTokens = decode(escrow.data).recipient_tokens;
+    console.log(
+      "Transfer: old recipient:",
+      oldRecipient.toBase58(),
+      "new recipient: ",
+      escrowNewRecipient.toBase58()
+    );
+    console.log(
+      "Transfer: old recipient:",
+      recipient.publicKey.toBase58(),
+      "new recipient: ",
+      newRecipient.publicKey.toBase58()
+    );
+    console.log(
+      "old recipient tokens:",
+      recipientTokens.toBase58(),
+      "new recipient tokens: ",
+      newRecipientTokens.toBase58(),
+      "new recipient tokens",
+      escrowNewRecipientTokens.toBase58()
+    );
+    assert.ok(oldRecipient !== escrowNewRecipient);
+    assert.ok(
+      escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
+    );
+    assert.ok(
+      escrowNewRecipientTokens.toBase58() === newRecipientTokens.toBase58()
+    );
+    await provider.connection.getBalance(sender.publicKey);
+  }).timeout(10000);
 
   it("Creates recurring", async () => {
     console.log("\nRecurring");
