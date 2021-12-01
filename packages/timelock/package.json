@@ -1,6 +1,6 @@
 {
   "name": "ibrica-timelock",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "SDK to interact with StreamFlow Finance's Timelock program on Solana.",
   "main": "dist/timelock.js",
   "types": "dist/timelock.d.ts",

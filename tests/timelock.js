@@ -36,6 +36,7 @@ describe("timelock", () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.Timelock;
+  const sender = provider.wallet;
 
   const metadata = Keypair.generate();
   const MINT_DECIMALS = 8;
@@ -122,12 +123,6 @@ describe("timelock", () => {
     console.log("metadata:", metadata.publicKey.toBase58());
     console.log("buffer:", metadata.publicKey.toBuffer());
 
-
-    start = new BN(1638292620);
-    end = new BN(1638292920);
-    let cliff = new BN(1638292620);
-    console.log("Start: ", start.toNumber());
-    console.log("End: ", end.toNumber());
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
       start,
@@ -135,7 +130,7 @@ describe("timelock", () => {
       depositedAmount,
       depositedAmount,
       period,
-      cliff, //cliff
+      new BN(0), //cliff
       new BN(0), //cliff amount 
       true, // cancelable_by_sender,
       false, // cancelable_by_recipient,
@@ -405,7 +400,8 @@ describe("timelock", () => {
       "new recipient ata:",
       newRecipientTokens.toBase58()
     );
-/*
+
+    console.log("Program RPC:", JSON.stringify(program.rpc));
     await program.rpc.transfer_recipient({
       accounts: {
         existingRecipient: recipient.publicKey,
@@ -452,7 +448,6 @@ describe("timelock", () => {
       escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
     );
     await provider.connection.getBalance(sender.publicKey);
-    */
   }).timeout(10000);
 
   
