@@ -108,6 +108,20 @@ describe("timelock", () => {
       recipient.publicKey
     );
 
+    
+    // airdrop to receiver, we'll need it for transfer recipient fees
+    let tx = await program.provider.connection.requestAirdrop(
+      recipient.publicKey,
+      1 * LAMPORTS_PER_SOL
+    );
+    console.log("Airdrop transaction: ", tx);
+
+    let recBalance = await program.provider.connection.getBalance(recipient.publicKey);
+    console.log(
+      "SOL balance: ",
+      recBalance
+    );
+  
     console.log("Accounts:");
     console.log("sender wallet:", sender.publicKey.toBase58());
     console.log("sender tokens:", senderTokens.toBase58());
@@ -374,23 +388,12 @@ describe("timelock", () => {
       metadata.publicKey
     );
     const oldRecipient = decode(escrow.data).recipient;
-    const newRecipient = Keypair.generate();
-    const newRecipientTokens = await Token.getAssociatedTokenAddress(
+    let newRecipient = Keypair.generate();
+    let newRecipientTokens = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       mint,
       newRecipient.publicKey
-    );
-
-    //airdrop
-    const tx = await program.provider.connection.requestAirdrop(
-      recipient.publicKey,
-      2 * LAMPORTS_PER_SOL
-    );
-    console.log(
-      "\nTransfer:\n"
-      // "SOL balance: ",
-      // await program.provider.connection.getBalance(recipient.publicKey)
     );
 
     console.log("old recipient", oldRecipient.toBase58());
@@ -401,8 +404,7 @@ describe("timelock", () => {
       newRecipientTokens.toBase58()
     );
 
-    console.log("Program RPC:", JSON.stringify(program.rpc));
-    await program.rpc.transfer_recipient({
+    await program.rpc.transferRecipient({ // It changes to camel case!!!
       accounts: {
         existingRecipient: recipient.publicKey,
         newRecipient: newRecipient.publicKey,
@@ -423,6 +425,7 @@ describe("timelock", () => {
     );
     console.log("parsed", decode(escrow.data));
     const escrowNewRecipient = decode(escrow.data).recipient;
+    const escrowNewRecipientTokens = decode(escrow.data).recipient_tokens;
     console.log(
       "Transfer: old recipient:",
       oldRecipient.toBase58(),
@@ -441,16 +444,18 @@ describe("timelock", () => {
       "new recipient tokens: ",
       newRecipientTokens.toBase58(),
       "new recipient tokens",
-      escrowNewRecipient.recipient_tokens.toBase58()
+      escrowNewRecipientTokens.toBase58()
     );
     assert.ok(oldRecipient !== escrowNewRecipient);
     assert.ok(
       escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
     );
+    assert.ok(
+      escrowNewRecipientTokens.toBase58() === newRecipientTokens.toBase58()
+    );
     await provider.connection.getBalance(sender.publicKey);
   }).timeout(10000);
 
-  
   it("Cancels the stream", async () => {
     const oldBalance = await provider.connection.getBalance(sender.publicKey);
       console.log("\nCancel:\n");
