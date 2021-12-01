@@ -21,14 +21,6 @@ const { decode } = require("./layout");
 const { SystemProgram, Keypair } = anchor.web3;
 const { BN } = anchor;
 
-/* Test IDL
-const idl = require("../packages/timelock/dist/idl");
-function initProgram(connection, wallet, timelockProgramId) {
-  var provider = new anchor.Provider(connection, wallet, {});
-  return new anchor.Program(idl.default, timelockProgramId, provider);
-}
-*/
-
 // The stream recipient main wallet
 const recipient = Keypair.generate();
 
@@ -109,7 +101,7 @@ describe("timelock", () => {
     );
 
     
-    // airdrop to receiver, we'll need it for transfer recipient fees
+    // airdrop to receiver, we'll need it later for transfer recipient fees
     let tx = await program.provider.connection.requestAirdrop(
       recipient.publicKey,
       1 * LAMPORTS_PER_SOL
@@ -192,7 +184,6 @@ describe("timelock", () => {
     console.log("Raw data:\n", _metadata.data);
     console.log("Stream Data:\n", strm_data);
     
-
     console.log(
       "deposited during contract creation: ",
       depositedAmount.toNumber(),
@@ -282,12 +273,6 @@ describe("timelock", () => {
       assert.ok(
         topupAmount.eq(new BN(newEscrowAmount - oldEscrowAmount))
       );
-      /*
-      // New state in data acc
-      assert.ok(
-        metadata_data.deposited_amount.eq(topupAmount + old_strm_data.deposited_amount)
-      );
-      */
   }).timeout(6000);
 
   it("Withdraws from a contract", async () => { // With set time out it didn't catch errors???
@@ -448,7 +433,6 @@ describe("timelock", () => {
         newSenderAta.data
       ).amount;
 
-
       console.log("cancel:");
       console.log(
         "old sender",
@@ -485,7 +469,6 @@ describe("timelock", () => {
     );
 
     const tx = await program.rpc.create(
-      // Order of the parameters must match the ones in the program
       start,
       end,
       depositedAmount,
@@ -497,7 +480,7 @@ describe("timelock", () => {
       false, // cancelable_by_recipient,
       false, //nwithdrawal_public,
       false, //transferable,
-      new BN(0), // release rate (when > 0 - recurring payment)
+      new BN(0), // release rate
       "Stream to transfer", // stream name
       {
         accounts: {
@@ -668,10 +651,5 @@ describe("timelock", () => {
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
     assert.ok(strm_data.period.eq(new BN(10)));
     assert.ok(strm_data.release_rate.eq(new BN(100)));
-
-    // assert.ok(strm_data.period === new BN(10));
-
   }).timeout(6000);
-
-
 });
