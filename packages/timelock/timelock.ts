@@ -50,7 +50,8 @@ export default class Timelock {
    * @param {boolean} cancelable_by_sender - Can sender cancel stream
    * @param {boolean} cancelable_by_recipient - Can recepient cancel stream
    * @param {boolean} withdrawal_public - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
-   * @param {boolean} transferable - Whether or not recipient can transfer the stream 
+   * @param {boolean} transferable_by_sender - Whether or not sender can transfer the stream
+   * @param {boolean} transferable_by_recipient - Whether or not recipient can transfer the stream
    * @param {BN} releaseRate - Period rate in recurring payment
    * @param {String} streamName - Name or subject of the stream
    */
@@ -70,7 +71,8 @@ export default class Timelock {
     cancelable_by_sender: boolean,
     cancelable_by_recipient: boolean,
     withdrawal_public: boolean,
-    transferable: boolean,
+    transferable_by_sender: boolean,
+    transferable_by_recipient: boolean,
     release_rate: BN,
     stream_name: String,
   ): Promise<TransactionSignature> {
@@ -155,7 +157,8 @@ export default class Timelock {
       cancelable_by_sender,
       cancelable_by_recipient,
       withdrawal_public,
-      transferable,
+      transferable_by_sender,
+      transferable_by_recipient,
       release_rate,
       stream_name,
       {
@@ -254,7 +257,7 @@ export default class Timelock {
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator (i.e. current recipient)
    * @param {Connection} connection
-   * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
+   * @param {Wallet} wallet - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {PublicKey} newRecipient - Address of a new stream/vesting contract recipient.
@@ -303,7 +306,7 @@ export default class Timelock {
  * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
  * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
  * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
- * @param {BN} amount - Requested amount to withdraw. If BN(0), program attempts to withdraw maximum available amount.
+ * @param {BN} amount - Spcified amount to topup (increases deposited amount).
  */
   static async topup(
     connection: Connection,
@@ -331,6 +334,5 @@ export default class Timelock {
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
-  }
-  
+  } 
 }

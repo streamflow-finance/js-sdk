@@ -1,7 +1,7 @@
 export default {
   version: "0.0.0",
   name: "timelock",
-  "instructions": [
+  instructions: [
     {
       "name": "create",
       "accounts": [
@@ -108,7 +108,11 @@ export default {
           "type": "bool"
         },
         {
-          "name": "transferable",
+          "name": "transferableBySender",
+          "type": "bool"
+        },
+        {
+          "name": "transferableByRecipient",
           "type": "bool"
         },
         {
@@ -321,7 +325,7 @@ export default {
       ]
     }
   ],
-  metadata: {
-    address: "BBbP5MHFSfcoygAtaPpWUmiEdb7yW2mZHDzg2MTnAsVa",
-  },
+  "metadata": {
+    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+  }
 };
