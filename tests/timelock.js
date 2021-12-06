@@ -141,7 +141,8 @@ describe("timelock", () => {
       true, // cancelable_by_sender,
       false, // cancelable_by_recipient,
       false, //nwithdrawal_public,
-      false, //transferable,
+      false, //transferable by sender,
+      true, //transferable by recipient,
       new BN(0), // release rate (when > 0 - recurring payment)
       "Stream NewStream NewStream New", // stream name
       {
@@ -479,7 +480,8 @@ describe("timelock", () => {
       true, // cancelable_by_sender,
       false, // cancelable_by_recipient,
       false, //nwithdrawal_public,
-      false, //transferable,
+      false, //transferable by sender,
+      true, //transferable by recipient,
       new BN(0), // release rate
       "Stream to transfer", // stream name
       {
@@ -534,7 +536,7 @@ describe("timelock", () => {
 
     await program.rpc.transferRecipient({ // It changes to camel case!!!
       accounts: {
-        existingRecipient: recipient.publicKey,
+        existingRecipient: recipient.publicKey, // Authorized wallet
         newRecipient: newRecipient.publicKey,
         newRecipientTokens,
         metadata: metadata.publicKey,
@@ -605,7 +607,8 @@ describe("timelock", () => {
       true, // cancelable_by_sender,
       false, // cancelable_by_recipient,
       false, //nwithdrawal_public,
-      false, //transferable,
+      false, //transferable by sender,
+      true, //transferable by recipient,
       new BN(100), // release rate
       "Stream", // stream name
       {
@@ -650,6 +653,7 @@ describe("timelock", () => {
     
     assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
     assert.ok(strm_data.period.eq(new BN(10)));
+    console.log("Release rate:", strm_data.release_rate.toNumber());
     assert.ok(strm_data.release_rate.eq(new BN(100)));
   }).timeout(6000);
 });
