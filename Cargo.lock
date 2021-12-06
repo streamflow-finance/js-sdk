@@ -1051,12 +1051,13 @@ dependencies = [
 [[package]]
 name = "streamflow-timelock"
 version = "0.3.0"
-source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=ibrica/recurring#04969e566c4650022d42e45d04b95a9ca7081ece"
+source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=master#6d87181e514a4a741c0a4ef0cffc340599f57998"
 dependencies = [
  "borsh",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
+ "thiserror",
 ]
 
 [[package]]
