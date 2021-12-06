@@ -23,7 +23,8 @@ pub mod timelock {
         cancelable_by_sender: bool,
         cancelable_by_recipient: bool,
         withdrawal_public: bool,
-        transferable: bool,
+        transferable_by_sender: bool,
+        transferable_by_recipient: bool,
         release_rate: u64,
         stream_name: String,
     ) -> ProgramResult {
@@ -38,7 +39,8 @@ pub mod timelock {
             cancelable_by_sender,
             cancelable_by_recipient,
             withdrawal_public,
-            transferable,
+            transferable_by_sender,
+            transferable_by_recipient,
             release_rate,
             stream_name,
         };
@@ -92,7 +94,7 @@ pub mod timelock {
 
     pub fn transfer_recipient(ctx: Context<Transfer>) -> ProgramResult {
         let acc = TransferAccounts {
-            existing_recipient: ctx.accounts.existing_recipient.to_account_info(),
+            authorized_wallet: ctx.accounts.existing_recipient.to_account_info(),
             new_recipient: ctx.accounts.new_recipient.to_account_info(),
             new_recipient_tokens: ctx.accounts.new_recipient_tokens.to_account_info(),
             metadata: ctx.accounts.metadata.to_account_info(),
@@ -117,7 +119,7 @@ pub mod timelock {
             token_program: ctx.accounts.token_program.to_account_info(),
         };
     
-        streamflow_timelock::token::topup_stream(acc, amount)
+        streamflow_timelock::token::topup_stream(ctx.program_id, acc, amount)
     }
 }
 
