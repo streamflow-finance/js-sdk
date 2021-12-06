@@ -53,7 +53,7 @@ export default class Timelock {
    * @param {boolean} transferable_by_sender - Whether or not sender can transfer the stream
    * @param {boolean} transferable_by_recipient - Whether or not recipient can transfer the stream
    * @param {BN} releaseRate - Period rate in recurring payment
-   * @param {String} streamName - Name or subject of the stream
+   * @param {string} streamName - Name or subject of the stream
    */
   static async create(
     connection: Connection,
@@ -74,7 +74,7 @@ export default class Timelock {
     transferable_by_sender: boolean,
     transferable_by_recipient: boolean,
     release_rate: BN,
-    stream_name: String,
+    stream_name: string,
   ): Promise<TransactionSignature> {
     console.log("program", timelockProgramId);
     const program = initProgram(connection, wallet, timelockProgramId);
@@ -306,7 +306,7 @@ export default class Timelock {
  * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
  * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
  * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
- * @param {BN} amount - Spcified amount to topup (increases deposited amount).
+ * @param {BN} amount - Specified amount to topup (increases deposited amount).
  */
   static async topup(
     connection: Connection,

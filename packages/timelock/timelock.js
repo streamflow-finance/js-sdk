@@ -71,7 +71,7 @@ var Timelock = /** @class */ (function () {
      * @param {boolean} transferable_by_sender - Whether or not sender can transfer the stream
      * @param {boolean} transferable_by_recipient - Whether or not recipient can transfer the stream
      * @param {BN} releaseRate - Period rate in recurring payment
-     * @param {String} streamName - Name or subject of the stream
+     * @param {string} streamName - Name or subject of the stream
      */
     Timelock.create = function (connection, wallet, timelockProgramId, newAcc, recipient, mint, depositedAmount, start, end, period, cliff, cliffAmount, cancelable_by_sender, cancelable_by_recipient, withdrawal_public, transferable_by_sender, transferable_by_recipient, release_rate, stream_name) {
         return __awaiter(this, void 0, void 0, function () {
@@ -249,7 +249,7 @@ var Timelock = /** @class */ (function () {
    * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
    * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
-   * @param {BN} amount - Spcified amount to topup (increases deposited amount).
+   * @param {BN} amount - Specified amount to topup (increases deposited amount).
    */
     Timelock.topup = function (connection, wallet, timelockProgramId, stream, amount) {
         return __awaiter(this, void 0, void 0, function () {
