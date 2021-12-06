@@ -1,0 +1,60 @@
+/// <reference types="node" />
+/// <reference types="bn.js" />
+import { PublicKey } from "@solana/web3.js";
+import { BN } from "@project-serum/anchor";
+export declare function decode(buf: Buffer): {
+    magic: BN;
+    created_at: BN;
+    withdrawn_amount: BN;
+    canceled_at: BN;
+    closable_at: BN;
+    last_withdrawn_at: BN;
+    sender: PublicKey;
+    sender_tokens: PublicKey;
+    recipient: PublicKey;
+    recipient_tokens: PublicKey;
+    mint: PublicKey;
+    escrow_tokens: PublicKey;
+    start_time: BN;
+    end_time: BN;
+    deposited_amount: BN;
+    total_amount: BN;
+    period: BN;
+    cliff: BN;
+    cliff_amount: BN;
+    cancelable_by_sender: boolean;
+    cancelable_by_recipient: boolean;
+    withdrawal_public: boolean;
+    transferable_by_sender: boolean;
+    transferable_by_recipient: boolean;
+    release_rate: BN;
+    stream_name: String;
+};
+export interface TokenStreamData {
+    magic: BN;
+    created_at: BN;
+    withdrawn_amount: BN;
+    canceled_at: BN;
+    closable_at: BN;
+    last_withdrawn_at: BN;
+    sender: PublicKey;
+    sender_tokens: PublicKey;
+    recipient: PublicKey;
+    recipient_tokens: PublicKey;
+    mint: PublicKey;
+    escrow_tokens: PublicKey;
+    start_time: BN;
+    end_time: BN;
+    deposited_amount: BN;
+    total_amount: BN;
+    period: BN;
+    cliff: BN;
+    cliff_amount: BN;
+    cancelable_by_sender: boolean;
+    cancelable_by_recipient: boolean;
+    withdrawal_public: boolean;
+    transferable_by_sender: boolean;
+    transferable_by_recipient: boolean;
+    release_rate: BN;
+    stream_name: string;
+}

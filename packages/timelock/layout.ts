@@ -15,8 +15,9 @@ const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>([
   BufferLayout.blob(1, "cancelable_by_sender"),
   BufferLayout.blob(1, "cancelable_by_recipient"),
   BufferLayout.blob(1, "withdrawal_public"),
-  BufferLayout.blob(1, "transferable"),
-  BufferLayout.blob(4, "release_rate"),
+  BufferLayout.blob(1, "transferable by sender"),
+  BufferLayout.blob(1, "transferable by recipient"),
+  BufferLayout.blob(8, "release_rate"),
   BufferLayout.utf8(60, "stream_name"),  //  NUL-terminated C string
 ]);
 
@@ -33,7 +34,8 @@ function decode_stream_instruction(buf: Buffer) {
     cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
     cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
     withdrawal_public: new Boolean(raw.withdrawal_public),
-    transferable: new Boolean(raw.transferable),
+    transferable_by_sender: new Boolean(raw.transferable_by_sender),
+    transferable_by_recipient: new Boolean(raw.transferable_by_recipient),
     release_rate: new BN(raw.release_rate, LE),
     stream_name: new String(raw.stream_name),
   };
@@ -50,7 +52,8 @@ interface StreamInstruction {
   cancelable_by_sender: boolean;
   cancelable_by_recipient: boolean;
   withdrawal_public: boolean;
-  transferable: boolean;
+  transferable_by_sender: boolean;
+  transferable_by_recipient: boolean;
   release_rate: BN;
   stream_name: string;
 }
@@ -78,7 +81,8 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(1, "cancelable_by_sender"),
   BufferLayout.blob(1, "cancelable_by_recipient"),
   BufferLayout.blob(1, "withdrawal_public"),
-  BufferLayout.blob(1, "transferable"),
+  BufferLayout.blob(1, "transferable by sender"),
+  BufferLayout.blob(1, "transferable by recipient"),
   BufferLayout.blob(8, "release_rate"),
   BufferLayout.utf8(200, "stream_name"),  //  it is not NUL-terminated C string
 ]);
@@ -108,7 +112,8 @@ export function decode(buf: Buffer) {
     cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
     cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
     withdrawal_public: new Boolean(raw.withdrawal_public),
-    transferable: new Boolean(raw.transferable),
+    transferable_by_sender: new Boolean(raw.transferable_by_sender),
+    transferable_by_recipient: new Boolean(raw.transferable_by_recipient),
     release_rate: new BN(raw.release_rate, LE),
     stream_name: new String(raw.stream_name),
   };
@@ -137,7 +142,8 @@ export interface TokenStreamData {
   cancelable_by_sender: boolean;
   cancelable_by_recipient: boolean;
   withdrawal_public: boolean;
-  transferable: boolean;
+  transferable_by_sender: boolean;
+  transferable_by_recipient: boolean;
   release_rate: BN;
   stream_name: string;
 }
