@@ -4,8 +4,8 @@
   "description": "SDK to interact with StreamFlow Finance's Timelock program on Solana.",
   "main": "packages/timelock/timelock.js",
   "scripts": {
-    "build": "tsc --outDir ./packages/timelock/dist"
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --outDir ./packages/timelock/dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
