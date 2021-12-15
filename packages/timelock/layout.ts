@@ -18,7 +18,7 @@ const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>([
   BufferLayout.blob(1, "transferable by sender"),
   BufferLayout.blob(1, "transferable by recipient"),
   BufferLayout.blob(8, "release_rate"),
-  BufferLayout.utf8(60, "stream_name"),  //  NUL-terminated C string
+  BufferLayout.utf8(60, "stream_name"), //  NUL-terminated C string
 ]);
 
 function decode_stream_instruction(buf: Buffer) {
@@ -31,13 +31,13 @@ function decode_stream_instruction(buf: Buffer) {
     period: new BN(raw.period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
-    cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
-    cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
-    withdrawal_public: new Boolean(raw.withdrawal_public),
-    transferable_by_sender: new Boolean(raw.transferable_by_sender),
-    transferable_by_recipient: new Boolean(raw.transferable_by_recipient),
+    cancelable_by_sender: Boolean(raw.cancelable_by_sender),
+    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient),
+    withdrawal_public: Boolean(raw.withdrawal_public),
+    transferable_by_sender: Boolean(raw.transferable_by_sender),
+    transferable_by_recipient: Boolean(raw.transferable_by_recipient),
     release_rate: new BN(raw.release_rate, LE),
-    stream_name: new String(raw.stream_name),
+    stream_name: String(raw.stream_name),
   };
 }
 
@@ -84,7 +84,7 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(1, "transferable by sender"),
   BufferLayout.blob(1, "transferable by recipient"),
   BufferLayout.blob(8, "release_rate"),
-  BufferLayout.utf8(200, "stream_name"),  //  it is not NUL-terminated C string
+  BufferLayout.utf8(200, "stream_name"), //  it is not NUL-terminated C string
 ]);
 
 export function decode(buf: Buffer) {
@@ -109,13 +109,13 @@ export function decode(buf: Buffer) {
     period: new BN(raw.period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
-    cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
-    cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
-    withdrawal_public: new Boolean(raw.withdrawal_public),
-    transferable_by_sender: new Boolean(raw.transferable_by_sender),
-    transferable_by_recipient: new Boolean(raw.transferable_by_recipient),
+    cancelable_by_sender: Boolean(raw.cancelable_by_sender),
+    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient),
+    withdrawal_public: Boolean(raw.withdrawal_public),
+    transferable_by_sender: Boolean(raw.transferable_by_sender),
+    transferable_by_recipient: Boolean(raw.transferable_by_recipient),
     release_rate: new BN(raw.release_rate, LE),
-    stream_name: new String(raw.stream_name),
+    stream_name: String(raw.stream_name),
   };
 }
 
