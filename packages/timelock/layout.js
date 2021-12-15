@@ -34,13 +34,13 @@ function decode_stream_instruction(buf) {
         period: new anchor_1.BN(raw.period, LE),
         cliff: new anchor_1.BN(raw.cliff, LE),
         cliff_amount: new anchor_1.BN(raw.cliff_amount, LE),
-        cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
-        cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
-        withdrawal_public: new Boolean(raw.withdrawal_public),
-        transferable_by_sender: new Boolean(raw.transferable_by_sender),
-        transferable_by_recipient: new Boolean(raw.transferable_by_recipient),
+        cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
+        cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
+        withdrawal_public: Boolean(raw.withdrawal_public).valueOf(),
+        transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
+        transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
         release_rate: new anchor_1.BN(raw.release_rate, LE),
-        stream_name: new String(raw.stream_name),
+        stream_name: String(raw.stream_name),
     };
 }
 var TokenStreamDataLayout = buffer_layout_1.default.struct([
@@ -93,13 +93,13 @@ function decode(buf) {
         period: new anchor_1.BN(raw.period, LE),
         cliff: new anchor_1.BN(raw.cliff, LE),
         cliff_amount: new anchor_1.BN(raw.cliff_amount, LE),
-        cancelable_by_sender: new Boolean(raw.cancelable_by_sender),
-        cancelable_by_recipient: new Boolean(raw.cancelable_by_recipient),
-        withdrawal_public: new Boolean(raw.withdrawal_public),
-        transferable_by_sender: new Boolean(raw.transferable_by_sender),
-        transferable_by_recipient: new Boolean(raw.transferable_by_recipient),
+        cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
+        cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
+        withdrawal_public: Boolean(raw.withdrawal_public).valueOf(),
+        transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
+        transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
         release_rate: new anchor_1.BN(raw.release_rate, LE),
-        stream_name: new String(raw.stream_name),
+        stream_name: String(raw.stream_name),
     };
 }
 exports.decode = decode;

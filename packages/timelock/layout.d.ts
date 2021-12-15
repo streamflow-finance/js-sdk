@@ -1,5 +1,4 @@
 /// <reference types="node" />
-/// <reference types="bn.js" />
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 export declare function decode(buf: Buffer): {

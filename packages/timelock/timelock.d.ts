@@ -1,4 +1,3 @@
-/// <reference types="bn.js" />
 import { Address, BN } from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { Connection, Keypair, PublicKey, TransactionSignature } from "@solana/web3.js";

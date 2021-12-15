@@ -24,7 +24,7 @@
     "anchor"
   ],
   "author": "StreamFlow Finance <dev@streamflow.finance>",
-  "license": "AGPL-3.0-or-later",
+  "license": "Business Source License 1.1",
   "bugs": {
     "url": "https://github.com/streamflow-finance/timelock/issues"
   },
