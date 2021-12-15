@@ -16,7 +16,6 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   SYSVAR_RENT_PUBKEY,
   TransactionSignature,
 } from "@solana/web3.js";
@@ -52,8 +51,8 @@ export default class Timelock {
    * @param {boolean} withdrawal_public - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
    * @param {boolean} transferable_by_sender - Whether or not sender can transfer the stream
    * @param {boolean} transferable_by_recipient - Whether or not recipient can transfer the stream
-   * @param {BN} releaseRate - Period rate in recurring payment
-   * @param {string} streamName - Name or subject of the stream
+   * @param {BN} release_rate - Stream release rate
+   * @param {string} stream_name - Stream name
    */
   static async create(
     connection: Connection,
@@ -74,11 +73,9 @@ export default class Timelock {
     transferable_by_sender: boolean,
     transferable_by_recipient: boolean,
     release_rate: BN,
-    stream_name: string,
+    stream_name: string
   ): Promise<TransactionSignature> {
-    console.log("program", timelockProgramId);
     const program = initProgram(connection, wallet, timelockProgramId);
-    console.log("program", program.programId);
     const metadata = newAcc;
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
       [metadata.publicKey.toBuffer()],
@@ -301,13 +298,13 @@ export default class Timelock {
   }
 
   /**
- * Tops up stream account deposited amount
- * @param {Connection} connection
- * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
- * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
- * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
- * @param {BN} amount - Specified amount to topup (increases deposited amount).
- */
+   * Tops up stream account deposited amount
+   * @param {Connection} connection
+   * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
+   * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
+   * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
+   * @param {BN} amount - Specified amount to topup (increases deposited amount).
+   */
   static async topup(
     connection: Connection,
     wallet: Wallet,
@@ -334,5 +331,5 @@ export default class Timelock {
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
-  } 
+  }
 }
