@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use streamflow_timelock::{
-    state::{CancelAccounts, InitializeAccounts, StreamInstruction, TransferAccounts, WithdrawAccounts, TopUpAccounts}
+    state::{CancelAccounts, InitializeAccounts, StreamInstruction, TopUpAccounts, TransferAccounts, WithdrawAccounts}
 };
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -31,8 +31,8 @@ pub mod timelock {
         let ix = StreamInstruction {
             start_time,
             end_time,
-            deposited_amount: deposited_amount,
-            total_amount: total_amount,
+            deposited_amount,
+            total_amount,
             period,
             cliff,
             cliff_amount,
@@ -122,7 +122,6 @@ pub mod timelock {
         streamflow_timelock::token::topup_stream(ctx.program_id, acc, amount)
     }
 }
-
 
 
 #[derive(Accounts)]
