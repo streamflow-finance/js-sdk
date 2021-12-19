@@ -1,7 +1,7 @@
 [package]
 name = "timelock"
-version = "0.1.0"
-description = "Created with Anchor"
+version = "0.2.0"
+description = "Token Vesting program for Solana."
 edition = "2018"
 
 [lib]
