@@ -62,9 +62,7 @@ export default class Timelock {
     cliff: BN,
     cliffAmount: BN
   ): Promise<TransactionSignature> {
-    console.log("program", timelockProgramId);
     const program = initProgram(connection, wallet, timelockProgramId);
-    console.log("program", program.programId);
     const metadata = newAcc;
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
       [metadata.publicKey.toBuffer()],
