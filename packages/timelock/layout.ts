@@ -1,46 +1,9 @@
+// Layout generated for JavaScript applications interacting with Streamflow's Timelock program.
 import BufferLayout from "buffer-layout";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 
 const LE = "le"; //little endian
-
-const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>([
-  BufferLayout.blob(8, "start_time"),
-  BufferLayout.blob(8, "end_time"),
-  BufferLayout.blob(8, "deposited_amount"),
-  BufferLayout.blob(8, "total_amount"),
-  BufferLayout.blob(8, "period"),
-  BufferLayout.blob(8, "cliff"),
-  BufferLayout.blob(8, "cliff_amount"),
-  BufferLayout.blob(1, "is_cancelable_by_sender"),
-  BufferLayout.blob(1, "is_cancelable_by_recipient"),
-  BufferLayout.blob(1, "is_withdrawal_public"),
-  BufferLayout.blob(1, "is_transferable"),
-  BufferLayout.blob(4, "padding"),
-]);
-
-function decode_stream_instruction(buf: Buffer) {
-  let raw = StreamInstructionLayout.decode(buf);
-  return {
-    start_time: new BN(raw.start_time, LE),
-    end_time: new BN(raw.end_time, LE),
-    deposited_amount: new BN(raw.deposited_amount, LE),
-    total_amount: new BN(raw.total_amount, LE),
-    period: new BN(raw.period, LE),
-    cliff: new BN(raw.cliff, LE),
-    cliff_amount: new BN(raw.cliff_amount, LE),
-  };
-}
-
-interface StreamInstruction {
-  start_time: BN;
-  end_time: BN;
-  deposited_amount: BN;
-  total_amount: BN;
-  period: BN;
-  cliff: BN;
-  cliff_amount: BN;
-}
 
 const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(8, "magic"),
@@ -69,7 +32,7 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(4, "padding"),
 ]);
 
-export function decode(buf: Buffer) {
+export function decode_token_stream_data(buf: Buffer) {
   let raw = TokenStreamDataLayout.decode(buf);
   return {
     magic: new BN(raw.magic, LE),

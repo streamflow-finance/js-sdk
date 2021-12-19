@@ -21,7 +21,7 @@ import {
   TransactionSignature,
 } from "@solana/web3.js";
 import idl from "./idl";
-import { decode } from "./layout";
+import { decode_token_stream_data as decode } from "./layout";
 
 function initProgram(
   connection: Connection,
