@@ -1,22 +1,17 @@
 const assert = require("assert");
-const BufferLayout = require("buffer-layout");
 const anchor = require("@project-serum/anchor");
 const common = require("@project-serum/common");
 const {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
-  u64,
   NATIVE_MINT,
 } = require("@solana/spl-token");
 const {
   PublicKey,
   SYSVAR_RENT_PUBKEY,
-  Connection,
   LAMPORTS_PER_SOL,
 } = require("@solana/web3.js");
-const { utils } = require("@project-serum/anchor");
-const { token } = require("@project-serum/common");
 const { decode } = require("./layout");
 const { SystemProgram, Keypair } = anchor.web3;
 const { BN } = anchor;
