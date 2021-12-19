@@ -20,21 +20,14 @@ pub mod timelock {
         cliff: u64,
         cliff_amount: u64,
     ) -> ProgramResult {
-        let ix = StreamInstruction {
+        let ix = StreamInstruction::new(
             start_time,
             end_time,
-            deposited_amount: amount,
-            total_amount: amount,
+            amount,
             period,
             cliff,
             cliff_amount,
-            //TODO: make following parameters programmable in the future release
-            is_cancelable_by_sender: true,
-            is_cancelable_by_recipient: false,
-            is_withdrawal_public: false,
-            is_transferable: true,
-            padding: 0,
-        };
+        );
 
         let acc = InitializeAccounts {
             sender: ctx.accounts.sender.to_account_info(),
