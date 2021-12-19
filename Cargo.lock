@@ -694,9 +694,9 @@ dependencies = [
 
 [[package]]
 name = "memoffset"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59accc507f1338036a0477ef61afdae33cde60840f4dfe481319ce3ad116ddf9"
+checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
 ]
@@ -1153,8 +1153,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "streamflow-timelock"
-version = "0.2.0"
-source = "git+https://github.com/streamflow-finance/streamflow-timelock?rev=769a2629168ec273710a66e150ecb0a0124f3723#769a2629168ec273710a66e150ecb0a0124f3723"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c6452c2a308ce445e0c817ed80d3e3abef5b215eb454ec7159e43464749c1ca"
 dependencies = [
  "borsh",
  "solana-program",
