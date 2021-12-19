@@ -1,0 +1,1 @@
+To load local Rust package (crate), use `path = "../relative/path/to/crate`
