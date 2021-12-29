@@ -119,7 +119,7 @@ export function decode(buf: Buffer) {
   };
 }
 
-export interface TokenStreamData {
+export interface Stream {
   magic: BN;
   created_at: BN;
   withdrawn_amount: BN;
@@ -147,3 +147,5 @@ export interface TokenStreamData {
   release_rate: BN;
   stream_name: string;
 }
+
+export type AccountsType = "sender" | "recipient";

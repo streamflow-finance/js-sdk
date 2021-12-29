@@ -14,69 +14,75 @@ import {
 } from "@solana/spl-token";
 import {
   Connection,
-  Keypair,
   PublicKey,
   SYSVAR_RENT_PUBKEY,
   TransactionSignature,
+  Keypair,
 } from "@solana/web3.js";
 import idl from "./idl";
 import { decode } from "./layout";
+import type { Stream as StreamData, AccountsType } from "./layout";
 
 function initProgram(
   connection: Connection,
   wallet: Wallet,
-  timelockProgramId: Address
+  programId: Address
 ): Program {
   const provider = new Provider(connection, wallet, {});
-  return new Program(idl as Idl, timelockProgramId, provider);
+  return new Program(idl as Idl, programId, provider);
 }
 
-export default class Timelock {
+export const TIMELOCK_STRUCT_OFFSET_SENDER = 48;
+export const TIMELOCK_STRUCT_OFFSET_RECIPIENT = 112;
+
+export default class Stream {
   /**
-   * Creates a new stream/vesting contract. All fees are paid by sender. (escrow metadata account rent, escrow token account, recipient's associated token account creation
+   * Creates a new stream/vesting contract. All fees are paid by sender. (escrow metadata account rent, escrow token account, recipient's associated token account creation)
    * @param {Connection} connection
-   * @param {Wallet} wallet - Wallet signing the transaction.
-   * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
-   * @param {Keypair} newAcc - New escrow account containing all of the stream/vesting contract metadata.
+   * @param {Wallet} sender - Wallet signing the transaction.
+   * @param {Address} programId - Timelock program ID on chain.
    * @param {PublicKey} recipient - Solana address of a recipient. Associated token account will be derived from this address and SPL Token mint address.
+   * @param {PublicKey | null} partner - Partner app or partner wallet.
    * @param {PublicKey} mint - SPL Token mint.
-   * @param {BN} depositedAmount - Initially deposited amount of tokens.
    * @param {BN} start - Timestamp (in seconds) when the tokens start vesting
    * @param {BN} end - Timestamp when all tokens are fully vested
+   * @param {BN} depositedAmount - Initially deposited amount of tokens.
    * @param {BN} period - Time step (period) in seconds per which the vesting occurs
    * @param {BN} cliff - Vesting contract "cliff" timestamp
    * @param {BN} cliffAmount - Amount unlocked at the "cliff" timestamp
-   * @param {boolean} cancelable_by_sender - Can sender cancel stream
-   * @param {boolean} cancelable_by_recipient - Can recepient cancel stream
-   * @param {boolean} withdrawal_public - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
-   * @param {boolean} transferable_by_sender - Whether or not sender can transfer the stream
-   * @param {boolean} transferable_by_recipient - Whether or not recipient can transfer the stream
-   * @param {BN} release_rate - Stream release rate
-   * @param {string} stream_name - Stream name
+   * @param {BN} amountPerPeriod - Release rate
+   * @param {string} name - Name/Subject
+   * @param {boolean} canTopup - Specific for vesting contracts. TRUE for vesting contracts, FALSE for streams.
+   * @param {boolean} cancelableBySender - Can sender cancel stream
+   * @param {boolean} cancelableByRecipient - Can recepient cancel stream
+   * @param {boolean} transferableBySender - Whether or not sender can transfer the stream
+   * @param {boolean} transferableByRecipient - Whether or not recipient can transfer the stream
+   * @param {boolean} automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
    */
   static async create(
     connection: Connection,
-    wallet: Wallet,
-    timelockProgramId: Address,
-    newAcc: Keypair,
+    sender: Wallet,
+    programId: Address,
     recipient: PublicKey,
+    partner: PublicKey | null,
     mint: PublicKey,
-    depositedAmount: BN,
     start: BN,
     end: BN,
+    depositedAmount: BN,
     period: BN,
     cliff: BN,
     cliffAmount: BN,
-    cancelable_by_sender: boolean,
-    cancelable_by_recipient: boolean,
-    withdrawal_public: boolean,
-    transferable_by_sender: boolean,
-    transferable_by_recipient: boolean,
-    release_rate: BN,
-    stream_name: string
+    amountPerPeriod: BN,
+    name: string,
+    canTopup: boolean,
+    cancelableBySender: boolean,
+    cancelableByRecipient: boolean,
+    transferableBySender: boolean,
+    transferableByRecipient: boolean,
+    automaticWithdrawal: boolean
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet, timelockProgramId);
-    const metadata = newAcc;
+    const program = initProgram(connection, sender, programId);
+    const metadata = Keypair.generate();
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
       [metadata.publicKey.toBuffer()],
       program.programId
@@ -85,7 +91,7 @@ export default class Timelock {
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       mint,
-      wallet.publicKey
+      sender.publicKey
     );
     let signers = [metadata];
     let instructions = undefined;
@@ -106,16 +112,16 @@ export default class Timelock {
       period,
       cliff,
       cliffAmount,
-      cancelable_by_sender,
-      cancelable_by_recipient,
-      withdrawal_public,
-      transferable_by_sender,
-      transferable_by_recipient,
-      release_rate,
-      stream_name,
+      cancelableBySender,
+      cancelableByRecipient,
+      automaticWithdrawal,
+      transferableBySender,
+      transferableByRecipient,
+      amountPerPeriod,
+      name,
       {
         accounts: {
-          sender: wallet.publicKey,
+          sender: sender.publicKey,
           senderTokens,
           recipient,
           recipientTokens,
@@ -144,12 +150,12 @@ export default class Timelock {
    */
   static async withdraw(
     connection: Connection,
-    wallet: Wallet,
-    timelockProgramId: Address,
+    invoker: Wallet,
+    programId: Address,
     stream: PublicKey,
     amount: BN
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet, timelockProgramId);
+    const program = initProgram(connection, invoker, programId);
     const escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
@@ -158,9 +164,9 @@ export default class Timelock {
 
     return await program.rpc.withdraw(amount, {
       accounts: {
-        withdrawAuthority: wallet.publicKey,
+        withdrawAuthority: invoker.publicKey,
         sender: data.sender,
-        recipient: wallet.publicKey,
+        recipient: invoker.publicKey,
         recipientTokens: data.recipient_tokens,
         metadata: stream,
         escrowTokens: data.escrow_tokens,
@@ -180,10 +186,10 @@ export default class Timelock {
   static async cancel(
     connection: Connection,
     wallet: Wallet,
-    timelockProgramId: Address,
+    programId: Address,
     stream: PublicKey
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet, timelockProgramId);
+    const program = initProgram(connection, wallet, programId);
     let escrow_acc = await connection.getAccountInfo(stream);
     if (!escrow_acc?.data) {
       throw new Error("Couldn't get account info");
@@ -217,11 +223,11 @@ export default class Timelock {
   static async transferRecipient(
     connection: Connection,
     wallet: Wallet,
-    timelockProgramId: Address,
+    programId: Address,
     stream: PublicKey,
     newRecipient: PublicKey
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet, timelockProgramId);
+    const program = initProgram(connection, wallet, programId);
     let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
@@ -262,12 +268,12 @@ export default class Timelock {
    */
   static async topup(
     connection: Connection,
-    wallet: Wallet,
-    timelockProgramId: Address,
+    invoker: Wallet,
+    programId: Address,
     stream: PublicKey,
     amount: BN
   ): Promise<TransactionSignature> {
-    const program = initProgram(connection, wallet, timelockProgramId);
+    const program = initProgram(connection, invoker, programId);
     let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
@@ -278,7 +284,7 @@ export default class Timelock {
 
     return await program.rpc.topup(amount, {
       accounts: {
-        sender: wallet.publicKey,
+        sender: invoker.publicKey,
         senderTokens: data.sender_tokens,
         metadata: stream,
         escrowTokens: data.escrow_tokens,
@@ -286,5 +292,64 @@ export default class Timelock {
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
+  }
+
+  /**
+   * Get stream by ID
+   * @param {Connection} connection
+   * @param {Wallet} wallet
+   * @param {PublicKey} streamID
+   */
+  static async getOne(
+    connection: Connection,
+    streamID: PublicKey
+  ): Promise<StreamData> {
+    const escrow = await connection.getAccountInfo(streamID);
+    if (!escrow?.data) {
+      throw new Error("Couldn't get account info.");
+    }
+
+    return decode(escrow?.data);
+  }
+
+  /**
+   * Get streams
+   * @param {Connection} connection
+   * @param {Address} programID
+   * @param {Wallet} wallet
+   * @param {AccountsType}type
+   */
+  static async get(
+    connection: Connection,
+    programId: Address,
+    wallet: Wallet,
+    type: AccountsType
+  ): Promise<{ [s: string]: StreamData }> {
+    const offset =
+      type === "sender"
+        ? TIMELOCK_STRUCT_OFFSET_SENDER
+        : TIMELOCK_STRUCT_OFFSET_RECIPIENT;
+
+    const accounts = await connection?.getProgramAccounts(
+      new PublicKey(programId),
+      {
+        filters: [
+          {
+            memcmp: {
+              offset,
+              bytes: wallet.publicKey?.toBase58(),
+            },
+          },
+        ],
+      }
+    );
+
+    let transactions = {};
+    accounts.forEach((account) => {
+      const decoded = decode(account.account.data);
+      transactions = { ...transactions, [account.pubkey.toBase58()]: decoded };
+    });
+
+    return transactions;
   }
 }

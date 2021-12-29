@@ -30,6 +30,7 @@
   "homepage": "https://github.com/streamflow-finance/timelock#readme",
   "dependencies": {
     "@project-serum/anchor": "^0.16.2",
+    "@project-serum/common": "^0.0.1-beta.3",
     "@project-serum/sol-wallet-adapter": "^0.2.5",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.29.2"
