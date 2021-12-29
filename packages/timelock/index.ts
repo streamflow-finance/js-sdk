@@ -89,51 +89,6 @@ export default class Timelock {
     );
     let signers = [metadata];
     let instructions = undefined;
-    // if (mint.toBase58() === NATIVE_MINT.toBase58()) {
-    //   //this effectively means new account is created for each wSOL stream, as we can't derive it.
-    //   instructions = [];
-    //   const balanceNeeded = await Token.getMinBalanceRentForExemptAccount(
-    //     connection
-    //   );
-    //   // Create a new account
-    //   const newAccount = Keypair.generate(); //todo this is not an associated token account????
-    //
-    //   signers.push(newAccount);
-    //
-    //   senderTokens = newAccount.publicKey;
-    //   instructions.push(
-    //     SystemProgram.createAccount({
-    //       fromPubkey: wallet.publicKey,
-    //       newAccountPubkey: newAccount.publicKey,
-    //       lamports: balanceNeeded,
-    //       space: AccountLayout.span,
-    //       programId: TOKEN_PROGRAM_ID,
-    //     })
-    //   );
-    //
-    //   // Send lamports to it (these will be wrapped into native tokens by the token program)
-    //   instructions.push(
-    //     SystemProgram.transfer({
-    //       fromPubkey: wallet.publicKey,
-    //       toPubkey: newAccount.publicKey,
-    //       lamports: depositedAmount.toNumber(),
-    //     })
-    //   );
-    //
-    //   // Assign the new account to the native token mint.
-    //   // the account will be initialized with a balance equal to the native token balance.
-    //   // (i.e. amount)
-    //   instructions.push(
-    //     Token.createInitAccountInstruction(
-    //       TOKEN_PROGRAM_ID,
-    //       NATIVE_MINT,
-    //       newAccount.publicKey,
-    //       wallet.publicKey
-    //     )
-    //   );
-    //   //TODO: figure out a way to create wrapped SOL account as an associated token account
-    //   //instructions.push(Token.createAssociatedTokenAccountInstruction(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, mint, newAccount.publicKey, wallet.publicKey, wallet.publicKey))
-    // }
 
     const recipientTokens = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
