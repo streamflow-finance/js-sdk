@@ -14,7 +14,7 @@ const StreamInstructionLayout = BufferLayout.struct<StreamInstruction>([
   BufferLayout.blob(8, "cliff_amount"),
   BufferLayout.blob(1, "cancelable_by_sender"),
   BufferLayout.blob(1, "cancelable_by_recipient"),
-  BufferLayout.blob(1, "withdrawal_public"),
+  BufferLayout.blob(1, "automatic_withdrawal"),
   BufferLayout.blob(1, "transferable by sender"),
   BufferLayout.blob(1, "transferable by recipient"),
   BufferLayout.blob(8, "release_rate"),
@@ -33,7 +33,7 @@ function decode_stream_instruction(buf: Buffer) {
     cliff_amount: new BN(raw.cliff_amount, LE),
     cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
     cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
-    withdrawal_public: Boolean(raw.withdrawal_public).valueOf(),
+    automatic_withdrawal: Boolean(raw.automatic_withdrawal).valueOf(),
     transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
     transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
     release_rate: new BN(raw.release_rate, LE),
@@ -51,7 +51,7 @@ interface StreamInstruction {
   cliff_amount: BN;
   cancelable_by_sender: boolean;
   cancelable_by_recipient: boolean;
-  withdrawal_public: boolean;
+  automatic_withdrawal: boolean;
   transferable_by_sender: boolean;
   transferable_by_recipient: boolean;
   release_rate: BN;
@@ -80,7 +80,7 @@ const TokenStreamDataLayout = BufferLayout.struct<TokenStreamData>([
   BufferLayout.blob(8, "cliff_amount"),
   BufferLayout.blob(1, "cancelable_by_sender"),
   BufferLayout.blob(1, "cancelable_by_recipient"),
-  BufferLayout.blob(1, "withdrawal_public"),
+  BufferLayout.blob(1, "automatic_withdrawal"),
   BufferLayout.blob(1, "transferable by sender"),
   BufferLayout.blob(1, "transferable by recipient"),
   BufferLayout.blob(8, "release_rate"),
@@ -111,7 +111,7 @@ export function decode(buf: Buffer) {
     cliff_amount: new BN(raw.cliff_amount, LE),
     cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
     cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
-    withdrawal_public: Boolean(raw.withdrawal_public).valueOf(),
+    automatic_withdrawal: Boolean(raw.automatic_withdrawal).valueOf(),
     transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
     transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
     release_rate: new BN(raw.release_rate, LE),
@@ -141,11 +141,12 @@ export interface Stream {
   cliff_amount: BN;
   cancelable_by_sender: boolean;
   cancelable_by_recipient: boolean;
-  withdrawal_public: boolean;
+  automatic_withdrawal: boolean;
   transferable_by_sender: boolean;
   transferable_by_recipient: boolean;
   release_rate: BN;
   stream_name: string;
 }
 
-export type AccountsType = "sender" | "recipient";
+export type StreamDirectionType = "outgoing" | "incoming" | "all";
+export type StreamType = "stream" | "vesting" | "all"; //wutevs

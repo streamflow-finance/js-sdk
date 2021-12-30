@@ -14,14 +14,19 @@ import {
 } from "@solana/spl-token";
 import {
   Connection,
+  Keypair,
   PublicKey,
+  SystemProgram,
   SYSVAR_RENT_PUBKEY,
   TransactionSignature,
-  Keypair,
 } from "@solana/web3.js";
 import idl from "./idl";
+import type {
+  Stream as StreamData,
+  StreamDirectionType,
+  StreamType,
+} from "./layout";
 import { decode } from "./layout";
-import type { Stream as StreamData, AccountsType } from "./layout";
 
 function initProgram(
   connection: Connection,
@@ -40,7 +45,6 @@ export default class Stream {
    * Creates a new stream/vesting contract. All fees are paid by sender. (escrow metadata account rent, escrow token account, recipient's associated token account creation)
    * @param {Connection} connection
    * @param {Wallet} sender - Wallet signing the transaction.
-   * @param {Address} programId - Timelock program ID on chain.
    * @param {PublicKey} recipient - Solana address of a recipient. Associated token account will be derived from this address and SPL Token mint address.
    * @param {PublicKey | null} partner - Partner app or partner wallet.
    * @param {PublicKey} mint - SPL Token mint.
@@ -62,7 +66,6 @@ export default class Stream {
   static async create(
     connection: Connection,
     sender: Wallet,
-    programId: Address,
     recipient: PublicKey,
     partner: PublicKey | null,
     mint: PublicKey,
@@ -123,16 +126,21 @@ export default class Stream {
         accounts: {
           sender: sender.publicKey,
           senderTokens,
-          recipient,
-          recipientTokens,
+          recipient: recipient.publicKey,
           metadata: metadata.publicKey,
+          recipientTokens,
           escrowTokens,
           mint,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: web3.SystemProgram.programId,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          streamflowTreasury: STREAMFLOW_TREASURY,
+          streamflowTreasuryTokens: streamflowTreasuryTokens,
+          partner: STREAMFLOW_TREASURY,
+          partnerTokens: streamflowTreasuryTokens,
+          feeOracle: streamflowTreasuryTokens,
         },
         signers,
         instructions,
@@ -143,15 +151,13 @@ export default class Stream {
   /**
    * Attempts withdrawal from a specified stream.
    * @param {Connection} connection
-   * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
-   * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
+   * @param {Wallet} invoker - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be withdrawn from.
    * @param {BN} amount - Requested amount to withdraw. If BN(0), program attempts to withdraw maximum available amount.
    */
   static async withdraw(
     connection: Connection,
     invoker: Wallet,
-    programId: Address,
     stream: PublicKey,
     amount: BN
   ): Promise<TransactionSignature> {
@@ -164,13 +170,17 @@ export default class Stream {
 
     return await program.rpc.withdraw(amount, {
       accounts: {
-        withdrawAuthority: invoker.publicKey,
-        sender: data.sender,
-        recipient: invoker.publicKey,
-        recipientTokens: data.recipient_tokens,
-        metadata: stream,
-        escrowTokens: data.escrow_tokens,
-        mint: data.mint,
+        authority: recipient.publicKey,
+        recipient: recipient.publicKey,
+        recipientTokens,
+        metadata: metadata.publicKey,
+        escrowTokens,
+        streamflowTreasury: STREAMFLOW_TREASURY,
+        streamflowTreasuryTokens: streamflowTreasuryTokens,
+        partner: STREAMFLOW_TREASURY,
+        partnerTokens: streamflowTreasuryTokens,
+        feeOracle: STREAMFLOW_TREASURY,
+        mint,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
@@ -186,9 +196,9 @@ export default class Stream {
   static async cancel(
     connection: Connection,
     wallet: Wallet,
-    programId: Address,
     stream: PublicKey
   ): Promise<TransactionSignature> {
+    //todo: program ID is set within the SDK, not passed from the client side
     const program = initProgram(connection, wallet, programId);
     let escrow_acc = await connection.getAccountInfo(stream);
     if (!escrow_acc?.data) {
@@ -198,16 +208,22 @@ export default class Stream {
 
     return await program.rpc.cancel({
       accounts: {
-        cancelAuthority: wallet.publicKey,
-        sender: wallet.publicKey,
-        senderTokens: data.sender_tokens,
-        recipient: data.recipient,
-        recipientTokens: data.recipient_tokens,
-        metadata: stream,
-        escrowTokens: data.escrow_tokens,
-        mint: data.mint,
+        authority: sender.publicKey,
+        sender: sender.publicKey,
+        senderTokens,
+        recipient: recipient.publicKey,
+        recipientTokens,
+        metadata: metadata.publicKey,
+        escrowTokens,
+        streamflowTreasury: STREAMFLOW_TREASURY,
+        streamflowTreasuryTokens: streamflowTreasuryTokens,
+        partner: STREAMFLOW_TREASURY,
+        partnerTokens: streamflowTreasuryTokens,
+        mint,
         tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       },
+      signers: [sender.payer],
     });
   }
 
@@ -244,7 +260,7 @@ export default class Stream {
 
     return await program.rpc.transferRecipient({
       accounts: {
-        existingRecipient: wallet.publicKey,
+        authority: wallet.publicKey,
         newRecipient,
         newRecipientTokens,
         metadata: stream,
@@ -262,14 +278,12 @@ export default class Stream {
    * Tops up stream account deposited amount
    * @param {Connection} connection
    * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
-   * @param {Address} timelockProgramId - Program ID of a timelock program on chain.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {BN} amount - Specified amount to topup (increases deposited amount).
    */
   static async topup(
     connection: Connection,
     invoker: Wallet,
-    programId: Address,
     stream: PublicKey,
     amount: BN
   ): Promise<TransactionSignature> {
@@ -288,6 +302,10 @@ export default class Stream {
         senderTokens: data.sender_tokens,
         metadata: stream,
         escrowTokens: data.escrow_tokens,
+        streamflowTreasury: STREAMFLOW_TREASURY,
+        streamflowTreasuryTokens: streamflowTreasuryTokens,
+        partner: STREAMFLOW_TREASURY,
+        partnerTokens: streamflowTreasuryTokens,
         mint,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
@@ -315,21 +333,22 @@ export default class Stream {
   /**
    * Get streams
    * @param {Connection} connection
-   * @param {Address} programID
    * @param {Wallet} wallet
-   * @param {AccountsType}type
+   * @param {StreamType} type
+   * @param {StreamDirectionType} direction
    */
   static async get(
     connection: Connection,
-    programId: Address,
     wallet: Wallet,
-    type: AccountsType
+    type: StreamType = "all",
+    direction: StreamDirectionType = "all"
   ): Promise<{ [s: string]: StreamData }> {
     const offset =
-      type === "sender"
+      direction === "outgoing"
         ? TIMELOCK_STRUCT_OFFSET_SENDER
         : TIMELOCK_STRUCT_OFFSET_RECIPIENT;
 
+    //todo: we need to be smart with our layout so we minimize rpc call to the chain
     const accounts = await connection?.getProgramAccounts(
       new PublicKey(programId),
       {
