@@ -178,8 +178,6 @@ pub struct Withdraw<'info> {
     #[account()]
     pub authority: Signer<'info>,
     #[account(mut)]
-    pub sender: AccountInfo<'info>,
-    #[account(mut)]
     pub recipient: AccountInfo<'info>,
     #[account(mut)]
     pub recipient_tokens: Account<'info, TokenAccount>,
