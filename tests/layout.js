@@ -32,11 +32,11 @@ var TokenStreamDataLayout = buffer_layout_1.default.struct([
   buffer_layout_1.default.blob(8, "cliff_amount"),
   buffer_layout_1.default.blob(1, "cancelable_by_sender"),
   buffer_layout_1.default.blob(1, "cancelable_by_recipient"),
-  buffer_layout_1.default.blob(1, "withdrawal_public"),
+  buffer_layout_1.default.blob(1, "automatic_withdrawal"),
   buffer_layout_1.default.blob(1, "transferable_by_sender"),
   buffer_layout_1.default.blob(1, "transferable_by_recipient"),
   buffer_layout_1.default.blob(1, "can_topup"),
-  buffer_layout_1.default.utf8(64, "stream_name"), //  NUL-terminated C string
+  buffer_layout_1.default.blob(64, "stream_name"), //  NUL-terminated C string
 ]);
 
 function decode(buf) {
@@ -62,11 +62,11 @@ function decode(buf) {
     cliff_amount: new anchor_1.BN(raw.cliff_amount, LE),
     cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
     cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
-    withdrawal_public: Boolean(raw.withdrawal_public).valueOf(),
+    automatic_withdrawal: Boolean(raw.automatic_withdrawal).valueOf(),
     transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
     transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
     can_topup: Boolean(raw.can_topup).valueOf(),
-    stream_name: String(raw.stream_name),
+    stream_name: raw.stream_name.toString(),
   };
 }
 
