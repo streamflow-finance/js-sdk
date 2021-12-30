@@ -36,7 +36,7 @@ var TokenStreamDataLayout = buffer_layout_1.default.struct([
   buffer_layout_1.default.blob(1, "transferable_by_sender"),
   buffer_layout_1.default.blob(1, "transferable_by_recipient"),
   buffer_layout_1.default.blob(1, "can_topup"),
-  buffer_layout_1.default.blob(64, "stream_name"), //  NUL-terminated C string
+  buffer_layout_1.default.utf8(200, "stream_name"), //  NUL-terminated C string
 ]);
 
 function decode(buf) {
@@ -66,7 +66,7 @@ function decode(buf) {
     transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
     transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
     can_topup: Boolean(raw.can_topup).valueOf(),
-    stream_name: raw.stream_name.toString(),
+    stream_name: String(raw.stream_name),
   };
 }
 
