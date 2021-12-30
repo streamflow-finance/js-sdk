@@ -2,12 +2,12 @@ use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use streamflow_timelock::{
-    cancel::{cancel, CancelAccounts},
-    create::{create, CreateAccounts},
-    state::{Contract, CreateParams},
-    topup::{topup, TopupAccounts},
-    transfer::{transfer_recipient, TransferAccounts},
-    withdraw::{withdraw, WithdrawAccounts},
+    cancel::CancelAccounts,
+    create::CreateAccounts,
+    state::CreateParams,
+    topup::TopupAccounts,
+    transfer::TransferAccounts,
+    withdraw::WithdrawAccounts,
 };
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -30,7 +30,7 @@ pub mod timelock {
         transferable_by_sender: bool,
         transferable_by_recipient: bool,
         can_topup: bool,
-        stream_name: String,
+        stream_name: String,//can't use constant for size here, Anchor's IDL parser not ready yet.
     ) -> ProgramResult {
         let ix = CreateParams {
             start_time,
@@ -41,7 +41,7 @@ pub mod timelock {
             cliff_amount,
             cancelable_by_sender,
             cancelable_by_recipient,
-            withdrawal_public: automatic_withdrawal,
+            automatic_withdrawal,
             transferable_by_sender,
             transferable_by_recipient,
             can_topup,
