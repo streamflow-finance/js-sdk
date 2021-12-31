@@ -109,10 +109,9 @@ export default class Stream {
     return await program.rpc.create(
       // Order of the parameters must match the ones in program
       start,
-      end,
-      depositedAmount,
       depositedAmount,
       period,
+      amountPerPeriod,
       cliff,
       cliffAmount,
       cancelableBySender,
@@ -120,13 +119,13 @@ export default class Stream {
       automaticWithdrawal,
       transferableBySender,
       transferableByRecipient,
-      amountPerPeriod,
+      canTopup,
       name,
       {
         accounts: {
           sender: sender.publicKey,
           senderTokens,
-          recipient: recipient.publicKey,
+          recipient: recipient,
           metadata: metadata.publicKey,
           recipientTokens,
           escrowTokens,
@@ -170,18 +169,19 @@ export default class Stream {
 
     return await program.rpc.withdraw(amount, {
       accounts: {
-        authority: recipient.publicKey,
-        recipient: recipient.publicKey,
-        recipientTokens,
-        metadata: metadata.publicKey,
-        escrowTokens,
+        authority: invoker.publicKey,
+        sender: data.sender,
+        recipient: invoker.publicKey,
+        recipientTokens: data.recipient_tokens,
+        metadata: stream,
+        escrowTokens: data.escrow_tokens,
+        mint: data.mint,
+        tokenProgram: TOKEN_PROGRAM_ID,
         streamflowTreasury: STREAMFLOW_TREASURY,
         streamflowTreasuryTokens: streamflowTreasuryTokens,
         partner: STREAMFLOW_TREASURY,
         partnerTokens: streamflowTreasuryTokens,
         feeOracle: STREAMFLOW_TREASURY,
-        mint,
-        tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
   }
@@ -208,20 +208,19 @@ export default class Stream {
 
     return await program.rpc.cancel({
       accounts: {
-        authority: sender.publicKey,
-        sender: sender.publicKey,
-        senderTokens,
-        recipient: recipient.publicKey,
-        recipientTokens,
-        metadata: metadata.publicKey,
-        escrowTokens,
+        authority: wallet.publicKey,
+        sender: wallet.publicKey,
+        senderTokens: data.sender_tokens,
+        recipient: data.recipient,
+        recipientTokens: data.recipient_tokens,
+        metadata: stream,
+        escrowTokens: data.escrow_tokens,
+        mint: data.mint,
+        tokenProgram: TOKEN_PROGRAM_ID,
         streamflowTreasury: STREAMFLOW_TREASURY,
         streamflowTreasuryTokens: streamflowTreasuryTokens,
         partner: STREAMFLOW_TREASURY,
         partnerTokens: streamflowTreasuryTokens,
-        mint,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
       },
       signers: [sender.payer],
     });
@@ -264,7 +263,6 @@ export default class Stream {
         newRecipient,
         newRecipientTokens,
         metadata: stream,
-        escrowTokens: data.escrow_tokens,
         mint,
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -308,6 +306,10 @@ export default class Stream {
         partnerTokens: streamflowTreasuryTokens,
         mint,
         tokenProgram: TOKEN_PROGRAM_ID,
+        streamflowTreasury: ,
+        streamflowTreasuryTokens:,
+        partner: ,
+        partnerTokens: ,
       },
     });
   }
