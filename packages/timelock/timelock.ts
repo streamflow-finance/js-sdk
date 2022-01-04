@@ -17,7 +17,7 @@ import type { Stream as StreamData, StreamDirectionType } from "./layout";
 import { decode } from "./layout";
 import idl from "./idl";
 
-const PROGRAM_ID = "GutMKXfaxeoi8yg6UymENGm8BRTZ9RU3RSRLoJuCFaH8";
+const PROGRAM_ID = "sfkEBYd2MMWmQqVsKojFGM5i3sj87NwQkrTbuwBze81";
 const TIMELOCK_STRUCT_OFFSET_SENDER = 48;
 const TIMELOCK_STRUCT_OFFSET_RECIPIENT = 112;
 const STREAMFLOW_TREASURY = new PublicKey(
