@@ -10,7 +10,7 @@ use streamflow_timelock::{
     withdraw::WithdrawAccounts,
 };
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("GutMKXfaxeoi8yg6UymENGm8BRTZ9RU3RSRLoJuCFaH8");
 
 #[program]
 pub mod timelock {

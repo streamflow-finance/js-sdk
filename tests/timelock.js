@@ -1,5 +1,4 @@
 const assert = require("assert");
-const BufferLayout = require("buffer-layout");
 const anchor = require("@project-serum/anchor");
 const common = require("@project-serum/common");
 const {
@@ -16,8 +15,6 @@ const {
   Connection,
   LAMPORTS_PER_SOL,
 } = require("@solana/web3.js");
-const { utils } = require("@project-serum/anchor");
-const { token, connection } = require("@project-serum/common");
 const { decode } = require("./layout");
 const { SystemProgram, Keypair } = anchor.web3;
 const { BN } = anchor;
@@ -69,18 +66,6 @@ describe("timelock", () => {
       mint,
       sender.publicKey
     );
-
-    // console.log(
-    //   "account",
-    //   senderTokens.toBase58(),
-    //   "mint",
-    //   senderTokensData.mint.toBase58(),
-    //   "amount",
-    //   senderTokensData.amount / LAMPORTS_PER_SOL,
-    //   "owner",
-    //   senderTokensData.owner.toBase58(),
-    //   senderTokensData.owner.toBase58() === sender.publicKey.toBase58()
-    // );
 
     [escrowTokens, nonce] = await PublicKey.findProgramAddress(
       [Buffer("strm"), metadata.publicKey.toBuffer()],
