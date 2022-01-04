@@ -110,10 +110,9 @@ export interface Stream {
   partner: PublicKey;
   partner_tokens: PublicKey;
   start_time: BN;
-  end_time: BN;
   net_deposited_amount: BN;
-  total_amount: BN;
   period: BN;
+  amount_per_period: BN;
   cliff: BN;
   cliff_amount: BN;
   cancelable_by_sender: boolean;
@@ -121,9 +120,8 @@ export interface Stream {
   automatic_withdrawal: boolean;
   transferable_by_sender: boolean;
   transferable_by_recipient: boolean;
-  amount_per_period: BN;
-  stream_name: string;
   can_topup: boolean;
+  stream_name: string;
 }
 
 export type StreamDirectionType = "outgoing" | "incoming" | "all";
