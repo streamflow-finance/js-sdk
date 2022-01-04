@@ -55,7 +55,6 @@ export default class Timelock {
     connection: Connection,
     sender: Wallet,
     recipient: PublicKey,
-    partner: PublicKey | null,
     mint: PublicKey,
     start: BN,
     depositedAmount: BN,
@@ -69,7 +68,8 @@ export default class Timelock {
     cancelableByRecipient: boolean,
     transferableBySender: boolean,
     transferableByRecipient: boolean,
-    automaticWithdrawal: boolean
+    automaticWithdrawal: boolean,
+    partner: PublicKey | null = null
   ): Promise<TransactionSignature> {
     const program = initProgram(connection, sender);
 
