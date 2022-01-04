@@ -51,7 +51,7 @@ export function decode(buf: Buffer) {
     created_at: new BN(raw.created_at, LE),
     withdrawn_amount: new BN(raw.withdrawn_amount, LE),
     canceled_at: new BN(raw.canceled_at, LE),
-    closable_at: new BN(raw.closable_at, LE),
+    end_time: new BN(raw.end_time, LE),
     last_withdrawn_at: new BN(raw.last_withdrawn_at, LE),
     sender: new PublicKey(raw.sender),
     sender_tokens: new PublicKey(raw.sender_tokens),
@@ -91,7 +91,7 @@ export interface Stream {
   created_at: BN;
   withdrawn_amount: BN;
   canceled_at: BN;
-  closable_at: BN;
+  end_time: BN;
   last_withdrawn_at: BN;
   sender: PublicKey;
   sender_tokens: PublicKey;
