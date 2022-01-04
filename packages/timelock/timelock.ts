@@ -99,7 +99,13 @@ export default class Timelock {
       STREAMFLOW_TREASURY
     );
 
-    const partnerTokens = null;
+    const partnerTokens = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      partner || STREAMFLOW_TREASURY
+    );
+
     const signers = [metadata];
 
     return await program.rpc.create(
@@ -128,7 +134,7 @@ export default class Timelock {
           streamflowTreasury: STREAMFLOW_TREASURY,
           streamflowTreasuryTokens: streamflowTreasuryTokens,
           partner: partner || STREAMFLOW_TREASURY,
-          partnerTokens: partnerTokens || streamflowTreasuryTokens,
+          partnerTokens: partnerTokens,
           mint,
           feeOracle: STREAMFLOW_TREASURY,
           rent: SYSVAR_RENT_PUBKEY,
