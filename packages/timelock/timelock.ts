@@ -46,7 +46,7 @@ export default class Timelock {
    * @param {string} name - Name/Subject
    * @param {boolean} canTopup - Specific for vesting contracts. TRUE for vesting contracts, FALSE for streams.
    * @param {boolean} cancelableBySender - Can sender cancel stream
-   * @param {boolean} cancelableByRecipient - Can recepient cancel stream
+   * @param {boolean} cancelableByRecipient - Can recipient cancel stream
    * @param {boolean} transferableBySender - Whether or not sender can transfer the stream
    * @param {boolean} transferableByRecipient - Whether or not recipient can transfer the stream
    * @param {boolean} automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
