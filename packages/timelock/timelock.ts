@@ -75,7 +75,7 @@ export default class Timelock {
 
     const metadata = Keypair.generate();
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
-      [metadata.publicKey.toBuffer()],
+      [Buffer.from("strm"), metadata.publicKey.toBuffer()],
       program.programId
     );
     const senderTokens = await Token.getAssociatedTokenAddress(
