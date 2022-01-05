@@ -75,12 +75,20 @@ export function decode(buf: Buffer) {
     amount_per_period: new BN(raw.amount_per_period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
-    cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
-    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
-    automatic_withdrawal: Boolean(raw.automatic_withdrawal).valueOf(),
-    transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
-    transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
-    can_topup: Boolean(raw.can_topup).valueOf(),
+    // @ts-ignore
+    cancelable_by_sender: Boolean(raw.cancelable_by_sender.readUInt8()),
+    // @ts-ignore
+    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient.readUInt8()),
+    // @ts-ignore
+    automatic_withdrawal: Boolean(raw.automatic_withdrawal.readUInt8()),
+    // @ts-ignore
+    transferable_by_sender: Boolean(raw.transferable_by_sender.readUInt8()),
+    transferable_by_recipient: Boolean(
+      // @ts-ignore
+      raw.transferable_by_recipient.readUInt8()
+    ),
+    // @ts-ignore
+    can_topup: Boolean(raw.can_topup.readUInt8()),
     stream_name: String(raw.stream_name),
   };
 }
