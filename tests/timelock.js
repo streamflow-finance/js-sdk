@@ -5,14 +5,10 @@ const {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
-  u64,
-  NATIVE_MINT,
-  transfer,
 } = require("@solana/spl-token");
 const {
   PublicKey,
   SYSVAR_RENT_PUBKEY,
-  Connection,
   LAMPORTS_PER_SOL,
 } = require("@solana/web3.js");
 const { decode } = require("./layout");
@@ -42,7 +38,7 @@ describe("timelock", () => {
   let senderTokens;
   let vault;
 
-  // Divide by 1000 since Unix timestamp is seconds
+  // Divide by 1000 to convert milliseconds to Unix timestamp (seconds)
   let start = new BN(+new Date() / 1000 + 4); //add several seconds to make sure this time is not in the past at the time of program invocation.
   // +60 seconds
   let end = new BN(+new Date() / 1000 + 60);
@@ -60,12 +56,7 @@ describe("timelock", () => {
       MINT_DECIMALS
     );
 
-    senderTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      sender.publicKey
-    );
+    senderTokens = await ata(mint, sender.publicKey);
 
     [escrowTokens, nonce] = await PublicKey.findProgramAddress(
       [Buffer("strm"), metadata.publicKey.toBuffer()],
@@ -74,19 +65,9 @@ describe("timelock", () => {
 
     console.log("ESCROW TOKENS: ", escrowTokens.toString());
 
-    recipientTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      recipient.publicKey
-    );
+    recipientTokens = await ata(mint, recipient.publicKey);
 
-    streamflowTreasuryTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      STREAMFLOW_TREASURY
-    );
+    streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY);
 
     // airdrop to receiver, we'll need it later for transfer recipient fees
     let tx = await program.provider.connection.requestAirdrop(
@@ -100,6 +81,7 @@ describe("timelock", () => {
     );
     console.log("SOL balance: ", recBalance);
 
+    console.log("Initialization ready.");
     console.log("Accounts:");
     console.log("sender wallet:", sender.publicKey.toBase58());
     console.log("sender tokens:", senderTokens.toBase58());
@@ -136,6 +118,7 @@ describe("timelock", () => {
       [sender],
       100_000
     );
+
     assert.ok(senderATAcheck.toString() === senderTokens.toString());
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
@@ -526,12 +509,7 @@ describe("timelock", () => {
       // );
       // const oldRecipient = decode(escrow.data).recipient;
       let newRecipient = Keypair.generate();
-      let newRecipientTokens = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mint,
-        newRecipient.publicKey
-      );
+      let newRecipientTokens = await ata(mint, newRecipient.publicKey);
 
       //console.log("old recipient", oldRecipient.toBase58());
       console.log(
@@ -602,13 +580,11 @@ describe("timelock", () => {
 
     const metadata = Keypair.generate();
     [escrowTokens, nonce] = await PublicKey.findProgramAddress(
-      [Buffer("strm"), metadata.publicKey.toBuffer()],
+      [Buffer.from("strm"), metadata.publicKey.toBuffer()],
       program.programId
     );
 
-    const streamflowTreasuryTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const streamflowTreasuryTokens = await ata(
       mint,
       STREAMFLOW_TREASURY.publicKey
     );
@@ -678,3 +654,12 @@ describe("timelock", () => {
     assert.ok(strm_data.release_rate.eq(new BN(100)));
   }).timeout(6000);
 });
+
+async function ata(mint: PublicKey, account: PublicKey) {
+  return await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    account
+  );
+}
