@@ -13,7 +13,11 @@ import {
   SYSVAR_RENT_PUBKEY,
   TransactionSignature,
 } from "@solana/web3.js";
-import type { Stream as StreamData, StreamDirectionType } from "./layout";
+import type {
+  Stream as StreamData,
+  StreamDirectionType,
+  StreamType,
+} from "./layout";
 import { decode } from "./layout";
 import idl from "./idl";
 
@@ -50,6 +54,7 @@ export default class Timelock {
    * @param {boolean} transferableBySender - Whether or not sender can transfer the stream
    * @param {boolean} transferableByRecipient - Whether or not recipient can transfer the stream
    * @param {boolean} automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
+   * @param {PublicKey | null} [partner = null] - Partner's wallet
    */
   static async create(
     connection: Connection,
@@ -78,33 +83,10 @@ export default class Timelock {
       [Buffer.from("strm"), metadata.publicKey.toBuffer()],
       program.programId
     );
-    const senderTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      sender.publicKey
-    );
-
-    const recipientTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      recipient
-    );
-
-    const streamflowTreasuryTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      STREAMFLOW_TREASURY
-    );
-
-    const partnerTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      partner || STREAMFLOW_TREASURY
-    );
+    const senderTokens = await ata(mint, sender.publicKey);
+    const recipientTokens = await ata(mint, recipient);
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY);
+    const partnerTokens = await ata(mint, partner || STREAMFLOW_TREASURY);
 
     const signers = [metadata];
 
@@ -151,7 +133,7 @@ export default class Timelock {
   /**
    * Attempts withdrawal from a specified stream.
    * @param {Connection} connection
-   * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
+   * @param invoker
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be withdrawn from.
    * @param {BN} amount - Requested amount to withdraw. If BN(0), program attempts to withdraw maximum available amount.
    */
@@ -163,32 +145,30 @@ export default class Timelock {
   ): Promise<TransactionSignature> {
     const program = initProgram(connection, invoker);
     const escrow = await connection.getAccountInfo(stream);
+
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
-    const data = decode(escrow.data);
 
-    const streamflowTreasuryTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      data.mint,
-      STREAMFLOW_TREASURY
+    const { mint, partner, recipient_tokens, escrow_tokens } = decode(
+      escrow.data
     );
-    const partner = null;
-    const partnerTokens = null;
+
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY);
+    const partnerTokens = await ata(mint, partner);
 
     return await program.rpc.withdraw(amount, {
       accounts: {
         authority: invoker.publicKey,
         recipient: invoker.publicKey,
-        recipientTokens: data.recipient_tokens,
+        recipientTokens: recipient_tokens,
         metadata: stream,
-        escrowTokens: data.escrow_tokens,
+        escrowTokens: escrow_tokens,
         streamflowTreasury: STREAMFLOW_TREASURY,
-        streamflowTreasuryTokens: streamflowTreasuryTokens,
-        partner: partner || STREAMFLOW_TREASURY,
-        partnerTokens: partnerTokens || streamflowTreasuryTokens,
-        mint: data.mint,
+        streamflowTreasuryTokens,
+        partner,
+        partnerTokens,
+        mint,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
@@ -205,22 +185,16 @@ export default class Timelock {
     wallet: Wallet,
     stream: PublicKey
   ): Promise<TransactionSignature> {
-    //todo: program ID is set within the SDK, not passed from the client side
     const program = initProgram(connection, wallet);
     let escrow_acc = await connection.getAccountInfo(stream);
     if (!escrow_acc?.data) {
       throw new Error("Couldn't get account info");
     }
     let data = decode(escrow_acc?.data);
+    const { mint, partner } = data;
 
-    const streamflowTreasuryTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      data.mint,
-      STREAMFLOW_TREASURY
-    );
-    const partner = null;
-    const partnerTokens = null;
+    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY);
+    const partnerTokens = await ata(mint, partner);
 
     return await program.rpc.cancel({
       accounts: {
@@ -233,8 +207,8 @@ export default class Timelock {
         escrowTokens: data.escrow_tokens,
         streamflowTreasury: STREAMFLOW_TREASURY,
         streamflowTreasuryTokens: streamflowTreasuryTokens,
-        partner: partner || STREAMFLOW_TREASURY,
-        partnerTokens: partnerTokens || streamflowTreasuryTokens,
+        partner: partner,
+        partnerTokens: partnerTokens,
         mint: data.mint,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
@@ -263,12 +237,7 @@ export default class Timelock {
     let data = decode(escrow?.data);
 
     const mint = data.mint;
-    const newRecipientTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      newRecipient
-    );
+    const newRecipientTokens = await ata(mint, newRecipient);
 
     return await program.rpc.transferRecipient({
       accounts: {
@@ -306,14 +275,9 @@ export default class Timelock {
     let data = decode(escrow?.data);
 
     const mint = data.mint;
-    const streamflowTreasuryTokens = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      mint,
-      STREAMFLOW_TREASURY
-    );
-    const partner = null;
-    const partnerTokens = null;
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY);
+    const partner = data.partner;
+    const partnerTokens = await ata(data.mint, data.partner);
 
     return await program.rpc.topup(amount, {
       accounts: {
@@ -323,8 +287,8 @@ export default class Timelock {
         escrowTokens: data.escrow_tokens,
         streamflowTreasury: STREAMFLOW_TREASURY,
         streamflowTreasuryTokens: streamflowTreasuryTokens,
-        partner: partner || STREAMFLOW_TREASURY,
-        partnerTokens: partnerTokens || streamflowTreasuryTokens,
+        partner: partner,
+        partnerTokens: partnerTokens,
         mint,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
@@ -334,7 +298,6 @@ export default class Timelock {
   /**
    * Get stream by ID
    * @param {Connection} connection
-   * @param {Wallet} wallet
    * @param {PublicKey} streamID
    */
   static async getOne(
@@ -359,6 +322,7 @@ export default class Timelock {
   static async get(
     connection: Connection,
     wallet: Wallet,
+    type: StreamType,
     direction: StreamDirectionType = "all"
   ): Promise<{ [s: string]: StreamData }> {
     const offset =
@@ -366,7 +330,7 @@ export default class Timelock {
         ? TIMELOCK_STRUCT_OFFSET_SENDER
         : TIMELOCK_STRUCT_OFFSET_RECIPIENT;
 
-    //todo: we need to be smart with our layout so we minimize rpc call to the chain
+    //todo: we need to be smart with our layout so we minimize rpc calls to the chain
     const accounts = await connection?.getProgramAccounts(
       new PublicKey(PROGRAM_ID),
       {
@@ -389,4 +353,13 @@ export default class Timelock {
 
     return transactions;
   }
+}
+
+async function ata(mint: PublicKey, account: PublicKey) {
+  return await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    account
+  );
 }
