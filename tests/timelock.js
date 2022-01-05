@@ -23,6 +23,9 @@ const STREAMFLOW_TREASURY = new PublicKey(
 );
 
 describe("timelock", () => {
+  //need explanation? rly?
+  beforeEach((done) => setTimeout(done, 1500));
+
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.Timelock;
