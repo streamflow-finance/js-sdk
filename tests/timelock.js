@@ -117,9 +117,9 @@ describe("timelock", () => {
       true, // cancelable_by_sender,
       false, // cancelable_by_recipient,
       false, // automatic_withdrawal,
-      false, // transferable by sender,
-      false, // transferable by recipient,
-      false,
+      true, // transferable by sender,
+      true, // transferable by recipient,
+      true, // can_topup - TODO: TEST FALSE
       "Didi", // stream name
       {
         accounts: {
@@ -164,8 +164,6 @@ describe("timelock", () => {
     );
 
     let strm_data = decode(_metadata.data);
-    console.log("Raw data:\n", _metadata.data);
-    console.log("Stream Data:\n", strm_data);
 
     console.log(
       "deposited during contract creation: ",
@@ -201,14 +199,14 @@ describe("timelock", () => {
     const oldEscrowAmount = common.token.parseTokenAccountData(
       oldEscrowAta.data
     ).amount;
-    const topupAmount = new BN(10000);
+
+    console.log("old escrow amount: ", oldEscrowAmount);
+    const topupAmount = new BN(1);
 
     const old_metadata = await program.provider.connection.getAccountInfo(
       metadata.publicKey
     );
     let old_strm_data = decode(old_metadata.data);
-
-    console.log("Stream Data:\n", old_strm_data);
 
     console.log("Old escrow amount", oldEscrowAmount);
     // console.log("\nseed", metadata.publicKey.toBuffer());
@@ -306,7 +304,6 @@ describe("timelock", () => {
       metadata.publicKey
     );
     let strm_data = decode(_metadata.data);
-    console.log("Stream Data:\n", strm_data);
 
     const newRecipientAta = await program.provider.connection.getAccountInfo(
       recipientTokens
@@ -354,7 +351,102 @@ describe("timelock", () => {
     );
     assert.ok(data.withdrawn_amount.eq(withdrawAmount));
   });
-  //
+
+  it("Transfers vesting contract recipient", async () => {
+    console.log("\nTransfer: ");
+    console.log(
+      "time diff (start, transfer): ",
+      start.toNumber(),
+      +new Date() / 1000
+    );
+
+    // const metadata = Keypair.generate();
+    // [escrowTokens, nonce] = await PublicKey.findProgramAddress(
+    //   [Buffer("strm"), metadata.publicKey.toBuffer()],
+    //   program.programId
+    // );
+
+    const _metadata = await program.provider.connection.getAccountInfo(
+      metadata.publicKey
+    );
+
+    let strm_data = decode(_metadata.data);
+    console.log("Stream Data:\n", strm_data);
+    console.log("Transferring to new recipient");
+    // let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
+    // bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
+    // let stream_name = new TextDecoder().decode(bytesStreamName);
+    // assert.ok(stream_name === "Stream to transfer");
+    // Now transfer recipient
+    // let escrow = await program.provider.connection.getAccountInfo(
+    //   metadata.publicKey
+    // );
+    // const oldRecipient = decode(escrow.data).recipient;
+    let newRecipient = Keypair.generate();
+    let newRecipientTokens = await ata(mint, newRecipient.publicKey);
+
+    //console.log("old recipient", oldRecipient.toBase58());
+    console.log(
+      "new recipient",
+      newRecipient.publicKey.toBase58(),
+      "new recipient ATA:",
+      newRecipientTokens.toBase58()
+    );
+
+    await program.rpc.transferRecipient({
+      // It changes to camel case!
+      accounts: {
+        authority: recipient.publicKey, // Authorized wallet
+        newRecipient: newRecipient.publicKey,
+        newRecipientTokens,
+        metadata: metadata.publicKey,
+        escrowTokens,
+        mint,
+        rent: SYSVAR_RENT_PUBKEY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        system: SystemProgram.programId,
+      },
+      signers: [recipient],
+    });
+    console.log("Update recipient success.");
+    let escrow = await program.provider.connection.getAccountInfo(
+      metadata.publicKey
+    );
+    const decoded = decode(escrow.data);
+    console.log("parseddd", decode(escrow.data));
+    const escrowNewRecipient = decoded.recipient;
+    console.log("new recipient: ", decoded.recipient.toBase58());
+    const escrowNewRecipientTokens = decoded.recipient_tokens;
+
+    console.log(
+      "Transfer: old recipient:",
+      recipient.publicKey.toBase58(),
+      "new recipient: ",
+      escrowNewRecipient.toBase58()
+    );
+    console.log(
+      "Transfer: old recipient:",
+      recipient.publicKey.toBase58(),
+      "new recipient: ",
+      newRecipient.publicKey.toBase58()
+    );
+    console.log(
+      "old recipient tokens:",
+      recipientTokens.toBase58(),
+      "new recipient tokens: ",
+      newRecipientTokens.toBase58(),
+      "new recipient tokens",
+      escrowNewRecipientTokens.toBase58()
+    );
+    assert.ok(recipient.publicKey !== escrowNewRecipient);
+    assert.ok(
+      escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
+    );
+    assert.ok(
+      escrowNewRecipientTokens.toBase58() === newRecipientTokens.toBase58()
+    );
+  });
   // it("Cancels the stream", async () => {
   //   setTimeout(async () => {
   //     const oldBalance = await provider.connection.getBalance(sender.publicKey);
@@ -455,103 +547,6 @@ describe("timelock", () => {
   //   }, 15500);
   // });
   //
-  // it("Transfers vesting contract recipient", async () => {
-  //   console.log("\nTransfer: ");
-  //   setTimeout(async () => {
-  //     console.log(
-  //       "time diff (start, transfer): ",
-  //       start.toNumber(),
-  //       +new Date() / 1000
-  //     );
-  //
-  //     // const metadata = Keypair.generate();
-  //     // [escrowTokens, nonce] = await PublicKey.findProgramAddress(
-  //     //   [Buffer("strm"), metadata.publicKey.toBuffer()],
-  //     //   program.programId
-  //     // );
-  //
-  //     const _metadata = await program.provider.connection.getAccountInfo(
-  //       metadata.publicKey
-  //     );
-  //
-  //     let strm_data = decode(_metadata.data);
-  //     console.log("Stream Data:\n", strm_data);
-  //     console.log("Transferring to new recipient");
-  //     // let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
-  //     // bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
-  //     // let stream_name = new TextDecoder().decode(bytesStreamName);
-  //     // assert.ok(stream_name === "Stream to transfer");
-  //     // Now transfer recipient
-  //     // let escrow = await program.provider.connection.getAccountInfo(
-  //     //   metadata.publicKey
-  //     // );
-  //     // const oldRecipient = decode(escrow.data).recipient;
-  //     let newRecipient = Keypair.generate();
-  //     let newRecipientTokens = await ata(mint, newRecipient.publicKey);
-  //
-  //     //console.log("old recipient", oldRecipient.toBase58());
-  //     console.log(
-  //       "new recipient",
-  //       newRecipient.publicKey.toBase58(),
-  //       "new recipient ATA:",
-  //       newRecipientTokens.toBase58()
-  //     );
-  //
-  //     await program.rpc.transferRecipient({
-  //       // It changes to camel case!
-  //       accounts: {
-  //         authority: recipient.publicKey, // Authorized wallet
-  //         newRecipient: newRecipient.publicKey,
-  //         newRecipientTokens,
-  //         metadata: metadata.publicKey,
-  //         escrowTokens,
-  //         mint,
-  //         rent: SYSVAR_RENT_PUBKEY,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  //         system: SystemProgram.programId,
-  //       },
-  //       signers: [recipient],
-  //     });
-  //     console.log("Update recipient success.");
-  //     let escrow = await program.provider.connection.getAccountInfo(
-  //       metadata.publicKey
-  //     );
-  //     const decoded = decode(escrow.data);
-  //     console.log("parseddd", decode(escrow.data));
-  //     const escrowNewRecipient = decoded.recipient;
-  //     console.log("new recipient: ", decoded.recipient.toBase58());
-  //     const escrowNewRecipientTokens = decoded.recipient_tokens;
-  //
-  //     console.log(
-  //       "Transfer: old recipient:",
-  //       recipient.publicKey.toBase58(),
-  //       "new recipient: ",
-  //       escrowNewRecipient.toBase58()
-  //     );
-  //     console.log(
-  //       "Transfer: old recipient:",
-  //       recipient.publicKey.toBase58(),
-  //       "new recipient: ",
-  //       newRecipient.publicKey.toBase58()
-  //     );
-  //     console.log(
-  //       "old recipient tokens:",
-  //       recipientTokens.toBase58(),
-  //       "new recipient tokens: ",
-  //       newRecipientTokens.toBase58(),
-  //       "new recipient tokens",
-  //       escrowNewRecipientTokens.toBase58()
-  //     );
-  //     assert.ok(recipient.publicKey !== escrowNewRecipient);
-  //     assert.ok(
-  //       escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
-  //     );
-  //     assert.ok(
-  //       escrowNewRecipientTokens.toBase58() === newRecipientTokens.toBase58()
-  //     );
-  //   }, 8500);
-  // });
   //
   // it.skip("Creates recurring", async () => {
   //   console.log("\nRecurring");
