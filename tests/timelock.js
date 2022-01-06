@@ -32,6 +32,7 @@ describe("timelock", () => {
   const sender = provider.wallet;
 
   const metadata = Keypair.generate();
+  const streamNotTopupable = Keypair.generate();
   const MINT_DECIMALS = 8;
   let escrowTokens;
   let recipientTokens;
@@ -103,9 +104,6 @@ describe("timelock", () => {
   });
 
   it("Create Vesting Contract w/out the cliff", async () => {
-    console.log("metadata:", metadata.publicKey.toBase58());
-    console.log("buffer:", metadata.publicKey.toBuffer());
-
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
       start,
@@ -174,25 +172,24 @@ describe("timelock", () => {
       _escrowTokensData.amount
     );
 
-    console.log("Stream name: ", strm_data.stream_name);
-    let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
-    bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
-    let stream_name = new TextDecoder().decode(bytesStreamName);
-    console.log("Stream name: ", stream_name);
-    console.log("Bytes literal: ", new TextEncoder().encode("Didi").length);
-    console.log(
-      "Bytes solana string: ",
-      new TextEncoder().encode(strm_data.stream_name).length
-    );
-    // assert.ok(depositedAmount.toNumber() === _escrowTokensData.amount);
+    // console.log("Stream name: ", strm_data.stream_name);
+    // let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
+    // bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
+    // let stream_name = new TextDecoder().decode(bytesStreamName);
+    // console.log("Stream name: ", stream_name);
+    // console.log("Bytes literal: ", new TextEncoder().encode("Didi").length);
+    // console.log(
+    //   "Bytes solana string: ",
+    //   new TextEncoder().encode(strm_data.stream_name).length
+    // );
     assert.ok(
       depositedAmount.toNumber() === strm_data.net_deposited_amount.toNumber()
     );
   });
 
   it("Top-ups the stream", async () => {
-    console.log("Top up:\n");
-    //console.log("Times (now, start): ", +new Date() / 1000, start.toString());
+    console.log("*** TOP UP ***");
+    timePassed();
     const oldEscrowAta = await program.provider.connection.getAccountInfo(
       escrowTokens
     );
@@ -201,7 +198,8 @@ describe("timelock", () => {
     ).amount;
 
     console.log("old escrow amount: ", oldEscrowAmount);
-    const topupAmount = new BN(1);
+    const topupAmount = new BN(10000);
+    console.log("Topup amount:", topupAmount.toNumber());
 
     const old_metadata = await program.provider.connection.getAccountInfo(
       metadata.publicKey
@@ -264,11 +262,8 @@ describe("timelock", () => {
 
   it("Withdraws from a contract", async () => {
     // With set time out it didn't catch errors???
-    console.log("Withdraw:\n");
-    console.log(
-      "Invoked %f seconds after start.",
-      +new Date() / 1000 - start.toNumber()
-    );
+    console.log("*** WITHDRAW ***");
+    timePassed();
     const oldEscrowAta = await program.provider.connection.getAccountInfo(
       escrowTokens
     );
@@ -353,12 +348,9 @@ describe("timelock", () => {
   });
 
   it("Transfers vesting contract recipient", async () => {
-    console.log("\nTransfer: ");
-    console.log(
-      "time diff (start, transfer): ",
-      start.toNumber(),
-      +new Date() / 1000
-    );
+    console.log("*** TRANSFER ***");
+
+    timePassed();
 
     // const metadata = Keypair.generate();
     // [escrowTokens, nonce] = await PublicKey.findProgramAddress(
@@ -371,7 +363,7 @@ describe("timelock", () => {
     );
 
     let strm_data = decode(_metadata.data);
-    console.log("Stream Data:\n", strm_data);
+    // console.log("Stream Data:\n", strm_data);
     console.log("Transferring to new recipient");
     // let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
     // bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
@@ -414,7 +406,6 @@ describe("timelock", () => {
       metadata.publicKey
     );
     const decoded = decode(escrow.data);
-    console.log("parseddd", decode(escrow.data));
     const escrowNewRecipient = decoded.recipient;
     console.log("new recipient: ", decoded.recipient.toBase58());
     const escrowNewRecipientTokens = decoded.recipient_tokens;
@@ -626,6 +617,13 @@ describe("timelock", () => {
   //   console.log("Release rate:", strm_data.release_rate.toNumber());
   //   assert.ok(strm_data.release_rate.eq(new BN(100)));
   // }).timeout(6000);
+
+  function timePassed() {
+    console.log(
+      "Seconds after stream start: ",
+      +new Date() / 1000 - start.toNumber()
+    );
+  }
 });
 
 async function ata(mint, account) {
