@@ -41,6 +41,8 @@ describe("timelock", () => {
   let token;
   let senderTokens;
   let vault;
+  let createParams;
+  let createAccounts;
 
   // Divide by 1000 to convert milliseconds to Unix timestamp (seconds)
   let start = new BN(+new Date() / 1000 + 5); //add several seconds to make sure this time is not in the past at the time of program invocation.
@@ -92,6 +94,42 @@ describe("timelock", () => {
       LAMPORTS_PER_SOL
     );
 
+    createParams = {
+      startTime: start,
+      netDepositedAmount: depositedAmount,
+      period: period,
+      amountPerPeriod: new BN(2), // amount_per_period
+      cliff: start, // cliff
+      cliffAmount: new BN(1), // cliff amount
+      cancelableBySender: true, // cancelable_by_sender,
+      cancelableByRecipient: false, // cancelable_by_recipient,
+      automaticWithdrawal: false, // automatic_withdrawal,
+      transferableBySender: true, // transferable by sender,
+      transferableByRecipient: true, // transferable by recipient,
+      canTopup: true, // can_topup - TODO: TEST FALSE
+      streamName: "Test", // stream name - use TextEncoder and Decoder for string (stream_name) manipulation?
+    };
+
+    createAccounts = {
+      sender: sender.publicKey,
+      senderTokens,
+      recipient: recipient.publicKey,
+      metadata: metadata.publicKey,
+      recipientTokens,
+      escrowTokens,
+      mint,
+      rent: SYSVAR_RENT_PUBKEY,
+      timelockProgram: program.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      streamflowTreasury: STREAMFLOW_TREASURY,
+      streamflowTreasuryTokens: streamflowTreasuryTokens,
+      partner: STREAMFLOW_TREASURY,
+      partnerTokens: streamflowTreasuryTokens,
+      feeOracle: STREAMFLOW_TREASURY,
+    };
+
     // console.log("Initialization ready.");
     // console.log("Accounts:");
     // console.log("sender wallet:", sender.publicKey.toBase58());
@@ -103,112 +141,64 @@ describe("timelock", () => {
     // console.log("mint:", mint.toBase58());
   });
 
-  it("Create Vesting Contract w/out the cliff", async () => {
-    const tx = await program.rpc.create(
-      // Order of the parameters must match the ones in the program
-      start,
-      depositedAmount,
-      period,
-      new BN(2), // amount_per_period
-      start, // cliff
-      new BN(1), // cliff amount
-      true, // cancelable_by_sender,
-      false, // cancelable_by_recipient,
-      false, // automatic_withdrawal,
-      true, // transferable by sender,
-      true, // transferable by recipient,
-      true, // can_topup - TODO: TEST FALSE
-      "Didi", // stream name
-      {
-        accounts: {
-          sender: sender.publicKey,
-          senderTokens,
-          recipient: recipient.publicKey,
-          metadata: metadata.publicKey,
-          recipientTokens,
-          escrowTokens,
-          mint,
-          rent: SYSVAR_RENT_PUBKEY,
-          timelockProgram: program.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-          streamflowTreasury: STREAMFLOW_TREASURY,
-          streamflowTreasuryTokens: streamflowTreasuryTokens,
-          partner: STREAMFLOW_TREASURY,
-          partnerTokens: streamflowTreasuryTokens,
-          feeOracle: STREAMFLOW_TREASURY,
-        },
-        signers: [metadata],
-        // instructions: [createTransferIX], //before program.rpc.create
-      }
-    );
+  it("Creates a stream", async () => {
+    console.log("*** CREATE ***");
+    const senderTokensAmountBefore = await getTokenAmount(senderTokens);
+    await createStream(createParams, createAccounts, [metadata]);
 
-    const _escrowTokens = await program.provider.connection.getAccountInfo(
-      escrowTokens
-    );
-    const _senderTokens = await program.provider.connection.getAccountInfo(
-      senderTokens
-    );
+    const contract = await getMetadata(metadata.publicKey);
+    const escrowTokensAmount = await getTokenAmount(escrowTokens);
+    const senderTokensAmountAfter = await getTokenAmount(senderTokens);
 
-    const _metadata = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    const _escrowTokensData = common.token.parseTokenAccountData(
-      _escrowTokens.data
-    );
-    const _senderTokensData = common.token.parseTokenAccountData(
-      _senderTokens.data
-    );
-
-    let strm_data = decode(_metadata.data);
+    const { net_deposited_amount, streamflow_fee_total, partner_fee_total } =
+      contract;
 
     console.log(
-      "deposited during contract creation: ",
+      "net deposited during contract creation: ",
       depositedAmount.toNumber(),
-      "saved in deposit data",
-      strm_data.net_deposited_amount.toNumber(),
-      "Escrow tokens balance (with 0.25% fees)",
-      _escrowTokensData.amount
+      "net deposited in contract",
+      contract.net_deposited_amount.toNumber(),
+      "Escrow tokens balance (including 0.25% fees)",
+      escrowTokensAmount,
+      "Gross amount (sum):",
+      net_deposited_amount
+        .add(streamflow_fee_total)
+        .add(partner_fee_total)
+        .toNumber()
     );
 
-    // console.log("Stream name: ", strm_data.stream_name);
-    // let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
-    // bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
-    // let stream_name = new TextDecoder().decode(bytesStreamName);
-    // console.log("Stream name: ", stream_name);
-    // console.log("Bytes literal: ", new TextEncoder().encode("Didi").length);
-    // console.log(
-    //   "Bytes solana string: ",
-    //   new TextEncoder().encode(strm_data.stream_name).length
-    // );
     assert.ok(
-      depositedAmount.toNumber() === strm_data.net_deposited_amount.toNumber()
+      escrowTokensAmount ===
+        net_deposited_amount
+          .add(streamflow_fee_total)
+          .add(partner_fee_total)
+          .toNumber()
+    );
+    assert.ok(
+      depositedAmount.toNumber() === contract.net_deposited_amount.toNumber()
+    );
+    assert.ok(
+      senderTokensAmountBefore === senderTokensAmountAfter + escrowTokensAmount
     );
   });
 
-  it("Top-ups the stream", async () => {
+  it("Top-ups the original stream", async () => {
     console.log("*** TOP UP ***");
     timePassed();
-    const oldEscrowAta = await program.provider.connection.getAccountInfo(
-      escrowTokens
-    );
     const oldEscrowAmount = common.token.parseTokenAccountData(
-      oldEscrowAta.data
+      (await program.provider.connection.getAccountInfo(escrowTokens)).data
     ).amount;
 
     console.log("old escrow amount: ", oldEscrowAmount);
     const topupAmount = new BN(10000);
     console.log("Topup amount:", topupAmount.toNumber());
 
-    const old_metadata = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    let old_strm_data = decode(old_metadata.data);
+    const netDepositedAmountBefore = decode(
+      (await program.provider.connection.getAccountInfo(metadata.publicKey))
+        .data
+    ).net_deposited_amount;
 
     console.log("Old escrow amount", oldEscrowAmount);
-    // console.log("\nseed", metadata.publicKey.toBuffer());
-    // console.log("metadata", metadata.publicKey.toBase58());
     await program.rpc.topup(topupAmount, {
       accounts: {
         sender: sender.publicKey,
@@ -254,13 +244,18 @@ describe("timelock", () => {
       "Deposited amount",
       metadata_data.net_deposited_amount.toNumber(),
       "Old deposited amount",
-      old_strm_data.net_deposited_amount.toNumber()
+      netDepositedAmountBefore.toNumber()
     );
     // New state on token acc
-    //assert.ok(topupAmount.eq(new BN(newEscrowAmount - oldEscrowAmount)));
+    assert.ok(
+      metadata_data.net_deposited_amount.eq(
+        netDepositedAmountBefore.add(topupAmount)
+      )
+    );
+    assert.ok(true);
   });
 
-  it("Withdraws from a contract", async () => {
+  it("Withdraws 2 tokens from a contract", async () => {
     // With set time out it didn't catch errors???
     console.log("*** WITHDRAW ***");
     timePassed();
@@ -618,10 +613,46 @@ describe("timelock", () => {
   //   assert.ok(strm_data.release_rate.eq(new BN(100)));
   // }).timeout(6000);
 
+  async function createStream(params, accounts, signers) {
+    const tx = await program.rpc.create(
+      // Order of the parameters must match the ones in the program
+      params.startTime,
+      params.netDepositedAmount,
+      params.period,
+      params.amountPerPeriod, // amount_per_period
+      params.cliff, // cliff
+      params.cliffAmount, // cliff amount
+      params.cancelableBySender, // cancelable_by_sender,
+      params.cancelableByRecipient, // cancelable_by_recipient,
+      params.automaticWithdrawal, // automatic_withdrawal,
+      params.transferableBySender, // transferable by sender,
+      params.transferableByRecipient, // transferable by recipient,
+      params.canTopup, // can_topup - TODO: TEST FALSE
+      params.streamName, // stream name
+      {
+        accounts: accounts,
+        signers: signers,
+        // instructions: [createTransferIX], //before program.rpc.create
+      }
+    );
+  }
+
   function timePassed() {
     console.log(
       "Seconds after stream start: ",
       +new Date() / 1000 - start.toNumber()
+    );
+  }
+
+  async function getTokenAmount(tokenAccount) {
+    return common.token.parseTokenAccountData(
+      (await program.provider.connection.getAccountInfo(tokenAccount)).data
+    ).amount;
+  }
+
+  async function getMetadata(metadataAccount) {
+    return decode(
+      (await program.provider.connection.getAccountInfo(metadataAccount))?.data
     );
   }
 });
