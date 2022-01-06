@@ -14,6 +14,7 @@ const {
 const { decode } = require("./layout");
 const { SystemProgram, Keypair } = anchor.web3;
 const { BN } = anchor;
+const u64_MAX = new BN(2).pow(new BN(64)).subn(1);
 
 // The stream recipient main wallet
 const recipient = Keypair.generate();
@@ -49,7 +50,7 @@ describe("timelock", () => {
   // +60 seconds
   let end = new BN(+new Date() / 1000 + 60);
   // In seconds
-  const period = new BN(2);
+  const period = new BN(1);
   // Amount to deposit
   // const depositedAmount = new BN(1337_000_000);
   const depositedAmount = new BN(10000);
@@ -98,7 +99,7 @@ describe("timelock", () => {
       startTime: start,
       netDepositedAmount: depositedAmount,
       period: period,
-      amountPerPeriod: new BN(2), // amount_per_period
+      amountPerPeriod: new BN(4), // amount_per_period
       cliff: start, // cliff
       cliffAmount: new BN(1), // cliff amount
       cancelableBySender: true, // cancelable_by_sender,
@@ -153,19 +154,8 @@ describe("timelock", () => {
     const { net_deposited_amount, streamflow_fee_total, partner_fee_total } =
       contract;
 
-    console.log(
-      "net deposited during contract creation: ",
-      depositedAmount.toNumber(),
-      "net deposited in contract",
-      contract.net_deposited_amount.toNumber(),
-      "Escrow tokens balance (including 0.25% fees)",
-      escrowTokensAmount,
-      "Gross amount (sum):",
-      net_deposited_amount
-        .add(streamflow_fee_total)
-        .add(partner_fee_total)
-        .toNumber()
-    );
+    const depositedAmountNum = depositedAmount.toNumber();
+    console.table({ depositedAmountNum, escrowTokensAmount });
 
     assert.ok(
       escrowTokensAmount ===
@@ -185,20 +175,12 @@ describe("timelock", () => {
   it("Top-ups the original stream", async () => {
     console.log("*** TOP UP ***");
     timePassed();
-    const oldEscrowAmount = common.token.parseTokenAccountData(
-      (await program.provider.connection.getAccountInfo(escrowTokens)).data
-    ).amount;
-
-    console.log("old escrow amount: ", oldEscrowAmount);
+    const escrowAmountBefore = await getTokenAmount(escrowTokens);
     const topupAmount = new BN(10000);
-    console.log("Topup amount:", topupAmount.toNumber());
 
-    const netDepositedAmountBefore = decode(
-      (await program.provider.connection.getAccountInfo(metadata.publicKey))
-        .data
-    ).net_deposited_amount;
+    let contract = await getMetadata(metadata.publicKey);
+    const netDepositedAmountBefore = contract.net_deposited_amount;
 
-    console.log("Old escrow amount", oldEscrowAmount);
     await program.rpc.topup(topupAmount, {
       accounts: {
         sender: sender.publicKey,
@@ -214,64 +196,40 @@ describe("timelock", () => {
       },
       signers: [sender.payer],
     });
-    const _metadata = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    let metadata_data = decode(_metadata.data);
 
-    let newEscrowAmount = null;
-    const newEscrowAta = await program.provider.connection.getAccountInfo(
-      escrowTokens
-    );
+    contract = await getMetadata(metadata.publicKey);
 
-    if (newEscrowAta) {
-      console.log("escrow account: ", escrowTokens.toString());
-      newEscrowAmount = common.token.parseTokenAccountData(
-        newEscrowAta.data
-      ).amount;
-    }
-    console.log(
-      "depositedAmount",
-      metadata_data.net_deposited_amount.toNumber()
-    );
-    console.log(
-      "Escrow token balance: previous: ",
-      oldEscrowAmount,
-      "after: ",
-      newEscrowAmount
-    );
-    console.log(
-      "Deposited amount",
-      metadata_data.net_deposited_amount.toNumber(),
-      "Old deposited amount",
-      netDepositedAmountBefore.toNumber()
-    );
-    // New state on token acc
+    let escrowAmountAfter = await getTokenAmount(escrowTokens);
+    const grossAmount = contract.net_deposited_amount
+      .add(contract.streamflow_fee_total)
+      .add(contract.partner_fee_total);
+
+    console.table({
+      topup: topupAmount.toNumber(),
+      escrowAmountBefore,
+      escrowAmountAfter,
+      netDepositedAmountBefore: netDepositedAmountBefore.toNumber(),
+      netDepositedAmountAfter: contract.net_deposited_amount.toNumber(),
+      gross: grossAmount.toNumber(),
+    });
     assert.ok(
-      metadata_data.net_deposited_amount.eq(
+      contract.net_deposited_amount.eq(
         netDepositedAmountBefore.add(topupAmount)
       )
     );
-    assert.ok(true);
+    assert.ok(escrowAmountAfter === grossAmount.toNumber());
   });
 
-  it("Withdraws 2 tokens from a contract", async () => {
-    // With set time out it didn't catch errors???
+  it("Withdraws specific amount of available tokens (10) from a contract", async () => {
     console.log("*** WITHDRAW ***");
     timePassed();
-    const oldEscrowAta = await program.provider.connection.getAccountInfo(
-      escrowTokens
-    );
-    const oldEscrowAmount = common.token.parseTokenAccountData(
-      oldEscrowAta.data
-    ).amount;
-    const oldRecipientAta = await program.provider.connection.getAccountInfo(
-      recipientTokens
-    );
-    const oldRecipientAmount = common.token.parseTokenAccountData(
-      oldRecipientAta.data
-    ).amount;
-    const withdrawAmount = new BN(2); //1 period passed.
+
+    let contract = await getMetadata(metadata.publicKey);
+    const netDepositedAmountBefore = contract.net_deposited_amount;
+    const escrowAmountBefore = await getTokenAmount(escrowTokens);
+    const recipientAmountBefore = await getTokenAmount(recipientTokens);
+    const withdrawAmount = new BN(9);
+    //const withdrawAmount = new BN(2).pow(new BN(64)).subn(1); //MAXXXX
 
     await program.rpc.withdraw(withdrawAmount, {
       accounts: {
@@ -290,98 +248,42 @@ describe("timelock", () => {
       },
       signers: [recipient],
     });
-    const _metadata = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    let strm_data = decode(_metadata.data);
+    contract = await getMetadata(metadata.publicKey);
+    const recipientAmountAfter = await getTokenAmount(recipientTokens);
+    const escrowAmountAfter = await getTokenAmount(escrowTokens);
+    //todo: strm & partner treasury before & after
+    console.table({
+      withdrawing: withdrawAmount,
+      escrowAmountBefore,
+      escrowAmountAfter,
+      recipientAmountBefore,
+      recipientAmountAfter,
+      netDepositedAmountBefore: netDepositedAmountBefore.toNumber(),
+      netDepositedAmountAfter: contract.net_deposited_amount.toNumber(),
+      "withdrawn (in contract)": contract.withdrawn_amount.toNumber(),
+    });
 
-    const newRecipientAta = await program.provider.connection.getAccountInfo(
-      recipientTokens
-    );
-    const newRecipientAmount = common.token.parseTokenAccountData(
-      newRecipientAta.data
-    ).amount;
-    const escrow = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    const data = decode(escrow.data);
-
-    let newEscrowAmount = null;
-    const newEscrowAta = await program.provider.connection.getAccountInfo(
-      escrowTokens
-    );
-
-    if (newEscrowAta) {
-      newEscrowAmount = common.token.parseTokenAccountData(
-        newEscrowAta.data
-      ).amount;
-    }
-    console.log(
-      "depositedAmount",
-      depositedAmount.toNumber(),
-      "withdrawn",
-      withdrawAmount
-    );
-    console.log(
-      "Escrow token balance: previous: ",
-      oldEscrowAmount,
-      "after: ",
-      newEscrowAmount
-    );
-
-    console.log(
-      "Recipient token balance: previous: ",
-      oldRecipientAmount,
-      "after: ",
-      newRecipientAmount
-    );
-    assert.ok(withdrawAmount.eq(new BN(oldEscrowAmount - newEscrowAmount)));
     assert.ok(
-      withdrawAmount.eq(new BN(newRecipientAmount - oldRecipientAmount))
+      withdrawAmount.eq(new BN(escrowAmountBefore - escrowAmountAfter))
     );
-    assert.ok(data.withdrawn_amount.eq(withdrawAmount));
+
+    assert.ok(
+      withdrawAmount.eq(new BN(recipientAmountAfter - recipientAmountBefore))
+    );
+    assert.ok(contract.withdrawn_amount.eq(withdrawAmount));
   });
 
   it("Transfers vesting contract recipient", async () => {
     console.log("*** TRANSFER ***");
-
     timePassed();
 
-    // const metadata = Keypair.generate();
-    // [escrowTokens, nonce] = await PublicKey.findProgramAddress(
-    //   [Buffer("strm"), metadata.publicKey.toBuffer()],
-    //   program.programId
-    // );
-
-    const _metadata = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-
-    let strm_data = decode(_metadata.data);
-    // console.log("Stream Data:\n", strm_data);
-    console.log("Transferring to new recipient");
-    // let bytesStreamName = new TextEncoder().encode(strm_data.stream_name);
-    // bytesStreamName = bytesStreamName.slice(4).filter((x) => x !== 0);
-    // let stream_name = new TextDecoder().decode(bytesStreamName);
-    // assert.ok(stream_name === "Stream to transfer");
-    // Now transfer recipient
-    // let escrow = await program.provider.connection.getAccountInfo(
-    //   metadata.publicKey
-    // );
-    // const oldRecipient = decode(escrow.data).recipient;
+    let contract = await getMetadata(metadata.publicKey);
+    const recipientBefore = contract.recipient.toBase58();
+    const recipientTokensBefore = contract.recipient_tokens.toBase58();
     let newRecipient = Keypair.generate();
     let newRecipientTokens = await ata(mint, newRecipient.publicKey);
 
-    //console.log("old recipient", oldRecipient.toBase58());
-    console.log(
-      "new recipient",
-      newRecipient.publicKey.toBase58(),
-      "new recipient ATA:",
-      newRecipientTokens.toBase58()
-    );
-
     await program.rpc.transferRecipient({
-      // It changes to camel case!
       accounts: {
         authority: recipient.publicKey, // Authorized wallet
         newRecipient: newRecipient.publicKey,
@@ -396,42 +298,21 @@ describe("timelock", () => {
       },
       signers: [recipient],
     });
-    console.log("Update recipient success.");
-    let escrow = await program.provider.connection.getAccountInfo(
-      metadata.publicKey
-    );
-    const decoded = decode(escrow.data);
-    const escrowNewRecipient = decoded.recipient;
-    console.log("new recipient: ", decoded.recipient.toBase58());
-    const escrowNewRecipientTokens = decoded.recipient_tokens;
+    contract = await getMetadata(metadata.publicKey);
+    let recipientAfter = contract.recipient.toBase58();
+    let recipientTokensAfter = contract.recipient_tokens.toBase58();
+    console.table({
+      recipientBefore,
+      recipientTokensBefore,
+      recipientAfter,
+      newRecipient: newRecipient.publicKey.toBase58(),
+      recipientTokensAfter: recipientTokensAfter.toString(),
+      newRecipientTokens: newRecipientTokens.toString(),
+    });
 
-    console.log(
-      "Transfer: old recipient:",
-      recipient.publicKey.toBase58(),
-      "new recipient: ",
-      escrowNewRecipient.toBase58()
-    );
-    console.log(
-      "Transfer: old recipient:",
-      recipient.publicKey.toBase58(),
-      "new recipient: ",
-      newRecipient.publicKey.toBase58()
-    );
-    console.log(
-      "old recipient tokens:",
-      recipientTokens.toBase58(),
-      "new recipient tokens: ",
-      newRecipientTokens.toBase58(),
-      "new recipient tokens",
-      escrowNewRecipientTokens.toBase58()
-    );
-    assert.ok(recipient.publicKey !== escrowNewRecipient);
-    assert.ok(
-      escrowNewRecipient.toBase58() === newRecipient.publicKey.toBase58()
-    );
-    assert.ok(
-      escrowNewRecipientTokens.toBase58() === newRecipientTokens.toBase58()
-    );
+    assert.ok(recipientAfter !== recipientBefore);
+    assert.ok(recipientAfter === newRecipient.publicKey.toBase58());
+    assert.ok(recipientTokensAfter === newRecipientTokens.toBase58());
   });
   // it("Cancels the stream", async () => {
   //   setTimeout(async () => {
@@ -446,13 +327,13 @@ describe("timelock", () => {
   //     const oldEscrowAta = await program.provider.connection.getAccountInfo(
   //       escrowTokens
   //     );
-  //     const oldEscrowAmount = common.token.parseTokenAccountData(
+  //     const escrowAmountBefore = common.token.parseTokenAccountData(
   //       oldEscrowAta.data
   //     ).amount;
   //     const oldRecipientAta = await program.provider.connection.getAccountInfo(
   //       recipientTokens
   //     );
-  //     const oldRecipientAmount = common.token.parseTokenAccountData(
+  //     const recipientAmountBefore = common.token.parseTokenAccountData(
   //       oldRecipientAta.data
   //     ).amount;
   //
@@ -481,19 +362,19 @@ describe("timelock", () => {
   //     let strm_data = decode(_metadata.data);
   //     console.log("Stream Data:\n", strm_data);
   //
-  //     let newEscrowAmount = 0; // It will stay 0 if closed
+  //     let escrowAmountAfter = 0; // It will stay 0 if closed
   //     const newEscrowAta = await program.provider.connection.getAccountInfo(
   //       escrowTokens
   //     );
   //     if (newEscrowAta) {
-  //       newEscrowAmount = common.token.parseTokenAccountData(
+  //       escrowAmountAfter = common.token.parseTokenAccountData(
   //         newEscrowAta.data
   //       ).amount;
   //     }
   //     const newRecipientAta = await program.provider.connection.getAccountInfo(
   //       recipientTokens
   //     );
-  //     const newRecipientAmount = common.token.parseTokenAccountData(
+  //     const recipientAmountAfter = common.token.parseTokenAccountData(
   //       newRecipientAta.data
   //     ).amount;
   //     const newSenderAta = await program.provider.connection.getAccountInfo(
@@ -508,27 +389,27 @@ describe("timelock", () => {
   //       "old sender",
   //       oldSenderAmount,
   //       "old recipient",
-  //       oldRecipientAmount,
+  //       recipientAmountBefore,
   //       "old escrow",
-  //       oldEscrowAmount
+  //       escrowAmountBefore
   //     );
   //     console.log(
   //       "new sender",
   //       newSenderAmount,
   //       "new recipient",
-  //       newRecipientAmount,
+  //       recipientAmountAfter,
   //       "new escrow:",
-  //       newEscrowAmount,
+  //       escrowAmountAfter,
   //       "deposited amount",
   //       depositedAmount.toNumber()
   //     );
   //     const newBalance = await provider.connection.getBalance(sender.publicKey);
   //     console.log("Returned:", newBalance - oldBalance);
-  //     assert.ok(newEscrowAmount === 0);
+  //     assert.ok(escrowAmountAfter === 0);
   //     // assert.ok(decode(escrow.data).amount.eq(0));
   //     assert.ok(
-  //       newRecipientAmount + newSenderAmount - oldSenderAmount ===
-  //         oldEscrowAmount
+  //       recipientAmountAfter + newSenderAmount - oldSenderAmount ===
+  //         escrowAmountBefore
   //     );
   //   }, 15500);
   // });
