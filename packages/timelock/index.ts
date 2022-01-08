@@ -17,13 +17,17 @@ import type {
   Stream as StreamData,
   StreamDirectionType,
   StreamType,
+  Account,
 } from "./layout";
 import { decode } from "./layout";
 import idl from "./idl";
 
+const TX_FINALITY_CONFIRMED = "confirmed";
+
+const STREAM_STRUCT_OFFSET_SENDER = 49;
+const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
+
 const PROGRAM_ID = "sfkEBYd2MMWmQqVsKojFGM5i3sj87NwQkrTbuwBze81";
-const TIMELOCK_STRUCT_OFFSET_SENDER = 48;
-const TIMELOCK_STRUCT_OFFSET_RECIPIENT = 112;
 const STREAMFLOW_TREASURY = new PublicKey(
   "Ht5G1RhkcKnpLVLMhqJc5aqZ4wYUEbxbtZwGCVbgU7DL"
 );
@@ -33,7 +37,7 @@ function initProgram(connection: Connection, wallet: Wallet): Program {
   return new Program(idl as Idl, PROGRAM_ID, provider);
 }
 
-export default class Timelock {
+export default class Stream {
   /**
    * Creates a new stream/vesting contract. All fees are paid by sender. (escrow metadata account rent, escrow token account, recipient's associated token account creation)
    * @param {Connection} connection
@@ -304,7 +308,10 @@ export default class Timelock {
     connection: Connection,
     streamID: PublicKey
   ): Promise<StreamData> {
-    const escrow = await connection.getAccountInfo(streamID);
+    const escrow = await connection.getAccountInfo(
+      streamID,
+      TX_FINALITY_CONFIRMED
+    );
     if (!escrow?.data) {
       throw new Error("Couldn't get account info.");
     }
@@ -313,46 +320,81 @@ export default class Timelock {
   }
 
   /**
-   * Get streams
+   * Get streams by providing direction (incoming, outgoing, all) and type (stream, vesting, all),
+   * streams are sorted by start_time value in ascending order
    * @param {Connection} connection
-   * @param {Wallet} wallet
+   * @param {PublicKey} publicKey
    * @param {StreamType} type
    * @param {StreamDirectionType} direction
    */
   static async get(
     connection: Connection,
-    wallet: Wallet,
-    type: StreamType,
+    publicKey: PublicKey,
+    type: StreamType = "all",
     direction: StreamDirectionType = "all"
-  ): Promise<{ [s: string]: StreamData }> {
-    const offset =
-      direction === "outgoing"
-        ? TIMELOCK_STRUCT_OFFSET_SENDER
-        : TIMELOCK_STRUCT_OFFSET_RECIPIENT;
-
+  ): Promise<[string, StreamData][]> {
+    let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
-    const accounts = await connection?.getProgramAccounts(
-      new PublicKey(PROGRAM_ID),
-      {
-        filters: [
-          {
-            memcmp: {
-              offset,
-              bytes: wallet.publicKey?.toBase58(),
-            },
-          },
-        ],
-      }
-    );
+    if (direction === "all") {
+      const outgoingAccounts = await getProgramAccounts(
+        connection,
+        publicKey,
+        STREAM_STRUCT_OFFSET_SENDER
+      );
+      const incomingAccounts = await getProgramAccounts(
+        connection,
+        publicKey,
+        STREAM_STRUCT_OFFSET_RECIPIENT
+      );
+      accounts = [...outgoingAccounts, ...incomingAccounts];
+    } else {
+      const offset =
+        direction === "outgoing"
+          ? STREAM_STRUCT_OFFSET_SENDER
+          : STREAM_STRUCT_OFFSET_RECIPIENT;
+      accounts = await getProgramAccounts(connection, publicKey, offset);
+    }
 
-    let transactions = {};
+    let streams: { [s: string]: StreamData } = {};
     accounts.forEach((account) => {
       const decoded = decode(account.account.data);
-      transactions = { ...transactions, [account.pubkey.toBase58()]: decoded };
+      streams = { ...streams, [account.pubkey.toBase58()]: decoded };
     });
 
-    return transactions;
+    const sortedStreams = Object.entries(streams).sort(
+      ([, stream1], [, stream2]) =>
+        stream2.start_time.toNumber() - stream1.start_time.toNumber()
+    );
+
+    if (type === "all") return sortedStreams;
+
+    return type === "stream"
+      ? sortedStreams.filter((stream) => stream[1].can_topup)
+      : sortedStreams.filter((stream) => !stream[1].can_topup);
   }
+}
+
+/**
+ * Get Program Accounts
+ * @param {Connection} connection
+ * @param {PublicKey} publicKey
+ * @param {number} offset
+ */
+async function getProgramAccounts(
+  connection: Connection,
+  publicKey: PublicKey,
+  offset: number
+): Promise<Account[]> {
+  return connection?.getProgramAccounts(new PublicKey(PROGRAM_ID), {
+    filters: [
+      {
+        memcmp: {
+          offset,
+          bytes: publicKey.toBase58(),
+        },
+      },
+    ],
+  });
 }
 
 async function ata(mint: PublicKey, account: PublicKey) {

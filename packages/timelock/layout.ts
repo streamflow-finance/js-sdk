@@ -1,5 +1,5 @@
 import BufferLayout from "buffer-layout";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, AccountInfo } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 
 const LE = "le"; //little endian
@@ -126,3 +126,7 @@ export interface Stream {
 
 export type StreamDirectionType = "outgoing" | "incoming" | "all";
 export type StreamType = "stream" | "vesting" | "all"; //wutevs
+export interface Account {
+  pubkey: PublicKey;
+  account: AccountInfo<Buffer>;
+}
