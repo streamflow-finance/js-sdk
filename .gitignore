@@ -18,3 +18,7 @@ test-ledger/
 docker-target
 
 packages/*/dist/
+
+
+.DS_Store
+packages/.DS_Store

@@ -1,5 +1,5 @@
 import BufferLayout from "buffer-layout";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, AccountInfo } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
 
 const LE = "le"; //little endian
@@ -34,12 +34,12 @@ const TokenStreamDataLayout = BufferLayout.struct<Stream>([
   BufferLayout.blob(8, "amount_per_period"),
   BufferLayout.blob(8, "cliff"),
   BufferLayout.blob(8, "cliff_amount"),
-  BufferLayout.blob(1, "cancelable_by_sender"),
-  BufferLayout.blob(1, "cancelable_by_recipient"),
-  BufferLayout.blob(1, "automatic_withdrawal"),
-  BufferLayout.blob(1, "transferable_by_sender"),
-  BufferLayout.blob(1, "transferable_by_recipient"),
-  BufferLayout.blob(1, "can_topup"),
+  BufferLayout.u8("cancelable_by_sender"),
+  BufferLayout.u8("cancelable_by_recipient"),
+  BufferLayout.u8("automatic_withdrawal"),
+  BufferLayout.u8("transferable_by_sender"),
+  BufferLayout.u8("transferable_by_recipient"),
+  BufferLayout.u8("can_topup"),
   BufferLayout.utf8(200, "stream_name"), //  it is not NUL-terminated C string
 ]);
 
@@ -75,20 +75,12 @@ export function decode(buf: Buffer) {
     amount_per_period: new BN(raw.amount_per_period, LE),
     cliff: new BN(raw.cliff, LE),
     cliff_amount: new BN(raw.cliff_amount, LE),
-    // @ts-ignore
-    cancelable_by_sender: Boolean(raw.cancelable_by_sender.readUInt8()),
-    // @ts-ignore
-    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient.readUInt8()),
-    // @ts-ignore
-    automatic_withdrawal: Boolean(raw.automatic_withdrawal.readUInt8()),
-    // @ts-ignore
-    transferable_by_sender: Boolean(raw.transferable_by_sender.readUInt8()),
-    transferable_by_recipient: Boolean(
-      // @ts-ignore
-      raw.transferable_by_recipient.readUInt8()
-    ),
-    // @ts-ignore
-    can_topup: Boolean(raw.can_topup.readUInt8()),
+    cancelable_by_sender: Boolean(raw.cancelable_by_sender),
+    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient),
+    automatic_withdrawal: Boolean(raw.automatic_withdrawal),
+    transferable_by_sender: Boolean(raw.transferable_by_sender),
+    transferable_by_recipient: Boolean(raw.transferable_by_recipient),
+    can_topup: Boolean(raw.can_topup),
     stream_name: String(raw.stream_name),
   };
 }
@@ -134,3 +126,7 @@ export interface Stream {
 
 export type StreamDirectionType = "outgoing" | "incoming" | "all";
 export type StreamType = "stream" | "vesting" | "all"; //wutevs
+export interface Account {
+  pubkey: PublicKey;
+  account: AccountInfo<Buffer>;
+}
