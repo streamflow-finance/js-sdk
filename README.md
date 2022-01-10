@@ -1,35 +1,36 @@
 # StreamFlow Timelock
 
-**Important: Code is undergoing security audit.**
+**Security audit passed. [Report here.](https://github.com/StreamFlow-Finance/timelock/blob/community/TIMELOCK_IMPLEMENTATION_COMMUNITY_REPORT_FINAL.pdf) ✅**
 
-Token Vesting and Streaming Payments for SPL tokens.
+-----
+## Token Vesting and Streaming Payments for SPL tokens.
 
 This is a free and open-source version of [Streamflow Timelock](../../tree/master) protocol.
 
-JS SDK interacts with Anchor program deployed on Solana mainnet. The Anchor program integrates and relies heavily on
+**JS SDK** interacts with Anchor program deployed on Solana mainnet.
+The Anchor program integrates and relies heavily on
 accompanying [Streamflow Timelock Rust crate (v0.3.2)](https://docs.rs/0.3.2/streamflow-timelock),
 ([source](https://github.com/streamflow-finance/timelock-crate/tree/community))
 
-Mainnet program ID: `8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX`
+**Mainnet program ID:** `8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX`
 
-It allows SPL timelock functionalities to be used "out of the box".
-
-Functionalities are:
+___
+**Functionalities are:**
 
 - `create` a vesting contract.
 - `withdraw` from a vesting contract. _Invoked by recipient (beneficiary)_
 - `cancel` a vesting contract. _Invoked by sender (creator)_
 - `transfer_recipient` of a vesting contract. _Invoked by recipient (beneficiary)_
 
-There are several ways to use Timelock protocol:
+There are several ways to use Streamflow Timelock protocol:
 
-- JS SDK (NPM package) available [here](https://www.npmjs.com/package/@streamflow/timelock/v/0.3.2-community)
-- Rust SDK (crate) for integration within Solana programs available [here](https://docs.rs/0.3.2/streamflow-timelock)
-- UI available at [https://app.streamflow.finance/vesting](https://app.streamflow.finance/vesting)
+- **`[preferred]` Full UI** available at [https://app.streamflow.finance/vesting](https://app.streamflow.finance/vesting)
+- **JS SDK** (NPM package) available [here](https://www.npmjs.com/package/@streamflow/timelock/v/0.3.2-community)
+- **Rust SDK (crate)** for integration within Solana programs available [here](https://docs.rs/0.3.2/streamflow-timelock)
 
 ### System overview
 
-System has 4 composable layers. There are (top to bottom):
+System has 4 composable layers. These are (top to bottom):
 
 - `streamflow-app` — React/TypeScript [web application that hosts user interface](https://app.streamflow.finance).
 - `@streamflow/timelock` — a [NPM package](https://www.npmjs.com/package/@streamflow/timelock) used by the web app.
