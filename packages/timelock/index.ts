@@ -27,7 +27,7 @@ const TX_FINALITY_CONFIRMED = "confirmed";
 const STREAM_STRUCT_OFFSET_SENDER = 49;
 const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 
-const PROGRAM_ID = "sfkEBYd2MMWmQqVsKojFGM5i3sj87NwQkrTbuwBze81";
+const PROGRAM_ID = idl.metadata.address;
 const STREAMFLOW_TREASURY = new PublicKey(
   "Ht5G1RhkcKnpLVLMhqJc5aqZ4wYUEbxbtZwGCVbgU7DL"
 );
@@ -203,7 +203,7 @@ export default class Stream {
     return await program.rpc.cancel({
       accounts: {
         authority: wallet.publicKey,
-        sender: wallet.publicKey,
+        sender: data.sender,
         senderTokens: data.sender_tokens,
         recipient: data.recipient,
         recipientTokens: data.recipient_tokens,
