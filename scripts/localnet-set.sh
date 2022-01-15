@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# This script configures the devnet for test transfers with hardcoded addresses.
+# This script configures the local validator for test transfers
 set -x
-
+gnome-terminal -e solana-test-validator
+sleep 5s
+gnome-terminal -e "solana logs"
 solana config set --url l
-# Fund our account (as defined in solana/keys/solana-devnet.json).
-retry solana airdrop 1000
+
+solana airdrop 1000
 
 # Create a new SPL token
 token=$(spl-token create-token | grep 'Creating token' | awk '{ print $3 }')
