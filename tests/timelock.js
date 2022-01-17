@@ -18,6 +18,7 @@ const u64_MAX = new BN(2).pow(new BN(64)).subn(1);
 
 // The stream recipient main wallet
 const recipient = Keypair.generate();
+let newRecipient = Keypair.generate();
 
 const STREAMFLOW_TREASURY = new PublicKey(
   "Ht5G1RhkcKnpLVLMhqJc5aqZ4wYUEbxbtZwGCVbgU7DL"
@@ -44,6 +45,9 @@ describe("timelock", () => {
   let vault;
   let createParams;
   let createAccounts;
+  let cancelAccounts;
+  let withdrawAccounts;
+  let transferAccounts;
 
   // Divide by 1000 to convert milliseconds to Unix timestamp (seconds)
   let start = new BN(+new Date() / 1000 + 5); //add several seconds to make sure this time is not in the past at the time of program invocation.
@@ -92,7 +96,12 @@ describe("timelock", () => {
     // airdrop to receiver, we'll need it later for transfer recipient fees
     let tx = await program.provider.connection.requestAirdrop(
       recipient.publicKey,
-      LAMPORTS_PER_SOL
+      2 * LAMPORTS_PER_SOL
+    );
+
+    await program.provider.connection.requestAirdrop(
+      sender.publicKey,
+      2 * LAMPORTS_PER_SOL
     );
 
     createParams = {
@@ -129,6 +138,23 @@ describe("timelock", () => {
       partner: STREAMFLOW_TREASURY,
       partnerTokens: streamflowTreasuryTokens,
       feeOracle: STREAMFLOW_TREASURY,
+    };
+
+    cancelAccounts = {
+      authority: sender.publicKey,
+      sender: sender.publicKey,
+      senderTokens,
+      recipient: recipient.publicKey,
+      recipientTokens,
+      metadata: metadata.publicKey,
+      escrowTokens,
+      streamflowTreasury: STREAMFLOW_TREASURY,
+      streamflowTreasuryTokens: streamflowTreasuryTokens,
+      partner: STREAMFLOW_TREASURY,
+      partnerTokens: streamflowTreasuryTokens,
+      mint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
     };
 
     // console.log("Initialization ready.");
@@ -220,7 +246,7 @@ describe("timelock", () => {
     assert.ok(escrowAmountAfter === grossAmount.toNumber());
   });
 
-  it("Withdraws specific amount of available tokens (10) from a contract", async () => {
+  it("Withdraws specific amount of available tokens  from a contract", async () => {
     console.log("*** WITHDRAW ***");
     timePassed();
 
@@ -248,19 +274,20 @@ describe("timelock", () => {
       },
       signers: [recipient],
     });
+
     contract = await getMetadata(metadata.publicKey);
     const recipientAmountAfter = await getTokenAmount(recipientTokens);
     const escrowAmountAfter = await getTokenAmount(escrowTokens);
     //todo: strm & partner treasury before & after
     console.table({
-      withdrawing: withdrawAmount,
+      withdrawing: withdrawAmount.toNumber(),
+      "withdrawn (in contract)": contract.withdrawn_amount.toNumber(),
       escrowAmountBefore,
       escrowAmountAfter,
       recipientAmountBefore,
       recipientAmountAfter,
       netDepositedAmountBefore: netDepositedAmountBefore.toNumber(),
       netDepositedAmountAfter: contract.net_deposited_amount.toNumber(),
-      "withdrawn (in contract)": contract.withdrawn_amount.toNumber(),
     });
 
     assert.ok(
@@ -280,8 +307,7 @@ describe("timelock", () => {
     let contract = await getMetadata(metadata.publicKey);
     const recipientBefore = contract.recipient.toBase58();
     const recipientTokensBefore = contract.recipient_tokens.toBase58();
-    let newRecipient = Keypair.generate();
-    let newRecipientTokens = await ata(mint, newRecipient.publicKey);
+    const newRecipientTokens = await ata(mint, newRecipient.publicKey);
 
     await program.rpc.transferRecipient({
       accounts: {
@@ -299,8 +325,8 @@ describe("timelock", () => {
       signers: [recipient],
     });
     contract = await getMetadata(metadata.publicKey);
-    let recipientAfter = contract.recipient.toBase58();
-    let recipientTokensAfter = contract.recipient_tokens.toBase58();
+    const recipientAfter = contract.recipient.toBase58();
+    const recipientTokensAfter = contract.recipient_tokens.toBase58();
     console.table({
       recipientBefore,
       recipientTokensBefore,
@@ -314,107 +340,64 @@ describe("timelock", () => {
     assert.ok(recipientAfter === newRecipient.publicKey.toBase58());
     assert.ok(recipientTokensAfter === newRecipientTokens.toBase58());
   });
-  // it("Cancels the stream", async () => {
-  //   setTimeout(async () => {
-  //     const oldBalance = await provider.connection.getBalance(sender.publicKey);
-  //     console.log("\nCancel:\n");
-  //     const oldSenderAta = await program.provider.connection.getAccountInfo(
-  //       senderTokens
-  //     );
-  //     const oldSenderAmount = common.token.parseTokenAccountData(
-  //       oldSenderAta.data
-  //     ).amount;
-  //     const oldEscrowAta = await program.provider.connection.getAccountInfo(
-  //       escrowTokens
-  //     );
-  //     const escrowAmountBefore = common.token.parseTokenAccountData(
-  //       oldEscrowAta.data
-  //     ).amount;
-  //     const oldRecipientAta = await program.provider.connection.getAccountInfo(
-  //       recipientTokens
-  //     );
-  //     const recipientAmountBefore = common.token.parseTokenAccountData(
-  //       oldRecipientAta.data
-  //     ).amount;
-  //
-  //     await program.rpc.cancel({
-  //       accounts: {
-  //         authority: sender.publicKey,
-  //         sender: sender.publicKey,
-  //         senderTokens,
-  //         recipient: recipient.publicKey,
-  //         recipientTokens,
-  //         metadata: metadata.publicKey,
-  //         escrowTokens,
-  //         streamflowTreasury: STREAMFLOW_TREASURY,
-  //         streamflowTreasuryTokens: streamflowTreasuryTokens,
-  //         partner: STREAMFLOW_TREASURY,
-  //         partnerTokens: streamflowTreasuryTokens,
-  //         mint,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //         systemProgram: SystemProgram.programId,
-  //       },
-  //       signers: [sender.payer],
-  //     });
-  //     const _metadata = await program.provider.connection.getAccountInfo(
-  //       metadata.publicKey
-  //     );
-  //     let strm_data = decode(_metadata.data);
-  //     console.log("Stream Data:\n", strm_data);
-  //
-  //     let escrowAmountAfter = 0; // It will stay 0 if closed
-  //     const newEscrowAta = await program.provider.connection.getAccountInfo(
-  //       escrowTokens
-  //     );
-  //     if (newEscrowAta) {
-  //       escrowAmountAfter = common.token.parseTokenAccountData(
-  //         newEscrowAta.data
-  //       ).amount;
-  //     }
-  //     const newRecipientAta = await program.provider.connection.getAccountInfo(
-  //       recipientTokens
-  //     );
-  //     const recipientAmountAfter = common.token.parseTokenAccountData(
-  //       newRecipientAta.data
-  //     ).amount;
-  //     const newSenderAta = await program.provider.connection.getAccountInfo(
-  //       senderTokens
-  //     );
-  //     const newSenderAmount = common.token.parseTokenAccountData(
-  //       newSenderAta.data
-  //     ).amount;
-  //
-  //     console.log("cancel:");
-  //     console.log(
-  //       "old sender",
-  //       oldSenderAmount,
-  //       "old recipient",
-  //       recipientAmountBefore,
-  //       "old escrow",
-  //       escrowAmountBefore
-  //     );
-  //     console.log(
-  //       "new sender",
-  //       newSenderAmount,
-  //       "new recipient",
-  //       recipientAmountAfter,
-  //       "new escrow:",
-  //       escrowAmountAfter,
-  //       "deposited amount",
-  //       depositedAmount.toNumber()
-  //     );
-  //     const newBalance = await provider.connection.getBalance(sender.publicKey);
-  //     console.log("Returned:", newBalance - oldBalance);
-  //     assert.ok(escrowAmountAfter === 0);
-  //     // assert.ok(decode(escrow.data).amount.eq(0));
-  //     assert.ok(
-  //       recipientAmountAfter + newSenderAmount - oldSenderAmount ===
-  //         escrowAmountBefore
-  //     );
-  //   }, 15500);
-  // });
-  //
-  //
+  it("Cancels the stream (with updated recipient)", async () => {
+    console.log("*** CANCEL (should throw Exception) ***");
+    timePassed();
+    try {
+      await program.rpc.cancel({
+        accounts: cancelAccounts,
+        signers: [sender.payer],
+      });
+      assert(false);
+    } catch (e) {
+      console.log("cancel start %s end", e);
+      assert(true);
+    }
+  });
+  it("Cancels the stream (with updated recipient)", async () => {
+    console.log("*** CANCEL ***");
+    timePassed();
+
+    let contract = await getMetadata(metadata.publicKey);
+    const senderAmountBefore = await getTokenAmount(senderTokens);
+    const escrowAmountBefore = await getTokenAmount(escrowTokens);
+    const recipientAmountBefore = await getTokenAmount(recipientTokens);
+    const withdrawnAmountBefore = contract.withdrawn_amount;
+    let newCancelAccounts = { ...cancelAccounts };
+    newCancelAccounts.recipient = newRecipient.publicKey;
+    newCancelAccounts.recipientTokens = await ata(mint, newRecipient.publicKey);
+
+    await program.rpc.cancel({
+      accounts: newCancelAccounts,
+      signers: [sender.payer],
+    });
+
+    contract = await getMetadata(metadata.publicKey);
+
+    const senderAmountAfter = await getTokenAmount(senderTokens);
+    //todo: will fail bcs escrow is closed
+    const escrowAmountAfter = await getTokenAmount(escrowTokens);
+    const recipientAmountAfter = await getTokenAmount(recipientTokens);
+
+    console.table({
+      senderAmountBefore,
+      senderAmountBefore,
+      escrowAmountBefore,
+      escrowAmountAfter,
+      recipientAmountBefore,
+      recipientAmountAfter,
+    });
+
+    const newBalance = await provider.connection.getBalance(sender.publicKey);
+    console.log("Returned:", newBalance - senderAmountBefore);
+    assert.ok(escrowAmountAfter === 0);
+    // assert.ok(decode(escrow.data).amount.eq(0));
+    assert.ok(
+      recipientAmountAfter + newSenderAmount - oldSenderAmount ===
+        escrowAmountBefore
+    );
+  });
+
   // it.skip("Creates recurring", async () => {
   //   console.log("\nRecurring");
   //
