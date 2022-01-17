@@ -27,7 +27,7 @@ const TX_FINALITY_CONFIRMED = "confirmed";
 const STREAM_STRUCT_OFFSET_SENDER = 49;
 const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 
-const PROGRAM_ID = idl.metadata.address;
+const PROGRAM_ID = "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ";
 const STREAMFLOW_TREASURY = new PublicKey(
   "Ht5G1RhkcKnpLVLMhqJc5aqZ4wYUEbxbtZwGCVbgU7DL"
 );
@@ -35,6 +35,11 @@ const STREAMFLOW_TREASURY = new PublicKey(
 function initProgram(connection: Connection, wallet: Wallet): Program {
   const provider = new Provider(connection, wallet, {});
   return new Program(idl as Idl, PROGRAM_ID, provider);
+}
+
+interface TransactionResponse {
+  tx: TransactionSignature;
+  data?: any;
 }
 
 export default class Stream {
@@ -79,7 +84,7 @@ export default class Stream {
     transferableByRecipient: boolean,
     automaticWithdrawal: boolean,
     partner: PublicKey | null = null
-  ): Promise<TransactionSignature> {
+  ): Promise<TransactionResponse> {
     const program = initProgram(connection, sender);
 
     const metadata = Keypair.generate();
@@ -94,7 +99,7 @@ export default class Stream {
 
     const signers = [metadata];
 
-    return await program.rpc.create(
+    const tx = await program.rpc.create(
       // Order of the parameters must match the ones in program
       start,
       depositedAmount,
@@ -132,6 +137,7 @@ export default class Stream {
         signers,
       }
     );
+    return { tx, data: metadata.publicKey };
   }
 
   /**
@@ -146,7 +152,7 @@ export default class Stream {
     invoker: Wallet,
     stream: PublicKey,
     amount: BN
-  ): Promise<TransactionSignature> {
+  ): Promise<TransactionResponse> {
     const program = initProgram(connection, invoker);
     const escrow = await connection.getAccountInfo(stream);
 
@@ -161,7 +167,7 @@ export default class Stream {
     const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY);
     const partnerTokens = await ata(mint, partner);
 
-    return await program.rpc.withdraw(amount, {
+    const tx = await program.rpc.withdraw(amount, {
       accounts: {
         authority: invoker.publicKey,
         recipient: invoker.publicKey,
@@ -176,6 +182,8 @@ export default class Stream {
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
+
+    return { tx };
   }
 
   /**
@@ -188,7 +196,7 @@ export default class Stream {
     connection: Connection,
     wallet: Wallet,
     stream: PublicKey
-  ): Promise<TransactionSignature> {
+  ): Promise<TransactionResponse> {
     const program = initProgram(connection, wallet);
     let escrow_acc = await connection.getAccountInfo(stream);
     if (!escrow_acc?.data) {
@@ -200,7 +208,7 @@ export default class Stream {
     const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY);
     const partnerTokens = await ata(mint, partner);
 
-    return await program.rpc.cancel({
+    const tx = await program.rpc.cancel({
       accounts: {
         authority: wallet.publicKey,
         sender: data.sender,
@@ -217,6 +225,8 @@ export default class Stream {
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
+
+    return { tx };
   }
 
   /**
@@ -232,7 +242,7 @@ export default class Stream {
     wallet: Wallet,
     stream: PublicKey,
     newRecipient: PublicKey
-  ): Promise<TransactionSignature> {
+  ): Promise<TransactionResponse> {
     const program = initProgram(connection, wallet);
     let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
@@ -243,7 +253,7 @@ export default class Stream {
     const mint = data.mint;
     const newRecipientTokens = await ata(mint, newRecipient);
 
-    return await program.rpc.transferRecipient({
+    const tx = await program.rpc.transferRecipient({
       accounts: {
         authority: wallet.publicKey,
         newRecipient,
@@ -256,6 +266,8 @@ export default class Stream {
         system: web3.SystemProgram.programId,
       },
     });
+
+    return { tx };
   }
 
   /**
@@ -270,7 +282,7 @@ export default class Stream {
     invoker: Wallet,
     stream: PublicKey,
     amount: BN
-  ): Promise<TransactionSignature> {
+  ): Promise<TransactionResponse> {
     const program = initProgram(connection, invoker);
     let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
@@ -283,7 +295,7 @@ export default class Stream {
     const partner = data.partner;
     const partnerTokens = await ata(data.mint, data.partner);
 
-    return await program.rpc.topup(amount, {
+    const tx = await program.rpc.topup(amount, {
       accounts: {
         sender: invoker.publicKey,
         senderTokens: data.sender_tokens,
@@ -297,6 +309,8 @@ export default class Stream {
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
+
+    return { tx };
   }
 
   /**
