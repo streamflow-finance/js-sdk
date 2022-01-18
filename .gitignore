@@ -18,3 +18,4 @@ test-ledger/
 docker-target
 
 packages/*/dist/
+/local/
