@@ -1,6 +1,7 @@
 import BufferLayout from "buffer-layout";
 import { PublicKey, AccountInfo } from "@solana/web3.js";
 import { BN } from "@project-serum/anchor";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 
 const LE = "le"; //little endian
 
@@ -132,3 +133,9 @@ export interface Account {
 }
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
+
+export enum LocalCluster {
+  Local = "local",
+}
+
+export type ClusterExtended = WalletAdapterNetwork | LocalCluster;
