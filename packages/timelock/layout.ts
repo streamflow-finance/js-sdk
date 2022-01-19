@@ -130,3 +130,9 @@ export interface Account {
   pubkey: PublicKey;
   account: AccountInfo<Buffer>;
 }
+
+export enum Cluster {
+  devnet = "devnet",
+  mainnet = "mainnet-beta",
+  local = "local",
+}
