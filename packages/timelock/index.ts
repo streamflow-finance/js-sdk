@@ -28,9 +28,9 @@ const STREAM_STRUCT_OFFSET_SENDER = 49;
 const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 
 const PROGRAM_ID = {
-  [Cluster.devnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
-  [Cluster.mainnet]: "8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX",
-  [Cluster.local]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
+  [Cluster.Devnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
+  [Cluster.Mainnet]: "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+  [Cluster.Testnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
 };
 
 const STREAMFLOW_TREASURY = new PublicKey(
@@ -73,7 +73,7 @@ export default class Stream {
    * @param {boolean} transferableByRecipient - Whether or not recipient can transfer the stream
    * @param {boolean} automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
    * @param {PublicKey | null} [partner = null] - Partner's wallet
-   * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+   * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
    */
   static async create(
     connection: Connection,
@@ -94,7 +94,7 @@ export default class Stream {
     transferableByRecipient: boolean,
     automaticWithdrawal: boolean,
     partner: PublicKey | null = null,
-    cluster: Cluster = Cluster.mainnet
+    cluster: Cluster = Cluster.Mainnet
   ): Promise<TransactionResponse> {
     const program = initProgram(connection, sender, cluster);
 
@@ -157,14 +157,14 @@ export default class Stream {
    * @param invoker
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be withdrawn from.
    * @param {BN} amount - Requested amount to withdraw. If BN(0), program attempts to withdraw maximum available amount.
-   * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+   * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
    */
   static async withdraw(
     connection: Connection,
     invoker: Wallet,
     stream: PublicKey,
     amount: BN,
-    cluster: Cluster = Cluster.mainnet
+    cluster: Cluster = Cluster.Mainnet
   ): Promise<TransactionResponse> {
     const program = initProgram(connection, invoker, cluster);
     const escrow = await connection.getAccountInfo(stream);
@@ -204,13 +204,13 @@ export default class Stream {
    * @param {Connection} connection
    * @param {Wallet} wallet - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be canceled.
-   * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+   * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
    */
   static async cancel(
     connection: Connection,
     wallet: Wallet,
     stream: PublicKey,
-    cluster: Cluster = Cluster.mainnet
+    cluster: Cluster = Cluster.Mainnet
   ): Promise<TransactionResponse> {
     const program = initProgram(connection, wallet, cluster);
     let escrow_acc = await connection.getAccountInfo(stream);
@@ -251,14 +251,14 @@ export default class Stream {
    * @param {Wallet} wallet - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {PublicKey} newRecipient - Address of a new stream/vesting contract recipient.
-   * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+   * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
    */
   static async transferRecipient(
     connection: Connection,
     wallet: Wallet,
     stream: PublicKey,
     newRecipient: PublicKey,
-    cluster: Cluster = Cluster.mainnet
+    cluster: Cluster = Cluster.Mainnet
   ): Promise<TransactionResponse> {
     const program = initProgram(connection, wallet, cluster);
     let escrow = await connection.getAccountInfo(stream);
@@ -293,14 +293,14 @@ export default class Stream {
    * @param {Wallet} invoker - Wallet signing the transaction. It's address should match current stream recipient or transaction will fail.
    * @param {PublicKey} stream - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {BN} amount - Specified amount to topup (increases deposited amount).
-   * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+   * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
    */
   static async topup(
     connection: Connection,
     invoker: Wallet,
     stream: PublicKey,
     amount: BN,
-    cluster: Cluster = Cluster.mainnet
+    cluster: Cluster = Cluster.Mainnet
   ): Promise<TransactionResponse> {
     const program = initProgram(connection, invoker, cluster);
     let escrow = await connection.getAccountInfo(stream);
@@ -359,14 +359,14 @@ export default class Stream {
    * @param {PublicKey} publicKey
    * @param {StreamType} type
    * @param {StreamDirectionType} direction
-   * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+   * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
    */
   static async get(
     connection: Connection,
     publicKey: PublicKey,
     type: StreamType = "all",
     direction: StreamDirectionType = "all",
-    cluster: Cluster = Cluster.mainnet
+    cluster: Cluster = Cluster.Mainnet
   ): Promise<[string, StreamData][]> {
     let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
@@ -421,13 +421,13 @@ export default class Stream {
  * @param {Connection} connection
  * @param {PublicKey} publicKey
  * @param {number} offset
- * @param {Cluster} [cluster = Cluster.mainnet] - cluster: devnet, mainnet-beta or local
+ * @param {Cluster} [cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta or local
  */
 async function getProgramAccounts(
   connection: Connection,
   publicKey: PublicKey,
   offset: number,
-  cluster: Cluster = Cluster.mainnet
+  cluster: Cluster = Cluster.Mainnet
 ): Promise<Account[]> {
   return connection?.getProgramAccounts(new PublicKey(PROGRAM_ID[cluster]), {
     filters: [

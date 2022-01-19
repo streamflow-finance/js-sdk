@@ -125,14 +125,10 @@ export interface Stream {
 }
 
 export type StreamDirectionType = "outgoing" | "incoming" | "all";
-export type StreamType = "stream" | "vesting" | "all"; //wutevs
+export type StreamType = "stream" | "vesting" | "all";
 export interface Account {
   pubkey: PublicKey;
   account: AccountInfo<Buffer>;
 }
 
-export enum Cluster {
-  devnet = "devnet",
-  mainnet = "mainnet-beta",
-  local = "local",
-}
+export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
