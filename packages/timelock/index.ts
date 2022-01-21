@@ -47,6 +47,8 @@ function initProgram(
   return new Program(idl as Idl, PROGRAM_ID[cluster], provider);
 }
 
+const encoder = new TextEncoder();
+
 interface TransactionResponse {
   tx: TransactionSignature;
   data?: any;
@@ -111,8 +113,18 @@ export default class Stream {
 
     const signers = [metadata];
 
+    const nameUtf8Encoded = encoder.encode(name);
+    const nameUtf8EncodedBytes: BN[] = [];
+    nameUtf8Encoded.forEach((elem) => nameUtf8EncodedBytes.push(new BN(elem)));
+
+    if (nameUtf8EncodedBytes.length < 64) {
+      const length = nameUtf8EncodedBytes.length;
+      const fill = new Array(64 - length).fill(new BN(0));
+      nameUtf8EncodedBytes.push(...fill);
+    }
+
     const tx = await program.rpc.create(
-      // Order of the parameters must match the ones in program
+      // Order of the parameters must match the ones in the program
       start,
       depositedAmount,
       period,
@@ -125,7 +137,7 @@ export default class Stream {
       transferableBySender,
       transferableByRecipient,
       canTopup,
-      name,
+      nameUtf8EncodedBytes,
       {
         accounts: {
           sender: sender.publicKey,
