@@ -1139,11 +1139,10 @@ dependencies = [
 
 [[package]]
 name = "spl-associated-token-account"
-version = "1.0.4"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44a7b802822cb7d3bee094acb356661b33d1372ef59488eaf69911af2ad9a45e"
+checksum = "393e2240d521c3dd770806bff25c2c00d761ac962be106e14e22dd912007f428"
 dependencies = [
- "borsh",
  "solana-program",
  "spl-token",
 ]
@@ -1165,7 +1164,7 @@ dependencies = [
 [[package]]
 name = "streamflow-timelock"
 version = "0.3.0"
-source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=dev#6c99d394a69008a1abbc88edae1405f5ab792113"
+source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=beta#82ad24acaac6321af445fb8d7fb7b80a93fbe4df"
 dependencies = [
  "borsh",
  "num-traits",
