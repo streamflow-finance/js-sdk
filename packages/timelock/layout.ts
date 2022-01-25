@@ -4,8 +4,9 @@ import { BN } from "@project-serum/anchor";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 
 const LE = "le"; //little endian
+var decoder = new TextDecoder("utf-8");
 
-const TokenStreamDataLayout = BufferLayout.struct<Stream>([
+const TokenStreamDataLayout = BufferLayout.struct<any>([
   BufferLayout.blob(8, "magic"),
   BufferLayout.blob(1, "version"),
   BufferLayout.blob(8, "created_at"),
@@ -41,11 +42,12 @@ const TokenStreamDataLayout = BufferLayout.struct<Stream>([
   BufferLayout.u8("transferable_by_sender"),
   BufferLayout.u8("transferable_by_recipient"),
   BufferLayout.u8("can_topup"),
-  BufferLayout.utf8(200, "stream_name"), //  it is not NUL-terminated C string
+  BufferLayout.blob(64, "stream_name"), //  it is not NUL-terminated C string
 ]);
 
 export function decode(buf: Buffer) {
   let raw = TokenStreamDataLayout.decode(buf);
+
   return {
     magic: new BN(raw.magic, LE),
     version: new BN(raw.version, LE),
@@ -82,7 +84,7 @@ export function decode(buf: Buffer) {
     transferable_by_sender: Boolean(raw.transferable_by_sender),
     transferable_by_recipient: Boolean(raw.transferable_by_recipient),
     can_topup: Boolean(raw.can_topup),
-    stream_name: String(raw.stream_name),
+    stream_name: decoder.decode(raw.stream_name),
   };
 }
 
