@@ -1,7 +1,7 @@
 [programs.localnet]
-timelock = "HgbG5ii7UEYMyRTpKTSqW8xr1xzfQdXgLmpPh77TsPha"
+timelock = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 [programs.devnet]
-timelock = "GutMKXfaxeoi8yg6UymENGm8BRTZ9RU3RSRLoJuCFaH8"
+timelock = "BBbP5MHFSfcoygAtaPpWUmiEdb7yW2mZHDzg2MTnAsVa"
 [programs.mainnet]
 timelock = "8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX"
 
