@@ -47,7 +47,7 @@ const TokenStreamDataLayout = BufferLayout.struct<any>([
 
 export function decode(buf: Buffer) {
   let raw = TokenStreamDataLayout.decode(buf);
-
+  return {
     magic: new BN(raw.magic, LE),
     version: new BN(raw.version, LE),
     created_at: new BN(raw.created_at, LE),
