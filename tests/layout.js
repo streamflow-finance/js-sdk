@@ -17,7 +17,7 @@ var TokenStreamDataLayout = buffer_layout_1.default.struct([
   buffer_layout_1.default.blob(8, "created_at"),
   buffer_layout_1.default.blob(8, "withdrawn_amount"),
   buffer_layout_1.default.blob(8, "canceled_at"),
-  buffer_layout_1.default.blob(8, "closable_at"),
+  buffer_layout_1.default.blob(8, "end_time"),
   buffer_layout_1.default.blob(8, "last_withdrawn_at"),
   buffer_layout_1.default.blob(32, "sender"),
   buffer_layout_1.default.blob(32, "sender_tokens"),
@@ -58,7 +58,7 @@ function decode(buf) {
     created_at: new anchor_1.BN(raw.created_at, LE),
     withdrawn_amount: new anchor_1.BN(raw.withdrawn_amount, LE),
     canceled_at: new anchor_1.BN(raw.canceled_at, LE),
-    closable_at: new anchor_1.BN(raw.closable_at, LE),
+    end_time: new anchor_1.BN(raw.end_time, LE),
     last_withdrawn_at: new anchor_1.BN(raw.last_withdrawn_at, LE),
     sender: new web3_js_1.PublicKey(raw.sender),
     sender_tokens: new web3_js_1.PublicKey(raw.sender_tokens),
@@ -84,12 +84,14 @@ function decode(buf) {
     amount_per_period: new anchor_1.BN(raw.amount_per_period, LE),
     cliff: new anchor_1.BN(raw.cliff, LE),
     cliff_amount: new anchor_1.BN(raw.cliff_amount, LE),
-    cancelable_by_sender: Boolean(raw.cancelable_by_sender).valueOf(),
-    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient).valueOf(),
-    automatic_withdrawal: Boolean(raw.automatic_withdrawal).valueOf(),
-    transferable_by_sender: Boolean(raw.transferable_by_sender).valueOf(),
-    transferable_by_recipient: Boolean(raw.transferable_by_recipient).valueOf(),
-    can_topup: Boolean(raw.can_topup).valueOf(),
+    cancelable_by_sender: Boolean(Buffer(raw.cancelable_by_sender).readUInt8()),
+    cancelable_by_recipient: Boolean(raw.cancelable_by_recipient.readUInt8()),
+    automatic_withdrawal: Boolean(raw.automatic_withdrawal.readUInt8()),
+    transferable_by_sender: Boolean(raw.transferable_by_sender.readUInt8()),
+    transferable_by_recipient: Boolean(
+      raw.transferable_by_recipient.readUInt8()
+    ),
+    can_topup: Boolean(raw.can_topup.readUInt8()),
     stream_name: String(raw.stream_name),
   };
 }
