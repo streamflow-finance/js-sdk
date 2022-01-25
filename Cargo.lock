@@ -645,9 +645,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.113"
+version = "0.2.114"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eef78b64d87775463c549fbd80e19249ef436ea3bf1de2a1eb7e717ec7fab1e9"
+checksum = "b0005d08a8f7b65fb8073cb697aa0b12b631ed251ce73d862ce50eeb52ce3b50"
 
 [[package]]
 name = "libsecp256k1"
@@ -1139,11 +1139,10 @@ dependencies = [
 
 [[package]]
 name = "spl-associated-token-account"
-version = "1.0.4"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44a7b802822cb7d3bee094acb356661b33d1372ef59488eaf69911af2ad9a45e"
+checksum = "393e2240d521c3dd770806bff25c2c00d761ac962be106e14e22dd912007f428"
 dependencies = [
- "borsh",
  "solana-program",
  "spl-token",
 ]
@@ -1165,7 +1164,7 @@ dependencies = [
 [[package]]
 name = "streamflow-timelock"
 version = "0.3.0"
-source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=dev#6c99d394a69008a1abbc88edae1405f5ab792113"
+source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=dev#4f89f47a66529d8f42aea3875a4390e1f833ebea"
 dependencies = [
  "borsh",
  "num-traits",
