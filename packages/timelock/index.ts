@@ -113,17 +113,7 @@ export default class Stream {
 
     const signers = [metadata];
 
-    const nameUtf8Encoded = encoder.encode(name);
-
-    debugger;
-    const nameUtf8EncodedBytes: BN[] = [];
-    nameUtf8Encoded.forEach((elem) => nameUtf8EncodedBytes.push(new BN(elem)));
-
-    if (nameUtf8EncodedBytes.length < 64) {
-      const length = nameUtf8EncodedBytes.length;
-      const fill = new Array(64 - length).fill(new BN(0));
-      nameUtf8EncodedBytes.push(...fill);
-    }
+    const nameUtf8EncodedBytes: BN[] = formatStringToBytesArray(encoder, name);
 
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
@@ -464,4 +454,26 @@ async function ata(mint: PublicKey, account: PublicKey) {
     mint,
     account
   );
+}
+
+function formatStringToBytesArray(encoder: TextEncoder, text: string) {
+  const textCopy = [...text];
+  const characters = Array.from(textCopy);
+  const utf8EncodedBytes: BN[] = [];
+
+  characters.every((char) => {
+    if (utf8EncodedBytes.length > 64) return false;
+
+    const encoded = encoder.encode(char);
+    if (utf8EncodedBytes.length + encoded.length > 64) return false;
+
+    encoded.forEach((elem) => utf8EncodedBytes.push(new BN(elem)));
+    return true;
+  });
+
+  const numberOfBytes = utf8EncodedBytes.length;
+  const fill = new Array(64 - numberOfBytes).fill(new BN(0));
+  utf8EncodedBytes.push(...fill);
+
+  return utf8EncodedBytes;
 }
