@@ -457,7 +457,6 @@ async function ata(mint: PublicKey, account: PublicKey) {
 }
 
 function formatStringToBytesArray(encoder: TextEncoder, text: string) {
-  // @ts-ignore
   const textCopy = [...text];
   const characters = Array.from(textCopy);
   const utf8EncodedBytes: BN[] = [];
