@@ -142,7 +142,9 @@ export default {
         },
         {
           name: "streamName",
-          type: "string",
+          type: {
+            array: ["u8", 64],
+          },
         },
       ],
     },
@@ -396,7 +398,4 @@ export default {
       ],
     },
   ],
-  metadata: {
-    address: "sfkEBYd2MMWmQqVsKojFGM5i3sj87NwQkrTbuwBze81",
-  },
 };
