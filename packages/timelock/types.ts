@@ -1,0 +1,188 @@
+import { Wallet, BN } from "@project-serum/anchor";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
+
+export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
+
+export enum StreamDirection {
+  Outgoing = "outgoing",
+  Incoming = "incoming",
+  All = "all",
+}
+
+export enum StreamType {
+  Stream = "stream",
+  Vesting = "vesting",
+  All = "all",
+}
+
+export interface Account {
+  pubkey: PublicKey;
+  account: AccountInfo<Buffer>;
+}
+
+export enum LocalCluster {
+  Local = "local",
+}
+
+export type ClusterExtended = WalletAdapterNetwork | LocalCluster;
+
+export interface CreateStreamData {
+  recipient: string;
+  mint: string;
+  start: string;
+  depositedAmount: number;
+  period: number;
+  cliff: string;
+  cliffAmount: number;
+  amountPerPeriod: number;
+  name: string;
+  canTopup: boolean;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+}
+
+export interface CreateStreamParams extends CreateStreamData {
+  connection: Connection;
+  sender: Wallet;
+  partner?: string;
+  cluster?: ClusterExtended;
+}
+
+export interface WithdrawStreamData {
+  id: string;
+  amount: number;
+}
+
+export interface WithdrawStreamParams extends WithdrawStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface TopupStreamData {
+  id: string;
+  amount: number;
+}
+
+export interface TopupStreamParams extends TopupStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface CancelStreamData {
+  id: string;
+}
+
+export interface CancelStreamParams extends CancelStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface TransferStreamData {
+  id: string;
+  recipientId: string;
+}
+
+export interface TransferStreamParams extends TransferStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface GetStreamParams {
+  connection: Connection;
+  id: string;
+}
+
+export interface GetStreamsParams {
+  connection: Connection;
+  wallet: PublicKey;
+  type?: StreamType;
+  direction?: StreamDirection;
+  cluster?: ClusterExtended;
+}
+
+// TODO: Check all types in Stream
+export interface Stream {
+  magic: BN;
+  version: BN;
+  createdAt: number;
+  withdrawnAmount: number;
+  canceledAt: number;
+  end: number;
+  lastWithdrawnAt: number;
+  sender: string;
+  senderTokens: PublicKey;
+  recipient: string;
+  recipientTokens: PublicKey;
+  mint: string;
+  escrowTokens: PublicKey;
+  streamflowTreasury: PublicKey;
+  streamflowTreasuryTokens: PublicKey;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
+  streamflowFeePercent: BN;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
+  partnerFeePercent: BN;
+  partner: string;
+  partnerTokens: PublicKey;
+  start: number;
+  depositedAmount: number;
+  period: number;
+  amountPerPeriod: number;
+  cliff: number;
+  cliffAmount: number;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  canTopup: boolean;
+  name: string;
+}
+
+export interface DecodedStream {
+  magic: BN;
+  version: BN;
+  createdAt: BN;
+  withdrawnAmount: BN;
+  canceledAt: BN;
+  end: BN;
+  lastWithdrawnAt: BN;
+  sender: PublicKey;
+  senderTokens: PublicKey;
+  recipient: PublicKey;
+  recipientTokens: PublicKey;
+  mint: PublicKey;
+  escrowTokens: PublicKey;
+  streamflowTreasury: PublicKey;
+  streamflowTreasuryTokens: PublicKey;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
+  streamflowFeePercent: BN;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
+  partnerFeePercent: BN;
+  partner: PublicKey;
+  partnerTokens: PublicKey;
+  start: BN;
+  depositedAmount: BN;
+  period: BN;
+  amountPerPeriod: BN;
+  cliff: BN;
+  cliffAmount: BN;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  canTopup: boolean;
+  name: string;
+}
