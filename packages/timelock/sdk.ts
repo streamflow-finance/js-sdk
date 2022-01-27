@@ -347,7 +347,7 @@ export default class Stream {
 
   /**
    * Get streams by providing direction (incoming, outgoing, all) and type (stream, vesting, all),
-   * streams are sorted by start_time value in ascending order
+   * streams are sorted by start time value in ascending order
    * @param param
    * @returns
    */
@@ -390,15 +390,14 @@ export default class Stream {
     });
 
     const sortedStreams = Object.entries(streams).sort(
-      ([, stream1], [, stream2]) =>
-        stream2.start_time.toNumber() - stream1.start_time.toNumber()
+      ([, stream1], [, stream2]) => stream2.startTime - stream1.startTime
     );
 
     if (type === "all") return sortedStreams;
 
     return type === "stream"
-      ? sortedStreams.filter((stream) => stream[1].can_topup)
-      : sortedStreams.filter((stream) => !stream[1].can_topup);
+      ? sortedStreams.filter((stream) => stream[1].canTopup)
+      : sortedStreams.filter((stream) => !stream[1].canTopup);
   }
 }
 
