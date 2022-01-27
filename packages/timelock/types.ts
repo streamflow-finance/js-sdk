@@ -1,4 +1,5 @@
-import { Wallet, BN } from "@project-serum/anchor";
+import { BN } from "@project-serum/anchor";
+import { Wallet } from "@project-serum/anchor/src/provider";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   AccountInfo,
@@ -35,10 +36,10 @@ export type ClusterExtended = WalletAdapterNetwork | LocalCluster;
 export interface CreateStreamData {
   recipient: string;
   mint: string;
-  start: string;
+  start: number;
   depositedAmount: number;
   period: number;
-  cliff: string;
+  cliff: number;
   cliffAmount: number;
   amountPerPeriod: number;
   name: string;

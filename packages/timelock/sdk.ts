@@ -1,5 +1,5 @@
 import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
-import { Wallet } from "@project-serum/anchor";
+import { Wallet } from "@project-serum/anchor/src/provider";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
@@ -246,7 +246,7 @@ export default class Stream {
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator (i.e. current recipient)
    * @param {TransferStreamParams} data
    */
-  static async transferRecipient({
+  static async transfer({
     connection,
     invoker,
     id,
