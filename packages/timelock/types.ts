@@ -50,7 +50,6 @@ export interface CreateStreamData {
   transferableByRecipient: boolean;
   automaticWithdrawal: boolean;
 }
-
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
