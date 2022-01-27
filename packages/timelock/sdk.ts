@@ -1,5 +1,5 @@
 import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
-import { Wallet } from "@project-serum/anchor/src/provider";
+import { Wallet } from "@project-serum/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
@@ -11,7 +11,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionSignature,
 } from "@solana/web3.js";
 
 import {
@@ -28,6 +27,8 @@ import {
   Cluster,
   GetStreamParams,
   GetStreamsParams,
+  CreateStreamResponse,
+  TransactionResponse,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
 import {
@@ -39,21 +40,16 @@ import {
 } from "./constants";
 import idl from "./idl";
 
-function initProgram(
+const encoder = new TextEncoder();
+
+const initProgram = (
   connection: Connection,
   wallet: Wallet,
   cluster: ClusterExtended
-): Program {
+): Program => {
   const provider = new Provider(connection, wallet, {});
   return new Program(idl as Idl, PROGRAM_ID[cluster], provider);
-}
-
-const encoder = new TextEncoder();
-
-interface TransactionResponse {
-  tx: TransactionSignature;
-  data?: any;
-}
+};
 
 export default class Stream {
   /**
@@ -81,7 +77,7 @@ export default class Stream {
     automaticWithdrawal,
     partner,
     cluster = Cluster.Mainnet,
-  }: CreateStreamParams): Promise<TransactionResponse> {
+  }: CreateStreamParams): Promise<CreateStreamResponse> {
     const program = initProgram(connection, sender, cluster);
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
@@ -144,7 +140,13 @@ export default class Stream {
         signers,
       }
     );
-    return { tx, data: metadata.publicKey };
+
+    const stream = await this.getOne({
+      connection,
+      id: metadata.publicKey.toBase58(),
+    });
+
+    return { tx, id: metadata.publicKey.toBase58(), data: stream };
   }
 
   /**

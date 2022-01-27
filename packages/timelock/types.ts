@@ -1,6 +1,11 @@
 import { Wallet, BN } from "@project-serum/anchor";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { AccountInfo, Connection, PublicKey } from "@solana/web3.js";
+import {
+  AccountInfo,
+  Connection,
+  PublicKey,
+  TransactionSignature,
+} from "@solana/web3.js";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
@@ -110,29 +115,29 @@ export interface GetStreamsParams {
 
 // TODO: Check all types in Stream
 export interface Stream {
-  magic: BN;
-  version: BN;
+  magic: number;
+  version: number;
   createdAt: number;
   withdrawnAmount: number;
   canceledAt: number;
   end: number;
   lastWithdrawnAt: number;
   sender: string;
-  senderTokens: PublicKey;
+  senderTokens: string;
   recipient: string;
-  recipientTokens: PublicKey;
+  recipientTokens: string;
   mint: string;
-  escrowTokens: PublicKey;
-  streamflowTreasury: PublicKey;
-  streamflowTreasuryTokens: PublicKey;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: BN;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
-  partnerFeePercent: BN;
+  escrowTokens: string;
+  streamflowTreasury: string;
+  streamflowTreasuryTokens: string;
+  streamflowFeeTotal: number;
+  streamflowFeeWithdrawn: number;
+  streamflowFeePercent: number;
+  partnerFeeTotal: number;
+  partnerFeeWithdrawn: number;
+  partnerFeePercent: number;
   partner: string;
-  partnerTokens: PublicKey;
+  partnerTokens: string;
   start: number;
   depositedAmount: number;
   period: number;
@@ -185,4 +190,13 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
+}
+
+export interface TransactionResponse {
+  tx: TransactionSignature;
+}
+
+export interface CreateStreamResponse extends TransactionResponse {
+  id: string;
+  data: Stream;
 }
