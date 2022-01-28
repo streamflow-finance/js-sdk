@@ -53,7 +53,7 @@ export interface CreateStreamData {
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
-  partner?: string;
+  partner?: string | null;
   cluster?: ClusterExtended;
 }
 
@@ -113,7 +113,6 @@ export interface GetStreamsParams {
   cluster?: ClusterExtended;
 }
 
-// TODO: Check all types in Stream
 export interface Stream {
   magic: number;
   version: number;
