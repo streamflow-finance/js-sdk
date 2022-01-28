@@ -161,8 +161,8 @@ const streams = Stream.get({
 
 ### Additional notes
 
-#### All amounts are sent/retrieved in the smallest units.
+##### All amounts are sent/retrieved in the smallest units.
 
 E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000.
 
-#### Date values are sent/retrieved in seconds (be sure to not expect ms).
+##### Date values are sent/retrieved in seconds (be sure to not expect ms).
