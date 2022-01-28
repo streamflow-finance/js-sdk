@@ -60,21 +60,21 @@ export default class Stream {
    * @param {Wallet} data.sender - Wallet signing the transaction. It's address should match authorized wallet (sender) or transaction will fail.
    * @param {string} data.recipient - Solana address of a recipient. Associated token account will be derived from this address and SPL Token mint address.
    * @param {string} data.mint - SPL Token mint.
-   * @param {number} data.start - Timestamp (in seconds) when the tokens start vesting
+   * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
    * @param {number} data.depositedAmount - Initially deposited amount of tokens.
-   * @param {number} data.period - Time step (period) in seconds per which the vesting occurs
-   * @param {number} data.cliff - Vesting contract "cliff" timestamp
-   * @param {number} data.cliffAmount - Amount unlocked at the "cliff" timestamp
-   * @param {number} data.amountPerPeriod - Release rate
-   * @param {string} data.name - Name/Subject
-   * @param {boolean} data.canTopup - Specific for vesting contracts. TRUE for vesting contracts, FALSE for streams.
-   * @param {boolean} data.cancelableBySender - Can sender cancel stream
-   * @param {boolean} data.cancelableByRecipient - Can recipient cancel stream
-   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream
-   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream
-   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set to FALSE)
-   * @param {string | null} [data.partner = null] - Partner's wallet
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta, testnet or local
+   * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
+   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds (not relevant when streaming, but the field is mandatory, best to send start time).
+   * @param {number} data.cliffAmount - Amount unlocked at the "cliff" timestamp (not relevant when streaming, but the field is mandatory, best to send 0).
+   * @param {number} data.amountPerPeriod - Release rate: how many tokens are unlocked per each period.
+   * @param {string} data.name - The stream name/subject.
+   * @param {boolean} data.canTopup - TRUE for vesting contracts, FALSE for streams.
+   * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
+   * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
+   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
+   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
+   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
+   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async create({
     connection,
@@ -176,7 +176,7 @@ export default class Stream {
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
    * @param {number} data.amount - Requested amount to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta, testnet or local
+   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async withdraw({
     connection,
@@ -226,7 +226,7 @@ export default class Stream {
    * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be canceled.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta, testnet or local
+   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async cancel({
     connection,
@@ -278,7 +278,7 @@ export default class Stream {
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {string} data.recipientId - Address of a new recipient.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta, testnet or local
+   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async transfer({
     connection,
@@ -322,7 +322,7 @@ export default class Stream {
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
    * @param {number} data.amount - Specified amount to topup (increases deposited amount).
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta, testnet or local
+   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async topup({
     connection,
@@ -367,8 +367,8 @@ export default class Stream {
   /**
    * Fetch stream data by its id (address).
    * @param {GetStreamParams} data
-   * @param {Connection} data.connection
-   * @param {string} data.id - Identifier of a stream.
+   * @param {Connection} data.connection - A connection to the cluster.
+   * @param {string} data.id - Identifier of a stream that is fetched.
    */
   static async getOne({
     connection,
@@ -393,7 +393,7 @@ export default class Stream {
    * @param {PublicKey} data.wallet - PublicKey of the wallet for which the streams/contracts are fetched.
    * @param {StreamType} [data.type = StreamType.All] - It can be one of: stream, vesting, all.
    * @param {StreamDirection} [data.direction = StreamDirection.All] - It can be one of: incoming, outgoing, all.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - cluster: devnet, mainnet-beta, testnet or local
+   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async get({
     connection,
