@@ -138,7 +138,7 @@ const cancelStream = async () => {
 };
 ```
 
-### Get stream/contract by id
+## Get stream/contract by id
 
 ```javascript
 const stream = Stream.getOne({
@@ -147,7 +147,7 @@ const stream = Stream.getOne({
 });
 ```
 
-### Get streams/contracts for specific wallet
+## Get streams/contracts for specific wallet
 
 ```javascript
 const streams = Stream.get({
@@ -167,6 +167,8 @@ E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 10
 
 #### Date values are sent/retrieved in seconds (be sure to not expect ms).
 
-### Disclaimer
+<br>
+
+## Disclaimer
 
 Addresses used in the examples are random.
