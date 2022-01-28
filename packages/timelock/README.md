@@ -147,7 +147,7 @@ const stream = Stream.getOne({
 });
 ```
 
-## Get streams/contracts for specific wallet
+### Get streams/contracts for specific wallet
 
 ```javascript
 const streams = Stream.get({
@@ -165,7 +165,7 @@ const streams = Stream.get({
 
 E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000.
 
-#### Date values are sent/retrieved in seconds (be sure to not expect ms).
+#### Date values are sent/retrieved in seconds (be sure to not expect ms).\
 
 
-### Addresses used in the examples are random.
+#### Addresses used in the examples are random.
