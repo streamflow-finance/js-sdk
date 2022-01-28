@@ -8,11 +8,18 @@ You can `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream (vesting
 
 This examples are valid for the newest SDK version. if you use older versions check types and usages inside npm package.
 
-### Install the StreamFlow JS SDK
+## Install the StreamFlow JS SDK
 
 `$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor`
 
-### Import SDK
+Anchor is needed for now for Wallet type:
+`import { Wallet } from "@project-serum/anchor/src/provider";`
+We plan to remove this dependency in the upcoming period.
+
+For Connection type use:
+`import { Connection } from "@solana/web3.js";`
+
+## Import SDK
 
 ```javascript
 import Stream, {
@@ -43,47 +50,46 @@ import Stream, {
 
 ```javascript
 const createStream = async () => {
-const data = {
-    connection: , //
-    sender:, //
-    recipient: '4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00', // string
-    mint: 'DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK', // string
-    start:, // number
-    depositedAmount: 6000, // number
-    period:, // number
-    cliff:, // number
-    cliffAmount: 100, // number
-    amountPerPeriod:, // number
-    name: 'Transfer to Jane Doe.', // string
-    canTopup: false, // boolean
-    cancelableBySender: true, // boolean
-    cancelableByRecipient: false, // boolean
-    transferableBySender: true, // boolean
-    transferableByRecipient: false, // boolean
-    automaticWithdrawal: false, // boolean
-    partner: null, // string | null (optional)
-    cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
-}
+  const data = {
+    connection: connection, // Connection to the cluster.
+    sender: wallet, // Wallet signing the transaction.
+    recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
+    mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
+    start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
+    depositedAmount: 1000000000000, // Deposited amount of tokens.
+    period: 1, // Time step (period) in seconds per which the unlocking occurs.
+    cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
+    cliffAmount: 100000000000, // Amount unlocked at the "cliff" timestamp .
+    amountPerPeriod: 5000000000, // Release rate: how many tokens are unlocked per each period.
+    name: "Transfer to Jane Doe.", // The stream name/subject.
+    canTopup: false, // TRUE for vesting contracts, FALSE for streams.
+    cancelableBySender: true, // Whether or not sender can cancel the stream.
+    cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
+    transferableBySender: true, // Whether or not sender can transfer the stream.
+    transferableByRecipient: false, // Whether or not recipient can transfer the stream.
+    automaticWithdrawal: false, // Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
+    partner: null, //  Partner's wallet address (optional, string | null).
+    cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
+  };
 
-const { tx, id, stream } = Stream.create( data );
-}
-
+  const { tx, id, stream } = Stream.create(data);
+};
 ```
 
 ### Withdraw stream/vesting contract
 
 ```javascript
 const withdrawStream = async () => {
-const data = {
-    connection: , //
-    invoker: , //
-    id: 'AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA',
-    amount: 100, //
+  const data = {
+    connection: connection, // Connection to the cluster.
+    invoker: wallet, // Wallet signing the transaction.
+    id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
+    amount: 100000000000, //  Requested amount to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
-}
+  };
 
-const { tx } = Stream.withdraw( data );
-}
+  const { tx } = Stream.withdraw(data);
+};
 ```
 
 ### Topup stream/vesting contract
@@ -91,10 +97,10 @@ const { tx } = Stream.withdraw( data );
 ```javascript
 const topupStream = async () => {
 const data = {
-    connection: , //
- invoker,
+    connection: connection, // Connection to the cluster.
+    invoker: { publicKey, ... }, // Wallet signing the transaction.
     id: 'AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA',
-    amount: 1000,
+    amount: 100000000000,
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
 }
 
@@ -106,16 +112,16 @@ const { tx } = Stream.topup( data );
 
 ```javascript
 const transferStream = async () => {
-const data = {
-    connection: , //
-    invoker,
-    id: 'AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA',
-    recipientId: '',
+  const data = {
+    connection: connection, // Connection to the cluster.
+    invoker: wallet, // Wallet signing the transaction.
+    id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
+    recipientId: "",
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
-}
+  };
 
-const { tx } = Stream.transfer( data );
-}
+  const { tx } = Stream.transfer(data);
+};
 ```
 
 ### Cancel stream/vesting contract
@@ -123,8 +129,8 @@ const { tx } = Stream.transfer( data );
 ```javascript
 const cancelStream = async () => {
 const data = {
-    connection: , //
-  invoker,
+    connection: { ... }, // Connection to the cluster.
+    invoker: { publicKey, ... }, // Wallet
     id: 'AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA',
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
 }
@@ -137,8 +143,8 @@ const { tx } = Stream.cancel( data );
 
 ```javascript
 const stream = Stream.getOne({
-  connection,
-  id,
+  connection: { ... }, // Connection to the cluster.
+  id: 'AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA',
 });
 ```
 
@@ -146,8 +152,8 @@ const stream = Stream.getOne({
 
 ```javascript
 const streams = Stream.get({
-  connection,
-  wallet,
+  connection: { ... }, // Connection to the cluster.
+  wallet: { publicKey, ... }, // Wallet
   type: StreamType.All, // Type (optional, default is StreamType.All)
   direction: StreamDirection.All, // Direction (optional, default is StreamDirection.All)
   cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
