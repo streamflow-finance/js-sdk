@@ -83,7 +83,7 @@ const withdrawStream = async () => {
     connection: connection, // Connection to the cluster.
     invoker: wallet, // Wallet signing the transaction.
     id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
-    amount: 100000000000, //  Requested amount to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
+    amount: 100000000000, // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
   };
 
