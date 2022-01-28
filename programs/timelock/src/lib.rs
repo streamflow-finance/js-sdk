@@ -30,7 +30,8 @@ pub mod timelock {
         transferable_by_sender: bool,
         transferable_by_recipient: bool,
         can_topup: bool,
-        stream_name: [u8; 64], //can't use constant for size here, Anchor's IDL parser not ready yet.
+        stream_name: [u8; 64],
+        withdraw_frequency: u64
     ) -> ProgramResult {
         let ix = CreateParams {
             start_time,
@@ -46,6 +47,7 @@ pub mod timelock {
             transferable_by_recipient,
             can_topup,
             stream_name,
+            withdraw_frequency
         };
 
         let acc = CreateAccounts {
