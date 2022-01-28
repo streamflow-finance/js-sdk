@@ -12,8 +12,7 @@ This examples are valid for the newest SDK version. if you use older versions ch
 
 `$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor`
 
-Anchor is needed for now for Wallet type:
-`import { Wallet } from "@project-serum/anchor/src/provider";`
+Anchor is needed for now for Wallet type: `import { Wallet } from "@project-serum/anchor/src/provider";`\
 We plan to remove this dependency in the upcoming period.
 
 For Connection type use:
@@ -162,7 +161,10 @@ const streams = Stream.get({
 
 ### Additional notes
 
-**_All amounts are sent/retrieved in the smallest units._**
+s
+
+#### All amounts are sent/retrieved in the smallest units.
+
 E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000.
 
-**_Date values are sent/retrieved in seconds (be sure to not expect ms)._**
+#### Date values are sent/retrieved in seconds (be sure to not expect ms).
