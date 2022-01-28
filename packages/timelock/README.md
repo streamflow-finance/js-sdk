@@ -131,7 +131,7 @@ const cancelStream = async () => {
     connection: connection, // Connection to the cluster.
     invoker: wallet, // Wallet signing the transaction.
     id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
-    cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
+    cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
   };
 
   const { tx } = Stream.cancel(data);
@@ -155,7 +155,7 @@ const streams = Stream.get({
   wallet: wallet, // Wallet signing the transaction.
   type: StreamType.All, // Type (optional, default is StreamType.All)
   direction: StreamDirection.All, // Direction (optional, default is StreamDirection.All)
-  cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet)
+  cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
 });
 ```
 
