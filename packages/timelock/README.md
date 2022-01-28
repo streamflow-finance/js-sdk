@@ -168,4 +168,4 @@ E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 10
 #### Date values are sent/retrieved in seconds (be sure to not expect ms).
 
 
-`#### Addresses used in the examples are random.`
+### Addresses used in the examples are random.
