@@ -1,5 +1,5 @@
 export default {
-  version: "0.0.0",
+  version: "0.1.0",
   name: "timelock",
   instructions: [
     {
@@ -145,6 +145,10 @@ export default {
           type: {
             array: ["u8", 64],
           },
+        },
+        {
+          name: "withdrawFrequency",
+          type: "u64",
         },
       ],
     },
