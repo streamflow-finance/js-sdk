@@ -151,6 +151,7 @@ export interface Stream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
+  withdrawFrequency: number;
 }
 
 export interface DecodedStream {
@@ -190,6 +191,7 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
+  withdrawFrequency: BN;
 }
 
 export interface TransactionResponse {

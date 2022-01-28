@@ -146,6 +146,10 @@ export default {
             array: ["u8", 64],
           },
         },
+        {
+          name: "withdrawFrequency",
+          type: "u64",
+        },
       ],
     },
     {

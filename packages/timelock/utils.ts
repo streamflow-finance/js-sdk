@@ -43,7 +43,8 @@ const TokenStreamDataLayout = BufferLayout.struct<any>([
   BufferLayout.u8("transferable_by_sender"),
   BufferLayout.u8("transferable_by_recipient"),
   BufferLayout.u8("can_topup"),
-  BufferLayout.blob(64, "stream_name"), //  it is not NUL-terminated C string
+  BufferLayout.blob(64, "stream_name"),
+  BufferLayout.blob(8, "withdraw_frequency"),
 ]);
 
 export const decodeStream = (buf: Buffer): DecodedStream => {
@@ -86,6 +87,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     transferableByRecipient: Boolean(raw.transferable_by_recipient),
     canTopup: Boolean(raw.can_topup),
     name: decoder.decode(raw.stream_name),
+    withdrawFrequency: new BN(raw.withdraw_frequency, LE),
   };
 };
 
@@ -126,4 +128,5 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => ({
   transferableByRecipient: stream.transferableByRecipient,
   canTopup: stream.canTopup,
   name: stream.name,
+  withdrawFrequency: stream.withdrawFrequency.toNumber(),
 });
