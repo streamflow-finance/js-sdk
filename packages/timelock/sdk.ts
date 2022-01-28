@@ -136,6 +136,7 @@ export default class Stream {
       transferableByRecipient,
       canTopup,
       nameUtf8EncodedBytes,
+      new BN(period),
       {
         accounts: {
           sender: sender.publicKey,
@@ -287,22 +288,22 @@ export default class Stream {
     cluster = Cluster.Mainnet,
   }: TransferStreamParams): Promise<TransactionResponse> {
     const program = initProgram(connection, invoker, cluster);
-    const streamPublicKey = new PublicKey(id);
-    const recipientPublicKey = new PublicKey(recipientId);
-    let escrow = await connection.getAccountInfo(streamPublicKey);
+    const stream = new PublicKey(id);
+    const newRecipient = new PublicKey(recipientId);
+    let escrow = await connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
     const { mint } = decodeStream(escrow?.data);
 
-    const recipientTokens = await ata(mint, recipientPublicKey);
+    const newRecipientTokens = await ata(mint, newRecipient);
 
     const tx = await program.rpc.transferRecipient({
       accounts: {
         authority: invoker.publicKey,
-        recipientPublicKey,
-        recipientTokens,
-        metadata: streamPublicKey,
+        newRecipient,
+        newRecipientTokens,
+        metadata: stream,
         mint,
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
