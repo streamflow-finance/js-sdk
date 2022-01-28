@@ -165,4 +165,4 @@ const streams = Stream.get({
 
 E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000.
 
-##### Date values are sent/retrieved in seconds (be sure to not expect ms).
+#### Date values are sent/retrieved in seconds (be sure to not expect ms).
