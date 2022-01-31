@@ -8,6 +8,10 @@ You can `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream (vesting
 
 This examples are valid for the newest SDK version. if you use older versions check types and usages inside npm package.
 
+Devnet Program ID: HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ
+
+Mainnet Program ID: strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m
+
 ## Install the StreamFlow JS SDK
 
 `$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor`
