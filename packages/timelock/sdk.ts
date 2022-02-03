@@ -124,11 +124,11 @@ export default class Stream {
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
       new BN(start),
-      new BN(depositedAmount),
+      depositedAmount,
       new BN(period),
-      new BN(amountPerPeriod),
+      amountPerPeriod,
       new BN(cliff),
-      new BN(cliffAmount),
+      cliffAmount,
       cancelableBySender,
       cancelableByRecipient,
       automaticWithdrawal,

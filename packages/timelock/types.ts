@@ -37,11 +37,11 @@ export interface CreateStreamData {
   recipient: string;
   mint: string;
   start: number;
-  depositedAmount: number;
+  depositedAmount: BN;
   period: number;
   cliff: number;
-  cliffAmount: number;
-  amountPerPeriod: number;
+  cliffAmount: BN;
+  amountPerPeriod: BN;
   name: string;
   canTopup: boolean;
   cancelableBySender: boolean;
@@ -59,7 +59,7 @@ export interface CreateStreamParams extends CreateStreamData {
 
 export interface WithdrawStreamData {
   id: string;
-  amount: number;
+  amount: BN;
 }
 
 export interface WithdrawStreamParams extends WithdrawStreamData {
@@ -70,7 +70,7 @@ export interface WithdrawStreamParams extends WithdrawStreamData {
 
 export interface TopupStreamData {
   id: string;
-  amount: number;
+  amount: BN;
 }
 
 export interface TopupStreamParams extends TopupStreamData {
@@ -117,7 +117,7 @@ export interface Stream {
   magic: number;
   version: number;
   createdAt: number;
-  withdrawnAmount: number;
+  withdrawnAmount: BN;
   canceledAt: number;
   end: number;
   lastWithdrawnAt: number;
@@ -138,11 +138,11 @@ export interface Stream {
   partner: string;
   partnerTokens: string;
   start: number;
-  depositedAmount: number;
+  depositedAmount: BN;
   period: number;
-  amountPerPeriod: number;
+  amountPerPeriod: BN;
   cliff: number;
-  cliffAmount: number;
+  cliffAmount: BN;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
