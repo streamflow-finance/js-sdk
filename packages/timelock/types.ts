@@ -199,5 +199,4 @@ export interface TransactionResponse {
 
 export interface CreateStreamResponse extends TransactionResponse {
   id: string;
-  data: Stream;
 }
