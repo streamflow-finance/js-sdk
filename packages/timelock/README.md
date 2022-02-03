@@ -1,58 +1,52 @@
-**Disclaimer: This code is under heavy development. Everything is provided as-is and without any warranty.**
+Audit is undergoing.
 
-# JavaScript SDK to interact with the `timelock` Anchor program.
+# JavaScript SDK to interact with Streamflow protocol.
 
-You can `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream (vesting contract).
+You can `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream.
+You can also `getOne` stream and `get` multiple streams.
 
 # Usage (with examples)
-
-This examples are valid for the newest SDK version. if you use older versions check types and usages inside npm package.
 
 Devnet Program ID: `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`.
 
 Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
 
-## Install the StreamFlow JS SDK
+## Install the Streamflow JS SDK
 
 `$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor`
 
-Anchor is needed for now for Wallet type: `import { Wallet } from "@project-serum/anchor/src/provider";`\
-We plan to remove this dependency in the upcoming period.
+Anchor is needed for now for `Wallet` type.
+*Note: We plan to remove this dependency in the upcoming releases.*
 
-For Connection type use:
-`import { Connection } from "@solana/web3.js";`
+```
+import { Connection } from "@solana/web3.js";
+import { Wallet } from "@project-serum/anchor/src/provider";
+
+```
 
 ## Import SDK
 
 ```javascript
 import Stream, {
   Stream,
-  CreateStreamData,
   CreateStreamParams,
-  WithdrawStreamData,
   WithdrawStreamParams,
-  TransferStreamData,
   TransferStreamParams,
-  TopupStreamData,
   TopupStreamParams,
-  CancelStreamData,
   CancelStreamParams,
   GetStreamParams,
   GetStreamsParams,
   StreamDirection,
   StreamType,
   Cluster,
-  LocalCluster,
-  ClusterExtended,
   TransactionResponse,
   CreateStreamResponse,
 } from "@streamflow/timelock";
 ```
 
-## Create stream/vesting contract
+## Create stream
 
 ```javascript
-const createStream = async () => {
   const data = {
     connection: connection, // Connection to the cluster.
     sender: wallet, // Wallet signing the transaction.
@@ -65,7 +59,7 @@ const createStream = async () => {
     cliffAmount: 100000000000, // Amount unlocked at the "cliff" timestamp.
     amountPerPeriod: 5000000000, // Release rate: how many tokens are unlocked per each period.
     name: "Transfer to Jane Doe.", // The stream name/subject.
-    canTopup: false, // TRUE for vesting contracts, FALSE for streams.
+    canTopup: false, // FALSE for vesting contracts, TRUE for streams.
     cancelableBySender: true, // Whether or not sender can cancel the stream.
     cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
     transferableBySender: true, // Whether or not sender can transfer the stream.
@@ -75,14 +69,17 @@ const createStream = async () => {
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
   };
 
-  const { tx, id, stream } = Stream.create(data);
-};
+try {
+  const { tx, id, stream } = await Stream.create(data);
+} catch (Exception e) {
+   // handle exception.
+}
 ```
 
-## Withdraw stream/vesting contract
+## Withdraw from stream
 
 ```javascript
-const withdrawStream = async () => {
+
   const data = {
     connection: connection, // Connection to the cluster.
     invoker: wallet, // Wallet signing the transaction.
@@ -91,14 +88,16 @@ const withdrawStream = async () => {
     cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
   };
 
+ 
+try {
   const { tx } = Stream.withdraw(data);
-};
+} catch (Exception e) {
+   //handle exception.
+}
 ```
 
-## Topup stream/vesting contract
-
+## Topup stream
 ```javascript
-const topupStream = async () => {
   const data = {
     connection: connection, // Connection to the cluster.
     invoker: wallet, // Wallet signing the transaction.
@@ -108,10 +107,10 @@ const topupStream = async () => {
   };
 
   const { tx } = Stream.topup(data);
-};
+  
 ```
 
-## Transfer stream/vesting contract
+## Transfer stream to another recipient
 
 ```javascript
 const transferStream = async () => {
@@ -127,7 +126,7 @@ const transferStream = async () => {
 };
 ```
 
-## Cancel stream/vesting contract
+## Cancel stream
 
 ```javascript
 const cancelStream = async () => {
@@ -142,7 +141,7 @@ const cancelStream = async () => {
 };
 ```
 
-## Get stream/contract by id
+## Get stream by ID
 
 ```javascript
 const stream = Stream.getOne({
@@ -151,7 +150,7 @@ const stream = Stream.getOne({
 });
 ```
 
-## Get streams/contracts for specific wallet
+## Get streams for a specific wallet address
 
 ```javascript
 const streams = Stream.get({
@@ -165,11 +164,11 @@ const streams = Stream.get({
 
 ### Additional notes
 
-#### All amounts are sent/retrieved in the smallest units.
+#### All amounts are denominated in their smallest units.
 
-E.g., if the amount is 1000SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000.
+E.g., if the amount is 1000 SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000.
 
-#### Date values are sent/retrieved in seconds (be sure to not expect ms).
+#### Date values are in seconds (NOT ms).
 
 <br>
 
