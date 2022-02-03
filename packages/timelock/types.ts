@@ -129,11 +129,11 @@ export interface Stream {
   escrowTokens: string;
   streamflowTreasury: string;
   streamflowTreasuryTokens: string;
-  streamflowFeeTotal: number;
-  streamflowFeeWithdrawn: number;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
   streamflowFeePercent: number;
-  partnerFeeTotal: number;
-  partnerFeeWithdrawn: number;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
   partnerFeePercent: number;
   partner: string;
   partnerTokens: string;
@@ -199,5 +199,4 @@ export interface TransactionResponse {
 
 export interface CreateStreamResponse extends TransactionResponse {
   id: string;
-  data: Stream;
 }

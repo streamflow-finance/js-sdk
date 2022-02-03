@@ -62,11 +62,11 @@ export default class Stream {
    * @param {string} data.recipient - Solana address of a recipient. Associated token account will be derived from this address and SPL Token mint address.
    * @param {string} data.mint - SPL Token mint.
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
-   * @param {number} data.depositedAmount - Initially deposited amount of tokens.
+   * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
    * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
    * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds (not relevant when streaming, but the field is mandatory, best to send start time).
-   * @param {number} data.cliffAmount - Amount unlocked at the "cliff" timestamp (not relevant when streaming, but the field is mandatory, best to send 0).
-   * @param {number} data.amountPerPeriod - Release rate: how many tokens are unlocked per each period.
+   * @param {BN} data.cliffAmount - Amount (in the smallest units) unlocked at the "cliff" timestamp (not relevant when streaming, but the field is mandatory, best to send 0).
+   * @param {BN} data.amountPerPeriod - Release rate (in the smallest units): how many tokens are unlocked per each period.
    * @param {string} data.name - The stream name/subject.
    * @param {boolean} data.canTopup - TRUE for vesting contracts, FALSE for streams.
    * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
@@ -163,12 +163,7 @@ export default class Stream {
       }
     );
 
-    const stream = await this.getOne({
-      connection,
-      id: metadata.publicKey.toBase58(),
-    });
-
-    return { tx, id: metadata.publicKey.toBase58(), data: stream };
+    return { tx, id: metadata.publicKey.toBase58() };
   }
 
   /**
@@ -177,7 +172,7 @@ export default class Stream {
    * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
-   * @param {number} data.amount - Requested amount to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
+   * @param {BN} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async withdraw({
@@ -203,7 +198,7 @@ export default class Stream {
     );
     const partnerTokens = await ata(data.mint, data.partner);
 
-    const tx = await program.rpc.withdraw(new BN(amount), {
+    const tx = await program.rpc.withdraw(amount, {
       accounts: {
         authority: invoker.publicKey,
         recipient: invoker.publicKey,
@@ -323,7 +318,7 @@ export default class Stream {
    * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
-   * @param {number} data.amount - Specified amount to topup (increases deposited amount).
+   * @param {BN} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async topup({
@@ -349,7 +344,7 @@ export default class Stream {
     );
     const partnerTokens = await ata(mint, partner);
 
-    const tx = await program.rpc.topup(new BN(amount), {
+    const tx = await program.rpc.topup(amount, {
       accounts: {
         sender: invoker.publicKey,
         senderTokens,
