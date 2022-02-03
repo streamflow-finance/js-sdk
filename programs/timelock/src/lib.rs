@@ -141,7 +141,6 @@ pub mod timelock {
             token_program: ctx.accounts.token_program.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
         };
-
         streamflow_timelock::topup::topup(ctx.program_id, acc, amount)
     }
 }
@@ -165,6 +164,7 @@ pub struct Create<'info> {
     pub streamflow_treasury: AccountInfo<'info>,
     #[account(mut)]
     pub streamflow_treasury_tokens: AccountInfo<'info>,
+    #[account(mut)]
     pub withdrawor: AccountInfo<'info>,
     #[account(mut)]
     pub partner: AccountInfo<'info>,
@@ -262,6 +262,7 @@ pub struct Topup<'info> {
     pub streamflow_treasury: AccountInfo<'info>,
     #[account(mut)]
     pub streamflow_treasury_tokens: AccountInfo<'info>,
+    #[account(mut)]
     pub withdrawor: AccountInfo<'info>,
     #[account(mut)]
     pub partner: AccountInfo<'info>,
@@ -269,5 +270,5 @@ pub struct Topup<'info> {
     pub partner_tokens: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
 }
