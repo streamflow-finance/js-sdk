@@ -15,5 +15,9 @@ export const PROGRAM_ID = {
 };
 
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey(
-  "Ht5G1RhkcKnpLVLMhqJc5aqZ4wYUEbxbtZwGCVbgU7DL"
+  "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+);
+
+export const WITHDRAWOR_PUBLIC_KEY = new PublicKey(
+  "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"
 );

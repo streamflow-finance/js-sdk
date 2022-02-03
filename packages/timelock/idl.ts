@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   version: "0.1.0",
   name: "timelock",
   instructions: [

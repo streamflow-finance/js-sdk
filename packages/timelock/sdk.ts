@@ -37,6 +37,7 @@ import {
   STREAM_STRUCT_OFFSET_RECIPIENT,
   STREAM_STRUCT_OFFSET_SENDER,
   TX_FINALITY_CONFIRMED,
+  WITHDRAWOR_PUBLIC_KEY,
 } from "./constants";
 import idl from "./idl";
 
@@ -155,6 +156,7 @@ export default class Stream {
           timelockProgram: program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          withdrawor: WITHDRAWOR_PUBLIC_KEY,
           systemProgram: SystemProgram.programId,
         },
         signers,
@@ -308,7 +310,7 @@ export default class Stream {
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        system: web3.SystemProgram.programId,
+        systemProgram: web3.SystemProgram.programId,
       },
     });
 
@@ -359,6 +361,8 @@ export default class Stream {
         partnerTokens: partnerTokens,
         mint,
         tokenProgram: TOKEN_PROGRAM_ID,
+        withdrawor: WITHDRAWOR_PUBLIC_KEY,
+        systemProgram: web3.SystemProgram.programId,
       },
     });
 
