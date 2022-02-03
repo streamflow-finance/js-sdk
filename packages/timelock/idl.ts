@@ -47,7 +47,7 @@ export default {
         },
         {
           name: "withdrawor",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -380,7 +380,7 @@ export default {
         },
         {
           name: "withdrawor",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
