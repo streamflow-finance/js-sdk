@@ -1,9 +1,9 @@
-Audit is undergoing.
+**Important: Security audit is underway.**
 
 # JavaScript SDK to interact with Streamflow protocol.
 
 You can `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream.
-<br>
+
 You can also `getOne` stream and `get` multiple streams.
 
 # Usage (with examples)
@@ -16,20 +16,20 @@ Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
 
 `$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor bn.js`
 
-Anchor is needed for now for `Wallet` type.
-*Note: We plan to remove this dependency in the upcoming releases.*
+Anchor is needed for now for the `Wallet` type.
 
-bn.js library is used for `Number < - > Big Number` conversions.
+*We plan to remove this dependency in the upcoming releases.*
 
-```
+`bn.js` library is used for handling big numbers.
+
+```javascript
 import { Connection } from "@solana/web3.js";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import BN from "bn.js";
 ```
 
 ## Import SDK
-Here are the imports we believe will be the most used by community. You can check the SDK for more types and utility functions.
-
+Most used imports:
 ```javascript
 import Stream, {
   Stream,
@@ -47,6 +47,7 @@ import Stream, {
   CreateStreamResponse,
 } from "@streamflow/timelock";
 ```
+Please check the SDK for other types and utility functions.
 
 ## Create stream
 
@@ -69,8 +70,8 @@ import Stream, {
     transferableBySender: true, // Whether or not sender can transfer the stream.
     transferableByRecipient: false, // Whether or not recipient can transfer the stream.
     automaticWithdrawal: false, // Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
-    partner: null, //  Partner's wallet address (optional, string | null).
-    cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
+    partner: null, //  (optional) Partner's wallet address (string | null).
+    cluster: Cluster.Mainnet, // (optional) Cluster (default is Cluster.Mainnet).
   };
 
 try {
@@ -187,11 +188,7 @@ try {
 
 E.g., if the amount is 1000 SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000. An then `new BN(1000000000000)` is used.
 
-If you plan to support huge token amounts in your implementation (and potentially hit JS highest safest number limit), we provide `getBN` an `getNumberFromBN` utility functions that does the conversion from value in the highest units to Big Number representation of the same value in the smallest units, and vice versa.
-
-#### Date values are in seconds (NOT ms).
-
-<br>
+Please use `getBN` an `getNumberFromBN` utility functions for converting `Number` into `BN`.
 
 ## Disclaimer
 
