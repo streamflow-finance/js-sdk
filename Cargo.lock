@@ -739,9 +739,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.115"
+version = "0.2.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a8d982fa7a96a000f6ec4cfe966de9703eccde29750df2bb8949da91b0e818d"
+checksum = "e74d72e0f9b65b5b4ca49a346af3976df0f9c61d550727f349ecd559f251a26c"
 
 [[package]]
 name = "libsecp256k1"
@@ -793,9 +793,9 @@ dependencies = [
 
 [[package]]
 name = "lock_api"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "712a4d093c9976e24e7dbca41db895dabcbac38eb5f4045393d17a95bdfb1109"
+checksum = "88943dd7ef4a2e5a4bfa2753aaab3013e34ce2533d1996fb18ef591e315e2b3b"
 dependencies = [
  "scopeguard",
 ]
@@ -905,7 +905,7 @@ dependencies = [
 [[package]]
 name = "partner-oracle"
 version = "0.0.1"
-source = "git+ssh://git@github.com/streamflow-finance/partner-oracle.git#fc1313d8a0eb4b42a5a3146d6170552ba0aa74c1"
+source = "git+ssh://git@github.com/streamflow-finance/partner-oracle.git#5a39766e8b974c8accc9322d917d4d6cce1b184f"
 dependencies = [
  "borsh 0.9.2",
  "solana-program",
@@ -1291,7 +1291,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "streamflow-timelock"
 version = "0.3.0"
-source = "git+https://github.com/StreamFlow-Finance/timelock-crate?branch=dev#3f6ef0494ab31e3564680481e4d8edd1eaf02dd0"
+source = "git+ssh://git@github.com/streamFlow-finance/protocol.git?branch=dev#e7d20d5146b3c9abdbffddc0aecd1ea7d0d53a05"
 dependencies = [
  "borsh 0.9.2",
  "num-traits",
@@ -1518,6 +1518,6 @@ checksum = "9fc79f4a1e39857fc00c3f662cbf2651c771f00e9c15fe2abc341806bd46bd71"
 
 [[package]]
 name = "zeroize"
-version = "1.5.1"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4062c749be08d90be727e9c5895371c3a0e49b90ba2b9592dc7afda95cc2b719"
+checksum = "7c88870063c39ee00ec285a2f8d6a966e5b6fb2becc4e8dac77ed0d370ed6006"

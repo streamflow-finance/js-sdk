@@ -59,6 +59,7 @@ pub mod timelock {
             escrow_tokens: ctx.accounts.escrow_tokens.to_account_info(),
             streamflow_treasury: ctx.accounts.streamflow_treasury.to_account_info(),
             streamflow_treasury_tokens: ctx.accounts.streamflow_treasury_tokens.to_account_info(),
+            withdrawor: ctx.accounts.withdrawor.to_account_info(),
             partner: ctx.accounts.partner.to_account_info(),
             partner_tokens: ctx.accounts.partner_tokens.to_account_info(),
             mint: ctx.accounts.mint.to_account_info(),
@@ -119,7 +120,7 @@ pub mod timelock {
             rent: ctx.accounts.rent.to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
             associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-            system_program: ctx.accounts.system.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
         };
 
         streamflow_timelock::transfer::transfer_recipient(ctx.program_id, acc)
@@ -133,10 +134,12 @@ pub mod timelock {
             escrow_tokens: ctx.accounts.escrow_tokens.to_account_info(),
             streamflow_treasury: ctx.accounts.streamflow_treasury.to_account_info(),
             streamflow_treasury_tokens: ctx.accounts.streamflow_treasury_tokens.to_account_info(),
+            withdrawor: ctx.accounts.withdrawor.to_account_info(),
             partner: ctx.accounts.partner.to_account_info(),
             partner_tokens: ctx.accounts.partner_tokens.to_account_info(),
             mint: ctx.accounts.mint.to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
         };
 
         streamflow_timelock::topup::topup(ctx.program_id, acc, amount)
@@ -162,6 +165,7 @@ pub struct Create<'info> {
     pub streamflow_treasury: AccountInfo<'info>,
     #[account(mut)]
     pub streamflow_treasury_tokens: AccountInfo<'info>,
+    pub withdrawor: AccountInfo<'info>,
     #[account(mut)]
     pub partner: AccountInfo<'info>,
     #[account(mut)]
@@ -241,7 +245,7 @@ pub struct Transfer<'info> {
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub system: Program<'info, System>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -258,10 +262,12 @@ pub struct Topup<'info> {
     pub streamflow_treasury: AccountInfo<'info>,
     #[account(mut)]
     pub streamflow_treasury_tokens: AccountInfo<'info>,
+    pub withdrawor: AccountInfo<'info>,
     #[account(mut)]
     pub partner: AccountInfo<'info>,
     #[account(mut)]
     pub partner_tokens: AccountInfo<'info>,
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, Token>,
 }
