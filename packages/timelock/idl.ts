@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   version: "0.1.0",
   name: "timelock",
   instructions: [
@@ -43,6 +43,11 @@ export default {
         {
           name: "streamflowTreasuryTokens",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "withdrawor",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -333,7 +338,7 @@ export default {
           isSigner: false,
         },
         {
-          name: "system",
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -374,6 +379,11 @@ export default {
           isSigner: false,
         },
         {
+          name: "withdrawor",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "partner",
           isMut: true,
           isSigner: false,
@@ -390,6 +400,11 @@ export default {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },

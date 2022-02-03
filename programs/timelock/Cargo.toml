@@ -17,6 +17,6 @@ default = []
 [dependencies]
 anchor-lang = "0.19.0"
 anchor-spl = "0.19.0"
-streamflow-timelock = { git = "https://github.com/StreamFlow-Finance/timelock-crate", branch = "beta", features = ["no-entrypoint"] }
+streamflow-timelock = { git = "ssh://git@github.com/streamFlow-finance/protocol.git", branch = "dev", features = ["no-entrypoint"] }
 # streamflow-timelock = "0.3.0"
 
