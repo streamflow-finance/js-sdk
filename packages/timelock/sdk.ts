@@ -107,16 +107,19 @@ export default class Stream {
       [Buffer.from("strm"), metadata.publicKey.toBuffer()],
       program.programId
     );
+
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
     const streamflowTreasuryTokens = await ata(
       mintPublicKey,
       STREAMFLOW_TREASURY_PUBLIC_KEY
     );
-    const partnerTokens = await ata(
-      mintPublicKey,
-      partner ? new PublicKey(partner) : STREAMFLOW_TREASURY_PUBLIC_KEY
-    );
+
+    const partnerPublicKey = partner
+      ? new PublicKey(partner)
+      : STREAMFLOW_TREASURY_PUBLIC_KEY;
+
+    const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
     const signers = [metadata];
 
@@ -148,7 +151,7 @@ export default class Stream {
           recipientTokens,
           streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
           streamflowTreasuryTokens: streamflowTreasuryTokens,
-          partner: partner || STREAMFLOW_TREASURY_PUBLIC_KEY,
+          partner: partnerPublicKey,
           partnerTokens: partnerTokens,
           mint,
           feeOracle: STREAMFLOW_TREASURY_PUBLIC_KEY,
