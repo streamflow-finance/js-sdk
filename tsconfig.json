@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "downlevelIteration": true
   },
-  "exclude": ["./packages/timelock/dist"]
+  "exclude": ["packages/stream/dist"]
 }

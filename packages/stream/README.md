@@ -17,7 +17,7 @@ Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
 `$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor`
 
 Anchor is needed for now for the `Wallet` type.
-
+<br>
 _We plan to remove this dependency in the upcoming releases._
 
 `bn.js` library is used for handling big numbers.
