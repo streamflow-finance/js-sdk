@@ -10,9 +10,10 @@ There is currently only one package under `packages/stream` which enables you to
 
 <br>
 
-**JS SDK** interacts with Anchor program deployed on Solana mainnet.
+### JS SDK interacts with Anchor program deployed on Solana mainnet.
 
 Devnet Program ID: `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`.
+<br>
 Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
 
 There are several ways to use Streamflow protocol:
