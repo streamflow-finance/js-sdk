@@ -55,25 +55,25 @@ const initProgram = (
 export default class Stream {
   /**
    * Creates a new stream/vesting contract.
-   * All fees are paid by sender (escrow metadata account rent, escrow token account, recipient's associated token account creation).
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {CreateStreamParams} data
    * @param {Connection} data.connection - A connection to the cluster.
-   * @param {Wallet} data.sender - Wallet signing the transaction. It's address should match authorized wallet (sender) or transaction will fail.
-   * @param {string} data.recipient - Solana address of a recipient. Associated token account will be derived from this address and SPL Token mint address.
+   * @param {Wallet} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
+   * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
    * @param {string} data.mint - SPL Token mint.
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
    * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
    * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
-   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds (not relevant when streaming, but the field is mandatory, best to send start time).
-   * @param {BN} data.cliffAmount - Amount (in the smallest units) unlocked at the "cliff" timestamp (not relevant when streaming, but the field is mandatory, best to send 0).
-   * @param {BN} data.amountPerPeriod - Release rate (in the smallest units): how many tokens are unlocked per each period.
-   * @param {string} data.name - The stream name/subject.
-   * @param {boolean} data.canTopup - TRUE for vesting contracts, FALSE for streams.
+   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
+   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
+   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
+   * @param {string} data.name - Stream name/subject.
+   * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
    * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
    * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
    * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
-   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
+   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
