@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "main": "dist/index.js",
-  "homepage": "https://github.com/streamflow-finance/js-sdk/packages/stream#readme",
+  "homepage": "https://github.com/streamflow-finance/js-sdk/packages/stream",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --outDir ./dist",
