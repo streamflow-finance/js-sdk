@@ -1,24 +1,30 @@
 **Important: Security audit is underway.**
+# Streamflow
+Streamflow is a token distribution platform powered by a streaming payments' protocol.
 
-# JavaScript SDK to interact with Streamflow protocol.
+Streamflow protocol program ID (devnet): `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
+<br>
+Streamflow protocol program ID (mainnet): `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`
 
-You can `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream.
+There are several ways to use Streamflow protocol:
+
+- **(preferred) Application with UI** => [app.streamflow.finance](https://app.streamflow.finance)
+- **JS SDK** (this repo) => [NPM package](https://www.npmjs.com/package/@streamflow/stream/v/2.0.0)
+- **Rust SDK** for integration within Solana programs => [here](https://github.com/streamflow-finance/rust-sdk)
+
+## JS SDK to interact with Streamflow protocol.
+This package allows you to `create`, `withdraw`, `cancel`, `topup` and `transfer` SPL token stream.
 
 You can also `getOne` stream and `get` multiple streams.
 
-# Usage (with examples)
+### Install the Streamflow JS SDK
 
-Devnet Program ID: `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`.
+`npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
 
-Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
 
-## Install the Streamflow JS SDK
-
-`$ npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
-
-Anchor is needed for now for the `Wallet` type.
+>_Anchor is needed for the `Wallet` type.
 <br>
-_We plan to remove this dependency in the upcoming releases._
+We plan to remove this dependency in upcoming releases._
 
 `bn.js` library is used for handling big numbers.
 
@@ -30,7 +36,7 @@ import BN from "bn.js";
 
 ## Import SDK
 
-Most used imports:
+Most common imports:
 
 ```javascript
 import Stream, {
@@ -47,17 +53,16 @@ import Stream, {
   Cluster,
   TransactionResponse,
   CreateStreamResponse,
-} from "@streamflow/timelock";
+} from "@streamflow/stream";
 ```
+_Check the SDK for other types and utility functions._
 
-Please check the SDK for other types and utility functions.
-
-## Create stream
+### Create stream
 
 ```javascript
-const data = {
+const createStreamParams = {
   connection: connection, // Connection to the cluster.
-  sender: wallet, // Wallet signing the transaction.
+  sender: wallet, // Wallet signing the transaction, creating and sending the stream.
   recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
   mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
@@ -67,7 +72,7 @@ const data = {
   cliffAmount: new BN(100000000000), // Amount unlocked at the "cliff" timestamp.
   amountPerPeriod: new BN(5000000000), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name/subject.
-  canTopup: false, // FALSE for vesting contracts, TRUE for streams.
+  canTopup: false, // setting to FALSE will effectively create a vesting contract.
   cancelableBySender: true, // Whether or not sender can cancel the stream.
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
   transferableBySender: true, // Whether or not sender can transfer the stream.
@@ -78,7 +83,7 @@ const data = {
 };
 
 try {
-  const { tx, id } = await Stream.create(data);
+  const { tx, id } = await Stream.create(createStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -87,7 +92,7 @@ try {
 ## Withdraw from stream
 
 ```javascript
-const data = {
+const withdrawStreamParams = {
   connection: connection, // Connection to the cluster.
   invoker: wallet, // Wallet signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
@@ -96,7 +101,7 @@ const data = {
 };
 
 try {
-  const { tx } = await Stream.withdraw(data);
+  const { tx } = await Stream.withdraw(withdrawStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -105,7 +110,7 @@ try {
 ## Topup stream
 
 ```javascript
-const data = {
+const topupStreamParams = {
   connection: connection, // Connection to the cluster.
   invoker: wallet, // Wallet signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be topped up.
@@ -114,7 +119,7 @@ const data = {
 };
 
 try {
-  const { tx } = await Stream.topup(data);
+  const { tx } = await Stream.topup(topupStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -141,7 +146,7 @@ try {
 ## Cancel stream
 
 ```javascript
-const data = {
+const cancelStreamParams = {
   connection: connection, // Connection to the cluster.
   invoker: wallet, // Wallet signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
@@ -149,7 +154,7 @@ const data = {
 };
 
 try {
-  const { tx } = await Stream.cancel(data);
+  const { tx } = await Stream.cancel(cancelStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -175,9 +180,9 @@ try {
   const streams = Stream.get({
     connection: connection, // Connection to the cluster.
     wallet: wallet, // Wallet signing the transaction.
-    type: StreamType.All, // Type (optional, default is StreamType.All)
-    direction: StreamDirection.All, // Direction (optional, default is StreamDirection.All)
-    cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
+    type: StreamType.All, // (optional) Type, default is StreamType.All
+    direction: StreamDirection.All, // (optional) Direction, default is StreamDirection.All)
+    cluster: Cluster.Mainnet, // (optional) Cluster, default is Cluster.Mainnet).
   });
 } catch (exception) {
   // handle exception
@@ -188,10 +193,10 @@ try {
 
 #### All BN amounts are denominated in their smallest units.
 
-E.g., if the amount is 1000 SOL than this amount in lamports is 1000 \* 10^9 = 1000000000000. An then `new BN(1000000000000)` is used.
+E.g, if the amount is 1 SOL than this amount in lamports is 1000 \* 10^9 = 1_000_000_000.
+And `new BN(1_000_000_000)` is used.
 
-Please use `getBN` and `getNumberFromBN` utility functions for conversions between `BN'` and `Number`.
+Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN'` and `Number` types.
 
 ## Disclaimer
-
 Addresses used in the examples are random.
