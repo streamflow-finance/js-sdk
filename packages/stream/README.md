@@ -1,16 +1,20 @@
 **Important: Security audit is underway.**
+
+Docs: https://streamflow.finance/js-sdk/
 # Streamflow
 Streamflow is a token distribution platform powered by a streaming payments' protocol.
 
-Streamflow protocol program ID (devnet): `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
+Streamflow program ID (devnet) => `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
 <br>
-Streamflow protocol program ID (mainnet): `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`
+Streamflow program ID (mainnet) => `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`
 
 There are several ways to use Streamflow protocol:
 
 - **(preferred) Application with UI** => [app.streamflow.finance](https://app.streamflow.finance)
 - **JS SDK** (this repo) => [NPM package](https://www.npmjs.com/package/@streamflow/stream/v/2.0.0)
 - **Rust SDK** for integration within Solana programs => [here](https://github.com/streamflow-finance/rust-sdk)
+
+[**Streamflow Community** (free and open source, with limited features) is available here.](https://github.com/streamflow-finance/js-sdk/tree/community)
 
 ## JS SDK to interact with Streamflow protocol.
 This package allows you to `create`, `withdraw`, `cancel`, `topup` and `transfer` SPL token stream.
@@ -22,9 +26,7 @@ You can also `getOne` stream and `get` multiple streams.
 `npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
 
 
->_Anchor is needed for the `Wallet` type.
-<br>
-We plan to remove this dependency in upcoming releases._
+>_Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
 
 `bn.js` library is used for handling big numbers.
 
@@ -196,7 +198,6 @@ try {
 E.g, if the amount is 1 SOL than this amount in lamports is 1000 \* 10^9 = 1_000_000_000.
 And `new BN(1_000_000_000)` is used.
 
-Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN'` and `Number` types.
+Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
 
-## Disclaimer
-Addresses used in the examples are random.
+WAGMI.

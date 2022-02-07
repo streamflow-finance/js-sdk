@@ -8,5 +8,6 @@
   "scripts": {
     "build": "tsc --outDir ./dist",
     "test": "echo \"Error: no test specified\" && exit 1"
-  }
+  },
+  "gitHead": "a37306eba0e762af096db642fa22f07194014cfd"
 }
