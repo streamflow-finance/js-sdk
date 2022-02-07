@@ -11,10 +11,10 @@ node_modules/
 .env
 
 target/
-.anchor/
 .idea/
 .gitattributes
-test-ledger/
-docker-target
 
 packages/*/dist/
+/local/
+.DS_Store
+packages/.DS_Store

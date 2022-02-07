@@ -1,60 +1,32 @@
-# StreamFlow Timelock
+**Important: Security audit is underway.**
 
-**Security audit passed. [Report here.](https://github.com/StreamFlow-Finance/timelock/blob/master/TIMELOCK_IMPLEMENTATION_COMMUNITY_REPORT_FINAL.pdf) ✅**
+# JavaScript SDK to interact with Streamflow protocol.
 
------
-## Token Vesting and Streaming Payments for SPL tokens.
+Check `packages/` folder for specific exports that you can use in your apps.
 
-This is a free and open-source version of [Streamflow Timelock](../../tree/master) protocol.
+There is currently only one package under `packages/stream` which enables you to:
 
-**JS SDK** interacts with Anchor program deployed on Solana mainnet.
-The Anchor program integrates and relies heavily on
-accompanying [Streamflow Timelock Rust crate (v0.3.2)](https://docs.rs/0.3.2/streamflow-timelock),
-([source](https://github.com/streamflow-finance/timelock-crate/tree/community))
+1. `create`, `withdraw`, `cancel`, `topup` and `transfer` a stream,
 
-**Mainnet program ID:** `8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX`
-
-___
-**Functionalities are:**
-
-- `create` a vesting contract.
-- `withdraw` from a vesting contract. _Invoked by recipient (beneficiary)_
-- `cancel` a vesting contract. _Invoked by sender (creator)_
-- `transfer_recipient` of a vesting contract. _Invoked by recipient (beneficiary)_
-
-There are several ways to use Streamflow Timelock protocol:
-
-- **`[preferred]` Application with UI** available at [https://app.streamflow.finance/vesting](https://app.streamflow.finance/vesting)
-- **JS SDK** (NPM package) available [here](https://www.npmjs.com/package/@streamflow/timelock/v/0.3.2-community)
-- **Rust SDK (crate)** for integration within Solana programs available [here](https://docs.rs/0.3.2/streamflow-timelock)
-
-### System overview
-
-System has 4 composable layers. These are (top to bottom):
-
-- `streamflow-app` — React/TypeScript [web application that hosts user interface](https://app.streamflow.finance).
-- `@streamflow/timelock` — a [NPM package](https://www.npmjs.com/package/@streamflow/timelock) used by the web app.
-  Interacts with provided `timelock` program deployed on Solana chain. (part of this repository)
-- `timelock` — simple implementation of Solana/Anchor program that integrates `timelock-crate` (this repository).
-- `timelock-crate` — a crate that provides `create`, `withdraw`, `cancel`, `transfer` stream/vesting contract
-  functionalities out of the box. Can be used in other Solana/Anchor programs, as demonstrated here.
-
-![Platform overview](/misc/platform.png)
-
-### Development
-
-#### Tests
-
-Run tests from the: 
-   - Command line using `anchor test`.
-   - IDE using run configuration.
-     IntelliJ IDEA will automatically load `.run/timelock.run.xml`.
-     Start the local validator with `anchor localnet` (Anchor 0.18+) or `anchor test --detach` and run/debug configuration `tests`
+2. `getOne` stream and `get` multiple streams. Check details [here](https://github.com/streamflow-finance/js-sdk/tree/master/packages/timelock).
 
 
-### Legal
+## JS SDK interacts with Anchor program deployed on Solana mainnet.
 
-This file is part of `streamflow-finance/timelock`
+Devnet Program ID: `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`.
+<br>
+Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
+
+There are several ways to use Streamflow protocol:
+
+- **`[preferred]` Application with UI** available at [https://app.streamflow.finance](https://app.streamflow.finance),
+- **JS SDK** (NPM package) available [here](https://www.npmjs.com/package/@streamflow/stream/v/2.0.0),
+- **Rust SDK (crate)** for integration within Solana programs available [here](https://docs.rs/0.3.2/streamflow-timelock).
+
+
+## Legal
+
+This file is part of `streamflow-finance/js-sdk`
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public
 License version 3 as published by the Free Software Foundation.
