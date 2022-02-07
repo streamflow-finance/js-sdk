@@ -14,7 +14,7 @@ Mainnet Program ID: `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`.
 
 ## Install the Streamflow JS SDK
 
-`$ npm i @streamflow/timelock @solana/web3.js @project-serum/anchor`
+`$ npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
 
 Anchor is needed for now for the `Wallet` type.
 <br>

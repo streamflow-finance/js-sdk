@@ -1,2 +1,0 @@
-Update `programs/.../Cargo.toml` to read local version of `timelock-crate` if that's needed during the development.
-(i.e. `streamflow-timelock = { path = "../relative/path/to/timelock-crate", features = ["no-entrypoint"] }`)
