@@ -196,11 +196,12 @@ Streamflow protocol program ID (mainnet): `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUx
 
 **All BN amounts are denominated in their smallest units.**
 
-E.g, if the amount is 1 SOL than this amount in lamports is 1000 \* 10^9 = 1_000_000_000. 
+E.g, if the amount is 1 SOL than this amount in lamports is `1000 \* 10^9 = 1_000_000_000.`
+
 And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
 
-**Streamflow Community** (free and open source, with a limited feature set) is available [here](https://github.com/streamflow-finance/js-sdk/tree/community).
+**Streamflow Community** (free and open source version, with a limited feature set) is available [here](https://github.com/streamflow-finance/js-sdk/tree/community).
 
 WAGMI.
