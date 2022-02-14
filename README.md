@@ -6,7 +6,7 @@ Streamflow is a token distribution platform powered by a streaming payments' pro
 
 There are several ways to use **Streamflow**:
 
-- **(easiest) [app.streamflow.finance](https://app.streamflow.finance)** (React application that uses JS SDK directly)
+- **(easiest) [app.streamflow.finance](https://app.streamflow.finance?utm_medium=github.com&utm_source=referral&utm_campaign=js-sdk-repo)** (React application that uses JS SDK directly)
 - **[JS SDK](https://github.com/streamflow-finance/js-sdk)** to interact with the protocol => [NPM package](https://www.npmjs.com/package/@streamflow/stream/v/2.0.0)
 - **[Rust SDK](https://github.com/streamflow-finance/rust-sdk)** to integrate within a Solana program => [Rust Crate](https://docs.rs/streamflow-sdk/)
 
