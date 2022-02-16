@@ -81,8 +81,8 @@ const createStreamParams = {
   transferableBySender: true, // Whether or not sender can transfer the stream to the new recipient.
   transferableByRecipient: false, // Whether or not recipient can transfer the stream to the new recipient.
   automaticWithdrawal: true, // [WIP] Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer. Defaults to false.
-  withdrawalFrequency: 10, // If automaticWithdrawal is set to true withdrawalFrequency is required, otherwise it is not used.
-  partner: null, //  (optional) Partner's wallet address (string | null).
+  withdrawalFrequency: 10, // [WIP] Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+  partner: "AAAAA075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // (optional) Partner's wallet address (string).
   cluster: Cluster.Mainnet, // (optional) Cluster (default is Cluster.Mainnet).
 };
 

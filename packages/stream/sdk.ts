@@ -73,9 +73,9 @@ export default class Stream {
    * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
    * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
-   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
-   * @param {number} data.withdrawFrequency - Whether or not a 3rd party can initiate withdraw in the name of recipient.
-   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+   * @param {boolean} [data.automaticWithdrawal = false] - Whether or not a 3rd party can initiate withdraw in the name of recipient.
+   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+   * @param {string} [data.partner = STREAMFLOW_TREASURY] - Partner's wallet address (optional).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async create({
@@ -95,9 +95,9 @@ export default class Stream {
     cancelableByRecipient,
     transferableBySender,
     transferableByRecipient,
-    automaticWithdrawal,
-    withdrawalFrequency,
-    partner,
+    automaticWithdrawal = false,
+    withdrawalFrequency = 0,
+    partner = STREAMFLOW_TREASURY_PUBLIC_KEY.toString(),
     cluster = Cluster.Mainnet,
   }: CreateStreamParams): Promise<CreateStreamResponse> {
     const program = initProgram(connection, sender, cluster);
@@ -117,9 +117,7 @@ export default class Stream {
       STREAMFLOW_TREASURY_PUBLIC_KEY
     );
 
-    const partnerPublicKey = partner
-      ? new PublicKey(partner)
-      : STREAMFLOW_TREASURY_PUBLIC_KEY;
+    const partnerPublicKey = new PublicKey(partner);
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
