@@ -1,5 +1,7 @@
-import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
-import { Wallet } from "@project-serum/anchor/src/provider";
+import { web3 } from "@project-serum/anchor";
+import { u64 } from "@solana/spl-token";
+import { Buffer } from "buffer";
+
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
@@ -11,6 +13,11 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+  Transaction,
+  Commitment,
+  ConnectionConfig,
+  sendAndConfirmRawTransaction,
 } from "@solana/web3.js";
 
 import {
@@ -39,34 +46,53 @@ import {
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
 } from "./constants";
-import idl from "./idl";
+import {
+  withdrawStreamInstruction,
+  cancelStreamInstruction,
+  transferStreamInstruction,
+  topupStreamInstruction,
+  createStreamInstruction,
+} from "./instructions";
 
 const encoder = new TextEncoder();
 
-const initProgram = (
-  connection: Connection,
-  wallet: Wallet,
-  cluster: ClusterExtended
-): Program => {
-  const provider = new Provider(connection, wallet, {});
-  return new Program(idl as Idl, PROGRAM_ID[cluster], provider);
-};
-
 export default class Stream {
+  private connection: Connection;
+  private cluster: ClusterExtended;
+  private programId: PublicKey;
+  private commitment: Commitment | ConnectionConfig;
+
+  /**
+   * Create Stream instance
+   */
+  constructor(
+    clusterUrl: string,
+    cluster: ClusterExtended = Cluster.Mainnet,
+    commitment: Commitment | ConnectionConfig = "confirmed"
+  ) {
+    this.commitment = commitment;
+    this.cluster = cluster;
+    this.connection = new Connection(clusterUrl, this.commitment);
+    this.programId = new PublicKey(PROGRAM_ID[cluster]);
+  }
+
+  public getConnection() {
+    return this.connection;
+  }
+
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {CreateStreamParams} data
-   * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
    * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
    * @param {string} data.mint - SPL Token mint.
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
-   * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
+   * @param {u64} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
    * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
    * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
-   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
+   * @param {u64} data.cliffAmount - Amount unlocked at the "cliff".
+   * @param {u64} data.amountPerPeriod - Amount unlocked per each period.
    * @param {string} data.name - Stream name/subject.
    * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
    * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
@@ -75,10 +101,8 @@ export default class Stream {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
-  static async create({
-    connection,
+  public async create({
     sender,
     recipient,
     mint,
@@ -96,16 +120,15 @@ export default class Stream {
     transferableByRecipient,
     automaticWithdrawal,
     partner,
-    cluster = Cluster.Mainnet,
   }: CreateStreamParams): Promise<CreateStreamResponse> {
-    const program = initProgram(connection, sender, cluster);
+    let ixs: TransactionInstruction[] = [];
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
 
     const metadata = Keypair.generate();
     const [escrowTokens] = await web3.PublicKey.findProgramAddress(
       [Buffer.from("strm"), metadata.publicKey.toBuffer()],
-      program.programId
+      this.programId
     );
 
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
@@ -121,31 +144,29 @@ export default class Stream {
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
-    const signers = [metadata];
-
-    const nameUtf8EncodedBytes: BN[] = formatStringToBytesArray(encoder, name);
-
-    const tx = await program.rpc.create(
-      // Order of the parameters must match the ones in the program
-      new BN(start),
-      depositedAmount,
-      new BN(period),
-      amountPerPeriod,
-      new BN(cliff),
-      cliffAmount,
-      cancelableBySender,
-      cancelableByRecipient,
-      automaticWithdrawal,
-      transferableBySender,
-      transferableByRecipient,
-      canTopup,
-      nameUtf8EncodedBytes,
-      new BN(period),
-      {
-        accounts: {
+    ixs.push(
+      createStreamInstruction(
+        {
+          start: new u64(start),
+          depositedAmount,
+          period: new u64(period),
+          amountPerPeriod,
+          cliff: new u64(cliff),
+          cliffAmount,
+          cancelableBySender,
+          cancelableByRecipient,
+          automaticWithdrawal,
+          transferableBySender,
+          transferableByRecipient,
+          canTopup,
+          name,
+          withdrawFrequency: new u64(period),
+        },
+        this.programId,
+        {
           sender: sender.publicKey,
           senderTokens,
-          recipient,
+          recipient: new PublicKey(recipient),
           metadata: metadata.publicKey,
           escrowTokens,
           recipientTokens,
@@ -153,42 +174,57 @@ export default class Stream {
           streamflowTreasuryTokens: streamflowTreasuryTokens,
           partner: partnerPublicKey,
           partnerTokens: partnerTokens,
-          mint,
+          mint: new PublicKey(mint),
           feeOracle: STREAMFLOW_TREASURY_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
-          timelockProgram: program.programId,
+          timelockProgram: this.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           withdrawor: WITHDRAWOR_PUBLIC_KEY,
           systemProgram: SystemProgram.programId,
-        },
-        signers,
-      }
+        }
+      )
     );
 
-    return { tx, id: metadata.publicKey.toBase58() };
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+
+    let hash = await this.connection.getRecentBlockhash(commitment);
+    let tx = new Transaction({
+      feePayer: sender.publicKey,
+      recentBlockhash: hash.blockhash,
+    }).add(...ixs);
+
+    tx.partialSign(metadata);
+    await sender.signTransaction(tx);
+
+    const rawTx = tx.serialize();
+    const signature = await sendAndConfirmRawTransaction(
+      this.connection,
+      rawTx
+    );
+
+    return { tx: signature, id: metadata.publicKey.toBase58() };
   }
 
   /**
    * Attempts withdrawal from the specified stream.
    * @param {WithdrawStreamParams} data
-   * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
-   * @param {BN} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
+   * @param {u64} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
    */
-  static async withdraw({
-    connection,
+  public async withdraw({
     invoker,
     id,
     amount,
-    cluster = Cluster.Mainnet,
   }: WithdrawStreamParams): Promise<TransactionResponse> {
-    const program = initProgram(connection, invoker, cluster);
+    let ixs: TransactionInstruction[] = [];
     const streamPublicKey = new PublicKey(id);
-    const escrow = await connection.getAccountInfo(streamPublicKey);
 
+    const escrow = await this.connection.getAccountInfo(streamPublicKey);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
@@ -201,8 +237,8 @@ export default class Stream {
     );
     const partnerTokens = await ata(data.mint, data.partner);
 
-    const tx = await program.rpc.withdraw(amount, {
-      accounts: {
+    ixs.push(
+      withdrawStreamInstruction(amount, this.programId, {
         authority: invoker.publicKey,
         recipient: invoker.publicKey,
         recipientTokens: data.recipientTokens,
@@ -214,29 +250,42 @@ export default class Stream {
         partnerTokens,
         mint: data.mint,
         tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    });
+      })
+    );
 
-    return { tx };
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+    let hash = await this.connection.getRecentBlockhash(commitment);
+    let tx = new Transaction({
+      feePayer: invoker.publicKey,
+      recentBlockhash: hash.blockhash,
+    }).add(...ixs);
+
+    const signedAndSerializedTx = (
+      await invoker.signTransaction(tx)
+    ).serialize();
+    const signature = await sendAndConfirmRawTransaction(
+      this.connection,
+      signedAndSerializedTx
+    );
+
+    return { tx: signature };
   }
 
   /**
    * Attempts canceling the specified stream.
    * @param {CancelStreamParams} data
-   * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be canceled.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
-  static async cancel({
-    connection,
+  public async cancel({
     invoker,
     id,
-    cluster = Cluster.Mainnet,
   }: CancelStreamParams): Promise<TransactionResponse> {
-    const program = initProgram(connection, invoker, cluster);
     const streamPublicKey = new PublicKey(id);
-    let escrow_acc = await connection.getAccountInfo(streamPublicKey);
+    let escrow_acc = await this.connection.getAccountInfo(streamPublicKey);
     if (!escrow_acc?.data) {
       throw new Error("Couldn't get account info");
     }
@@ -249,8 +298,10 @@ export default class Stream {
     );
     const partnerTokens = await ata(data.mint, data.partner);
 
-    const tx = await program.rpc.cancel({
-      accounts: {
+    let ixs: TransactionInstruction[] = [];
+
+    ixs.push(
+      cancelStreamInstruction(this.programId, {
         authority: invoker.publicKey,
         sender: data.sender,
         senderTokens: data.senderTokens,
@@ -264,33 +315,47 @@ export default class Stream {
         partnerTokens,
         mint: data.mint,
         tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    });
+      })
+    );
 
-    return { tx };
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+
+    let hash = await this.connection.getRecentBlockhash(commitment);
+    let tx = new Transaction({
+      feePayer: invoker.publicKey,
+      recentBlockhash: hash.blockhash,
+    }).add(...ixs);
+    await invoker.signTransaction(tx);
+
+    const rawTx = tx.serialize();
+    const signature = await sendAndConfirmRawTransaction(
+      this.connection,
+      rawTx
+    );
+
+    return { tx: signature };
   }
 
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
    * @param {TransferStreamParams} data
-   * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {string} data.recipientId - Address of a new recipient.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
-  static async transfer({
-    connection,
+  public async transfer({
     invoker,
     id,
     recipientId,
-    cluster = Cluster.Mainnet,
   }: TransferStreamParams): Promise<TransactionResponse> {
-    const program = initProgram(connection, invoker, cluster);
+    let ixs: TransactionInstruction[] = [];
     const stream = new PublicKey(id);
     const newRecipient = new PublicKey(recipientId);
-    let escrow = await connection.getAccountInfo(stream);
+    let escrow = await this.connection.getAccountInfo(stream);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
@@ -298,8 +363,8 @@ export default class Stream {
 
     const newRecipientTokens = await ata(mint, newRecipient);
 
-    const tx = await program.rpc.transferRecipient({
-      accounts: {
+    ixs.push(
+      transferStreamInstruction(this.programId, {
         authority: invoker.publicKey,
         newRecipient,
         newRecipientTokens,
@@ -309,31 +374,45 @@ export default class Stream {
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: web3.SystemProgram.programId,
-      },
-    });
+      })
+    );
 
-    return { tx };
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+    let hash = await this.connection.getRecentBlockhash(commitment);
+
+    let tx = new Transaction({
+      feePayer: invoker.publicKey,
+      recentBlockhash: hash.blockhash,
+    }).add(...ixs);
+    await invoker.signTransaction(tx);
+
+    const rawTx = tx.serialize();
+    const signature = await sendAndConfirmRawTransaction(
+      this.connection,
+      rawTx
+    );
+
+    return { tx: signature };
   }
 
   /**
    * Tops up stream account deposited amount.
    * @param {TopupStreamParams} data
-   * @param {Connection} data.connection - A connection to the cluster.
    * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
-   * @param {BN} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
+   * @param {u64} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
    */
-  static async topup({
-    connection,
+  public async topup({
     invoker,
     id,
     amount,
-    cluster = Cluster.Mainnet,
   }: TopupStreamParams): Promise<TransactionResponse> {
-    const program = initProgram(connection, invoker, cluster);
+    let ixs: TransactionInstruction[] = [];
     const streamPublicKey = new PublicKey(id);
-    let escrow = await connection.getAccountInfo(streamPublicKey);
+    let escrow = await this.connection.getAccountInfo(streamPublicKey);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
@@ -347,8 +426,8 @@ export default class Stream {
     );
     const partnerTokens = await ata(mint, partner);
 
-    const tx = await program.rpc.topup(amount, {
-      accounts: {
+    ixs.push(
+      topupStreamInstruction(amount, this.programId, {
         sender: invoker.publicKey,
         senderTokens,
         metadata: streamPublicKey,
@@ -361,10 +440,28 @@ export default class Stream {
         tokenProgram: TOKEN_PROGRAM_ID,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: web3.SystemProgram.programId,
-      },
-    });
+      })
+    );
 
-    return { tx };
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+    let hash = await this.connection.getRecentBlockhash(commitment);
+    let tx = new Transaction({
+      feePayer: invoker.publicKey,
+      recentBlockhash: hash.blockhash,
+    }).add(...ixs);
+
+    const signedAndSerializedTx = (
+      await invoker.signTransaction(tx)
+    ).serialize();
+    const signature = await sendAndConfirmRawTransaction(
+      this.connection,
+      signedAndSerializedTx
+    );
+
+    return { tx: signature };
   }
   /**
    * Fetch stream data by its id (address).
@@ -372,11 +469,8 @@ export default class Stream {
    * @param {Connection} data.connection - A connection to the cluster.
    * @param {string} data.id - Identifier of a stream that is fetched.
    */
-  static async getOne({
-    connection,
-    id,
-  }: GetStreamParams): Promise<StreamData> {
-    const escrow = await connection.getAccountInfo(
+  public async getOne({ id }: GetStreamParams): Promise<StreamData> {
+    const escrow = await this.connection.getAccountInfo(
       new PublicKey(id),
       TX_FINALITY_CONFIRMED
     );
@@ -391,33 +485,29 @@ export default class Stream {
    * Fetch streams/contracts by providing direction.
    * Streams are sorted by start time in ascending order.
    * @param {GetStreamsParams} data
-   * @param {Connection} data.connection - A connection to the cluster.
    * @param {PublicKey} data.wallet - PublicKey of the wallet for which the streams/contracts are fetched.
    * @param {StreamType} [data.type = StreamType.All] - It can be one of: stream, vesting, all.
    * @param {StreamDirection} [data.direction = StreamDirection.All] - It can be one of: incoming, outgoing, all.
-   * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
-  static async get({
-    connection,
+  public async get({
     wallet,
     type = StreamType.All,
     direction = StreamDirection.All,
-    cluster = Cluster.Mainnet,
   }: GetStreamsParams): Promise<[string, StreamData][]> {
     let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
     if (direction === "all") {
       const outgoingAccounts = await getProgramAccounts(
-        connection,
+        this.connection,
         wallet,
         STREAM_STRUCT_OFFSET_SENDER,
-        cluster
+        this.cluster
       );
       const incomingAccounts = await getProgramAccounts(
-        connection,
+        this.connection,
         wallet,
         STREAM_STRUCT_OFFSET_RECIPIENT,
-        cluster
+        this.cluster
       );
       accounts = [...outgoingAccounts, ...incomingAccounts];
     } else {
@@ -425,7 +515,12 @@ export default class Stream {
         direction === "outgoing"
           ? STREAM_STRUCT_OFFSET_SENDER
           : STREAM_STRUCT_OFFSET_RECIPIENT;
-      accounts = await getProgramAccounts(connection, wallet, offset, cluster);
+      accounts = await getProgramAccounts(
+        this.connection,
+        wallet,
+        offset,
+        this.cluster
+      );
     }
 
     let streams: { [s: string]: any } = {};
@@ -474,24 +569,24 @@ async function ata(mint: PublicKey, account: PublicKey) {
   );
 }
 
-function formatStringToBytesArray(encoder: TextEncoder, text: string) {
-  const textCopy = [...text];
-  const characters = Array.from(textCopy);
-  const utf8EncodedBytes: BN[] = [];
+// function formatStringToBytesArray(encoder: TextEncoder, text: string) {
+//   const textCopy = [...text];
+//   const characters = Array.from(textCopy);
+//   const utf8EncodedBytes: [];
 
-  characters.every((char) => {
-    if (utf8EncodedBytes.length > 64) return false;
+//   characters.every((char) => {
+//     if (utf8EncodedBytes.length > 64) return false;
 
-    const encoded = encoder.encode(char);
-    if (utf8EncodedBytes.length + encoded.length > 64) return false;
+//     const encoded = encoder.encode(char);
+//     if (utf8EncodedBytes.length + encoded.length > 64) return false;
 
-    encoded.forEach((elem) => utf8EncodedBytes.push(new BN(elem)));
-    return true;
-  });
+//     encoded.forEach((elem) => utf8EncodedBytes.push(elem));
+//     return true;
+//   });
 
-  const numberOfBytes = utf8EncodedBytes.length;
-  const fill = new Array(64 - numberOfBytes).fill(new BN(0));
-  utf8EncodedBytes.push(...fill);
+//   const numberOfBytes = utf8EncodedBytes.length;
+//   const fill = new Array(64 - numberOfBytes).fill(0);
+//   utf8EncodedBytes.push(...fill);
 
-  return utf8EncodedBytes;
-}
+//   return utf8EncodedBytes;
+// }

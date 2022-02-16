@@ -4,4 +4,4 @@ export * from "./utils";
 
 export * from "./types";
 
-export { BN } from "@project-serum/anchor";
+export { u64 } from "@solana/spl-token";

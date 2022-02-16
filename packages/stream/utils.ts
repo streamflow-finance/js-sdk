@@ -1,63 +1,23 @@
-import BufferLayout from "buffer-layout";
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "@project-serum/anchor";
+import { u64 } from "@solana/spl-token";
 
+import { streamLayout } from "./layout";
 import { Stream, DecodedStream } from "./types";
 
-const LE = "le"; //little endian
 var decoder = new TextDecoder("utf-8");
-
-const TokenStreamDataLayout = BufferLayout.struct<any>([
-  BufferLayout.blob(8, "magic"),
-  BufferLayout.blob(1, "version"),
-  BufferLayout.blob(8, "created_at"),
-  BufferLayout.blob(8, "withdrawn_amount"),
-  BufferLayout.blob(8, "canceled_at"),
-  BufferLayout.blob(8, "end_time"),
-  BufferLayout.blob(8, "last_withdrawn_at"),
-  BufferLayout.blob(32, "sender"),
-  BufferLayout.blob(32, "sender_tokens"),
-  BufferLayout.blob(32, "recipient"),
-  BufferLayout.blob(32, "recipient_tokens"),
-  BufferLayout.blob(32, "mint"),
-  BufferLayout.blob(32, "escrow_tokens"),
-  BufferLayout.blob(32, "streamflow_treasury"),
-  BufferLayout.blob(32, "streamflow_treasury_tokens"),
-  BufferLayout.blob(8, "streamflow_fee_total"),
-  BufferLayout.blob(8, "streamflow_fee_withdrawn"),
-  BufferLayout.blob(4, "streamflow_fee_percent"),
-  BufferLayout.blob(32, "partner"),
-  BufferLayout.blob(32, "partner_tokens"),
-  BufferLayout.blob(8, "partner_fee_total"),
-  BufferLayout.blob(8, "partner_fee_withdrawn"),
-  BufferLayout.blob(4, "partner_fee_percent"),
-  BufferLayout.blob(8, "start_time"),
-  BufferLayout.blob(8, "net_deposited_amount"),
-  BufferLayout.blob(8, "period"),
-  BufferLayout.blob(8, "amount_per_period"),
-  BufferLayout.blob(8, "cliff"),
-  BufferLayout.blob(8, "cliff_amount"),
-  BufferLayout.u8("cancelable_by_sender"),
-  BufferLayout.u8("cancelable_by_recipient"),
-  BufferLayout.u8("automatic_withdrawal"),
-  BufferLayout.u8("transferable_by_sender"),
-  BufferLayout.u8("transferable_by_recipient"),
-  BufferLayout.u8("can_topup"),
-  BufferLayout.blob(64, "stream_name"),
-  BufferLayout.blob(8, "withdraw_frequency"),
-]);
+const LE = "le"; //little endian
 
 export const decodeStream = (buf: Buffer): DecodedStream => {
-  let raw = TokenStreamDataLayout.decode(buf);
+  let raw = streamLayout.decode(buf);
 
   return {
-    magic: new BN(raw.magic, LE),
-    version: new BN(raw.version, LE),
-    createdAt: new BN(raw.created_at, LE),
-    withdrawnAmount: new BN(raw.withdrawn_amount, LE),
-    canceledAt: new BN(raw.canceled_at, LE),
-    end: new BN(raw.end_time, LE),
-    lastWithdrawnAt: new BN(raw.last_withdrawn_at, LE),
+    magic: new u64(raw.magic, LE),
+    version: new u64(raw.version, LE),
+    createdAt: new u64(raw.created_at, LE),
+    withdrawnAmount: new u64(raw.withdrawn_amount, LE),
+    canceledAt: new u64(raw.canceled_at, LE),
+    end: new u64(raw.end_time, LE),
+    lastWithdrawnAt: new u64(raw.last_withdrawn_at, LE),
     sender: new PublicKey(raw.sender),
     senderTokens: new PublicKey(raw.sender_tokens),
     recipient: new PublicKey(raw.recipient),
@@ -66,20 +26,20 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     escrowTokens: new PublicKey(raw.escrow_tokens),
     streamflowTreasury: new PublicKey(raw.streamflow_treasury),
     streamflowTreasuryTokens: new PublicKey(raw.streamflow_treasury_tokens),
-    streamflowFeeTotal: new BN(raw.streamflow_fee_total, LE),
-    streamflowFeeWithdrawn: new BN(raw.streamflow_fee_withdrawn, LE),
-    streamflowFeePercent: new BN(raw.streamflow_fee_percent, LE),
-    partnerFeeTotal: new BN(raw.partner_fee_total, LE),
-    partnerFeeWithdrawn: new BN(raw.partner_fee_withdrawn, LE),
-    partnerFeePercent: new BN(raw.partner_fee_percent, LE),
+    streamflowFeeTotal: new u64(raw.streamflow_fee_total, LE),
+    streamflowFeeWithdrawn: new u64(raw.streamflow_fee_withdrawn, LE),
+    streamflowFeePercent: new u64(raw.streamflow_fee_percent, LE),
+    partnerFeeTotal: new u64(raw.partner_fee_total, LE),
+    partnerFeeWithdrawn: new u64(raw.partner_fee_withdrawn, LE),
+    partnerFeePercent: new u64(raw.partner_fee_percent, LE),
     partner: new PublicKey(raw.partner),
     partnerTokens: new PublicKey(raw.partner_tokens),
-    start: new BN(raw.start_time, LE),
-    depositedAmount: new BN(raw.net_deposited_amount, LE),
-    period: new BN(raw.period, LE),
-    amountPerPeriod: new BN(raw.amount_per_period, LE),
-    cliff: new BN(raw.cliff, LE),
-    cliffAmount: new BN(raw.cliff_amount, LE),
+    start: new u64(raw.start_time, LE),
+    depositedAmount: new u64(raw.net_amount_deposited, LE),
+    period: new u64(raw.period, LE),
+    amountPerPeriod: new u64(raw.amount_per_period, LE),
+    cliff: new u64(raw.cliff, LE),
+    cliffAmount: new u64(raw.cliff_amount, LE),
     cancelableBySender: Boolean(raw.cancelable_by_sender),
     cancelableByRecipient: Boolean(raw.cancelable_by_recipient),
     automaticWithdrawal: Boolean(raw.automatic_withdrawal),
@@ -87,7 +47,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     transferableByRecipient: Boolean(raw.transferable_by_recipient),
     canTopup: Boolean(raw.can_topup),
     name: decoder.decode(raw.stream_name),
-    withdrawFrequency: new BN(raw.withdraw_frequency, LE),
+    withdrawFrequency: new u64(raw.withdraw_frequency, LE),
   };
 };
 
@@ -134,21 +94,21 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => ({
 /**
  * Used for conversion of token amounts to their Big Number representation.
  * Get Big Number representation in the smallest units from the same value in the highest units.
- * @param {number} value - Number of tokens you want to convert to its BN representation.
+ * @param {number} value - Number of tokens you want to convert to its u64 representation.
  * @param {number} decimals - Number of decimals the token has.
  */
-export const getBN = (value: number, decimals: number): BN =>
+export const getBN = (value: number, decimals: number): u64 =>
   value > (2 ** 53 - 1) / 10 ** decimals
-    ? new BN(value).mul(new BN(10 ** decimals))
-    : new BN(value * 10 ** decimals);
+    ? new u64(value).mul(new u64(10 ** decimals))
+    : new u64(value * 10 ** decimals);
 
 /**
  * Used for token amounts conversion from their Big Number representation to number.
- * Get value in the highest units from BN representation of the same value in the smallest units.
- * @param {BN} value - Big Number representation of value in the smallest units.
+ * Get value in the highest units from u64 representation of the same value in the smallest units.
+ * @param {u64} value - Big Number representation of value in the smallest units.
  * @param {number} decimals - Number of decimals the token has.
  */
-export const getNumberFromBN = (value: BN, decimals: number): number =>
-  value.gt(new BN(2 ** 53 - 1))
-    ? value.div(new BN(10 ** decimals)).toNumber()
+export const getNumberFromBN = (value: u64, decimals: number): number =>
+  value.gt(new u64(2 ** 53 - 1))
+    ? value.div(new u64(10 ** decimals)).toNumber()
     : value.toNumber() / 10 ** decimals;

@@ -14,6 +14,12 @@ export const PROGRAM_ID = {
   [LocalCluster.Local]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
 };
 
+export const STREAMFLOW_PROGRAM_ID =
+  "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m";
+
+export const STREAMFLOW_DEVNET_PROGRAM_ID =
+  "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ";
+
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey(
   "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
 );

@@ -1,7 +1,9 @@
 **Important: Security audit is underway.**
 
 Docs: https://streamflow.finance/js-sdk/
+
 # Streamflow
+
 Streamflow is a token distribution platform powered by a streaming payments' protocol.
 
 Streamflow program ID (devnet) => `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
@@ -17,6 +19,7 @@ There are several ways to use Streamflow protocol:
 [**Streamflow Community** (free and open source, with limited features) is available here.](https://github.com/streamflow-finance/js-sdk/tree/community)
 
 ## JS SDK to interact with Streamflow protocol.
+
 This package allows you to `create`, `withdraw`, `cancel`, `topup` and `transfer` SPL token stream.
 
 You can also `getOne` stream and `get` multiple streams.
@@ -25,8 +28,7 @@ You can also `getOne` stream and `get` multiple streams.
 
 `npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
 
-
->_Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
+> _Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
 
 `bn.js` library is used for handling big numbers.
 
@@ -57,13 +59,13 @@ import Stream, {
   CreateStreamResponse,
 } from "@streamflow/stream";
 ```
+
 _Check the SDK for other types and utility functions._
 
 ### Create stream
 
 ```javascript
 const createStreamParams = {
-  connection: connection, // Connection to the cluster.
   sender: wallet, // Wallet signing the transaction, creating and sending the stream.
   recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
   mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
@@ -81,7 +83,6 @@ const createStreamParams = {
   transferableByRecipient: false, // Whether or not recipient can transfer the stream.
   automaticWithdrawal: false, // Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
   partner: null, //  (optional) Partner's wallet address (string | null).
-  cluster: Cluster.Mainnet, // (optional) Cluster (default is Cluster.Mainnet).
 };
 
 try {
@@ -195,7 +196,7 @@ try {
 
 #### All BN amounts are denominated in their smallest units.
 
-E.g, if the amount is 1 SOL than this amount in lamports is 1000 \* 10^9 = 1_000_000_000. 
+E.g, if the amount is 1 SOL than this amount in lamports is 1000 \* 10^9 = 1_000_000_000.
 And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.

@@ -1,12 +1,7 @@
-import { BN } from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import {
-  AccountInfo,
-  Connection,
-  PublicKey,
-  TransactionSignature,
-} from "@solana/web3.js";
+import { AccountInfo, PublicKey, TransactionSignature } from "@solana/web3.js";
+import { u64 } from "@solana/spl-token";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
@@ -37,11 +32,11 @@ export interface CreateStreamData {
   recipient: string;
   mint: string;
   start: number;
-  depositedAmount: BN;
+  depositedAmount: u64;
   period: number;
   cliff: number;
-  cliffAmount: BN;
-  amountPerPeriod: BN;
+  cliffAmount: u64;
+  amountPerPeriod: u64;
   name: string;
   canTopup: boolean;
   cancelableBySender: boolean;
@@ -51,32 +46,26 @@ export interface CreateStreamData {
   automaticWithdrawal: boolean;
 }
 export interface CreateStreamParams extends CreateStreamData {
-  connection: Connection;
   sender: Wallet;
   partner?: string | null;
-  cluster?: ClusterExtended;
 }
 
 export interface WithdrawStreamData {
   id: string;
-  amount: BN;
+  amount: u64;
 }
 
 export interface WithdrawStreamParams extends WithdrawStreamData {
-  connection: Connection;
   invoker: Wallet;
-  cluster?: ClusterExtended;
 }
 
 export interface TopupStreamData {
   id: string;
-  amount: BN;
+  amount: u64;
 }
 
 export interface TopupStreamParams extends TopupStreamData {
-  connection: Connection;
   invoker: Wallet;
-  cluster?: ClusterExtended;
 }
 
 export interface CancelStreamData {
@@ -84,9 +73,7 @@ export interface CancelStreamData {
 }
 
 export interface CancelStreamParams extends CancelStreamData {
-  connection: Connection;
   invoker: Wallet;
-  cluster?: ClusterExtended;
 }
 
 export interface TransferStreamData {
@@ -95,29 +82,24 @@ export interface TransferStreamData {
 }
 
 export interface TransferStreamParams extends TransferStreamData {
-  connection: Connection;
   invoker: Wallet;
-  cluster?: ClusterExtended;
 }
 
 export interface GetStreamParams {
-  connection: Connection;
   id: string;
 }
 
 export interface GetStreamsParams {
-  connection: Connection;
   wallet: PublicKey;
   type?: StreamType;
   direction?: StreamDirection;
-  cluster?: ClusterExtended;
 }
 
 export interface Stream {
   magic: number;
   version: number;
   createdAt: number;
-  withdrawnAmount: BN;
+  withdrawnAmount: u64;
   canceledAt: number;
   end: number;
   lastWithdrawnAt: number;
@@ -129,20 +111,20 @@ export interface Stream {
   escrowTokens: string;
   streamflowTreasury: string;
   streamflowTreasuryTokens: string;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
+  streamflowFeeTotal: u64;
+  streamflowFeeWithdrawn: u64;
   streamflowFeePercent: number;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
+  partnerFeeTotal: u64;
+  partnerFeeWithdrawn: u64;
   partnerFeePercent: number;
   partner: string;
   partnerTokens: string;
   start: number;
-  depositedAmount: BN;
+  depositedAmount: u64;
   period: number;
-  amountPerPeriod: BN;
+  amountPerPeriod: u64;
   cliff: number;
-  cliffAmount: BN;
+  cliffAmount: u64;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -154,13 +136,13 @@ export interface Stream {
 }
 
 export interface DecodedStream {
-  magic: BN;
-  version: BN;
-  createdAt: BN;
-  withdrawnAmount: BN;
-  canceledAt: BN;
-  end: BN;
-  lastWithdrawnAt: BN;
+  magic: u64;
+  version: u64;
+  createdAt: u64;
+  withdrawnAmount: u64;
+  canceledAt: u64;
+  end: u64;
+  lastWithdrawnAt: u64;
   sender: PublicKey;
   senderTokens: PublicKey;
   recipient: PublicKey;
@@ -169,20 +151,20 @@ export interface DecodedStream {
   escrowTokens: PublicKey;
   streamflowTreasury: PublicKey;
   streamflowTreasuryTokens: PublicKey;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: BN;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
-  partnerFeePercent: BN;
+  streamflowFeeTotal: u64;
+  streamflowFeeWithdrawn: u64;
+  streamflowFeePercent: u64;
+  partnerFeeTotal: u64;
+  partnerFeeWithdrawn: u64;
+  partnerFeePercent: u64;
   partner: PublicKey;
   partnerTokens: PublicKey;
-  start: BN;
-  depositedAmount: BN;
-  period: BN;
-  amountPerPeriod: BN;
-  cliff: BN;
-  cliffAmount: BN;
+  start: u64;
+  depositedAmount: u64;
+  period: u64;
+  amountPerPeriod: u64;
+  cliff: u64;
+  cliffAmount: u64;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -190,7 +172,7 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: BN;
+  withdrawFrequency: u64;
 }
 
 export interface TransactionResponse {
