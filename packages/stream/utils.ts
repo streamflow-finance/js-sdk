@@ -87,7 +87,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     transferableByRecipient: Boolean(raw.transferable_by_recipient),
     canTopup: Boolean(raw.can_topup),
     name: decoder.decode(raw.stream_name),
-    withdrawFrequency: new BN(raw.withdraw_frequency, LE),
+    withdrawalFrequency: new BN(raw.withdraw_frequency, LE),
   };
 };
 
@@ -128,7 +128,7 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => ({
   transferableByRecipient: stream.transferableByRecipient,
   canTopup: stream.canTopup,
   name: stream.name,
-  withdrawFrequency: stream.withdrawFrequency.toNumber(),
+  withdrawalFrequency: stream.withdrawalFrequency.toNumber(),
 });
 
 /**

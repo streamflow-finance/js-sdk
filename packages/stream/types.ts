@@ -49,6 +49,7 @@ export interface CreateStreamData {
   transferableBySender: boolean;
   transferableByRecipient: boolean;
   automaticWithdrawal: boolean;
+  withdrawalFrequency: number;
 }
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
@@ -150,7 +151,7 @@ export interface Stream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: number;
+  withdrawalFrequency: number;
 }
 
 export interface DecodedStream {
@@ -190,7 +191,7 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: BN;
+  withdrawalFrequency: BN;
 }
 
 export interface TransactionResponse {

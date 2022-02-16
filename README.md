@@ -1,7 +1,9 @@
 **Important: Security audit is underway.**
 
 Docs: https://streamflow.finance/js-sdk/
+
 # Streamflow
+
 Streamflow is a token distribution platform powered by a streaming payments' protocol.
 
 There are several ways to use **Streamflow**:
@@ -11,17 +13,18 @@ There are several ways to use **Streamflow**:
 - **[Rust SDK](https://github.com/streamflow-finance/rust-sdk)** to integrate within a Solana program => [Rust Crate](https://docs.rs/streamflow-sdk/)
 
 ## JS SDK
+
 This SDK allows you to `create`, `withdraw`, `cancel`, `topup` and `transfer` SPL token stream.
 
 You can also `getOne` stream and `get` multiple streams.
 
-----
+---
+
 ### Installation
 
 `npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
 
-
->_Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
+> _Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
 
 `bn.js` library is used for handling big numbers.
 
@@ -30,7 +33,9 @@ import { Connection } from "@solana/web3.js";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import BN from "bn.js";
 ```
-### Usage 
+
+### Usage
+
 #### Imports
 
 Most common imports:
@@ -52,6 +57,7 @@ import Stream, {
   CreateStreamResponse,
 } from "@streamflow/stream";
 ```
+
 _Check the SDK for other types and utility functions._
 
 #### Create stream
@@ -74,7 +80,8 @@ const createStreamParams = {
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
   transferableBySender: true, // Whether or not sender can transfer the stream to the new recipient.
   transferableByRecipient: false, // Whether or not recipient can transfer the stream to the new recipient.
-  automaticWithdrawal: false, // [WIP] Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdrawal/transfer.
+  automaticWithdrawal: true, // [WIP] Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
+  withdrawalFrequency: 10, // If automaticWithdrawal is set to true withdrawalFrequency is required, otherwise it is not used.
   partner: null, //  (optional) Partner's wallet address (string | null).
   cluster: Cluster.Mainnet, // (optional) Cluster (default is Cluster.Mainnet).
 };
@@ -85,9 +92,10 @@ try {
   // handle exception
 }
 ```
-_Disclaimer: Support for scheduled, automatic token withdrawals/transfers is under development and scheduled to launch in Q1. Once launched, it will be enabled retroactively for all streams that have `automaticWithdrawal` set to `true`.
 
-Please note that transaction fees for the scheduled transfers are paid upfront by the stream creator (sender)._
+\_Disclaimer: Support for scheduled, automatic token withdrawals/transfers is under development and scheduled to launch in Q1. Once launched, it will be enabled retroactively for all streams that have `automaticWithdrawal` set to `true`.
+
+Please note that transaction fees for the scheduled transfers are paid upfront by the stream creator (sender).\_
 
 #### Withdraw from stream
 
@@ -190,6 +198,7 @@ try {
 ```
 
 ## Additional notes
+
 Streamflow protocol program ID (devnet): `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
 <br>
 Streamflow protocol program ID (mainnet): `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`

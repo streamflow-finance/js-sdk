@@ -74,6 +74,7 @@ export default class Stream {
    * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
+   * @param {number} data.withdrawFrequency - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
@@ -95,6 +96,7 @@ export default class Stream {
     transferableBySender,
     transferableByRecipient,
     automaticWithdrawal,
+    withdrawalFrequency,
     partner,
     cluster = Cluster.Mainnet,
   }: CreateStreamParams): Promise<CreateStreamResponse> {
@@ -140,7 +142,7 @@ export default class Stream {
       transferableByRecipient,
       canTopup,
       nameUtf8EncodedBytes,
-      new BN(period),
+      new BN(automaticWithdrawal ? withdrawalFrequency : period),
       {
         accounts: {
           sender: sender.publicKey,
