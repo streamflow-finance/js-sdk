@@ -48,12 +48,13 @@ export interface CreateStreamData {
   cancelableByRecipient: boolean;
   transferableBySender: boolean;
   transferableByRecipient: boolean;
-  automaticWithdrawal: boolean;
+  automaticWithdrawal?: boolean;
+  withdrawalFrequency?: number;
 }
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
-  partner?: string | null;
+  partner?: string;
   cluster?: ClusterExtended;
 }
 
@@ -150,7 +151,7 @@ export interface Stream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: number;
+  withdrawalFrequency: number;
 }
 
 export interface DecodedStream {
@@ -190,7 +191,7 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: BN;
+  withdrawalFrequency: BN;
 }
 
 export interface TransactionResponse {
