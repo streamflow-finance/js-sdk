@@ -206,7 +206,7 @@ export default class Stream {
       rawTx
     );
 
-    return { tx: signature, id: metadata.publicKey.toBase58() };
+    return { ixs, tx: signature, metadata };
   }
 
   /**
@@ -271,7 +271,7 @@ export default class Stream {
       signedAndSerializedTx
     );
 
-    return { tx: signature };
+    return { ixs, tx: signature };
   }
 
   /**
@@ -336,7 +336,7 @@ export default class Stream {
       rawTx
     );
 
-    return { tx: signature };
+    return { ixs, tx: signature };
   }
 
   /**
@@ -395,7 +395,7 @@ export default class Stream {
       rawTx
     );
 
-    return { tx: signature };
+    return { ixs, tx: signature };
   }
 
   /**
@@ -461,7 +461,7 @@ export default class Stream {
       signedAndSerializedTx
     );
 
-    return { tx: signature };
+    return { ixs, tx: signature };
   }
   /**
    * Fetch stream data by its id (address).
@@ -568,25 +568,3 @@ async function ata(mint: PublicKey, account: PublicKey) {
     account
   );
 }
-
-// function formatStringToBytesArray(encoder: TextEncoder, text: string) {
-//   const textCopy = [...text];
-//   const characters = Array.from(textCopy);
-//   const utf8EncodedBytes: [];
-
-//   characters.every((char) => {
-//     if (utf8EncodedBytes.length > 64) return false;
-
-//     const encoded = encoder.encode(char);
-//     if (utf8EncodedBytes.length + encoded.length > 64) return false;
-
-//     encoded.forEach((elem) => utf8EncodedBytes.push(elem));
-//     return true;
-//   });
-
-//   const numberOfBytes = utf8EncodedBytes.length;
-//   const fill = new Array(64 - numberOfBytes).fill(0);
-//   utf8EncodedBytes.push(...fill);
-
-//   return utf8EncodedBytes;
-// }

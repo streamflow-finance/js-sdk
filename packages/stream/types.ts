@@ -1,6 +1,12 @@
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { AccountInfo, PublicKey, TransactionSignature } from "@solana/web3.js";
+import {
+  AccountInfo,
+  PublicKey,
+  Keypair,
+  TransactionSignature,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import { u64 } from "@solana/spl-token";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
@@ -176,9 +182,10 @@ export interface DecodedStream {
 }
 
 export interface TransactionResponse {
+  ixs: TransactionInstruction[];
   tx: TransactionSignature;
 }
 
 export interface CreateStreamResponse extends TransactionResponse {
-  id: string;
+  metadata: Keypair;
 }
