@@ -204,7 +204,7 @@ export default class Stream {
     const tx = await program.rpc.withdraw(amount, {
       accounts: {
         authority: invoker.publicKey,
-        recipient: invoker.publicKey,
+        recipient: data.recipient,
         recipientTokens: data.recipientTokens,
         metadata: streamPublicKey,
         escrowTokens: data.escrowTokens,
