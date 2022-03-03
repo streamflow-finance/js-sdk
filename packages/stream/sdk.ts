@@ -131,6 +131,17 @@ export default class Stream {
       this.programId
     );
 
+    const metadataAcc = SystemProgram.createAccount({
+      programId: this.programId,
+      space: 1500,
+      lamports: await this.connection.getMinimumBalanceForRentExemption(
+        1500,
+        "confirmed"
+      ),
+      fromPubkey: sender.publicKey,
+      newAccountPubkey: metadata.publicKey,
+    });
+
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
     const streamflowTreasuryTokens = await ata(
@@ -144,6 +155,7 @@ export default class Stream {
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
+    ixs.push(metadataAcc);
     ixs.push(
       createStreamInstruction(
         {
