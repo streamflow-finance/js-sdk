@@ -38,6 +38,7 @@ import {
   STREAM_STRUCT_OFFSET_SENDER,
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
+  FEE_ORACLE_PUBLIC_KEY,
 } from "./constants";
 import idl from "./idl";
 
@@ -75,7 +76,7 @@ export default class Stream {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} [data.automaticWithdrawal = false] - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {string} [data.partner = STREAMFLOW_TREASURY] - Partner's wallet address (optional).
+   * @param {string} [data.partner = ""] - Partner's wallet address (optional).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async create({
@@ -97,7 +98,7 @@ export default class Stream {
     transferableByRecipient,
     automaticWithdrawal = false,
     withdrawalFrequency = 0,
-    partner = STREAMFLOW_TREASURY_PUBLIC_KEY.toString(),
+    partner = "",
     cluster = Cluster.Mainnet,
   }: CreateStreamParams): Promise<CreateStreamResponse> {
     const program = initProgram(connection, sender, cluster);
@@ -117,7 +118,9 @@ export default class Stream {
       STREAMFLOW_TREASURY_PUBLIC_KEY
     );
 
-    const partnerPublicKey = new PublicKey(partner);
+    const partnerPublicKey = partner
+      ? new PublicKey(partner)
+      : sender.publicKey;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
@@ -154,7 +157,7 @@ export default class Stream {
           partner: partnerPublicKey,
           partnerTokens: partnerTokens,
           mint,
-          feeOracle: STREAMFLOW_TREASURY_PUBLIC_KEY,
+          feeOracle: FEE_ORACLE_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
