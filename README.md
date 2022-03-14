@@ -1,5 +1,3 @@
-**Important: Security audit is underway.**
-
 Docs: https://streamflow.finance/js-sdk/
 
 # Streamflow
@@ -11,6 +9,13 @@ There are several ways to use **Streamflow**:
 - **(easiest) [app.streamflow.finance](https://app.streamflow.finance?utm_medium=github.com&utm_source=referral&utm_campaign=js-sdk-repo)** (React application that uses JS SDK directly)
 - **[JS SDK](https://github.com/streamflow-finance/js-sdk)** to interact with the protocol => [NPM package](https://www.npmjs.com/package/@streamflow/stream)
 - **[Rust SDK](https://github.com/streamflow-finance/rust-sdk)** to integrate within a Solana program => [Rust Crate](https://docs.rs/streamflow-sdk/)
+
+
+**Security audit passed ✅**
+
+Protocol audit available [here](https://github.com/streamflow-finance/rust-sdk/blob/main/protocol_audit.pdf).
+
+Partner oracle audit available here [here](https://github.com/streamflow-finance/rust-sdk/blob/main/partner_oracle_audit.pdf).
 
 ## JS SDK
 
