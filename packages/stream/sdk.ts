@@ -473,7 +473,8 @@ async function ata(mint: PublicKey, account: PublicKey) {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     mint,
-    account
+    account,
+    true
   );
 }
 
