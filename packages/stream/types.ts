@@ -2,6 +2,7 @@ import { Wallet } from "@project-serum/anchor/src/provider";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   AccountInfo,
+  Connection,
   PublicKey,
   Keypair,
   TransactionSignature,
@@ -51,7 +52,15 @@ export interface CreateStreamData {
   transferableByRecipient: boolean;
   automaticWithdrawal: boolean;
 }
+
 export interface CreateStreamParams extends CreateStreamData {
+  connection: Connection;
+  sender: Wallet;
+  partner?: string;
+  cluster?: ClusterExtended;
+}
+
+export interface CreateStreamParamsRaw extends CreateStreamData {
   sender: Wallet;
   partner?: string | null;
 }
@@ -62,6 +71,12 @@ export interface WithdrawStreamData {
 }
 
 export interface WithdrawStreamParams extends WithdrawStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface WithdrawStreamParamsRaw extends WithdrawStreamData {
   invoker: Wallet;
 }
 
@@ -71,6 +86,12 @@ export interface TopupStreamData {
 }
 
 export interface TopupStreamParams extends TopupStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface TopupStreamParamsRaw extends TopupStreamData {
   invoker: Wallet;
 }
 
@@ -79,6 +100,12 @@ export interface CancelStreamData {
 }
 
 export interface CancelStreamParams extends CancelStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface CancelStreamParamsRaw extends CancelStreamData {
   invoker: Wallet;
 }
 
@@ -88,14 +115,29 @@ export interface TransferStreamData {
 }
 
 export interface TransferStreamParams extends TransferStreamData {
+  connection: Connection;
+  invoker: Wallet;
+  cluster?: ClusterExtended;
+}
+
+export interface TransferStreamParamsRaw extends TransferStreamData {
   invoker: Wallet;
 }
 
 export interface GetStreamParams {
+  connection: Connection;
   id: string;
 }
 
 export interface GetStreamsParams {
+  connection: Connection;
+  wallet: PublicKey;
+  type?: StreamType;
+  direction?: StreamDirection;
+  cluster?: ClusterExtended;
+}
+
+export interface GetStreamsParamsRaw {
   wallet: PublicKey;
   type?: StreamType;
   direction?: StreamDirection;
@@ -182,10 +224,18 @@ export interface DecodedStream {
 }
 
 export interface TransactionResponse {
+  tx: TransactionSignature;
+}
+
+export interface TransactionResponseRaw {
   ixs: TransactionInstruction[];
   tx: TransactionSignature;
 }
 
 export interface CreateStreamResponse extends TransactionResponse {
+  id: string;
+}
+
+export interface CreateStreamResponseRaw extends TransactionResponse {
   metadata: Keypair;
 }
