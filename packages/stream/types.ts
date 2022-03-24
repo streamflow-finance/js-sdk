@@ -54,6 +54,29 @@ export interface CreateStreamData {
   withdrawalFrequency?: number;
 }
 
+export interface MultiRecipient {
+  recipient: string;
+  depositedAmount: u64;
+  name: string;
+}
+
+export interface CreateMultiStreamData {
+  recipientsData: MultiRecipient[];
+  mint: string;
+  start: number;
+  period: number;
+  cliff: number;
+  cliffAmount: u64;
+  amountPerPeriod: u64;
+  canTopup: boolean;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  automaticWithdrawal?: boolean;
+  withdrawalFrequency?: number;
+}
+
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
@@ -62,6 +85,11 @@ export interface CreateStreamParams extends CreateStreamData {
 }
 
 export interface CreateStreamParamsRaw extends CreateStreamData {
+  sender: Wallet;
+  partner?: string | null;
+}
+
+export interface CreateMultiStreamParamsRaw extends CreateMultiStreamData {
   sender: Wallet;
   partner?: string | null;
 }
@@ -239,4 +267,8 @@ export interface TransactionResponseRaw {
 
 export interface CreateStreamResponseRaw extends TransactionResponseRaw {
   metadata: Keypair;
+}
+
+export interface CreateMultiStreamResponse {
+  txs: TransactionSignature[]
 }
