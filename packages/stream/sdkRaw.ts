@@ -203,18 +203,7 @@ export default class StreamRaw {
 
     tx.partialSign(metadata);
 
-    if (sender instanceof Keypair) {
-      tx.sign({ publicKey: sender.publicKey, secretKey: sender.secretKey });
-    } else if (sender?.signTransaction) {
-      await sender.signTransaction(tx);
-    }
-
-    const rawTx = tx.serialize();
-
-    const signature = await sendAndConfirmRawTransaction(
-      this.connection,
-      rawTx
-    );
+    const signature = await this.sign(sender, tx);
 
     return { ixs, tx: signature, metadata };
   }
@@ -370,7 +359,7 @@ export default class StreamRaw {
   /**
    * Attempts withdrawal from the specified stream.
    * @param {WithdrawStreamParamsRaw} data
-   * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
+   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
    * @param {u64} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
    */
@@ -421,13 +410,7 @@ export default class StreamRaw {
       recentBlockhash: hash.blockhash,
     }).add(...ixs);
 
-    const signedAndSerializedTx = (
-      await invoker.signTransaction(tx)
-    ).serialize();
-    const signature = await sendAndConfirmRawTransaction(
-      this.connection,
-      signedAndSerializedTx
-    );
+    const signature = await this.sign(invoker, tx);
 
     return { ixs, tx: signature };
   }
@@ -435,7 +418,7 @@ export default class StreamRaw {
   /**
    * Attempts canceling the specified stream.
    * @param {CancelStreamParamsRaw} data
-   * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
+   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be canceled.
    */
   public async cancel({
@@ -486,13 +469,8 @@ export default class StreamRaw {
       feePayer: invoker.publicKey,
       recentBlockhash: hash.blockhash,
     }).add(...ixs);
-    await invoker.signTransaction(tx);
 
-    const rawTx = tx.serialize();
-    const signature = await sendAndConfirmRawTransaction(
-      this.connection,
-      rawTx
-    );
+    const signature = await this.sign(invoker, tx);
 
     return { ixs, tx: signature };
   }
@@ -501,7 +479,7 @@ export default class StreamRaw {
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
    * @param {TransferStreamParamsRaw} data
-   * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
+   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {string} data.recipientId - Address of a new recipient.
    */
@@ -545,13 +523,8 @@ export default class StreamRaw {
       feePayer: invoker.publicKey,
       recentBlockhash: hash.blockhash,
     }).add(...ixs);
-    await invoker.signTransaction(tx);
 
-    const rawTx = tx.serialize();
-    const signature = await sendAndConfirmRawTransaction(
-      this.connection,
-      rawTx
-    );
+    const signature = await this.sign(invoker, tx);
 
     return { ixs, tx: signature };
   }
@@ -559,7 +532,7 @@ export default class StreamRaw {
   /**
    * Tops up stream account deposited amount.
    * @param {TopupStreamParamsRaw} data
-   * @param {Wallet} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
+   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
    * @param {u64} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
    */
@@ -611,13 +584,7 @@ export default class StreamRaw {
       recentBlockhash: hash.blockhash,
     }).add(...ixs);
 
-    const signedAndSerializedTx = (
-      await invoker.signTransaction(tx)
-    ).serialize();
-    const signature = await sendAndConfirmRawTransaction(
-      this.connection,
-      signedAndSerializedTx
-    );
+    const signature = await this.sign(invoker, tx);
 
     return { ixs, tx: signature };
   }
@@ -696,6 +663,22 @@ export default class StreamRaw {
       ? sortedStreams.filter((stream) => stream[1].canTopup)
       : sortedStreams.filter((stream) => !stream[1].canTopup);
   }
+
+  private async sign(invoker: any, tx: web3.Transaction) {
+    if (invoker instanceof Keypair) {
+      tx.partialSign(invoker);
+    } else if (invoker?.signTransaction) {
+      await invoker.signTransaction(tx);
+    }
+
+    const rawTx = tx.serialize();
+
+    const signature = await sendAndConfirmRawTransaction(
+      this.connection,
+      rawTx
+    );
+    return signature;
+  }
 }
 
 async function getProgramAccounts(
@@ -724,3 +707,5 @@ async function ata(mint: PublicKey, account: PublicKey) {
     account
   );
 }
+
+
