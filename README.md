@@ -57,7 +57,7 @@ import {
 
 _Check the SDK for other types and utility functions._
 
-### Create StreamClient class instance
+### Create StreamClient instance
 
 Before creating and manipulating streams StreamClient instance must be created. 
 All streams functions are methods on this instance.
