@@ -28,7 +28,7 @@ import {
   StreamType,
   Account,
   CreateParams,
-  CreateMultiStreamParams,
+  CreateMultiParams,
   WithdrawParams,
   TopupParams,
   CancelParams,
@@ -37,7 +37,7 @@ import {
   Cluster,
   GetAllParams,
   CreateResponse,
-  CreateMultiStreamResponse,
+  CreateMultiResponse,
   TxResponse,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
@@ -213,7 +213,7 @@ export default class StreamClient {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
-   * @param {CreateMultiStreamParams} data
+   * @param {CreateMultiParams} data
    * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
    * @param {MultiRecipient[]} data.recipientsData
    * @param {string} data.mint - SPL Token mint.
@@ -248,7 +248,7 @@ export default class StreamClient {
     automaticWithdrawal = false,
     withdrawalFrequency = 0,
     partner = null,
-  }: CreateMultiStreamParams): Promise<CreateMultiStreamResponse> {
+  }: CreateMultiParams): Promise<CreateMultiResponse> {
     const mintPublicKey = new PublicKey(mint);
 
     let batch: Transaction[] = [];

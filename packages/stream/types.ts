@@ -60,7 +60,7 @@ export interface MultiRecipient {
   name: string;
 }
 
-export interface CreateMultiStreamData {
+export interface CreateMultiData {
   recipientsData: MultiRecipient[];
   mint: string;
   start: number;
@@ -89,7 +89,7 @@ export interface CreateParams extends CreateStreamData {
   partner?: string | null;
 }
 
-export interface CreateMultiStreamParams extends CreateMultiStreamData {
+export interface CreateMultiParams extends CreateMultiData {
   sender: Wallet | Keypair;
   partner?: string | null;
 }
@@ -269,6 +269,6 @@ export interface CreateResponse extends TxResponse {
   metadata: Keypair;
 }
 
-export interface CreateMultiStreamResponse {
+export interface CreateMultiResponse {
   txs: TransactionSignature[];
 }
