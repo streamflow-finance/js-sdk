@@ -57,7 +57,7 @@ import {
 
 _Check the SDK for other types and utility functions._
 
-### Create StreamClient instance
+## Create StreamClient instance
 
 Before creating and manipulating streams StreamClient instance must be created. 
 All streams functions are methods on this instance.
@@ -67,7 +67,7 @@ import {StreamClient} from '@streamflow/stream';
 const StreamClient = new StreamClient("https://streamflow.rpcpool.com/8527ad85d20c2f0e6c37b026cab0", Cluster.Mainnet, "confirmed");
 ```
 
-### Create stream
+## Create stream
 
 ```javascript
 const createStreamParams = {
@@ -97,7 +97,7 @@ try {
 }
 ```
 
-### Create multiple streams at once
+## Create multiple streams at once
 
 ```javascript
 const recipientsData = [
