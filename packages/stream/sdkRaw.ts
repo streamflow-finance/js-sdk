@@ -223,7 +223,7 @@ export default class StreamRaw {
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {CreateMultiStreamParamsRaw} data
-   * @param {Wallet} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
+   * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
    * @param {MultiRecipient[]} data.recipientsData
    * @param {string} data.mint - SPL Token mint.
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
@@ -347,7 +347,7 @@ export default class StreamRaw {
       signed_batch = batch.map((t) => {
         t.partialSign(sender);
         return t;
-      })
+      });
     } else if (sender?.signAllTransactions) {
       signed_batch = await sender.signAllTransactions(batch);
     } else {
