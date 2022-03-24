@@ -1,5 +1,7 @@
 export { default } from "./sdk";
 
+export { default as StreamRaw } from "./sdkRaw";
+
 export * from "./utils";
 
 export * from "./types";

@@ -1,6 +1,7 @@
 import { u64 } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import { web3 } from "@project-serum/anchor";
+// import { Wallet } from "@project-serum/anchor";
 
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -44,6 +45,7 @@ import {
   STREAM_STRUCT_OFFSET_SENDER,
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
+  FEE_ORACLE_PUBLIC_KEY,
 } from "./constants";
 import {
   withdrawStreamInstruction,
@@ -53,7 +55,7 @@ import {
   createStreamInstruction,
 } from "./instructions";
 
-export default class Stream {
+export default class StreamRaw {
   private connection: Connection;
   private cluster: ClusterExtended;
   private programId: PublicKey;
@@ -97,6 +99,7 @@ export default class Stream {
    * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
+   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async create({
@@ -115,8 +118,9 @@ export default class Stream {
     cancelableByRecipient,
     transferableBySender,
     transferableByRecipient,
-    automaticWithdrawal,
-    partner,
+    automaticWithdrawal = false,
+    withdrawalFrequency = 0,
+    partner = null,
   }: CreateStreamParamsRaw): Promise<CreateStreamResponseRaw> {
     let ixs: TransactionInstruction[] = [];
     const mintPublicKey = new PublicKey(mint);
@@ -128,16 +132,16 @@ export default class Stream {
       this.programId
     );
 
-    const metadataAcc = SystemProgram.createAccount({
-      programId: this.programId,
-      space: 1500,
-      lamports: await this.connection.getMinimumBalanceForRentExemption(
-        1500,
-        "confirmed"
-      ),
-      fromPubkey: sender.publicKey,
-      newAccountPubkey: metadata.publicKey,
-    });
+    // const metadataAcc = SystemProgram.createAccount({
+    //   programId: this.programId,
+    //   space: 1500,
+    //   lamports: await this.connection.getMinimumBalanceForRentExemption(
+    //     1500,
+    //     "confirmed"
+    //   ),
+    //   fromPubkey: sender.publicKey,
+    //   newAccountPubkey: metadata.publicKey,
+    // });
 
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
@@ -152,7 +156,7 @@ export default class Stream {
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
-    ixs.push(metadataAcc);
+    // ixs.push(metadataAcc);
     ixs.push(
       createStreamInstruction(
         {
@@ -169,7 +173,9 @@ export default class Stream {
           transferableByRecipient,
           canTopup,
           name,
-          withdrawFrequency: new u64(period),
+          withdrawFrequency: new u64(
+            automaticWithdrawal ? withdrawalFrequency : period
+          ),
         },
         this.programId,
         {
@@ -184,7 +190,7 @@ export default class Stream {
           partner: partnerPublicKey,
           partnerTokens: partnerTokens,
           mint: new PublicKey(mint),
-          feeOracle: STREAMFLOW_TREASURY_PUBLIC_KEY,
+          feeOracle: FEE_ORACLE_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: this.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -207,13 +213,25 @@ export default class Stream {
     }).add(...ixs);
 
     tx.partialSign(metadata);
+
+    // if (sender instanceof Wallet) {
     await sender.signTransaction(tx);
+    // }
 
     const rawTx = tx.serialize();
+
     const signature = await sendAndConfirmRawTransaction(
       this.connection,
       rawTx
     );
+
+    // if (sender instanceof Keypair) {
+    //   const signature = await sendAndConfirmRawTransaction(
+    //     this.connection,
+    //     rawTx,
+    //     [sender]
+    //   );
+    // }
 
     return { ixs, tx: signature, metadata };
   }

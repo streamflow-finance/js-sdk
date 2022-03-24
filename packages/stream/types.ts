@@ -50,13 +50,14 @@ export interface CreateStreamData {
   cancelableByRecipient: boolean;
   transferableBySender: boolean;
   transferableByRecipient: boolean;
-  automaticWithdrawal: boolean;
+  automaticWithdrawal?: boolean;
+  withdrawalFrequency?: number;
 }
 
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
-  partner?: string;
+  partner?: string | null;
   cluster?: ClusterExtended;
 }
 
@@ -227,15 +228,15 @@ export interface TransactionResponse {
   tx: TransactionSignature;
 }
 
+export interface CreateStreamResponse extends TransactionResponse {
+  id: string;
+}
+
 export interface TransactionResponseRaw {
   ixs: TransactionInstruction[];
   tx: TransactionSignature;
 }
 
-export interface CreateStreamResponse extends TransactionResponse {
-  id: string;
-}
-
-export interface CreateStreamResponseRaw extends TransactionResponse {
+export interface CreateStreamResponseRaw extends TransactionResponseRaw {
   metadata: Keypair;
 }

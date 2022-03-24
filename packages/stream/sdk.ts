@@ -14,11 +14,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
-  Transaction,
-  Commitment,
-  ConnectionConfig,
-  sendAndConfirmRawTransaction,
 } from "@solana/web3.js";
 
 import {
@@ -36,6 +31,7 @@ import {
   TransactionResponse,
   TopupStreamParams,
   TransferStreamParams,
+  GetStreamParams,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
 import {
@@ -45,6 +41,7 @@ import {
   STREAM_STRUCT_OFFSET_SENDER,
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
+  FEE_ORACLE_PUBLIC_KEY,
 } from "./constants";
 import idl from "./idl";
 
@@ -82,7 +79,7 @@ export default class Stream {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} [data.automaticWithdrawal = false] - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {string} [data.partner = ""] - Partner's wallet address (optional).
+   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async create({
@@ -126,7 +123,7 @@ export default class Stream {
 
     const partnerPublicKey = partner
       ? new PublicKey(partner)
-      : sender.publicKey;
+      : STREAMFLOW_TREASURY_PUBLIC_KEY;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
@@ -154,7 +151,7 @@ export default class Stream {
         accounts: {
           sender: sender.publicKey,
           senderTokens,
-          recipient,
+          recipient: new PublicKey(recipient),
           metadata: metadata.publicKey,
           escrowTokens,
           recipientTokens,
@@ -162,7 +159,7 @@ export default class Stream {
           streamflowTreasuryTokens: streamflowTreasuryTokens,
           partner: partnerPublicKey,
           partnerTokens: partnerTokens,
-          mint,
+          mint: new PublicKey(mint),
           feeOracle: FEE_ORACLE_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: program.programId,
