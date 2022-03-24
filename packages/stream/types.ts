@@ -90,7 +90,7 @@ export interface CreateStreamParamsRaw extends CreateStreamData {
 }
 
 export interface CreateMultiStreamParamsRaw extends CreateMultiStreamData {
-  sender: Wallet;
+  sender: Wallet | Keypair;
   partner?: string | null;
 }
 
