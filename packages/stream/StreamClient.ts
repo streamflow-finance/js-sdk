@@ -1,3 +1,5 @@
+// Latest version of the SDK that does not use Anchor. It supports raw instructions.
+
 import { u64 } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import { web3 } from "@project-serum/anchor";
@@ -25,18 +27,18 @@ import {
   StreamDirection,
   StreamType,
   Account,
-  CreateStreamParamsRaw,
-  CreateMultiStreamParamsRaw,
-  WithdrawStreamParamsRaw,
-  TopupStreamParamsRaw,
-  CancelStreamParamsRaw,
-  TransferStreamParamsRaw,
+  CreateParams,
+  CreateMultiStreamParams,
+  WithdrawParams,
+  TopupParams,
+  CancelParams,
+  TransferParams,
   ClusterExtended,
   Cluster,
-  GetStreamsParams,
-  CreateStreamResponseRaw,
+  GetAllParams,
+  CreateResponse,
   CreateMultiStreamResponse,
-  TransactionResponseRaw,
+  TxResponse,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
 import {
@@ -56,7 +58,7 @@ import {
   createStreamInstruction,
 } from "./instructions";
 
-export default class StreamRaw {
+export default class StreamClient {
   private connection: Connection;
   private cluster: ClusterExtended;
   private programId: PublicKey;
@@ -83,7 +85,7 @@ export default class StreamRaw {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
-   * @param {CreateStreamParamsRaw} data
+   * @param {CreateParams} data
    * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
    * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
    * @param {string} data.mint - SPL Token mint.
@@ -122,7 +124,7 @@ export default class StreamRaw {
     automaticWithdrawal = false,
     withdrawalFrequency = 0,
     partner = null,
-  }: CreateStreamParamsRaw): Promise<CreateStreamResponseRaw> {
+  }: CreateParams): Promise<CreateResponse> {
     let ixs: TransactionInstruction[] = [];
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
@@ -211,7 +213,7 @@ export default class StreamRaw {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
-   * @param {CreateMultiStreamParamsRaw} data
+   * @param {CreateMultiStreamParams} data
    * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
    * @param {MultiRecipient[]} data.recipientsData
    * @param {string} data.mint - SPL Token mint.
@@ -246,7 +248,7 @@ export default class StreamRaw {
     automaticWithdrawal = false,
     withdrawalFrequency = 0,
     partner = null,
-  }: CreateMultiStreamParamsRaw): Promise<CreateMultiStreamResponse> {
+  }: CreateMultiStreamParams): Promise<CreateMultiStreamResponse> {
     const mintPublicKey = new PublicKey(mint);
 
     let batch: Transaction[] = [];
@@ -358,7 +360,7 @@ export default class StreamRaw {
 
   /**
    * Attempts withdrawal from the specified stream.
-   * @param {WithdrawStreamParamsRaw} data
+   * @param {WithdrawParams} data
    * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
    * @param {u64} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
@@ -367,7 +369,7 @@ export default class StreamRaw {
     invoker,
     id,
     amount,
-  }: WithdrawStreamParamsRaw): Promise<TransactionResponseRaw> {
+  }: WithdrawParams): Promise<TxResponse> {
     let ixs: TransactionInstruction[] = [];
     const streamPublicKey = new PublicKey(id);
 
@@ -417,14 +419,11 @@ export default class StreamRaw {
 
   /**
    * Attempts canceling the specified stream.
-   * @param {CancelStreamParamsRaw} data
+   * @param {CancelParams} data
    * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be canceled.
    */
-  public async cancel({
-    invoker,
-    id,
-  }: CancelStreamParamsRaw): Promise<TransactionResponseRaw> {
+  public async cancel({ invoker, id }: CancelParams): Promise<TxResponse> {
     const streamPublicKey = new PublicKey(id);
     let escrow_acc = await this.connection.getAccountInfo(streamPublicKey);
     if (!escrow_acc?.data) {
@@ -478,7 +477,7 @@ export default class StreamRaw {
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
-   * @param {TransferStreamParamsRaw} data
+   * @param {TransferParams} data
    * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be transferred.
    * @param {string} data.recipientId - Address of a new recipient.
@@ -487,7 +486,7 @@ export default class StreamRaw {
     invoker,
     id,
     recipientId,
-  }: TransferStreamParamsRaw): Promise<TransactionResponseRaw> {
+  }: TransferParams): Promise<TxResponse> {
     let ixs: TransactionInstruction[] = [];
     const stream = new PublicKey(id);
     const newRecipient = new PublicKey(recipientId);
@@ -531,7 +530,7 @@ export default class StreamRaw {
 
   /**
    * Tops up stream account deposited amount.
-   * @param {TopupStreamParamsRaw} data
+   * @param {TopupParams} data
    * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
    * @param {u64} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
@@ -540,7 +539,7 @@ export default class StreamRaw {
     invoker,
     id,
     amount,
-  }: TopupStreamParamsRaw): Promise<TransactionResponseRaw> {
+  }: TopupParams): Promise<TxResponse> {
     let ixs: TransactionInstruction[] = [];
     const streamPublicKey = new PublicKey(id);
     let escrow = await this.connection.getAccountInfo(streamPublicKey);
@@ -607,7 +606,7 @@ export default class StreamRaw {
   /**
    * Fetch streams/contracts by providing direction.
    * Streams are sorted by start time in ascending order.
-   * @param {GetStreamsParamsRaw} data
+   * @param {GetAllParams} data
    * @param {PublicKey} data.wallet - PublicKey of the wallet for which the streams/contracts are fetched.
    * @param {StreamType} [data.type = StreamType.All] - It can be one of: stream, vesting, all.
    * @param {StreamDirection} [data.direction = StreamDirection.All] - It can be one of: incoming, outgoing, all.
@@ -616,7 +615,7 @@ export default class StreamRaw {
     wallet,
     type = StreamType.All,
     direction = StreamDirection.All,
-  }: GetStreamsParams): Promise<[string, StreamData][]> {
+  }: GetAllParams): Promise<[string, StreamData][]> {
     let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
     if (direction === "all") {
@@ -707,5 +706,3 @@ async function ata(mint: PublicKey, account: PublicKey) {
     account
   );
 }
-
-

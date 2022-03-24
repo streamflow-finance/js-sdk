@@ -1,3 +1,5 @@
+// Version 1 of the SDK that uses Anchor.
+
 import { u64 } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import { Idl, Program, Provider, web3 } from "@project-serum/anchor";

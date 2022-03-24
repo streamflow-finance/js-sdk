@@ -1,6 +1,6 @@
-export { default } from "./sdk";
+export { default } from "./Stream";
 
-export { default as StreamRaw } from "./sdkRaw";
+export { default as StreamClient } from "./StreamClient";
 
 export * from "./utils";
 

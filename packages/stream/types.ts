@@ -84,12 +84,12 @@ export interface CreateStreamParams extends CreateStreamData {
   cluster?: ClusterExtended;
 }
 
-export interface CreateStreamParamsRaw extends CreateStreamData {
+export interface CreateParams extends CreateStreamData {
   sender: Wallet | Keypair;
   partner?: string | null;
 }
 
-export interface CreateMultiStreamParamsRaw extends CreateMultiStreamData {
+export interface CreateMultiStreamParams extends CreateMultiStreamData {
   sender: Wallet | Keypair;
   partner?: string | null;
 }
@@ -105,7 +105,7 @@ export interface WithdrawStreamParams extends WithdrawStreamData {
   cluster?: ClusterExtended;
 }
 
-export interface WithdrawStreamParamsRaw extends WithdrawStreamData {
+export interface WithdrawParams extends WithdrawStreamData {
   invoker: Wallet;
 }
 
@@ -120,7 +120,7 @@ export interface TopupStreamParams extends TopupStreamData {
   cluster?: ClusterExtended;
 }
 
-export interface TopupStreamParamsRaw extends TopupStreamData {
+export interface TopupParams extends TopupStreamData {
   invoker: Wallet;
 }
 
@@ -134,7 +134,7 @@ export interface CancelStreamParams extends CancelStreamData {
   cluster?: ClusterExtended;
 }
 
-export interface CancelStreamParamsRaw extends CancelStreamData {
+export interface CancelParams extends CancelStreamData {
   invoker: Wallet;
 }
 
@@ -149,7 +149,7 @@ export interface TransferStreamParams extends TransferStreamData {
   cluster?: ClusterExtended;
 }
 
-export interface TransferStreamParamsRaw extends TransferStreamData {
+export interface TransferParams extends TransferStreamData {
   invoker: Wallet;
 }
 
@@ -166,7 +166,7 @@ export interface GetStreamsParams {
   cluster?: ClusterExtended;
 }
 
-export interface GetStreamsParamsRaw {
+export interface GetAllParams {
   wallet: PublicKey;
   type?: StreamType;
   direction?: StreamDirection;
@@ -260,15 +260,15 @@ export interface CreateStreamResponse extends TransactionResponse {
   id: string;
 }
 
-export interface TransactionResponseRaw {
+export interface TxResponse {
   ixs: TransactionInstruction[];
   tx: TransactionSignature;
 }
 
-export interface CreateStreamResponseRaw extends TransactionResponseRaw {
+export interface CreateResponse extends TxResponse {
   metadata: Keypair;
 }
 
 export interface CreateMultiStreamResponse {
-  txs: TransactionSignature[]
+  txs: TransactionSignature[];
 }
