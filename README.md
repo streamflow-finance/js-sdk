@@ -20,7 +20,7 @@ There are several ways to use Streamflow protocol:
 
 ## JS SDK to interact with Streamflow protocol.
 
-This package allows you to `create`, `withdraw`, `cancel`, `topup` and `transfer` SPL token stream.
+This package allows you to `create`, `createMultiple`, `withdraw`, `cancel`, `topup` and `transfer` SPL token stream.
 
 You can also `getOne` stream and `get` multiple streams.
 
@@ -32,41 +32,46 @@ You can also `getOne` stream and `get` multiple streams.
 
 `bn.js` library is used for handling big numbers.
 
-```javascript
-import { Connection } from "@solana/web3.js";
-import { Wallet } from "@project-serum/anchor/src/provider";
-import BN from "bn.js";
-```
-
 ## Import SDK
 
 Most common imports:
 
 ```javascript
-import Stream, {
+import {
+  StreamClient, 
   Stream,
-  CreateStreamParams,
-  WithdrawStreamParams,
-  TransferStreamParams,
-  TopupStreamParams,
-  CancelStreamParams,
-  GetStreamParams,
-  GetStreamsParams,
+  CreateParams,
+  CreateMultiParams,
+  WithdrawParams,
+  TransferParams,
+  TopupParams,
+  CancelParams,
+  GetAllParams,
   StreamDirection,
   StreamType,
   Cluster,
-  TransactionResponse,
-  CreateStreamResponse,
+  TxResponse,
+  CreateResponse,
 } from "@streamflow/stream";
 ```
 
 _Check the SDK for other types and utility functions._
 
-### Create stream
+## Create StreamClient instance
+
+Before creating and manipulating streams StreamClient instance must be created. 
+All streams functions are methods on this instance.
+```
+import {StreamClient} from '@streamflow/stream';
+
+const StreamClient = new StreamClient("https://streamflow.rpcpool.com/8527ad85d20c2f0e6c37b026cab0", Cluster.Mainnet, "confirmed");
+```
+
+## Create stream
 
 ```javascript
 const createStreamParams = {
-  sender: wallet, // Wallet signing the transaction, creating and sending the stream.
+  sender: wallet, // Wallet/Keypair signing the transaction, creating and sending the stream.
   recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
   mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
@@ -86,7 +91,43 @@ const createStreamParams = {
 };
 
 try {
-  const { tx, id } = await Stream.create(createStreamParams);
+  const { ixs, tx, metadata } = await StreamClient.create(createStreamParams);
+} catch (exception) {
+  // handle exception
+}
+```
+
+## Create multiple streams at once
+
+```javascript
+const recipientsData = [
+  { 
+    recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
+    depositedAmount:"new BN(1000000000000)", // Deposited amount of tokens (in the smallest units).
+    name: "January Payroll", // The stream name/subject.
+  }
+];
+
+const createMultiStreamsParams = {
+  sender: wallet, // Wallet/Keypair signing the transaction, creating and sending the stream.
+  recipientsData, // Array of Solana recipient address.
+  mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
+  start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
+  period: 1, // Time step (period) in seconds per which the unlocking occurs.
+  cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
+  cliffAmount: new BN(100000000000), // Amount unlocked at the "cliff" timestamp.
+  amountPerPeriod: new BN(5000000000), // Release rate: how many tokens are unlocked per each period.
+  canTopup: true, // setting to FALSE will effectively create a vesting contract.
+  cancelableBySender: true, // Whether or not sender can cancel the stream.
+  cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
+  transferableBySender: true, // Whether or not sender can transfer the stream.
+  transferableByRecipient: false, // Whether or not recipient can transfer the stream.
+  automaticWithdrawal: false, // Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
+  partner: null, //  (optional) Partner's wallet address (string | null).
+};
+
+try {
+  const { txs } = await StreamClient.createMultiple(createMultiStreamsParams);
 } catch (exception) {
   // handle exception
 }
@@ -96,15 +137,13 @@ try {
 
 ```javascript
 const withdrawStreamParams = {
-  connection: connection, // Connection to the cluster.
-  invoker: wallet, // Wallet signing the transaction.
+  invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
   amount: new BN(100000000000), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
-  cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
 };
 
 try {
-  const { tx } = await Stream.withdraw(withdrawStreamParams);
+  const { ixs, tx } = await StreamClient.withdraw(withdrawStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -114,15 +153,13 @@ try {
 
 ```javascript
 const topupStreamParams = {
-  connection: connection, // Connection to the cluster.
-  invoker: wallet, // Wallet signing the transaction.
+  invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be topped up.
   amount: new BN(100000000000), // Specified amount to topup (increases deposited amount).
-  cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
 };
 
 try {
-  const { tx } = await Stream.topup(topupStreamParams);
+  const { ixs, tx } = await StreamClient.topup(topupStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -132,15 +169,13 @@ try {
 
 ```javascript
 const data = {
-  connection: connection, // Connection to the cluster.
-  invoker: wallet, // Wallet signing the transaction.
+  invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
   recipientId: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier of a stream to be transferred.
-  cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
 };
 
 try {
-  const { tx } = await Stream.transfer(data);
+  const { tx } = await StreamClient.transfer(data);
 } catch (exception) {
   // handle exception
 }
@@ -150,14 +185,12 @@ try {
 
 ```javascript
 const cancelStreamParams = {
-  connection: connection, // Connection to the cluster.
-  invoker: wallet, // Wallet signing the transaction.
+  invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
-  cluster: Cluster.Mainnet, // Cluster (optional, default is Cluster.Mainnet).
 };
 
 try {
-  const { tx } = await Stream.cancel(cancelStreamParams);
+  const { ixs, tx } = await StreamClient.cancel(cancelStreamParams);
 } catch (exception) {
   // handle exception
 }
@@ -167,10 +200,7 @@ try {
 
 ```javascript
 try {
-  const stream = await Stream.getOne({
-    connection: connection, // Connection to the cluster.
-    id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream that is fetched.
-  });
+  const stream = await StreamClient.getOne("AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA"); // Identifier of a stream that is fetched.
 } catch (exception) {
   // handle exception
 }
@@ -180,12 +210,10 @@ try {
 
 ```javascript
 try {
-  const streams = Stream.get({
-    connection: connection, // Connection to the cluster.
+  const streams = StreamClient.get({
     wallet: wallet, // Wallet signing the transaction.
     type: StreamType.All, // (optional) Type, default is StreamType.All
     direction: StreamDirection.All, // (optional) Direction, default is StreamDirection.All)
-    cluster: Cluster.Mainnet, // (optional) Cluster, default is Cluster.Mainnet).
   });
 } catch (exception) {
   // handle exception
@@ -193,6 +221,8 @@ try {
 ```
 
 ### Additional notes
+
+#### Default import `import Stream from '@streamflow/stream'` is an import of older SDK version that uses Anchor and doesn't support raw instructions, nor multi streams creation.
 
 #### All BN amounts are denominated in their smallest units.
 
