@@ -1,7 +1,6 @@
 import { u64 } from "@solana/spl-token";
 import { Buffer } from "buffer";
-import { web3 } from "@project-serum/anchor";
-// import { Wallet } from "@project-serum/anchor";
+import { Wallet } from "@project-serum/anchor";
 
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -83,7 +82,7 @@ export default class StreamRaw {
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {CreateStreamParamsRaw} data
-   * @param {Wallet} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
+   * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
    * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
    * @param {string} data.mint - SPL Token mint.
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
@@ -127,7 +126,7 @@ export default class StreamRaw {
     const recipientPublicKey = new PublicKey(recipient);
 
     const metadata = Keypair.generate();
-    const [escrowTokens] = await web3.PublicKey.findProgramAddress(
+    const [escrowTokens] = await PublicKey.findProgramAddress(
       [Buffer.from("strm"), metadata.publicKey.toBuffer()],
       this.programId
     );
@@ -214,9 +213,11 @@ export default class StreamRaw {
 
     tx.partialSign(metadata);
 
-    // if (sender instanceof Wallet) {
-    await sender.signTransaction(tx);
-    // }
+    if (sender instanceof Keypair) {
+      tx.sign({ publicKey: sender.publicKey, secretKey: sender.secretKey });
+    } else if (sender?.signTransaction) {
+      await sender.signTransaction(tx);
+    }
 
     const rawTx = tx.serialize();
 
@@ -224,14 +225,6 @@ export default class StreamRaw {
       this.connection,
       rawTx
     );
-
-    // if (sender instanceof Keypair) {
-    //   const signature = await sendAndConfirmRawTransaction(
-    //     this.connection,
-    //     rawTx,
-    //     [sender]
-    //   );
-    // }
 
     return { ixs, tx: signature, metadata };
   }
@@ -400,7 +393,7 @@ export default class StreamRaw {
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
       })
     );
 
@@ -466,7 +459,7 @@ export default class StreamRaw {
         mint,
         tokenProgram: TOKEN_PROGRAM_ID,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
-        systemProgram: web3.SystemProgram.programId,
+        systemProgram: SystemProgram.programId,
       })
     );
 
