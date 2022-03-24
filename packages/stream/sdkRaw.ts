@@ -26,6 +26,7 @@ import {
   StreamType,
   Account,
   CreateStreamParamsRaw,
+  CreateMultiStreamParamsRaw,
   WithdrawStreamParamsRaw,
   TopupStreamParamsRaw,
   CancelStreamParamsRaw,
@@ -34,6 +35,7 @@ import {
   Cluster,
   GetStreamsParams,
   CreateStreamResponseRaw,
+  CreateMultiStreamResponse,
   TransactionResponseRaw,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
@@ -227,6 +229,144 @@ export default class StreamRaw {
     );
 
     return { ixs, tx: signature, metadata };
+  }
+
+  /**
+   * Creates a new stream/vesting contract.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {CreateMultiStreamParamsRaw} data
+   * @param {Wallet} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
+   * @param {MultiRecipient[]} data.recipientsData
+   * @param {string} data.mint - SPL Token mint.
+   * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
+   * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
+   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
+   * @param {u64} data.cliffAmount - Amount unlocked at the "cliff".
+   * @param {u64} data.amountPerPeriod - Amount unlocked per each period.
+   * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
+   * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
+   * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
+   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
+   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
+   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
+   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+   */
+  public async createMultiple({
+    sender,
+    recipientsData,
+    mint,
+    start,
+    period,
+    cliff,
+    cliffAmount,
+    amountPerPeriod,
+    canTopup,
+    cancelableBySender,
+    cancelableByRecipient,
+    transferableBySender,
+    transferableByRecipient,
+    automaticWithdrawal = false,
+    withdrawalFrequency = 0,
+    partner = null,
+  }: CreateMultiStreamParamsRaw): Promise<CreateMultiStreamResponse> {
+    const mintPublicKey = new PublicKey(mint);
+
+    let batch: Transaction[] = [];
+
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+
+    for (const recipient of recipientsData) {
+      let ixs: TransactionInstruction[] = [];
+      const recipientPublicKey = new PublicKey(recipient.recipient);
+
+      const metadata = Keypair.generate();
+      const [escrowTokens] = await web3.PublicKey.findProgramAddress(
+        [Buffer.from("strm"), metadata.publicKey.toBuffer()],
+        this.programId
+      );
+
+      const senderTokens = await ata(mintPublicKey, sender.publicKey);
+      const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
+      const streamflowTreasuryTokens = await ata(
+        mintPublicKey,
+        STREAMFLOW_TREASURY_PUBLIC_KEY
+      );
+
+      const partnerPublicKey = partner
+        ? new PublicKey(partner)
+        : STREAMFLOW_TREASURY_PUBLIC_KEY;
+
+      const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
+
+      ixs.push(
+        createStreamInstruction(
+          {
+            start: new u64(start),
+            depositedAmount: recipient.depositedAmount,
+            period: new u64(period),
+            amountPerPeriod,
+            cliff: new u64(cliff),
+            cliffAmount,
+            cancelableBySender,
+            cancelableByRecipient,
+            automaticWithdrawal,
+            transferableBySender,
+            transferableByRecipient,
+            canTopup,
+            name: recipient.name,
+            withdrawFrequency: new u64(
+              automaticWithdrawal ? withdrawalFrequency : period
+            ),
+          },
+          this.programId,
+          {
+            sender: sender.publicKey,
+            senderTokens,
+            recipient: new PublicKey(recipient.recipient),
+            metadata: metadata.publicKey,
+            escrowTokens,
+            recipientTokens,
+            streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
+            streamflowTreasuryTokens: streamflowTreasuryTokens,
+            partner: partnerPublicKey,
+            partnerTokens: partnerTokens,
+            mint: new PublicKey(mint),
+            feeOracle: FEE_ORACLE_PUBLIC_KEY,
+            rent: SYSVAR_RENT_PUBKEY,
+            timelockProgram: this.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            withdrawor: WITHDRAWOR_PUBLIC_KEY,
+            systemProgram: SystemProgram.programId,
+          }
+        )
+      );
+      let hash = await this.connection.getRecentBlockhash(commitment);
+      let tx = new Transaction({
+        feePayer: sender.publicKey,
+        recentBlockhash: hash.blockhash,
+      }).add(...ixs);
+      tx.partialSign(metadata);
+      batch.push(tx);
+    }
+
+    const signed_batch = await sender.signAllTransactions(batch);
+
+    let sigs: string[] = [];
+    for (let i = 0; i < signed_batch.length; i++) {
+      let buf = signed_batch[i].serialize();
+      const signature = await sendAndConfirmRawTransaction(
+        this.connection,
+        buf
+      );
+      sigs.push(signature);
+    }
+
+    return { txs: sigs };
   }
 
   /**
