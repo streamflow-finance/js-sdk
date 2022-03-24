@@ -1,6 +1,6 @@
 import { u64 } from "@solana/spl-token";
 import { Buffer } from "buffer";
-import { Wallet } from "@project-serum/anchor";
+import { web3 } from "@project-serum/anchor";
 
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -133,17 +133,6 @@ export default class StreamRaw {
       this.programId
     );
 
-    // const metadataAcc = SystemProgram.createAccount({
-    //   programId: this.programId,
-    //   space: 1500,
-    //   lamports: await this.connection.getMinimumBalanceForRentExemption(
-    //     1500,
-    //     "confirmed"
-    //   ),
-    //   fromPubkey: sender.publicKey,
-    //   newAccountPubkey: metadata.publicKey,
-    // });
-
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
     const streamflowTreasuryTokens = await ata(
@@ -157,7 +146,6 @@ export default class StreamRaw {
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
-    // ixs.push(metadataAcc);
     ixs.push(
       createStreamInstruction(
         {
@@ -354,7 +342,17 @@ export default class StreamRaw {
       batch.push(tx);
     }
 
-    const signed_batch = await sender.signAllTransactions(batch);
+    var signed_batch: Transaction[];
+    if (sender instanceof Keypair) {
+      signed_batch = batch.map((t) => {
+        t.partialSign(sender);
+        return t;
+      })
+    } else if (sender?.signAllTransactions) {
+      signed_batch = await sender.signAllTransactions(batch);
+    } else {
+      signed_batch = [];
+    }
 
     let sigs: string[] = [];
     for (let i = 0; i < signed_batch.length; i++) {
