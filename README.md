@@ -61,7 +61,7 @@ _Check the SDK for other types and utility functions._
 Before creating and manipulating streams StreamClient instance must be created.
 All streams functions are methods on this instance.
 
-```
+```javascript
 import {StreamClient} from '@streamflow/stream';
 
 const StreamClient = new StreamClient("https://api.mainnet-beta.solana.com", Cluster.Mainnet, "confirmed");
