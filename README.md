@@ -23,7 +23,7 @@ You can also `getOne` stream and `get` multiple streams.
 
 ---
 
-### Installation
+## Installation
 
 `npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
 
