@@ -101,7 +101,7 @@ try {
 ## Create multiple streams at once
 
 ```javascript
-const recipientsData = [
+const recipients = [
   {
     recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
     depositedAmount: "new BN(1000000000000)", // Deposited amount of tokens (in the smallest units).
@@ -111,7 +111,7 @@ const recipientsData = [
 
 const createMultiStreamsParams = {
   sender: wallet, // Wallet/Keypair signing the transaction, creating and sending the stream.
-  recipientsData, // Array of Solana recipient address.
+  recipientsData: recipients, // Array of Solana recipient address.
   mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
