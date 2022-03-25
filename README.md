@@ -104,7 +104,7 @@ try {
 const recipients = [
   {
     recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
-    depositedAmount: "new BN(1000000000000)", // Deposited amount of tokens (in the smallest units).
+    depositedAmount: new BN(1000000000000), // Deposited amount of tokens (in the smallest units).
     name: "January Payroll", // The stream name/subject.
   },
 ];
