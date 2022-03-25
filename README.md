@@ -64,7 +64,7 @@ All streams functions are methods on this instance.
 ```
 import {StreamClient} from '@streamflow/stream';
 
-const StreamClient = new StreamClient("https://streamflow.rpcpool.com/8527ad85d20c2f0e6c37b026cab0", Cluster.Mainnet, "confirmed");
+const StreamClient = new StreamClient("https://api.mainnet-beta.solana.com", Cluster.Mainnet, "confirmed");
 ```
 
 ## Create stream
