@@ -88,7 +88,7 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => ({
   transferableByRecipient: stream.transferableByRecipient,
   canTopup: stream.canTopup,
   name: stream.name,
-  withdrawFrequency: stream.withdrawFrequency.toNumber(),
+  withdrawalFrequency: stream.withdrawFrequency.toNumber(),
 });
 
 /**

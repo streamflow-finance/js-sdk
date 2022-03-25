@@ -80,7 +80,7 @@ export interface CreateMultiData {
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
-  partner?: string | null;
+  partner?: string;
   cluster?: ClusterExtended;
 }
 
@@ -209,7 +209,7 @@ export interface Stream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: number;
+  withdrawalFrequency: number;
 }
 
 export interface DecodedStream {

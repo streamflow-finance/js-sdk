@@ -81,7 +81,11 @@ export default class Stream {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} [data.automaticWithdrawal = false] - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+<<<<<<< HEAD:packages/stream/Stream.ts
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+=======
+   * @param {string} [data.partner = ""] - Partner's wallet address (optional).
+>>>>>>> master:packages/stream/sdk.ts
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async create({
@@ -125,7 +129,7 @@ export default class Stream {
 
     const partnerPublicKey = partner
       ? new PublicKey(partner)
-      : STREAMFLOW_TREASURY_PUBLIC_KEY;
+      : sender.publicKey;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
@@ -478,6 +482,7 @@ async function ata(mint: PublicKey, account: PublicKey) {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     mint,
-    account
+    account,
+    true
   );
 }
