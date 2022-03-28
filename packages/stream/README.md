@@ -143,7 +143,7 @@ try {
 
 Please note that transaction fees for the scheduled transfers are paid upfront by the stream creator (sender).\_
 
-#### Withdraw from stream
+## Withdraw from stream
 
 ```javascript
 const withdrawStreamParams = {
@@ -159,7 +159,7 @@ try {
 }
 ```
 
-#### Topup stream
+## Topup stream
 
 ```javascript
 const topupStreamParams = {
@@ -191,7 +191,7 @@ try {
 }
 ```
 
-#### Cancel stream
+## Cancel stream
 
 ```javascript
 const cancelStreamParams = {
@@ -218,7 +218,7 @@ try {
 }
 ```
 
-#### Get multiple streams for a specific wallet address
+## Get multiple streams for a specific wallet address
 
 ```javascript
 try {
