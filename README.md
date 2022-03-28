@@ -29,8 +29,6 @@ You can also `getOne` stream and `get` multiple streams.
 
 > _Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
 
-`bn.js` library is used for handling big numbers.
-
 ## Import SDK
 
 Most common imports:
@@ -51,6 +49,9 @@ import {
   Cluster,
   TxResponse,
   CreateResponse,
+  BN,
+  getBN,
+  getNumberFromBN,
 } from "@streamflow/stream";
 ```
 
@@ -62,9 +63,13 @@ Before creating and manipulating streams StreamClient instance must be created.
 All streams functions are methods on this instance.
 
 ```javascript
-import {StreamClient} from '@streamflow/stream';
+import { StreamClient } from "@streamflow/stream";
 
-const StreamClient = new StreamClient("https://api.mainnet-beta.solana.com", Cluster.Mainnet, "confirmed");
+const StreamClient = new StreamClient(
+  "https://api.mainnet-beta.solana.com",
+  Cluster.Mainnet,
+  "confirmed"
+);
 ```
 
 ## Create stream
@@ -75,11 +80,11 @@ const createStreamParams = {
   recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
   mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
-  depositedAmount: new BN(1000000000000), // Deposited amount of tokens (using smallest denomination).
+  depositedAmount: getBN(1000000000000, 9), // Deposited amount of tokens (using smallest denomination).
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
   cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
   cliffAmount: new BN(100000000000), // Amount (smallest denomination) unlocked at the "cliff" timestamp.
-  amountPerPeriod: new BN(5000000000), // Release rate: how many tokens are unlocked per each period.
+  amountPerPeriod: getBN(5000000000, 9), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name or subject.
   canTopup: false, // setting to FALSE will effectively create a vesting contract.
   cancelableBySender: true, // Whether or not sender can cancel the stream.
@@ -116,8 +121,8 @@ const createMultiStreamsParams = {
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
   cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-  cliffAmount: new BN(100000000000), // Amount unlocked at the "cliff" timestamp.
-  amountPerPeriod: new BN(5000000000), // Release rate: how many tokens are unlocked per each period.
+  cliffAmount: getBN(100000000000, 9), // Amount unlocked at the "cliff" timestamp.
+  amountPerPeriod: getBN(5000000000, 9), // Release rate: how many tokens are unlocked per each period.
   canTopup: true, // setting to FALSE will effectively create a vesting contract.
   cancelableBySender: true, // Whether or not sender can cancel the stream.
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
@@ -144,7 +149,7 @@ Please note that transaction fees for the scheduled transfers are paid upfront b
 const withdrawStreamParams = {
   invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
-  amount: new BN(100000000000), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
+  amount: getBN(100000000000, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
 };
 
 try {
@@ -160,7 +165,7 @@ try {
 const topupStreamParams = {
   invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be topped up.
-  amount: new BN(100000000000), // Specified amount to topup (increases deposited amount).
+  amount: getBN(100000000000, 9), // Specified amount to topup (increases deposited amount).
 };
 
 try {
@@ -206,8 +211,8 @@ try {
 ```javascript
 try {
   const stream = await StreamClient.getOne(
-    "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA"
-  ); // Identifier of a stream that is fetched.
+    "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA" // Identifier of a stream that is fetched.
+  );
 } catch (exception) {
   // handle exception
 }
