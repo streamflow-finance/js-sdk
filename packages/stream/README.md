@@ -175,7 +175,7 @@ try {
 }
 ```
 
-#### Transfer stream to another recipient
+## Transfer stream to another recipient
 
 ```javascript
 const data = {
@@ -206,7 +206,7 @@ try {
 }
 ```
 
-#### Get one stream by its ID
+## Get one stream by its ID
 
 ```javascript
 try {
