@@ -250,4 +250,6 @@ Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN`
 
 **Streamflow Community** (free and open source version, with a limited feature set) is available [here](https://github.com/streamflow-finance/js-sdk/tree/community).
 
+`npx typedoc packages/stream/index.ts`
+
 WAGMI.
