@@ -1,5 +1,10 @@
-import { BN, Idl, Program, Provider, web3 } from "@project-serum/anchor";
+// Version 1 of the SDK that uses Anchor.
+
+import { u64 } from "@solana/spl-token";
+import { Buffer } from "buffer";
+import { Idl, Program, Provider, web3 } from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
+
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
@@ -18,17 +23,17 @@ import {
   StreamDirection,
   StreamType,
   Account,
-  CreateStreamParams,
-  WithdrawStreamParams,
-  TopupStreamParams,
-  CancelStreamParams,
-  TransferStreamParams,
   ClusterExtended,
   Cluster,
-  GetStreamParams,
   GetStreamsParams,
+  CreateStreamParams,
   CreateStreamResponse,
+  WithdrawStreamParams,
+  CancelStreamParams,
   TransactionResponse,
+  TopupStreamParams,
+  TransferStreamParams,
+  GetStreamParams,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
 import {
@@ -76,7 +81,7 @@ export default class Stream {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} [data.automaticWithdrawal = false] - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {string} [data.partner = ""] - Partner's wallet address (optional).
+   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    * @param {ClusterExtended} [data.cluster = Cluster.Mainnet] - Cluster: devnet, mainnet-beta, testnet or local (optional).
    */
   static async create({
@@ -126,15 +131,15 @@ export default class Stream {
 
     const signers = [metadata];
 
-    const nameUtf8EncodedBytes: BN[] = formatStringToBytesArray(encoder, name);
+    const nameUtf8EncodedArr = encoder.encode(name);
 
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
-      new BN(start),
+      new u64(start),
       depositedAmount,
-      new BN(period),
+      new u64(period),
       amountPerPeriod,
-      new BN(cliff),
+      new u64(cliff),
       cliffAmount,
       cancelableBySender,
       cancelableByRecipient,
@@ -142,13 +147,13 @@ export default class Stream {
       transferableBySender,
       transferableByRecipient,
       canTopup,
-      nameUtf8EncodedBytes,
-      new BN(automaticWithdrawal ? withdrawalFrequency : period),
+      nameUtf8EncodedArr,
+      new u64(automaticWithdrawal ? withdrawalFrequency : period),
       {
         accounts: {
           sender: sender.publicKey,
           senderTokens,
-          recipient,
+          recipient: new PublicKey(recipient),
           metadata: metadata.publicKey,
           escrowTokens,
           recipientTokens,
@@ -156,7 +161,7 @@ export default class Stream {
           streamflowTreasuryTokens: streamflowTreasuryTokens,
           partner: partnerPublicKey,
           partnerTokens: partnerTokens,
-          mint,
+          mint: new PublicKey(mint),
           feeOracle: FEE_ORACLE_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: program.programId,
@@ -473,28 +478,7 @@ async function ata(mint: PublicKey, account: PublicKey) {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     mint,
-    account
+    account,
+    true
   );
-}
-
-function formatStringToBytesArray(encoder: TextEncoder, text: string) {
-  const textCopy = [...text];
-  const characters = Array.from(textCopy);
-  const utf8EncodedBytes: BN[] = [];
-
-  characters.every((char) => {
-    if (utf8EncodedBytes.length > 64) return false;
-
-    const encoded = encoder.encode(char);
-    if (utf8EncodedBytes.length + encoded.length > 64) return false;
-
-    encoded.forEach((elem) => utf8EncodedBytes.push(new BN(elem)));
-    return true;
-  });
-
-  const numberOfBytes = utf8EncodedBytes.length;
-  const fill = new Array(64 - numberOfBytes).fill(new BN(0));
-  utf8EncodedBytes.push(...fill);
-
-  return utf8EncodedBytes;
 }

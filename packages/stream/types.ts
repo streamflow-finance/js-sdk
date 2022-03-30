@@ -1,12 +1,14 @@
-import { BN } from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   AccountInfo,
   Connection,
   PublicKey,
+  Keypair,
   TransactionSignature,
+  TransactionInstruction,
 } from "@solana/web3.js";
+import { u64 } from "@solana/spl-token";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
@@ -37,11 +39,11 @@ export interface CreateStreamData {
   recipient: string;
   mint: string;
   start: number;
-  depositedAmount: BN;
+  depositedAmount: u64;
   period: number;
   cliff: number;
-  cliffAmount: BN;
-  amountPerPeriod: BN;
+  cliffAmount: u64;
+  amountPerPeriod: u64;
   name: string;
   canTopup: boolean;
   cancelableBySender: boolean;
@@ -51,6 +53,30 @@ export interface CreateStreamData {
   automaticWithdrawal?: boolean;
   withdrawalFrequency?: number;
 }
+
+export interface MultiRecipient {
+  recipient: string;
+  depositedAmount: u64;
+  name: string;
+}
+
+export interface CreateMultiData {
+  recipientsData: MultiRecipient[];
+  mint: string;
+  start: number;
+  period: number;
+  cliff: number;
+  cliffAmount: u64;
+  amountPerPeriod: u64;
+  canTopup: boolean;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  automaticWithdrawal?: boolean;
+  withdrawalFrequency?: number;
+}
+
 export interface CreateStreamParams extends CreateStreamData {
   connection: Connection;
   sender: Wallet;
@@ -58,9 +84,19 @@ export interface CreateStreamParams extends CreateStreamData {
   cluster?: ClusterExtended;
 }
 
+export interface CreateParams extends CreateStreamData {
+  sender: Wallet | Keypair;
+  partner?: string | null;
+}
+
+export interface CreateMultiParams extends CreateMultiData {
+  sender: Wallet | Keypair;
+  partner?: string | null;
+}
+
 export interface WithdrawStreamData {
   id: string;
-  amount: BN;
+  amount: u64;
 }
 
 export interface WithdrawStreamParams extends WithdrawStreamData {
@@ -69,15 +105,23 @@ export interface WithdrawStreamParams extends WithdrawStreamData {
   cluster?: ClusterExtended;
 }
 
+export interface WithdrawParams extends WithdrawStreamData {
+  invoker: Wallet;
+}
+
 export interface TopupStreamData {
   id: string;
-  amount: BN;
+  amount: u64;
 }
 
 export interface TopupStreamParams extends TopupStreamData {
   connection: Connection;
   invoker: Wallet;
   cluster?: ClusterExtended;
+}
+
+export interface TopupParams extends TopupStreamData {
+  invoker: Wallet;
 }
 
 export interface CancelStreamData {
@@ -90,6 +134,10 @@ export interface CancelStreamParams extends CancelStreamData {
   cluster?: ClusterExtended;
 }
 
+export interface CancelParams extends CancelStreamData {
+  invoker: Wallet;
+}
+
 export interface TransferStreamData {
   id: string;
   recipientId: string;
@@ -99,6 +147,10 @@ export interface TransferStreamParams extends TransferStreamData {
   connection: Connection;
   invoker: Wallet;
   cluster?: ClusterExtended;
+}
+
+export interface TransferParams extends TransferStreamData {
+  invoker: Wallet;
 }
 
 export interface GetStreamParams {
@@ -114,11 +166,17 @@ export interface GetStreamsParams {
   cluster?: ClusterExtended;
 }
 
+export interface GetAllParams {
+  wallet: PublicKey;
+  type?: StreamType;
+  direction?: StreamDirection;
+}
+
 export interface Stream {
   magic: number;
   version: number;
   createdAt: number;
-  withdrawnAmount: BN;
+  withdrawnAmount: u64;
   canceledAt: number;
   end: number;
   lastWithdrawnAt: number;
@@ -130,20 +188,20 @@ export interface Stream {
   escrowTokens: string;
   streamflowTreasury: string;
   streamflowTreasuryTokens: string;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
+  streamflowFeeTotal: u64;
+  streamflowFeeWithdrawn: u64;
   streamflowFeePercent: number;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
+  partnerFeeTotal: u64;
+  partnerFeeWithdrawn: u64;
   partnerFeePercent: number;
   partner: string;
   partnerTokens: string;
   start: number;
-  depositedAmount: BN;
+  depositedAmount: u64;
   period: number;
-  amountPerPeriod: BN;
+  amountPerPeriod: u64;
   cliff: number;
-  cliffAmount: BN;
+  cliffAmount: u64;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -155,13 +213,13 @@ export interface Stream {
 }
 
 export interface DecodedStream {
-  magic: BN;
-  version: BN;
-  createdAt: BN;
-  withdrawnAmount: BN;
-  canceledAt: BN;
-  end: BN;
-  lastWithdrawnAt: BN;
+  magic: u64;
+  version: u64;
+  createdAt: u64;
+  withdrawnAmount: u64;
+  canceledAt: u64;
+  end: u64;
+  lastWithdrawnAt: u64;
   sender: PublicKey;
   senderTokens: PublicKey;
   recipient: PublicKey;
@@ -170,20 +228,20 @@ export interface DecodedStream {
   escrowTokens: PublicKey;
   streamflowTreasury: PublicKey;
   streamflowTreasuryTokens: PublicKey;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: BN;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
-  partnerFeePercent: BN;
+  streamflowFeeTotal: u64;
+  streamflowFeeWithdrawn: u64;
+  streamflowFeePercent: u64;
+  partnerFeeTotal: u64;
+  partnerFeeWithdrawn: u64;
+  partnerFeePercent: u64;
   partner: PublicKey;
   partnerTokens: PublicKey;
-  start: BN;
-  depositedAmount: BN;
-  period: BN;
-  amountPerPeriod: BN;
-  cliff: BN;
-  cliffAmount: BN;
+  start: u64;
+  depositedAmount: u64;
+  period: u64;
+  amountPerPeriod: u64;
+  cliff: u64;
+  cliffAmount: u64;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -191,7 +249,7 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawalFrequency: BN;
+  withdrawFrequency: u64;
 }
 
 export interface TransactionResponse {
@@ -200,4 +258,17 @@ export interface TransactionResponse {
 
 export interface CreateStreamResponse extends TransactionResponse {
   id: string;
+}
+
+export interface TxResponse {
+  ixs: TransactionInstruction[];
+  tx: TransactionSignature;
+}
+
+export interface CreateResponse extends TxResponse {
+  metadata: Keypair;
+}
+
+export interface CreateMultiResponse {
+  txs: TransactionSignature[];
 }
