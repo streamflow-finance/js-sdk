@@ -1,13 +1,13 @@
 // Latest version of the SDK that does not use Anchor. It supports raw instructions.
 
-import { u64 } from "@solana/spl-token";
+import BN from "bn.js";
 import { Buffer } from "buffer";
 import { web3 } from "@project-serum/anchor";
 
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  Token,
   TOKEN_PROGRAM_ID,
+  Token,
 } from "@solana/spl-token";
 import {
   Connection,
@@ -90,11 +90,11 @@ export default class StreamClient {
    * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
    * @param {string} data.mint - SPL Token mint.
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
-   * @param {u64} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
+   * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
    * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
    * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {u64} data.cliffAmount - Amount unlocked at the "cliff".
-   * @param {u64} data.amountPerPeriod - Amount unlocked per each period.
+   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
+   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
    * @param {string} data.name - Stream name/subject.
    * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
    * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
@@ -151,11 +151,11 @@ export default class StreamClient {
     ixs.push(
       createStreamInstruction(
         {
-          start: new u64(start),
+          start: new BN(start),
           depositedAmount,
-          period: new u64(period),
+          period: new BN(period),
           amountPerPeriod,
-          cliff: new u64(cliff),
+          cliff: new BN(cliff),
           cliffAmount,
           cancelableBySender,
           cancelableByRecipient,
@@ -164,7 +164,7 @@ export default class StreamClient {
           transferableByRecipient,
           canTopup,
           name,
-          withdrawFrequency: new u64(
+          withdrawFrequency: new BN(
             automaticWithdrawal ? withdrawalFrequency : period
           ),
         },
@@ -220,8 +220,8 @@ export default class StreamClient {
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
    * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
    * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {u64} data.cliffAmount - Amount unlocked at the "cliff".
-   * @param {u64} data.amountPerPeriod - Amount unlocked per each period.
+   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
+   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
    * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
    * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
    * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
@@ -284,11 +284,11 @@ export default class StreamClient {
       ixs.push(
         createStreamInstruction(
           {
-            start: new u64(start),
+            start: new BN(start),
             depositedAmount: recipient.depositedAmount,
-            period: new u64(period),
+            period: new BN(period),
             amountPerPeriod,
-            cliff: new u64(cliff),
+            cliff: new BN(cliff),
             cliffAmount,
             cancelableBySender,
             cancelableByRecipient,
@@ -297,7 +297,7 @@ export default class StreamClient {
             transferableByRecipient,
             canTopup,
             name: recipient.name,
-            withdrawFrequency: new u64(
+            withdrawFrequency: new BN(
               automaticWithdrawal ? withdrawalFrequency : period
             ),
           },
@@ -363,7 +363,7 @@ export default class StreamClient {
    * @param {WithdrawParams} data
    * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
-   * @param {u64} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
+   * @param {BN} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
    */
   public async withdraw({
     invoker,
@@ -533,7 +533,7 @@ export default class StreamClient {
    * @param {TopupParams} data
    * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
    * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
-   * @param {u64} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
+   * @param {BN} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
    */
   public async topup({
     invoker,

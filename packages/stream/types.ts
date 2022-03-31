@@ -8,7 +8,7 @@ import {
   TransactionSignature,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { u64 } from "@solana/spl-token";
+import BN from "bn.js";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
@@ -39,11 +39,11 @@ export interface CreateStreamData {
   recipient: string;
   mint: string;
   start: number;
-  depositedAmount: u64;
+  depositedAmount: BN;
   period: number;
   cliff: number;
-  cliffAmount: u64;
-  amountPerPeriod: u64;
+  cliffAmount: BN;
+  amountPerPeriod: BN;
   name: string;
   canTopup: boolean;
   cancelableBySender: boolean;
@@ -56,7 +56,7 @@ export interface CreateStreamData {
 
 export interface MultiRecipient {
   recipient: string;
-  depositedAmount: u64;
+  depositedAmount: BN;
   name: string;
 }
 
@@ -66,8 +66,8 @@ export interface CreateMultiData {
   start: number;
   period: number;
   cliff: number;
-  cliffAmount: u64;
-  amountPerPeriod: u64;
+  cliffAmount: BN;
+  amountPerPeriod: BN;
   canTopup: boolean;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
@@ -96,7 +96,7 @@ export interface CreateMultiParams extends CreateMultiData {
 
 export interface WithdrawStreamData {
   id: string;
-  amount: u64;
+  amount: BN;
 }
 
 export interface WithdrawStreamParams extends WithdrawStreamData {
@@ -111,7 +111,7 @@ export interface WithdrawParams extends WithdrawStreamData {
 
 export interface TopupStreamData {
   id: string;
-  amount: u64;
+  amount: BN;
 }
 
 export interface TopupStreamParams extends TopupStreamData {
@@ -176,7 +176,7 @@ export interface Stream {
   magic: number;
   version: number;
   createdAt: number;
-  withdrawnAmount: u64;
+  withdrawnAmount: BN;
   canceledAt: number;
   end: number;
   lastWithdrawnAt: number;
@@ -188,20 +188,20 @@ export interface Stream {
   escrowTokens: string;
   streamflowTreasury: string;
   streamflowTreasuryTokens: string;
-  streamflowFeeTotal: u64;
-  streamflowFeeWithdrawn: u64;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
   streamflowFeePercent: number;
-  partnerFeeTotal: u64;
-  partnerFeeWithdrawn: u64;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
   partnerFeePercent: number;
   partner: string;
   partnerTokens: string;
   start: number;
-  depositedAmount: u64;
+  depositedAmount: BN;
   period: number;
-  amountPerPeriod: u64;
+  amountPerPeriod: BN;
   cliff: number;
-  cliffAmount: u64;
+  cliffAmount: BN;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -213,13 +213,13 @@ export interface Stream {
 }
 
 export interface DecodedStream {
-  magic: u64;
-  version: u64;
-  createdAt: u64;
-  withdrawnAmount: u64;
-  canceledAt: u64;
-  end: u64;
-  lastWithdrawnAt: u64;
+  magic: BN;
+  version: BN;
+  createdAt: BN;
+  withdrawnAmount: BN;
+  canceledAt: BN;
+  end: BN;
+  lastWithdrawnAt: BN;
   sender: PublicKey;
   senderTokens: PublicKey;
   recipient: PublicKey;
@@ -228,20 +228,20 @@ export interface DecodedStream {
   escrowTokens: PublicKey;
   streamflowTreasury: PublicKey;
   streamflowTreasuryTokens: PublicKey;
-  streamflowFeeTotal: u64;
-  streamflowFeeWithdrawn: u64;
-  streamflowFeePercent: u64;
-  partnerFeeTotal: u64;
-  partnerFeeWithdrawn: u64;
-  partnerFeePercent: u64;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
+  streamflowFeePercent: BN;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
+  partnerFeePercent: BN;
   partner: PublicKey;
   partnerTokens: PublicKey;
-  start: u64;
-  depositedAmount: u64;
-  period: u64;
-  amountPerPeriod: u64;
-  cliff: u64;
-  cliffAmount: u64;
+  start: BN;
+  depositedAmount: BN;
+  period: BN;
+  amountPerPeriod: BN;
+  cliff: BN;
+  cliffAmount: BN;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -249,7 +249,7 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: u64;
+  withdrawFrequency: BN;
 }
 
 export interface TransactionResponse {

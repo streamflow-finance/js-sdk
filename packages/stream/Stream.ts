@@ -1,6 +1,6 @@
 // Version 1 of the SDK that uses Anchor.
 
-import { u64 } from "@solana/spl-token";
+import BN from "bn.js";
 import { Buffer } from "buffer";
 import { Idl, Program, Provider, web3 } from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
@@ -135,11 +135,11 @@ export default class Stream {
 
     const tx = await program.rpc.create(
       // Order of the parameters must match the ones in the program
-      new u64(start),
+      new BN(start),
       depositedAmount,
-      new u64(period),
+      new BN(period),
       amountPerPeriod,
-      new u64(cliff),
+      new BN(cliff),
       cliffAmount,
       cancelableBySender,
       cancelableByRecipient,
@@ -148,7 +148,7 @@ export default class Stream {
       transferableByRecipient,
       canTopup,
       nameUtf8EncodedArr,
-      new u64(automaticWithdrawal ? withdrawalFrequency : period),
+      new BN(automaticWithdrawal ? withdrawalFrequency : period),
       {
         accounts: {
           sender: sender.publicKey,
