@@ -58,6 +58,8 @@ export interface MultiRecipient {
   recipient: string;
   depositedAmount: BN;
   name: string;
+  cliffAmount: BN;
+  amountPerPeriod: BN;
 }
 
 export interface CreateMultiData {
@@ -66,8 +68,6 @@ export interface CreateMultiData {
   start: number;
   period: number;
   cliff: number;
-  cliffAmount: BN;
-  amountPerPeriod: BN;
   canTopup: boolean;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
@@ -271,4 +271,5 @@ export interface CreateResponse extends TxResponse {
 
 export interface CreateMultiResponse {
   txs: TransactionSignature[];
+  metadatas: Keypair[];
 }

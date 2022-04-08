@@ -220,8 +220,6 @@ export default class StreamClient {
    * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
    * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
    * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
-   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
    * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
    * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
    * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
@@ -238,8 +236,6 @@ export default class StreamClient {
     start,
     period,
     cliff,
-    cliffAmount,
-    amountPerPeriod,
     canTopup,
     cancelableBySender,
     cancelableByRecipient,
@@ -258,11 +254,14 @@ export default class StreamClient {
         ? this.commitment
         : this.commitment.commitment;
 
+    const metadatas = [];
+
     for (const recipient of recipientsData) {
       let ixs: TransactionInstruction[] = [];
       const recipientPublicKey = new PublicKey(recipient.recipient);
 
       const metadata = Keypair.generate();
+      metadatas.push(metadata);
       const [escrowTokens] = await web3.PublicKey.findProgramAddress(
         [Buffer.from("strm"), metadata.publicKey.toBuffer()],
         this.programId
@@ -287,9 +286,9 @@ export default class StreamClient {
             start: new BN(start),
             depositedAmount: recipient.depositedAmount,
             period: new BN(period),
-            amountPerPeriod,
+            amountPerPeriod: recipient.amountPerPeriod,
             cliff: new BN(cliff),
-            cliffAmount,
+            cliffAmount: recipient.cliffAmount,
             cancelableBySender,
             cancelableByRecipient,
             automaticWithdrawal,
@@ -355,7 +354,7 @@ export default class StreamClient {
       sigs.push(signature);
     }
 
-    return { txs: sigs };
+    return { txs: sigs, metadatas };
   }
 
   /**
