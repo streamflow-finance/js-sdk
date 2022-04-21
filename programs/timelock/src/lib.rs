@@ -1,9 +1,20 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use streamflow_timelock::{
-    state::{CancelAccounts, InitializeAccounts, StreamInstruction, TransferAccounts, WithdrawAccounts}
+use solana_security_txt::security_txt;
+use streamflow_timelock::state::{
+    CancelAccounts, InitializeAccounts, StreamInstruction, TransferAccounts, WithdrawAccounts,
 };
+
+security_txt! {
+    name: "timelock",
+    project_url: "https://streamflow.finance/",
+    contacts: "email:security@streamflow.finance,discord:https://discord.com/invite/ZC7URcQyM7",
+    policy: "https://github.com/streamflow-finance/js-sdk/blob/community/SECURITY.md",
+    preferred_languages: "en",
+    source_code: "https://github.com/streamflow-finance/timelock-crate/tree/community",
+    auditors: "opcodes"
+}
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
