@@ -18,3 +18,4 @@ default = []
 anchor-lang = "0.17.0"
 anchor-spl = "0.17.0"
 streamflow-timelock = "0.3.2"
+solana-security-txt = "1.0.1"

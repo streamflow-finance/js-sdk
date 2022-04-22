@@ -1,5 +1,10 @@
+anchor_version = "0.24.2"
+
 [programs.localnet]
 timelock = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+
+[programs.mainnet]
+timelock = "8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX"
 
 [registry]
 url = "https://anchor.projectserum.com"
