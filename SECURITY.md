@@ -27,20 +27,19 @@ Rewards are distributed according to the following classifications:
 - Permanent freezing of unlocked funds
 - Temporary freezing of unlocked funds for at least 24 hour
 
-Up to $20,000 USD
+Up to $50,000 USD
 
 ### Severity medium
 
 - Block stuffing for profit
 - Griefing (e.g. no profit motive for an attacker, but damage to the users or the protocol)
-- Theft of gas
-- Unbounded gas consumption 
+- Unbounded lamports consumption 
 
 Up to $5,000 USD
 
 This bounty is only paid out if details about the security issues have not been provided to third parties before a fix has been introduced and verified. Furthermore, the reporter is in no way allowed to exploit the issue without our explicit consent. Actual prize size is determined based on a combination of factors including but not limited to severity, value at risk, and likelihood of being exploited.
 
-Payouts are done in vesting STRM on Solana.
+Payouts are done in vesting USDC on Solana.
 
 ## Out of Scope and Rules
 
