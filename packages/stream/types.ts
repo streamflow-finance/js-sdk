@@ -269,7 +269,11 @@ export interface CreateResponse extends TxResponse {
   metadata: Keypair;
 }
 
+export interface MetadataRecipientHashMap {
+  [metadataPubKey: string]: MultiRecipient;
+}
 export interface CreateMultiResponse {
   txs: TransactionSignature[];
   metadatas: Keypair[];
+  metadataToRecipient: MetadataRecipientHashMap;
 }
