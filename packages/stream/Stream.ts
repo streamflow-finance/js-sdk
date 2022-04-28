@@ -45,7 +45,7 @@ import {
   WITHDRAWOR_PUBLIC_KEY,
   FEE_ORACLE_PUBLIC_KEY,
 } from "./constants";
-import idl from "./idl";
+import idl from "./idl/timelock";
 
 const encoder = new TextEncoder();
 

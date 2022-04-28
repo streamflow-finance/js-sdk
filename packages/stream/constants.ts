@@ -31,3 +31,8 @@ export const WITHDRAWOR_PUBLIC_KEY = new PublicKey(
 export const FEE_ORACLE_PUBLIC_KEY = new PublicKey(
   "B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"
 );
+
+export const AIRDROP_TEST_TOKEN =
+  "Gssm3vfi8s65R31SBdmQRq6cKeYojGgup7whkw4VCiQj";
+
+export const AIRDROP_AMOUNT = 1; // 1 SOL is the cap on the testnet
