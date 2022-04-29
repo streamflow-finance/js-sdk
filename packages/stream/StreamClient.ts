@@ -254,6 +254,8 @@ export default class StreamClient {
       typeof this.commitment == "string"
         ? this.commitment
         : this.commitment.commitment;
+    
+    let hash = await this.connection.getRecentBlockhash(commitment);
 
     const metadatas = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
@@ -326,7 +328,6 @@ export default class StreamClient {
           }
         )
       );
-      let hash = await this.connection.getRecentBlockhash(commitment);
       let tx = new Transaction({
         feePayer: sender.publicKey,
         recentBlockhash: hash.blockhash,
@@ -347,15 +348,17 @@ export default class StreamClient {
       signed_batch = [];
     }
 
-    let sigs: string[] = [];
+    let sigs: string[] =  [];
+    let promises = [];
     for (let i = 0; i < signed_batch.length; i++) {
       let buf = signed_batch[i].serialize();
-      const signature = await sendAndConfirmRawTransaction(
-        this.connection,
-        buf
-      );
-      sigs.push(signature);
+      promises.push(sendAndConfirmRawTransaction(this.connection, buf));
     }
+    await Promise.all(promises).then(
+      (values) => {
+        sigs = values;
+      }
+    )
 
     return { txs: sigs, metadatas, metadataToRecipient };
   }
