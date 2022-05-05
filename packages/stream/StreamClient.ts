@@ -39,6 +39,7 @@ import {
   CreateResponse,
   CreateMultiResponse,
   TxResponse,
+  MetadataRecipientHashMap,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
 import {
@@ -255,13 +256,15 @@ export default class StreamClient {
         : this.commitment.commitment;
 
     const metadatas = [];
-
+    const metadataToRecipient: MetadataRecipientHashMap = {};
     for (const recipient of recipientsData) {
       let ixs: TransactionInstruction[] = [];
       const recipientPublicKey = new PublicKey(recipient.recipient);
 
       const metadata = Keypair.generate();
       metadatas.push(metadata);
+      const metadataPubKey = metadata.publicKey.toBase58();
+      metadataToRecipient[metadataPubKey] = recipient;
       const [escrowTokens] = await web3.PublicKey.findProgramAddress(
         [Buffer.from("strm"), metadata.publicKey.toBuffer()],
         this.programId
@@ -354,7 +357,7 @@ export default class StreamClient {
       sigs.push(signature);
     }
 
-    return { txs: sigs, metadatas };
+    return { txs: sigs, metadatas, metadataToRecipient };
   }
 
   /**
