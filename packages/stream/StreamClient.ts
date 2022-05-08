@@ -40,6 +40,7 @@ import {
   CreateMultiResponse,
   TxResponse,
   MetadataRecipientHashMap,
+  MultiRecipient,
 } from "./types";
 import { decodeStream, formatDecodedStream } from "./utils";
 import {
@@ -58,6 +59,8 @@ import {
   topupStreamInstruction,
   createStreamInstruction,
 } from "./instructions";
+import { Wallet } from "@project-serum/anchor/src/provider";
+import { sleep } from "@project-serum/common";
 
 export default class StreamClient {
   private connection: Connection;
@@ -230,134 +233,69 @@ export default class StreamClient {
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
-  public async createMultiple({
-    sender,
-    recipientsData,
-    mint,
-    start,
-    period,
-    cliff,
-    canTopup,
-    cancelableBySender,
-    cancelableByRecipient,
-    transferableBySender,
-    transferableByRecipient,
-    automaticWithdrawal = false,
-    withdrawalFrequency = 0,
-    partner = null,
-  }: CreateMultiParams): Promise<CreateMultiResponse> {
-    const mintPublicKey = new PublicKey(mint);
-
-    let batch: Transaction[] = [];
-
-    const commitment =
-      typeof this.commitment == "string"
-        ? this.commitment
-        : this.commitment.commitment;
+  public async createMultiple(data: CreateMultiParams): Promise<any> {
+    const { sender, recipientsData } = data;
 
     const metadatas = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
-    for (const recipient of recipientsData) {
-      let ixs: TransactionInstruction[] = [];
-      const recipientPublicKey = new PublicKey(recipient.recipient);
+    const errors = [];
+    const signatures: string[] = [];
+    //Put all recipient data to chunks to avoid recent blockhash error
+    const chunkSize = 10;
+    const chunkes = [];
 
-      const metadata = Keypair.generate();
-      metadatas.push(metadata);
-      const metadataPubKey = metadata.publicKey.toBase58();
-      metadataToRecipient[metadataPubKey] = recipient;
-      const [escrowTokens] = await web3.PublicKey.findProgramAddress(
-        [Buffer.from("strm"), metadata.publicKey.toBuffer()],
-        this.programId
+    for (let i = 0; i < recipientsData.length; i += chunkSize) {
+      const chunk = recipientsData.slice(i, i + chunkSize);
+      chunkes.push(chunk);
+    }
+    for (const chunk of chunkes) {
+      //Batch is the object that creates assosiation between transaction and recipient
+      //It is used to create error messages when a transaction fails and link to recipient address so client could rerun this transaction with the same recipient
+      const batch: BatchItem[] = [];
+
+      for (const recipientData of chunk) {
+        const { tx, metadata } = await this.prepareStreamTransaction(
+          recipientData,
+          data
+        );
+
+        const metadataPubKey = metadata.publicKey.toBase58();
+        metadataToRecipient[metadataPubKey] = recipientData;
+
+        metadatas.push(metadata);
+        batch.push({ tx, recipient: recipientData.recipient });
+      }
+
+      //Extract tx from batch item and sign it
+      let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
+        sender,
+        batch
       );
 
-      const senderTokens = await ata(mintPublicKey, sender.publicKey);
-      const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
-      const streamflowTreasuryTokens = await ata(
-        mintPublicKey,
-        STREAMFLOW_TREASURY_PUBLIC_KEY
+      //send all transactions in parallel and wait for them to settle.
+      //it allows to speed up the process of sending transactions
+      //we then filter all promise responses and handle failed transactions
+      const batchTransactionsCalls = signed_batch.map((el) =>
+        sendAndConfirmStreamRawTransaction(this.connection, el)
       );
+      const responses = await Promise.allSettled(batchTransactionsCalls);
 
-      const partnerPublicKey = partner
-        ? new PublicKey(partner)
-        : STREAMFLOW_TREASURY_PUBLIC_KEY;
-
-      const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
-
-      ixs.push(
-        createStreamInstruction(
-          {
-            start: new BN(start),
-            depositedAmount: recipient.depositedAmount,
-            period: new BN(period),
-            amountPerPeriod: recipient.amountPerPeriod,
-            cliff: new BN(cliff),
-            cliffAmount: recipient.cliffAmount,
-            cancelableBySender,
-            cancelableByRecipient,
-            automaticWithdrawal,
-            transferableBySender,
-            transferableByRecipient,
-            canTopup,
-            name: recipient.name,
-            withdrawFrequency: new BN(
-              automaticWithdrawal ? withdrawalFrequency : period
-            ),
-          },
-          this.programId,
-          {
-            sender: sender.publicKey,
-            senderTokens,
-            recipient: new PublicKey(recipient.recipient),
-            metadata: metadata.publicKey,
-            escrowTokens,
-            recipientTokens,
-            streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
-            streamflowTreasuryTokens: streamflowTreasuryTokens,
-            partner: partnerPublicKey,
-            partnerTokens: partnerTokens,
-            mint: new PublicKey(mint),
-            feeOracle: FEE_ORACLE_PUBLIC_KEY,
-            rent: SYSVAR_RENT_PUBKEY,
-            timelockProgram: this.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-            withdrawor: WITHDRAWOR_PUBLIC_KEY,
-            systemProgram: SystemProgram.programId,
-          }
+      const successes = responses
+        .filter(
+          (el): el is PromiseFulfilledResult<BatchItemSuccess> =>
+            el.status === "fulfilled"
         )
-      );
-      let hash = await this.connection.getRecentBlockhash(commitment);
-      let tx = new Transaction({
-        feePayer: sender.publicKey,
-        recentBlockhash: hash.blockhash,
-      }).add(...ixs);
-      tx.partialSign(metadata);
-      batch.push(tx);
-    }
+        .map((el) => el.value);
+      signatures.push(...successes.map((el) => el.signature));
 
-    var signed_batch: Transaction[];
-    if (sender instanceof Keypair) {
-      signed_batch = batch.map((t) => {
-        t.partialSign(sender);
-        return t;
-      });
-    } else if (sender?.signAllTransactions) {
-      signed_batch = await sender.signAllTransactions(batch);
-    } else {
-      signed_batch = [];
+      const failures = responses
+        .filter((el): el is PromiseRejectedResult => el.status === "rejected")
+        .map((el) => el.reason as BatchItemError);
+      errors.push(...failures);
+      await sleep(100);
     }
-
-    let sigs: string[] = [];
-    for (let i = 0; i < signed_batch.length; i++) {
-      let buf = signed_batch[i].serialize();
-      const signature = await sendAndConfirmRawTransaction(
-        this.connection,
-        buf
-      );
-      sigs.push(signature);
-    }
-
-    return { txs: sigs, metadatas, metadataToRecipient };
+    const isError = errors.length > 0;
+    return { txs: signatures, metadatas, metadataToRecipient, isError, errors };
   }
 
   /**
@@ -680,6 +618,107 @@ export default class StreamClient {
     );
     return signature;
   }
+  /**
+   * Forms instructions from params, creates a raw transaction and fetch recent blockhash.
+   * @param {MultiRecipient} recipient - Wallet sending stream to
+   * @param {CreateMultiParams} streamParams - Parameters of stream user wants to create.
+   */
+  private async prepareStreamTransaction(
+    recipient: MultiRecipient,
+    streamParams: CreateMultiParams
+  ) {
+    const {
+      sender,
+      mint,
+      start,
+      period,
+      cliff,
+      canTopup,
+      cancelableBySender,
+      cancelableByRecipient,
+      transferableBySender,
+      transferableByRecipient,
+      automaticWithdrawal = false,
+      withdrawalFrequency = 0,
+      partner = null,
+    } = streamParams;
+    let ixs: TransactionInstruction[] = [];
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+    const recipientPublicKey = new PublicKey(recipient.recipient);
+    const mintPublicKey = new PublicKey(mint);
+    const metadata = Keypair.generate();
+    const [escrowTokens] = await web3.PublicKey.findProgramAddress(
+      [Buffer.from("strm"), metadata.publicKey.toBuffer()],
+      this.programId
+    );
+
+    const senderTokens = await ata(mintPublicKey, sender.publicKey);
+    const recipientTokens = await ata(mintPublicKey, recipientPublicKey);
+    const streamflowTreasuryTokens = await ata(
+      mintPublicKey,
+      STREAMFLOW_TREASURY_PUBLIC_KEY
+    );
+
+    const partnerPublicKey = partner
+      ? new PublicKey(partner)
+      : STREAMFLOW_TREASURY_PUBLIC_KEY;
+
+    const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
+
+    ixs.push(
+      createStreamInstruction(
+        {
+          start: new BN(start),
+          depositedAmount: recipient.depositedAmount,
+          period: new BN(period),
+          amountPerPeriod: recipient.amountPerPeriod,
+          cliff: new BN(cliff),
+          cliffAmount: recipient.cliffAmount,
+          cancelableBySender,
+          cancelableByRecipient,
+          automaticWithdrawal,
+          transferableBySender,
+          transferableByRecipient,
+          canTopup,
+          name: recipient.name,
+          withdrawFrequency: new BN(
+            automaticWithdrawal ? withdrawalFrequency : period
+          ),
+        },
+        this.programId,
+        {
+          sender: sender.publicKey,
+          senderTokens,
+          recipient: new PublicKey(recipient.recipient),
+          metadata: metadata.publicKey,
+          escrowTokens,
+          recipientTokens,
+          streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
+          streamflowTreasuryTokens: streamflowTreasuryTokens,
+          partner: partnerPublicKey,
+          partnerTokens: partnerTokens,
+          mint: new PublicKey(mint),
+          feeOracle: FEE_ORACLE_PUBLIC_KEY,
+          rent: SYSVAR_RENT_PUBKEY,
+          timelockProgram: this.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          withdrawor: WITHDRAWOR_PUBLIC_KEY,
+          systemProgram: SystemProgram.programId,
+        }
+      )
+    );
+    let hash = await this.connection.getRecentBlockhash(commitment);
+    let tx = new Transaction({
+      feePayer: sender.publicKey,
+      recentBlockhash: hash.blockhash,
+    }).add(...ixs);
+    tx.partialSign(metadata);
+    return { tx, metadata };
+  }
 }
 
 async function getProgramAccounts(
@@ -707,4 +746,60 @@ async function ata(mint: PublicKey, account: PublicKey) {
     mint,
     account
   );
+}
+
+function isAnchorWallet(wallet: Keypair | Wallet): wallet is Wallet {
+  //magic happens here
+  return (<Wallet>wallet).signTransaction !== undefined;
+}
+
+interface BatchItem {
+  recipient: string;
+  tx: web3.Transaction;
+}
+
+interface BatchItemSuccess extends BatchItem {
+  signature: string;
+}
+
+interface BatchItemError extends BatchItem {
+  error: string;
+}
+
+async function signAllTransactionWithRecipients(
+  sender: Keypair | Wallet,
+  batch: BatchItem[]
+) {
+  let signed_batch: BatchItem[] = [];
+  const isKeypair = sender instanceof Keypair;
+  const isWallet = isAnchorWallet(sender);
+
+  if (!isKeypair && !isWallet) return signed_batch;
+
+  if (isKeypair) {
+    signed_batch = batch.map((t) => {
+      t.tx.partialSign(sender);
+      return { tx: t.tx, recipient: t.recipient };
+    });
+  }
+  if (isWallet) {
+    for (const item of batch) {
+      await sender.signTransaction(item.tx);
+      signed_batch.push(item);
+    }
+  }
+  return signed_batch;
+}
+
+async function sendAndConfirmStreamRawTransaction(
+  connection: Connection,
+  batchItem: BatchItem
+): Promise<BatchItemSuccess | BatchItemError> {
+  try {
+    const rawTx = batchItem.tx.serialize();
+    const signature = await sendAndConfirmRawTransaction(connection, rawTx);
+    return { ...batchItem, signature };
+  } catch (error: any) {
+    throw { ...batchItem, error };
+  }
 }
