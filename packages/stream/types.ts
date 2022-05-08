@@ -277,3 +277,34 @@ export interface CreateMultiResponse {
   metadatas: Keypair[];
   metadataToRecipient: MetadataRecipientHashMap;
 }
+
+export enum TransferCancelOptions {
+  Recipient = "recipient",
+  Sender = "sender",
+  Both = "both",
+  Neither = "neither",
+}
+
+export interface Recipient {
+  recipient: string;
+  recipientEmail: string;
+  name: string;
+  depositedAmount: number;
+}
+
+export interface CreateMultipleStreamsValues {
+  releaseAmount: number;
+  email: string;
+  tokenSymbol: string;
+  startDate: string;
+  startTime: string;
+  releaseFrequencyCounter: number;
+  whoCanTransfer: TransferCancelOptions;
+  whoCanCancel: TransferCancelOptions;
+  releaseFrequencyPeriod: number;
+  automaticWithdrawal: boolean;
+  withdrawalFrequencyCounter: number;
+  withdrawalFrequencyPeriod: number;
+  referral: string;
+  recipients: Recipient[];
+}
