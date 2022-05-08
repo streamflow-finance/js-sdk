@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "lib": ["es2020"],
     "skipLibCheck": true,
     "downlevelIteration": true
   },
