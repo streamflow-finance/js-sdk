@@ -24,8 +24,7 @@ const CLUSTER_LOCAL = "local";
 const clusterUrls: { [s: string]: () => string } = {
   [CLUSTER_LOCAL]: () => "http://localhost:8899", // http://127.0.0.1:8899",
   [Cluster.Devnet]: () => "https://api.devnet.solana.com",
-  [Cluster.Mainnet]: () =>
-    "https://streamflow.rpcpool.com/8527ad85d20c2f0e6c37b026cab0",
+  [Cluster.Mainnet]: () => "https://api.mainnet-beta.solana.com",
 };
 beforeAll(async () => {
   streamInstance = new StreamClient(
