@@ -14,8 +14,8 @@ import {
 import type { Idl } from "@project-serum/anchor/dist/cjs/idl";
 import type { TransactionSignature } from "@solana/web3.js";
 
-import airdrop from "./idl/airdrop";
-import { AIRDROP_TEST_TOKEN } from "./constants";
+import airdrop from "../idl/airdrop";
+import { AIRDROP_TEST_TOKEN } from "../constants";
 import { Wallet } from "@project-serum/anchor";
 
 const PROGRAM_ID = "Ek6Jpdv5iEEDLXTVQ8UFcntms3DT2ewHtzzwH2R5MpvN";
@@ -163,13 +163,6 @@ export async function cancel(
     mint,
     pda
   );
-
-  // console.log("wallet", wallet?.publicKey?.toString());
-  // console.log("associated STRM token", assTokenAcc.toString());
-  // console.log("airdrop account", airdropAccount.pubkey.toString());
-  // console.log("pda", pda.toString());
-  // console.log("_pda", _pda.toString());
-  // console.log("program", program.programId.toString());
 
   try {
     await program.rpc.cancelAirdrop({

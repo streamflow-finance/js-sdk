@@ -1,8 +1,8 @@
 import { Wallet } from "@project-serum/anchor";
 import { Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getTestTokenAirdrop } from "./airdrop";
-import { AIRDROP_AMOUNT } from "./constants";
-import { TX_FINALITY_CONFIRMED } from "./constants";
+import { AIRDROP_AMOUNT } from "../constants";
+import { TX_FINALITY_CONFIRMED } from "../constants";
 
 export const requestAirdrop = async (
   wallet: Wallet,
