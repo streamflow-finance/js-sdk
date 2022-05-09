@@ -784,10 +784,21 @@ async function signAllTransactionWithRecipients(
     });
   }
   if (isWallet) {
+    const recipientToBlockhashMap = new Map<string, BatchItem>();
+
     for (const item of batch) {
-      await sender.signTransaction(item.tx);
-      signed_batch.push(item);
+      recipientToBlockhashMap.set(item.tx.recentBlockhash!, item);
     }
+    const txs = await sender.signAllTransactions(batch.map((t) => t.tx));
+    txs.map((tx) => {
+      const item = recipientToBlockhashMap.get(tx.recentBlockhash!);
+      if (item) {
+        signed_batch.push({
+          tx,
+          recipient: item.recipient,
+        });
+      }
+    });
   }
   return signed_batch;
 }
