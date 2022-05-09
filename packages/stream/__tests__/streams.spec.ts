@@ -8,9 +8,8 @@ import {
 } from "../types";
 import * as web3 from "@solana/web3.js";
 import { getBN } from "../utils";
-import { requestAirdrop } from "./airdrop/airdrop-request";
+import { requestAirdrop } from "./test_dependencies/airdrop/airdrop-request";
 import { Wallet } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
 import { AIRDROP_TEST_TOKEN } from "../constants";
 import { BN } from "bn.js";
 let streamInstance: StreamClient | null = null;
