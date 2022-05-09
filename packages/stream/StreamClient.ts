@@ -233,7 +233,9 @@ export default class StreamClient {
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
-  public async createMultiple(data: CreateMultiParams): Promise<any> {
+  public async createMultiple(
+    data: CreateMultiParams
+  ): Promise<CreateMultiResponse> {
     const { sender, recipientsData } = data;
 
     const metadatas = [];
@@ -294,8 +296,8 @@ export default class StreamClient {
       errors.push(...failures);
       await sleep(100);
     }
-    const isError = errors.length > 0;
-    return { txs: signatures, metadatas, metadataToRecipient, isError, errors };
+
+    return { txs: signatures, metadatas, metadataToRecipient, errors };
   }
 
   /**
@@ -749,7 +751,6 @@ async function ata(mint: PublicKey, account: PublicKey) {
 }
 
 function isAnchorWallet(wallet: Keypair | Wallet): wallet is Wallet {
-  //magic happens here
   return (<Wallet>wallet).signTransaction !== undefined;
 }
 
@@ -800,6 +801,6 @@ async function sendAndConfirmStreamRawTransaction(
     const signature = await sendAndConfirmRawTransaction(connection, rawTx);
     return { ...batchItem, signature };
   } catch (error: any) {
-    throw { ...batchItem, error };
+    throw { recipient: batchItem.recipient, error };
   }
 }

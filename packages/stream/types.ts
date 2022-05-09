@@ -272,10 +272,17 @@ export interface CreateResponse extends TxResponse {
 export interface MetadataRecipientHashMap {
   [metadataPubKey: string]: MultiRecipient;
 }
+
+export interface CreateMultiError {
+  recipient: string;
+  error: string;
+}
+
 export interface CreateMultiResponse {
   txs: TransactionSignature[];
   metadatas: Keypair[];
   metadataToRecipient: MetadataRecipientHashMap;
+  errors: CreateMultiError[];
 }
 
 export enum TransferCancelOptions {
