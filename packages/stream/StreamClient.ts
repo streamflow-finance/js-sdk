@@ -74,16 +74,24 @@ export default class StreamClient {
   constructor(
     clusterUrl: string,
     cluster: ClusterExtended = Cluster.Mainnet,
-    commitment: Commitment | ConnectionConfig = "confirmed"
+    commitment: Commitment | ConnectionConfig = "confirmed",
+    programId: string = ""
   ) {
     this.commitment = commitment;
     this.cluster = cluster;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = new PublicKey(PROGRAM_ID[cluster]);
+    if (programId != "") {
+      this.programId = new PublicKey(programId);
+    }
   }
 
   public getConnection() {
     return this.connection;
+  }
+
+  public getProgramId(): string {
+    return this.programId.toBase58();
   }
 
   /**
