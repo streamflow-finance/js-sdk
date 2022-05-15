@@ -106,7 +106,7 @@ export interface WithdrawStreamParams extends WithdrawStreamData {
 }
 
 export interface WithdrawParams extends WithdrawStreamData {
-  invoker: Wallet;
+  invoker: Wallet | Keypair;
 }
 
 export interface TopupStreamData {
@@ -121,7 +121,7 @@ export interface TopupStreamParams extends TopupStreamData {
 }
 
 export interface TopupParams extends TopupStreamData {
-  invoker: Wallet;
+  invoker: Wallet | Keypair;
 }
 
 export interface CancelStreamData {
@@ -135,7 +135,7 @@ export interface CancelStreamParams extends CancelStreamData {
 }
 
 export interface CancelParams extends CancelStreamData {
-  invoker: Wallet;
+  invoker: Wallet | Keypair;
 }
 
 export interface TransferStreamData {
@@ -150,7 +150,7 @@ export interface TransferStreamParams extends TransferStreamData {
 }
 
 export interface TransferParams extends TransferStreamData {
-  invoker: Wallet;
+  invoker: Wallet | Keypair;
 }
 
 export interface GetStreamParams {
