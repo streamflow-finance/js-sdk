@@ -50,8 +50,10 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     withdrawFrequency: new BN(raw.withdraw_frequency, LE),
   };
 };
-
-export const formatDecodedStream = (stream: DecodedStream): Stream => ({
+// DeprecationWarning: This object will be deprecated starting from the version 4.0.0. Use
+// types/Contract instead
+export const formatDecodedStream = (stream: DecodedStream): Stream  => {
+  const resp = {
   magic: stream.magic.toNumber(),
   version: stream.version.toNumber(),
   createdAt: stream.createdAt.toNumber(),
@@ -89,7 +91,12 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => ({
   canTopup: stream.canTopup,
   name: stream.name,
   withdrawalFrequency: stream.withdrawFrequency.toNumber(),
-});
+    unlocked: function () { return new BN(0) }, //phantom method to preserve partial support of this object
+    withdrawn: function() { return new BN(0) } //phantom method to preserve partial support of this object
+  }
+  return resp
+}
+
 
 /**
  * Used for conversion of token amounts to their Big Number representation.

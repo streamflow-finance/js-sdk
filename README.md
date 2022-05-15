@@ -80,19 +80,19 @@ const createStreamParams = {
   recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
   mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
-  depositedAmount: getBN(1000000000000, 9), // Deposited amount of tokens (using smallest denomination).
+  depositedAmount: getBN(100, 9), // depositing 100 tokens with 9 decimals mint.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
   cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-  cliffAmount: new BN(100000000000), // Amount (smallest denomination) unlocked at the "cliff" timestamp.
-  amountPerPeriod: getBN(5000000000, 9), // Release rate: how many tokens are unlocked per each period.
+  cliffAmount: new BN(10), // Amount unlocked at the "cliff" timestamp.
+  amountPerPeriod: getBN(5, 9), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name or subject.
   canTopup: false, // setting to FALSE will effectively create a vesting contract.
   cancelableBySender: true, // Whether or not sender can cancel the stream.
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
   transferableBySender: true, // Whether or not sender can transfer the stream.
   transferableByRecipient: false, // Whether or not recipient can transfer the stream.
-  automaticWithdrawal: true, // [WIP] Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
-  withdrawalFrequency: 10, // [WIP] Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+  automaticWithdrawal: true, // Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
+  withdrawalFrequency: 10, // Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
   partner: null, //  (optional) Partner's wallet address (string | null).
 };
 
@@ -109,8 +109,10 @@ try {
 const recipients = [
   {
     recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
-    depositedAmount: getBN(1000000000000, 9), // Deposited amount of tokens (in the smallest units).
+    depositedAmount: getBN(100, 9), // depositing 100 tokens with 9 decimals mint.
     name: "January Payroll", // The stream name/subject.
+    cliffAmount: getBN(10, 9), // amount released on cliff for this recipient
+    amountPerPeriod: getBN(1, 9) //amount released every specified period epoch
   },
 ];
 
@@ -121,8 +123,6 @@ const createMultiStreamsParams = {
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
   cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-  cliffAmount: getBN(100000000000, 9), // Amount unlocked at the "cliff" timestamp.
-  amountPerPeriod: getBN(5000000000, 9), // Release rate: how many tokens are unlocked per each period.
   canTopup: true, // setting to FALSE will effectively create a vesting contract.
   cancelableBySender: true, // Whether or not sender can cancel the stream.
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
@@ -139,9 +139,17 @@ try {
 }
 ```
 
-\_Disclaimer: Support for scheduled, automatic token withdrawals/transfers is under development and scheduled to launch in Q1. Once launched, it will be enabled retroactively for all streams that have `automaticWithdrawal` set to `true`.
 
-Please note that transaction fees for the scheduled transfers are paid upfront by the stream creator (sender).\_
+Please note that transaction fees for the scheduled transfers are paid upfront by the stream creator (sender).
+
+## Identifying created contracts (streams or vesting)
+
+Upon creation of a stream, a solana PDA (Program Derrived Address) is created and used to store stream configuration. This account is called 'metadata' of a stream. Every stream creation method returns a Keypair used to initialize Metadata. Public key of this Keypair is the unique identifier of that stream.
+```javascript
+const { ixs, tx, metadata } = await StreamClient.create(createStreamParams);
+
+console.log(metadata.publicKey.toBase58()) // stream 'id'
+```
 
 ## Withdraw from stream
 
@@ -149,7 +157,7 @@ Please note that transaction fees for the scheduled transfers are paid upfront b
 const withdrawStreamParams = {
   invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
-  amount: getBN(100000000000, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
+  amount: getBN(100, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
 };
 
 try {
@@ -165,7 +173,7 @@ try {
 const topupStreamParams = {
   invoker: wallet, // Wallet/Keypair signing the transaction.
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be topped up.
-  amount: getBN(100000000000, 9), // Specified amount to topup (increases deposited amount).
+  amount: getBN(100, 9), // Specified amount to topup (increases deposited amount).
 };
 
 try {
@@ -180,7 +188,7 @@ try {
 ```javascript
 const data = {
   invoker: wallet, // Wallet/Keypair signing the transaction.
-  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
+  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", 
   recipientId: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier of a stream to be transferred.
 };
 
@@ -218,6 +226,32 @@ try {
 }
 ```
 
+## Fetching unlocked amount
+
+```javascript
+const stream = await StreamClient.getOne(
+  "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA"
+);
+const unlocked = stream.unlocked(tsInSeconds) // bn amount unlocked at the tsInSeconds
+console.log(getNumberFromBN(unlocked, 9))
+```
+* Note: unlocked amount is determined based on configuration set on creation, no dynamic data is involved so client calculations are correct and no requests to Solana RPC is needed 
+
+
+
+## Reading withdrawn amount and remaining funds
+
+```javascript
+const stream = await StreamClient.getOne(
+  "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA"
+);
+const withdrawn = stream.withdrawnAmount // bn amount withdrawn already
+console.log(getNumberFromBN(wihtdrawn, 9))
+const remaining = stream.withdrawnAmount // bn amount of remaining funds
+console.log(getNumberFromBN(remaining, 9))
+
+```
+
 ## Get multiple streams for a specific wallet address
 
 ```javascript
@@ -248,7 +282,6 @@ And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
 
-**Streamflow Community** (free and open source version, with a limited feature set) is available [here](https://github.com/streamflow-finance/js-sdk/tree/community).
 
 `npx typedoc packages/stream/index.ts`
 

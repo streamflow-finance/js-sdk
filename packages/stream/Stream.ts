@@ -34,8 +34,9 @@ import {
   TopupStreamParams,
   TransferStreamParams,
   GetStreamParams,
+  Contract
 } from "./types";
-import { decodeStream, formatDecodedStream } from "./utils";
+import { decodeStream } from "./utils";
 import {
   PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
@@ -392,7 +393,7 @@ export default class Stream {
       throw new Error("Couldn't get account info.");
     }
 
-    return formatDecodedStream(decodeStream(escrow?.data));
+    return new Contract(decodeStream(escrow?.data));
   }
 
   /**
@@ -439,7 +440,7 @@ export default class Stream {
     let streams: { [s: string]: any } = {};
 
     accounts.forEach((account) => {
-      const decoded = formatDecodedStream(decodeStream(account.account.data));
+      const decoded = new Contract(decodeStream(account.account.data));
       streams = { ...streams, [account.pubkey.toBase58()]: decoded };
     });
 

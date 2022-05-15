@@ -210,6 +210,112 @@ export interface Stream {
   canTopup: boolean;
   name: string;
   withdrawalFrequency: number;
+
+  unlocked(currentTimestamp: number): BN
+
+}
+
+
+export class Contract implements Stream {
+  magic: number;
+  version: number;
+  createdAt: number;
+  withdrawnAmount: BN;
+  canceledAt: number;
+  end: number;
+  lastWithdrawnAt: number;
+  sender: string;
+  senderTokens: string;
+  recipient: string;
+  recipientTokens: string;
+  mint: string;
+  escrowTokens: string;
+  streamflowTreasury: string;
+  streamflowTreasuryTokens: string;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
+  streamflowFeePercent: number;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
+  partnerFeePercent: number;
+  partner: string;
+  partnerTokens: string;
+  start: number;
+  depositedAmount: BN;
+  period: number;
+  amountPerPeriod: BN;
+  cliff: number;
+  cliffAmount: BN;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  canTopup: boolean;
+  name: string;
+  withdrawalFrequency: number;
+
+  constructor(stream: DecodedStream) {
+    
+      this.magic = stream.magic.toNumber();
+      this.version = stream.version.toNumber();
+      this.createdAt = stream.createdAt.toNumber();
+      this.withdrawnAmount = stream.withdrawnAmount;
+      this.canceledAt = stream.canceledAt.toNumber();
+      this.end = stream.end.toNumber();
+      this.lastWithdrawnAt = stream.lastWithdrawnAt.toNumber();
+      this.sender = stream.sender.toBase58();
+      this.senderTokens = stream.senderTokens.toBase58();
+      this.recipient = stream.recipient.toBase58();
+      this.recipientTokens = stream.recipientTokens.toBase58();
+      this.mint = stream.mint.toBase58();
+      this.escrowTokens = stream.escrowTokens.toBase58();
+      this.streamflowTreasury = stream.streamflowTreasury.toBase58();
+      this.streamflowTreasuryTokens = 
+        stream.streamflowTreasuryTokens.toBase58();
+      this.streamflowFeeTotal = stream.streamflowFeeTotal;
+      this.streamflowFeeWithdrawn = stream.streamflowFeeWithdrawn;
+      this.streamflowFeePercent = stream.streamflowFeePercent.toNumber();
+      this.partnerFeeTotal = stream.partnerFeeTotal;
+      this.partnerFeeWithdrawn = stream.partnerFeeWithdrawn;
+      this.partnerFeePercent = stream.partnerFeePercent.toNumber();
+      this.partner = stream.partner.toBase58();
+      this.partnerTokens = stream.partnerTokens?.toBase58();
+      this.start = stream.start.toNumber();
+      this.depositedAmount = stream.depositedAmount;
+      this.period = stream.period.toNumber();
+      this.amountPerPeriod = stream.amountPerPeriod;
+      this.cliff = stream.cliff.toNumber();
+      this.cliffAmount = stream.cliffAmount;
+      this.cancelableBySender = stream.cancelableBySender;
+      this.cancelableByRecipient = stream.cancelableByRecipient;
+      this.automaticWithdrawal = stream.automaticWithdrawal;
+      this.transferableBySender = stream.transferableBySender;
+      this.transferableByRecipient = stream.transferableByRecipient;
+      this.canTopup = stream.canTopup;
+      this.name = stream.name;
+      this.withdrawalFrequency = stream.withdrawFrequency.toNumber();
+  }
+
+  unlocked(
+    currentTimestamp: number,
+  ): BN {
+    if (currentTimestamp < this.cliff) return new BN(0);
+    if (currentTimestamp > this.end) return this.depositedAmount;
+
+    const streamed = this.cliffAmount.add(
+      new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(
+        this.amountPerPeriod
+      )
+    );
+
+    return streamed < this.depositedAmount ? streamed : this.depositedAmount;
+  }
+
+  remaining(): BN {
+    return this.depositedAmount.sub(this.withdrawnAmount)
+  }
+  
 }
 
 export interface DecodedStream {
