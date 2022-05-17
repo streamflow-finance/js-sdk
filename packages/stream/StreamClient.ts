@@ -246,32 +246,32 @@ export default class StreamClient {
     const chunkSize = 10;
     const chunkes = [];
 
-    for (let i = 0; i < recipientsData.length; i += chunkSize) {
-      const chunk = recipientsData.slice(i, i + chunkSize);
+    //Batch is the object that creates assosiation between transaction and recipient
+    //It is used to create error messages when a transaction fails and link to recipient address so client could rerun this transaction with the same recipient
+    const batch: BatchItem[] = [];
+
+    for (const recipientData of recipientsData) {
+      const { tx, metadata } = await this.prepareStreamTransaction(
+        recipientData,
+        data
+      );
+
+      const metadataPubKey = metadata.publicKey.toBase58();
+      metadataToRecipient[metadataPubKey] = recipientData;
+
+      metadatas.push(metadata);
+      batch.push({ tx, recipient: recipientData.recipient });
+    }
+
+    for (let i = 0; i < batch.length; i += chunkSize) {
+      const chunk = batch.slice(i, i + chunkSize);
       chunkes.push(chunk);
     }
     for (const chunk of chunkes) {
-      //Batch is the object that creates assosiation between transaction and recipient
-      //It is used to create error messages when a transaction fails and link to recipient address so client could rerun this transaction with the same recipient
-      const batch: BatchItem[] = [];
-
-      for (const recipientData of chunk) {
-        const { tx, metadata } = await this.prepareStreamTransaction(
-          recipientData,
-          data
-        );
-
-        const metadataPubKey = metadata.publicKey.toBase58();
-        metadataToRecipient[metadataPubKey] = recipientData;
-
-        metadatas.push(metadata);
-        batch.push({ tx, recipient: recipientData.recipient });
-      }
-
       //Extract tx from batch item and sign it
       let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
         sender,
-        batch
+        chunk
       );
 
       //send all transactions in parallel and wait for them to settle.
