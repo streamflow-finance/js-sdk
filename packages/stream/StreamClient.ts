@@ -20,6 +20,7 @@ import {
   Commitment,
   ConnectionConfig,
   sendAndConfirmRawTransaction,
+  BlockheightBasedTransactionConfimationStrategy,
 } from "@solana/web3.js";
 
 import {
@@ -61,6 +62,7 @@ import {
 } from "./instructions";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { sleep } from "@project-serum/common";
+import { encode } from "@project-serum/anchor/dist/cjs/utils/bytes/bs58";
 
 export default class StreamClient {
   private connection: Connection;
@@ -243,7 +245,7 @@ export default class StreamClient {
     const errors = [];
     const signatures: string[] = [];
     //Put all recipient data to chunks to avoid recent blockhash error
-    const chunkSize = 10;
+    const chunkSize = 100;
     const chunkes = [];
 
     //Batch is the object that creates assosiation between transaction and recipient
@@ -713,10 +715,11 @@ export default class StreamClient {
         }
       )
     );
-    let hash = await this.connection.getRecentBlockhash(commitment);
+    let hash = await this.connection.getLatestBlockhash(commitment);
     let tx = new Transaction({
       feePayer: sender.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
     tx.partialSign(metadata);
     return { tx, metadata };
@@ -809,8 +812,22 @@ async function sendAndConfirmStreamRawTransaction(
 ): Promise<BatchItemSuccess | BatchItemError> {
   try {
     const rawTx = batchItem.tx.serialize();
-    const signature = await sendAndConfirmRawTransaction(connection, rawTx);
-    return { ...batchItem, signature };
+    const { lastValidBlockHeight, signature, recentBlockhash } = batchItem.tx;
+    if (!lastValidBlockHeight || !signature || !recentBlockhash)
+      throw { recipient: batchItem.recipient, error: "no recent blockhash" };
+
+    const confirmationStrategy: BlockheightBasedTransactionConfimationStrategy =
+      {
+        lastValidBlockHeight,
+        signature: encode(signature),
+        blockhash: recentBlockhash,
+      };
+    const completedTxSignature = await sendAndConfirmRawTransaction(
+      connection,
+      rawTx,
+      confirmationStrategy
+    );
+    return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
     throw { recipient: batchItem.recipient, error };
   }
