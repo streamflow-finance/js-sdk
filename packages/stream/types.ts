@@ -10,6 +10,8 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 
+import { getNumberFromBN } from "./utils";
+
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
 export enum StreamDirection {
@@ -211,7 +213,7 @@ export interface Stream {
   name: string;
   withdrawalFrequency: number;
 
-  unlocked(currentTimestamp: number): BN
+  unlocked(currentTimestamp: number, decimals: number): BN
 
 }
 
@@ -299,6 +301,7 @@ export class Contract implements Stream {
 
   unlocked(
     currentTimestamp: number,
+    decimals: number
   ): BN {
     if (currentTimestamp < this.cliff) return new BN(0);
     if (currentTimestamp > this.end) return this.depositedAmount;
@@ -309,7 +312,7 @@ export class Contract implements Stream {
       )
     );
 
-    return streamed < this.depositedAmount ? streamed : this.depositedAmount;
+    return getNumberFromBN(streamed, decimals) < getNumberFromBN(this.depositedAmount, decimals) ? streamed : this.depositedAmount;
   }
 
   remaining(): BN {
