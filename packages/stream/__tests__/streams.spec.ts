@@ -38,7 +38,7 @@ beforeAll(async () => {
 
   sender = new Wallet(web3.Keypair.generate());
   recipient = new Wallet(web3.Keypair.generate());
-  recipients = [...new Array(30)].map(
+  recipients = [...new Array(10)].map(
     () => new Wallet(web3.Keypair.generate())
   );
   await requestAirdrop(sender, connection);
@@ -159,5 +159,7 @@ test("Can create multiple stremas", async () => {
   };
   const data = newCreateMultipleStreamsPayload(values, sender);
   const response = await streamInstance?.createMultiple(data);
+  const errors = response?.errors;
+  console.log(errors);
   return response;
 }, 600000);
