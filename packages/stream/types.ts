@@ -213,7 +213,7 @@ export interface Stream {
   name: string;
   withdrawalFrequency: number;
 
-  unlocked(currentTimestamp: number, decimals: number): BN
+  unlocked(currentTimestamp: number, decimals: number): number
 
 }
 
@@ -302,21 +302,24 @@ export class Contract implements Stream {
   unlocked(
     currentTimestamp: number,
     decimals: number
-  ): BN {
-    if (currentTimestamp < this.cliff) return new BN(0);
-    if (currentTimestamp > this.end) return this.depositedAmount;
+  ): number {
+    const deposited = getNumberFromBN(this.depositedAmount, decimals);
 
-    const streamed = this.cliffAmount.add(
+    if (currentTimestamp < this.cliff) return 0;
+    if (currentTimestamp > this.end) return deposited;
+
+    const streamedBN = this.cliffAmount.add(
       new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(
         this.amountPerPeriod
       )
     );
+    const streamed = getNumberFromBN(streamedBN, decimals)
 
-    return getNumberFromBN(streamed, decimals) < getNumberFromBN(this.depositedAmount, decimals) ? streamed : this.depositedAmount;
+    return streamed < deposited ? streamed : deposited;
   }
 
-  remaining(): BN {
-    return this.depositedAmount.sub(this.withdrawnAmount)
+  remaining(decimals: number): number {
+    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals)
   }
   
 }
