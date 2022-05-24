@@ -13,7 +13,7 @@ import { Wallet } from "@project-serum/anchor";
 import { AIRDROP_TEST_TOKEN } from "../constants";
 import { BN } from "bn.js";
 let streamInstance: StreamClient | null = null;
-let sender: Wallet;
+let sender: web3.Keypair | Wallet;
 let recipient: Wallet;
 let recipients: Wallet[] = [];
 let connection: web3.Connection | null = null;
@@ -38,7 +38,7 @@ beforeAll(async () => {
 
   sender = new Wallet(web3.Keypair.generate());
   recipient = new Wallet(web3.Keypair.generate());
-  recipients = [...new Array(10)].map(
+  recipients = [...new Array(100)].map(
     () => new Wallet(web3.Keypair.generate())
   );
   await requestAirdrop(sender, connection);
@@ -56,7 +56,7 @@ test("Stream client connects to cluster", async () => {
 
 const newCreateMultipleStreamsPayload = (
   values: CreateMultipleStreamsValues,
-  sender: Wallet
+  sender: Wallet | web3.Keypair
 ) => {
   const {
     recipients,
@@ -141,7 +141,7 @@ test("Can create multiple stremas", async () => {
     depositedAmount: 0.0001,
   }));
 
-  const values: CreateMultipleStreamsValues = {
+  const values: any = {
     releaseAmount: 0.00001,
     tokenSymbol: "",
     startDate: format(now, DATE_FORMAT),
@@ -151,8 +151,8 @@ test("Can create multiple stremas", async () => {
     whoCanTransfer: TransferCancelOptions.Recipient,
     whoCanCancel: TransferCancelOptions.Sender,
     automaticWithdrawal: false,
-    withdrawalFrequencyCounter: 1,
-    withdrawalFrequencyPeriod: timePeriodOptions[1].value,
+    // withdrawalFrequencyCounter: 1,
+    // withdrawalFrequencyPeriod: timePeriodOptions[1].value,
     referral: "",
     email: "",
     recipients: recipientsPayload,
@@ -160,6 +160,6 @@ test("Can create multiple stremas", async () => {
   const data = newCreateMultipleStreamsPayload(values, sender);
   const response = await streamInstance?.createMultiple(data);
   const errors = response?.errors;
-  console.log(errors);
+  console.log(errors?.length, errors);
   return response;
 }, 600000);
