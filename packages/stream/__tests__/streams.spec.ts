@@ -142,7 +142,7 @@ test("Can create multiple stremas", async () => {
   }));
 
   const values: any = {
-    releaseAmount: 0.0000001,
+    releaseAmount: 0.00001,
     tokenSymbol: "",
     startDate: format(now, DATE_FORMAT),
     startTime: format(add(now, { minutes: 5 }), TIME_FORMAT),
