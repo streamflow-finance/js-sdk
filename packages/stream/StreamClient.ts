@@ -20,6 +20,7 @@ import {
   Commitment,
   ConnectionConfig,
   sendAndConfirmRawTransaction,
+  BlockheightBasedTransactionConfimationStrategy,
 } from "@solana/web3.js";
 
 import {
@@ -61,6 +62,7 @@ import {
 } from "./instructions";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { sleep } from "@project-serum/common";
+import { encode } from "@project-serum/anchor/dist/cjs/utils/bytes/bs58";
 
 export default class StreamClient {
   private connection: Connection;
@@ -236,6 +238,24 @@ export default class StreamClient {
   public async createMultiple(
     data: CreateMultiParams
   ): Promise<CreateMultiResponse> {
+    const { sender } = data;
+
+    if (isKeypair(sender)) {
+      return this.createMultipleStreamForKeypair(data);
+    }
+    if (isAnchorWallet(sender)) {
+      return this.createMultipleStreamForWallet(data);
+    }
+    return Promise.reject(
+      new Error(
+        `Invalid sender type. Expected Keypair or AnchorWallet, got ${typeof sender}`
+      )
+    );
+  }
+
+  private async createMultipleStreamForWallet(
+    data: CreateMultiParams
+  ): Promise<CreateMultiResponse> {
     const { sender, recipientsData } = data;
 
     const metadatas = [];
@@ -243,17 +263,21 @@ export default class StreamClient {
     const errors = [];
     const signatures: string[] = [];
     //Put all recipient data to chunks to avoid recent blockhash error
-    const chunkSize = 10;
-    const chunkes = [];
 
     //Batch is the object that creates assosiation between transaction and recipient
     //It is used to create error messages when a transaction fails and link to recipient address so client could rerun this transaction with the same recipient
     const batch: BatchItem[] = [];
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+    let hash = await this.connection.getLatestBlockhash(commitment);
 
     for (const recipientData of recipientsData) {
       const { tx, metadata } = await this.prepareStreamTransaction(
         recipientData,
-        data
+        data,
+        hash
       );
 
       const metadataPubKey = metadata.publicKey.toBase58();
@@ -263,15 +287,81 @@ export default class StreamClient {
       batch.push({ tx, recipient: recipientData.recipient });
     }
 
-    for (let i = 0; i < batch.length; i += chunkSize) {
-      const chunk = batch.slice(i, i + chunkSize);
+    //Extract tx from batch item and sign it
+    let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
+      sender,
+      batch
+    );
+
+    //send all transactions in parallel and wait for them to settle.
+    //it allows to speed up the process of sending transactions
+    //we then filter all promise responses and handle failed transactions
+    const batchTransactionsCalls = signed_batch.map((el) =>
+      sendAndConfirmStreamRawTransaction(this.connection, el)
+    );
+    const responses = await Promise.allSettled(batchTransactionsCalls);
+
+    const successes = responses
+      .filter(
+        (el): el is PromiseFulfilledResult<BatchItemSuccess> =>
+          el.status === "fulfilled"
+      )
+      .map((el) => el.value);
+    signatures.push(...successes.map((el) => el.signature));
+
+    const failures = responses
+      .filter((el): el is PromiseRejectedResult => el.status === "rejected")
+      .map((el) => el.reason as BatchItemError);
+    errors.push(...failures);
+    await sleep(100);
+
+    return { txs: signatures, metadatas, metadataToRecipient, errors };
+  }
+  private async createMultipleStreamForKeypair(
+    data: CreateMultiParams
+  ): Promise<CreateMultiResponse> {
+    const { sender, recipientsData } = data;
+
+    const metadatas = [];
+    const metadataToRecipient: MetadataRecipientHashMap = {};
+    const errors = [];
+    const signatures: string[] = [];
+    //Put all recipient data to chunks to avoid recent blockhash error
+    const chunkSize = 20;
+    const chunkes = [];
+
+    for (let i = 0; i < recipientsData.length; i += chunkSize) {
+      const chunk = recipientsData.slice(i, i + chunkSize);
       chunkes.push(chunk);
     }
     for (const chunk of chunkes) {
+      //Batch is the object that creates assosiation between transaction and recipient
+      //It is used to create error messages when a transaction fails and link to recipient address so client could rerun this transaction with the same recipient
+      const batch: BatchItem[] = [];
+      const commitment =
+        typeof this.commitment == "string"
+          ? this.commitment
+          : this.commitment.commitment;
+      let hash = await this.connection.getLatestBlockhash(commitment);
+
+      for (const recipientData of chunk) {
+        const { tx, metadata } = await this.prepareStreamTransaction(
+          recipientData,
+          data,
+          hash
+        );
+
+        const metadataPubKey = metadata.publicKey.toBase58();
+        metadataToRecipient[metadataPubKey] = recipientData;
+
+        metadatas.push(metadata);
+        batch.push({ tx, recipient: recipientData.recipient });
+      }
+
       //Extract tx from batch item and sign it
       let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
         sender,
-        chunk
+        batch
       );
 
       //send all transactions in parallel and wait for them to settle.
@@ -299,7 +389,6 @@ export default class StreamClient {
 
     return { txs: signatures, metadatas, metadataToRecipient, errors };
   }
-
   /**
    * Attempts withdrawal from the specified stream.
    * @param {WithdrawParams} data
@@ -627,7 +716,11 @@ export default class StreamClient {
    */
   private async prepareStreamTransaction(
     recipient: MultiRecipient,
-    streamParams: CreateMultiParams
+    streamParams: CreateMultiParams,
+    hash: Readonly<{
+      blockhash: string;
+      lastValidBlockHeight: number;
+    }>
   ) {
     const {
       sender,
@@ -645,10 +738,7 @@ export default class StreamClient {
       partner = null,
     } = streamParams;
     let ixs: TransactionInstruction[] = [];
-    const commitment =
-      typeof this.commitment == "string"
-        ? this.commitment
-        : this.commitment.commitment;
+
     const recipientPublicKey = new PublicKey(recipient.recipient);
     const mintPublicKey = new PublicKey(mint);
     const metadata = Keypair.generate();
@@ -713,12 +803,13 @@ export default class StreamClient {
         }
       )
     );
-    let hash = await this.connection.getRecentBlockhash(commitment);
-    let tx = new Transaction({
+    let tx: TransactionWithId = new Transaction({
       feePayer: sender.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
     tx.partialSign(metadata);
+    tx.id = Math.floor(Math.random() * 999999).toString();
     return { tx, metadata };
   }
 }
@@ -753,10 +844,15 @@ async function ata(mint: PublicKey, account: PublicKey) {
 function isAnchorWallet(wallet: Keypair | Wallet): wallet is Wallet {
   return (<Wallet>wallet).signTransaction !== undefined;
 }
+function isKeypair(keypair: Keypair | Wallet): keypair is Keypair {
+  return (<Keypair>keypair).secretKey !== undefined;
+}
+
+type TransactionWithId = web3.Transaction & { id?: string };
 
 interface BatchItem {
   recipient: string;
-  tx: web3.Transaction;
+  tx: TransactionWithId;
 }
 
 interface BatchItemSuccess extends BatchItem {
@@ -772,26 +868,27 @@ async function signAllTransactionWithRecipients(
   batch: BatchItem[]
 ) {
   let signed_batch: BatchItem[] = [];
-  const isKeypair = sender instanceof Keypair;
-  const isWallet = isAnchorWallet(sender);
 
-  if (!isKeypair && !isWallet) return signed_batch;
+  const isSenderKeypair = isKeypair(sender);
+  const isSenderWallet = isAnchorWallet(sender);
 
-  if (isKeypair) {
+  if (!isSenderKeypair && !isSenderWallet) return signed_batch;
+
+  if (isSenderKeypair) {
     signed_batch = batch.map((t) => {
       t.tx.partialSign(sender);
       return { tx: t.tx, recipient: t.recipient };
     });
   }
-  if (isWallet) {
-    const recipientToBlockhashMap = new Map<string, BatchItem>();
+  if (isSenderWallet) {
+    const recipientToIdMap = new Map<string, BatchItem>();
 
     for (const item of batch) {
-      recipientToBlockhashMap.set(item.tx.recentBlockhash!, item);
+      recipientToIdMap.set(item.tx.id ?? "", item);
     }
     const txs = await sender.signAllTransactions(batch.map((t) => t.tx));
     txs.map((tx) => {
-      const item = recipientToBlockhashMap.get(tx.recentBlockhash!);
+      const item = recipientToIdMap.get((tx as TransactionWithId).id ?? "");
       if (item) {
         signed_batch.push({
           tx,
@@ -809,8 +906,22 @@ async function sendAndConfirmStreamRawTransaction(
 ): Promise<BatchItemSuccess | BatchItemError> {
   try {
     const rawTx = batchItem.tx.serialize();
-    const signature = await sendAndConfirmRawTransaction(connection, rawTx);
-    return { ...batchItem, signature };
+    const { lastValidBlockHeight, signature, recentBlockhash } = batchItem.tx;
+    if (!lastValidBlockHeight || !signature || !recentBlockhash)
+      throw { recipient: batchItem.recipient, error: "no recent blockhash" };
+
+    const confirmationStrategy: BlockheightBasedTransactionConfimationStrategy =
+      {
+        lastValidBlockHeight,
+        signature: encode(signature),
+        blockhash: recentBlockhash,
+      };
+    const completedTxSignature = await sendAndConfirmRawTransaction(
+      connection,
+      rawTx,
+      confirmationStrategy
+    );
+    return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
     throw { recipient: batchItem.recipient, error };
   }

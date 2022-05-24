@@ -13,7 +13,7 @@ import { Wallet } from "@project-serum/anchor";
 import { AIRDROP_TEST_TOKEN } from "../constants";
 import { BN } from "bn.js";
 let streamInstance: StreamClient | null = null;
-let sender: Wallet;
+let sender: web3.Keypair | Wallet;
 let recipient: Wallet;
 let recipients: Wallet[] = [];
 let connection: web3.Connection | null = null;
@@ -36,12 +36,12 @@ beforeAll(async () => {
   );
   connection = new web3.Connection(web3.clusterApiUrl(), "confirmed");
 
-  sender = new Wallet(web3.Keypair.generate());
+  sender = web3.Keypair.generate();
   recipient = new Wallet(web3.Keypair.generate());
-  recipients = [...new Array(30)].map(
+  recipients = [...new Array(100)].map(
     () => new Wallet(web3.Keypair.generate())
   );
-  await requestAirdrop(sender, connection);
+  await requestAirdrop(new Wallet(sender), connection);
 }, 100000);
 
 test("Sender wallet airdropped funds", async () => {
@@ -56,7 +56,7 @@ test("Stream client connects to cluster", async () => {
 
 const newCreateMultipleStreamsPayload = (
   values: CreateMultipleStreamsValues,
-  sender: Wallet
+  sender: Wallet | web3.Keypair
 ) => {
   const {
     recipients,
@@ -138,11 +138,11 @@ test("Can create multiple stremas", async () => {
     recipient: recipient.publicKey.toBase58(),
     recipientEmail: "",
     name: "Recipient " + i,
-    depositedAmount: 0.0001,
+    depositedAmount: 0.00001,
   }));
 
-  const values: CreateMultipleStreamsValues = {
-    releaseAmount: 0.00001,
+  const values: any = {
+    releaseAmount: 0.0000001,
     tokenSymbol: "",
     startDate: format(now, DATE_FORMAT),
     startTime: format(add(now, { minutes: 5 }), TIME_FORMAT),
@@ -151,13 +151,15 @@ test("Can create multiple stremas", async () => {
     whoCanTransfer: TransferCancelOptions.Recipient,
     whoCanCancel: TransferCancelOptions.Sender,
     automaticWithdrawal: false,
-    withdrawalFrequencyCounter: 1,
-    withdrawalFrequencyPeriod: timePeriodOptions[1].value,
+    // withdrawalFrequencyCounter: 1,
+    // withdrawalFrequencyPeriod: timePeriodOptions[1].value,
     referral: "",
     email: "",
     recipients: recipientsPayload,
   };
   const data = newCreateMultipleStreamsPayload(values, sender);
   const response = await streamInstance?.createMultiple(data);
+  const errors = response?.errors;
+  console.log(errors?.length, errors);
   return response;
 }, 600000);
