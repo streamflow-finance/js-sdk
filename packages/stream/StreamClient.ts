@@ -42,8 +42,9 @@ import {
   TxResponse,
   MetadataRecipientHashMap,
   MultiRecipient,
+  Contract
 } from "./types";
-import { decodeStream, formatDecodedStream } from "./utils";
+import { decodeStream } from "./utils";
 import {
   PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
@@ -76,16 +77,24 @@ export default class StreamClient {
   constructor(
     clusterUrl: string,
     cluster: ClusterExtended = Cluster.Mainnet,
-    commitment: Commitment | ConnectionConfig = "confirmed"
+    commitment: Commitment | ConnectionConfig = "confirmed",
+    programId: string = ""
   ) {
     this.commitment = commitment;
     this.cluster = cluster;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = new PublicKey(PROGRAM_ID[cluster]);
+    if (programId != "") {
+      this.programId = new PublicKey(programId);
+    }
   }
 
   public getConnection() {
     return this.connection;
+  }
+
+  public getProgramId(): string {
+    return this.programId.toBase58();
   }
 
   /**
@@ -631,7 +640,7 @@ export default class StreamClient {
       throw new Error("Couldn't get account info.");
     }
 
-    return formatDecodedStream(decodeStream(escrow?.data));
+    return new Contract(decodeStream(escrow?.data));
   }
 
   /**
@@ -679,7 +688,7 @@ export default class StreamClient {
     let streams: { [s: string]: any } = {};
 
     accounts.forEach((account) => {
-      const decoded = formatDecodedStream(decodeStream(account.account.data));
+      const decoded = new Contract(decodeStream(account.account.data));
       streams = { ...streams, [account.pubkey.toBase58()]: decoded };
     });
 
