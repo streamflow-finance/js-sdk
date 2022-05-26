@@ -576,13 +576,13 @@ export default class StreamClient {
         this.connection,
         wallet,
         STREAM_STRUCT_OFFSET_SENDER,
-        this.cluster
+        this.programId
       );
       const incomingAccounts = await getProgramAccounts(
         this.connection,
         wallet,
         STREAM_STRUCT_OFFSET_RECIPIENT,
-        this.cluster
+        this.programId
       );
       accounts = [...outgoingAccounts, ...incomingAccounts];
     } else {
@@ -594,7 +594,7 @@ export default class StreamClient {
         this.connection,
         wallet,
         offset,
-        this.cluster
+        this.programId
       );
     }
 
@@ -739,9 +739,9 @@ async function getProgramAccounts(
   connection: Connection,
   wallet: PublicKey,
   offset: number,
-  cluster: ClusterExtended = Cluster.Mainnet
+  programId: PublicKey
 ): Promise<Account[]> {
-  return connection?.getProgramAccounts(new PublicKey(PROGRAM_ID[cluster]), {
+  return connection?.getProgramAccounts(programId, {
     filters: [
       {
         memcmp: {
