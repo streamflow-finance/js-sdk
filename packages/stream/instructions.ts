@@ -114,6 +114,7 @@ export const createStreamInstruction = (
   bufferData = Buffer.concat([
     Buffer.from(sha256.digest("global:create")).slice(0, 8),
     bufferData,
+    Buffer.alloc(10)
   ]);
 
   return new TransactionInstruction({
@@ -179,6 +180,7 @@ export const withdrawStreamInstruction = (
   data = Buffer.concat([
     Buffer.from(sha256.digest("global:withdraw")).slice(0, 8),
     data,
+    Buffer.alloc(10)
   ]);
 
   return new TransactionInstruction({
@@ -242,7 +244,10 @@ export const cancelStreamInstruction = (
     { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.from(sha256.digest("global:cancel")).slice(0, 8);
+  const data = Buffer.concat([
+    Buffer.from(sha256.digest("global:cancel")).slice(0, 8),
+    Buffer.alloc(10),
+  ]);
 
   return new TransactionInstruction({
     keys,
@@ -289,10 +294,10 @@ export const transferStreamInstruction = (
     { pubkey: systemProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.from(sha256.digest("global:transfer_recipient")).slice(
-    0,
-    8
-  );
+  const data = Buffer.concat([
+    Buffer.from(sha256.digest("global:transfer_recipient")).slice(0, 8),
+    Buffer.alloc(10),
+  ]);
 
   return new TransactionInstruction({
     keys,
@@ -361,6 +366,7 @@ export const topupStreamInstruction = (
   data = Buffer.concat([
     Buffer.from(sha256.digest("global:topup")).slice(0, 8),
     data,
+    Buffer.alloc(10)
   ]);
 
   return new TransactionInstruction({
