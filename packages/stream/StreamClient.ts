@@ -42,7 +42,7 @@ import {
   TxResponse,
   MetadataRecipientHashMap,
   MultiRecipient,
-  Contract
+  Contract,
 } from "./types";
 import { decodeStream } from "./utils";
 import {
@@ -212,15 +212,16 @@ export default class StreamClient {
         ? this.commitment
         : this.commitment.commitment;
 
-    let hash = await this.connection.getRecentBlockhash(commitment);
+    let hash = await this.connection.getLatestBlockhash(commitment);
     let tx = new Transaction({
       feePayer: sender.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
     tx.partialSign(metadata);
 
-    const signature = await this.sign(sender, tx);
+    const signature = await this.sign(sender, tx, hash);
 
     return { ixs, tx: signature, metadata };
   }
@@ -359,13 +360,14 @@ export default class StreamClient {
       typeof this.commitment == "string"
         ? this.commitment
         : this.commitment.commitment;
-    let hash = await this.connection.getRecentBlockhash(commitment);
+    let hash = await this.connection.getLatestBlockhash(commitment);
     let tx = new Transaction({
       feePayer: invoker.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx);
+    const signature = await this.sign(invoker, tx, hash);
 
     return { ixs, tx: signature };
   }
@@ -416,13 +418,14 @@ export default class StreamClient {
         ? this.commitment
         : this.commitment.commitment;
 
-    let hash = await this.connection.getRecentBlockhash(commitment);
+    let hash = await this.connection.getLatestBlockhash(commitment);
     let tx = new Transaction({
       feePayer: invoker.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx);
+    const signature = await this.sign(invoker, tx, hash);
 
     return { ixs, tx: signature };
   }
@@ -469,14 +472,15 @@ export default class StreamClient {
       typeof this.commitment == "string"
         ? this.commitment
         : this.commitment.commitment;
-    let hash = await this.connection.getRecentBlockhash(commitment);
+    let hash = await this.connection.getLatestBlockhash(commitment);
 
     let tx = new Transaction({
       feePayer: invoker.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx);
+    const signature = await this.sign(invoker, tx, hash);
 
     return { ixs, tx: signature };
   }
@@ -530,13 +534,14 @@ export default class StreamClient {
       typeof this.commitment == "string"
         ? this.commitment
         : this.commitment.commitment;
-    let hash = await this.connection.getRecentBlockhash(commitment);
+    let hash = await this.connection.getLatestBlockhash(commitment);
     let tx = new Transaction({
       feePayer: invoker.publicKey,
-      recentBlockhash: hash.blockhash,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx);
+    const signature = await this.sign(invoker, tx, hash);
 
     return { ixs, tx: signature };
   }
@@ -616,18 +621,35 @@ export default class StreamClient {
       : sortedStreams.filter((stream) => !stream[1].canTopup);
   }
 
-  private async sign(invoker: any, tx: web3.Transaction) {
-    if (invoker instanceof Keypair) {
-      tx.partialSign(invoker);
-    } else if (invoker?.signTransaction) {
+  private async sign(
+    invoker: any,
+    tx: web3.Transaction,
+    hash: Readonly<{
+      blockhash: string;
+      lastValidBlockHeight: number;
+    }>
+  ) {
+    if (isAnchorWallet(invoker)) {
       await invoker.signTransaction(tx);
+    } else {
+      tx.partialSign(invoker);
     }
 
     const rawTx = tx.serialize();
 
+    if (!hash.lastValidBlockHeight || !tx.signature || !hash.blockhash)
+      throw Error("Error with transaction parameters.");
+
+    const confirmationStrategy: BlockheightBasedTransactionConfimationStrategy =
+      {
+        lastValidBlockHeight: hash.lastValidBlockHeight,
+        signature: encode(tx.signature),
+        blockhash: hash.blockhash,
+      };
     const signature = await sendAndConfirmRawTransaction(
       this.connection,
-      rawTx
+      rawTx,
+      confirmationStrategy
     );
     return signature;
   }
