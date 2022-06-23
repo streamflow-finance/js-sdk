@@ -289,7 +289,7 @@ export default class StreamClient {
     const rentToExempt =
       await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
     const createMetadataInstruction = SystemProgram.createAccount({
-      programId: new PublicKey(STREAMFLOW_PROGRAM_ID),
+      programId: this.programId,
       space: METADATA_ACC_SIZE,
       lamports: rentToExempt,
       fromPubkey: sender?.publicKey,
@@ -357,6 +357,8 @@ export default class StreamClient {
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
+
+    tx.partialSign(metadata);
 
     const signature = await this.sign(sender, tx, hash);
 
