@@ -53,6 +53,7 @@ import {
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
   FEE_ORACLE_PUBLIC_KEY,
+  STREAMFLOW_PROGRAM_ID,
 } from "./constants";
 import {
   withdrawStreamInstruction,
@@ -60,10 +61,13 @@ import {
   transferStreamInstruction,
   topupStreamInstruction,
   createStreamInstruction,
+  createUncheckedStreamInstruction,
 } from "./instructions";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { sleep } from "@project-serum/common";
 import { encode } from "@project-serum/anchor/dist/cjs/utils/bytes/bs58";
+
+const METADATA_ACC_SIZE = 1104;
 
 export default class StreamClient {
   private connection: Connection;
@@ -220,6 +224,139 @@ export default class StreamClient {
     }).add(...ixs);
 
     tx.partialSign(metadata);
+
+    const signature = await this.sign(sender, tx, hash);
+
+    return { ixs, tx: signature, metadata };
+  }
+
+  /**
+   * Creates a new stream/vesting contract using unchecked instruction.
+   *
+   * Unchecked instruction differes from the regular in:
+   * - does not check for initialized associated token account (wallets with no control over their ATA should not be used
+   * as sender/recipient/partner or there are risks of funds being locked in the contract)
+   * - initialized contract PDA off chain
+   *
+   * If you are not sure if you should use create or create_unchecked, go for create to be safer.
+   *
+   * @param {CreateParams} data
+   * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
+   * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
+   * @param {string} data.mint - SPL Token mint.
+   * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
+   * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
+   * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
+   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
+   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
+   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
+   * @param {string} data.name - Stream name/subject.
+   * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
+   * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
+   * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
+   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
+   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
+   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
+   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+   */
+  public async createUnchecked({
+    sender,
+    recipient,
+    mint,
+    start,
+    depositedAmount,
+    period,
+    cliff,
+    cliffAmount,
+    amountPerPeriod,
+    name,
+    canTopup,
+    cancelableBySender,
+    cancelableByRecipient,
+    transferableBySender,
+    transferableByRecipient,
+    automaticWithdrawal = false,
+    withdrawalFrequency = 0,
+    partner = null,
+  }: CreateParams): Promise<CreateResponse> {
+    const mintPublicKey = new PublicKey(mint);
+    const recipientPublicKey = new PublicKey(recipient);
+
+    const metadata = Keypair.generate();
+
+    
+    const rentToExempt =
+      await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
+    const createMetadataInstruction = SystemProgram.createAccount({
+      programId: new PublicKey(STREAMFLOW_PROGRAM_ID),
+      space: METADATA_ACC_SIZE,
+      lamports: rentToExempt,
+      fromPubkey: sender?.publicKey,
+      newAccountPubkey: metadata.publicKey,
+    });
+
+    const [escrowTokens] = await PublicKey.findProgramAddress(
+      [Buffer.from("strm"), metadata.publicKey.toBuffer()],
+      this.programId
+    );
+
+    const senderTokens = await ata(mintPublicKey, sender.publicKey);
+
+    const partnerPublicKey = partner
+      ? new PublicKey(partner)
+      : STREAMFLOW_TREASURY_PUBLIC_KEY;
+
+    const createInstruction = createUncheckedStreamInstruction(
+      {
+        start: new BN(start),
+        depositedAmount,
+        period: new BN(period),
+        amountPerPeriod,
+        cliff: new BN(cliff),
+        cliffAmount,
+        cancelableBySender,
+        cancelableByRecipient,
+        automaticWithdrawal,
+        transferableBySender,
+        transferableByRecipient,
+        canTopup,
+        name,
+        withdrawFrequency: new BN(
+          automaticWithdrawal ? withdrawalFrequency : period
+        ),
+        recipient: recipientPublicKey,
+        partner: partnerPublicKey,
+      },
+      this.programId,
+      {
+        sender: sender.publicKey,
+        senderTokens,
+        metadata: metadata.publicKey,
+        escrowTokens,
+        mint: new PublicKey(mint),
+        feeOracle: FEE_ORACLE_PUBLIC_KEY,
+        rent: SYSVAR_RENT_PUBKEY,
+        timelockProgram: this.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        withdrawor: WITHDRAWOR_PUBLIC_KEY,
+        systemProgram: SystemProgram.programId,
+      }
+    );
+    const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+    let ixs: TransactionInstruction[] = [
+      createMetadataInstruction,
+      createInstruction,
+    ];
+    let hash = await this.connection.getLatestBlockhash(commitment);
+    let tx = new Transaction({
+      feePayer: sender.publicKey,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
+    }).add(...ixs);
 
     const signature = await this.sign(sender, tx, hash);
 
