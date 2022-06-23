@@ -53,7 +53,6 @@ import {
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
   FEE_ORACLE_PUBLIC_KEY,
-  STREAMFLOW_PROGRAM_ID,
 } from "./constants";
 import {
   withdrawStreamInstruction,
