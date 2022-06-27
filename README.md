@@ -266,9 +266,22 @@ try {
 }
 ```
 
+## Handling errors
+
+Protocol returns custom errors on:
+- validation errors
+- state missmatch errors (such as canceling a stream that is complete/already canceled)
+
+Errors are returned per solana specification in hex format such as: 0x60
+
+To interpret these, a public map of protocol errors is available here: https://streamflow.notion.site/Streamflow-protocol-docs-0accad86d5c44e5db84fd4fb49b8ff54#5a4a1be2226f47b8a63b4aac916d1940
+
+
 ## Additional notes
 
 Default import `import Stream from '@streamflow/stream'` is an import of older SDK version that uses Anchor and doesn't support raw instructions, nor multi streams creation.
+
+Streamflow protocol docs -> https://streamflow.notion.site/Streamflow-protocol-docs-0accad86d5c44e5db84fd4fb49b8ff54
 
 Streamflow protocol program ID (devnet): `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
 
