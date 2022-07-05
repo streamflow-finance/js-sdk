@@ -284,7 +284,7 @@ export default class StreamClient {
 
     const metadata = Keypair.generate();
 
-    
+
     const rentToExempt =
       await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
     const createMetadataInstruction = SystemProgram.createAccount({
@@ -392,12 +392,6 @@ export default class StreamClient {
     const metadataToRecipient: MetadataRecipientHashMap = {};
     const errors = [];
     const signatures: string[] = [];
-    //Put all recipient data to chunks to avoid recent blockhash error
-    const chunkSize = 100;
-    const chunkes = [];
-
-    //Batch is the object that creates assosiation between transaction and recipient
-    //It is used to create error messages when a transaction fails and link to recipient address so client could rerun this transaction with the same recipient
     const batch: BatchItem[] = [];
 
     for (const recipientData of recipientsData) {
@@ -413,15 +407,9 @@ export default class StreamClient {
       batch.push({ tx, recipient: recipientData.recipient });
     }
 
-    for (let i = 0; i < batch.length; i += chunkSize) {
-      const chunk = batch.slice(i, i + chunkSize);
-      chunkes.push(chunk);
-    }
-    for (const chunk of chunkes) {
-      //Extract tx from batch item and sign it
       let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
         sender,
-        chunk
+        batch
       );
 
       //send all transactions in parallel and wait for them to settle.
@@ -444,8 +432,6 @@ export default class StreamClient {
         .filter((el): el is PromiseRejectedResult => el.status === "rejected")
         .map((el) => el.reason as BatchItemError);
       errors.push(...failures);
-      await sleep(100);
-    }
 
     return { txs: signatures, metadatas, metadataToRecipient, errors };
   }
@@ -950,29 +936,14 @@ async function signAllTransactionWithRecipients(
   if (!isKeypair && !isWallet) return signed_batch;
 
   if (isKeypair) {
-    signed_batch = batch.map((t) => {
+    batch.map((t) => {
       t.tx.partialSign(sender);
       return { tx: t.tx, recipient: t.recipient };
     });
+  } else if (isWallet) {
+   await sender.signAllTransactions(batch.map((t) => t.tx));
   }
-  if (isWallet) {
-    const recipientToBlockhashMap = new Map<string, BatchItem>();
-
-    for (const item of batch) {
-      recipientToBlockhashMap.set(item.tx.recentBlockhash!, item);
-    }
-    const txs = await sender.signAllTransactions(batch.map((t) => t.tx));
-    txs.map((tx) => {
-      const item = recipientToBlockhashMap.get(tx.recentBlockhash!);
-      if (item) {
-        signed_batch.push({
-          tx,
-          recipient: item.recipient,
-        });
-      }
-    });
-  }
-  return signed_batch;
+  return batch;
 }
 
 async function sendAndConfirmStreamRawTransaction(
