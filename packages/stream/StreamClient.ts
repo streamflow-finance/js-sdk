@@ -8,6 +8,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   Token,
+  NATIVE_MINT,
 } from "@solana/spl-token";
 import {
   Connection,
@@ -61,6 +62,8 @@ import {
   topupStreamInstruction,
   createStreamInstruction,
   createUncheckedStreamInstruction,
+  createSyncNativeInstruction,
+  prepareWrappedAccount,
 } from "./instructions";
 import { Wallet } from "@project-serum/anchor/src/provider";
 import { sleep } from "@project-serum/common";
@@ -121,6 +124,7 @@ export default class StreamClient {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+   * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async create({
@@ -142,9 +146,10 @@ export default class StreamClient {
     automaticWithdrawal = false,
     withdrawalFrequency = 0,
     partner = null,
+    isNative = false,
   }: CreateParams): Promise<CreateResponse> {
     let ixs: TransactionInstruction[] = [];
-    const mintPublicKey = new PublicKey(mint);
+    const mintPublicKey = isNative ? new PublicKey(mint) : NATIVE_MINT;
     const recipientPublicKey = new PublicKey(recipient);
 
     const metadata = Keypair.generate();
@@ -165,6 +170,10 @@ export default class StreamClient {
       : STREAMFLOW_TREASURY_PUBLIC_KEY;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
+
+    const nativeInstructions = isNative
+      ? await prepareWrappedAccount(this.connection, sender.publicKey, depositedAmount)
+      : [] as TransactionInstruction[];
 
     ixs.push(
       createStreamInstruction(
@@ -220,7 +229,7 @@ export default class StreamClient {
       feePayer: sender.publicKey,
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
+    }).add(...nativeInstructions, ...ixs);
 
     tx.partialSign(metadata);
 
@@ -257,7 +266,8 @@ export default class StreamClient {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+   * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
+  * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async createUnchecked({
     sender,
@@ -278,6 +288,7 @@ export default class StreamClient {
     automaticWithdrawal = false,
     withdrawalFrequency = 0,
     partner = null,
+    isNative = false,
   }: CreateParams): Promise<CreateResponse> {
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
@@ -305,6 +316,10 @@ export default class StreamClient {
     const partnerPublicKey = partner
       ? new PublicKey(partner)
       : STREAMFLOW_TREASURY_PUBLIC_KEY;
+
+    const nativeInstructions = isNative
+      ? await prepareWrappedAccount(this.connection, sender.publicKey, depositedAmount)
+      : [] as TransactionInstruction[];
 
     const createInstruction = createUncheckedStreamInstruction(
       {
@@ -355,7 +370,7 @@ export default class StreamClient {
       feePayer: sender.publicKey,
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
+    }).add(...nativeInstructions, ...ixs);
 
     tx.partialSign(metadata);
 
@@ -381,6 +396,7 @@ export default class StreamClient {
    * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+   * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
    * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async createMultiple(
@@ -407,31 +423,55 @@ export default class StreamClient {
       batch.push({ tx, recipient: recipientData.recipient });
     }
 
-      let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
-        sender,
-        batch
-      );
+    if (data.isNative) {
+      const totalDepositedAmount = recipientsData.reduce((acc, recipient) => recipient.depositedAmount.add(acc), new BN(0));
+      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
 
-      //send all transactions in parallel and wait for them to settle.
-      //it allows to speed up the process of sending transactions
-      //we then filter all promise responses and handle failed transactions
-      const batchTransactionsCalls = signed_batch.map((el) =>
-        sendAndConfirmStreamRawTransaction(this.connection, el)
-      );
-      const responses = await Promise.allSettled(batchTransactionsCalls);
+      const commitment =
+      typeof this.commitment == "string"
+        ? this.commitment
+        : this.commitment.commitment;
+      let hash = await this.connection.getLatestBlockhash(commitment);
+      let prepareTransaction = new Transaction({
+        feePayer: sender.publicKey,
+        blockhash: hash.blockhash,
+        lastValidBlockHeight: hash.lastValidBlockHeight,
+      }).add(...nativeInstructions);
 
-      const successes = responses
-        .filter(
-          (el): el is PromiseFulfilledResult<BatchItemSuccess> =>
-            el.status === "fulfilled"
-        )
-        .map((el) => el.value);
-      signatures.push(...successes.map((el) => el.signature));
+      batch.push({ tx: prepareTransaction, recipient: sender.publicKey.toBase58() });
+    }
 
-      const failures = responses
-        .filter((el): el is PromiseRejectedResult => el.status === "rejected")
-        .map((el) => el.reason as BatchItemError);
-      errors.push(...failures);
+    let signed_batch: BatchItem[] = await signAllTransactionWithRecipients(
+      sender,
+      batch
+    );
+
+    if (data.isNative) {
+      const prepareTx = signed_batch.pop();
+      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!)
+    }
+
+    //send all transactions in parallel and wait for them to settle.
+    //it allows to speed up the process of sending transactions
+    //we then filter all promise responses and handle failed transactions
+    const batchTransactionsCalls = signed_batch.map((el) =>
+      sendAndConfirmStreamRawTransaction(this.connection, el)
+    );
+
+    const responses = await Promise.allSettled(batchTransactionsCalls);
+
+    const successes = responses
+      .filter(
+        (el): el is PromiseFulfilledResult<BatchItemSuccess> =>
+          el.status === "fulfilled"
+      )
+      .map((el) => el.value);
+    signatures.push(...successes.map((el) => el.signature));
+
+    const failures = responses
+      .filter((el): el is PromiseRejectedResult => el.status === "rejected")
+      .map((el) => el.reason as BatchItemError);
+    errors.push(...failures);
 
     return { txs: signatures, metadatas, metadataToRecipient, errors };
   }
@@ -620,6 +660,7 @@ export default class StreamClient {
     invoker,
     id,
     amount,
+    isNative,
   }: TopupParams): Promise<TxResponse> {
     let ixs: TransactionInstruction[] = [];
     const streamPublicKey = new PublicKey(id);
@@ -636,6 +677,10 @@ export default class StreamClient {
       STREAMFLOW_TREASURY_PUBLIC_KEY
     );
     const partnerTokens = await ata(mint, partner);
+
+    const nativeInstructions = isNative
+      ? await prepareWrappedAccount(this.connection, invoker.publicKey, amount)
+      : [] as TransactionInstruction[];
 
     ixs.push(
       topupStreamInstruction(amount, this.programId, {
@@ -663,7 +708,7 @@ export default class StreamClient {
       feePayer: invoker.publicKey,
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
+    }).add(...nativeInstructions, ...ixs);
 
     const signature = await this.sign(invoker, tx, hash);
 

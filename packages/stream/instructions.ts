@@ -1,9 +1,12 @@
 import { Buffer } from "buffer";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 import { sha256 } from "js-sha256";
+import { struct, u8 } from '@solana/buffer-layout';
 
 import * as Layout from "./layout";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { BASE_FEE } from "./constants";
 
 interface CreateStreamData {
   start: BN;
@@ -141,7 +144,7 @@ interface CreateUncheckedStreamData {
   withdrawFrequency: BN;
   recipient: PublicKey;
   partner: PublicKey;
-  
+
 }
 
 interface CreateUncheckedStreamAccounts {
@@ -474,4 +477,50 @@ export const topupStreamInstruction = (
     programId,
     data,
   });
+};
+
+// TODO: Use native createSyncNativeInstruction after migrating to newer @solana/spl-token
+const SyncNativeIndex = 17;
+export const syncNativeInstructionData = struct<any>([u8('instruction')]);
+export const createSyncNativeInstruction = (account: PublicKey): TransactionInstruction =>  {
+    const keys = [{ pubkey: account, isSigner: false, isWritable: true }];
+    const data = Buffer.alloc(syncNativeInstructionData.span);
+    syncNativeInstructionData.encode({ instruction: SyncNativeIndex }, data);
+    return new TransactionInstruction({ keys, programId: TOKEN_PROGRAM_ID, data });
+}
+
+export const prepareWrappedAccount = async (connection: Connection, senderAddress: PublicKey, amount: BN): Promise<TransactionInstruction[]> => {
+  const tokenAccount = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    NATIVE_MINT,
+    senderAddress,
+    true
+  );
+
+  const accInfo = await connection.getParsedAccountInfo(tokenAccount);
+
+  const instructions =
+    (accInfo.value?.lamports ?? 0) > 0
+      ? []
+      : [
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            NATIVE_MINT,
+            tokenAccount,
+            senderAddress,
+            senderAddress,
+          ),
+        ];
+
+  return [
+    ...instructions,
+    SystemProgram.transfer({
+      fromPubkey: senderAddress,
+      toPubkey: tokenAccount,
+      lamports: amount.mul(new BN(BASE_FEE)).div(new BN(1000000)).toNumber(),
+    }),
+    createSyncNativeInstruction(tokenAccount),
+  ];
 };

@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "3.0.12",
+  "version": "3.0.13",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "main": "dist/index.js",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
@@ -11,9 +11,9 @@
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
-    "@types/bn.js": "^5.1.0",
-    "date-fns": "^2.28.0",
-    "typescript": "^4.6.4"
+    "@types/bn.js": "5.1.0",
+    "date-fns": "2.28.0",
+    "typescript": "4.6.4"
   },
   "dependencies": {
     "@project-serum/anchor": "^0.16.2",
