@@ -89,11 +89,13 @@ export interface CreateStreamParams extends CreateStreamData {
 export interface CreateParams extends CreateStreamData {
   sender: Wallet | Keypair;
   partner?: string | null;
+  isNative?: boolean;
 }
 
 export interface CreateMultiParams extends CreateMultiData {
   sender: Wallet | Keypair;
   partner?: string | null;
+  isNative?: boolean;
 }
 
 export interface WithdrawStreamData {
@@ -124,6 +126,7 @@ export interface TopupStreamParams extends TopupStreamData {
 
 export interface TopupParams extends TopupStreamData {
   invoker: Wallet | Keypair;
+  isNative?: boolean;
 }
 
 export interface CancelStreamData {
@@ -258,7 +261,7 @@ export class Contract implements Stream {
   withdrawalFrequency: number;
 
   constructor(stream: DecodedStream) {
-    
+
       this.magic = stream.magic.toNumber();
       this.version = stream.version.toNumber();
       this.createdAt = stream.createdAt.toNumber();
@@ -273,7 +276,7 @@ export class Contract implements Stream {
       this.mint = stream.mint.toBase58();
       this.escrowTokens = stream.escrowTokens.toBase58();
       this.streamflowTreasury = stream.streamflowTreasury.toBase58();
-      this.streamflowTreasuryTokens = 
+      this.streamflowTreasuryTokens =
         stream.streamflowTreasuryTokens.toBase58();
       this.streamflowFeeTotal = stream.streamflowFeeTotal;
       this.streamflowFeeWithdrawn = stream.streamflowFeeWithdrawn;
@@ -321,7 +324,7 @@ export class Contract implements Stream {
   remaining(decimals: number): number {
     return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals)
   }
-  
+
 }
 
 export interface DecodedStream {
