@@ -148,6 +148,7 @@ interface CreateUncheckedStreamData {
 }
 
 interface CreateUncheckedStreamAccounts {
+  payer?: PublicKey;
   sender: PublicKey;
   senderTokens: PublicKey;
   metadata: PublicKey;
@@ -179,6 +180,14 @@ export const createUncheckedStreamInstruction = (
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
   ];
+
+  if (accounts.payer) {
+    keys.unshift({
+      pubkey: accounts.payer,
+      isSigner: true,
+      isWritable: true,
+    });
+  }
 
   let bufferData = Buffer.alloc(Layout.createUncheckedStreamLayout.span);
 
@@ -214,8 +223,11 @@ export const createUncheckedStreamInstruction = (
     bufferData
   );
   bufferData = bufferData.slice(0, encodeLength);
+  const digest = accounts.payer
+    ? sha256.digest("global:create_unchecked_with_payer")
+    : sha256.digest("global:create_unchecked");
   bufferData = Buffer.concat([
-    Buffer.from(sha256.digest("global:create_unchecked")).slice(0, 8),
+    Buffer.from(digest).slice(0, 8),
     bufferData,
     Buffer.alloc(10),
   ]);
