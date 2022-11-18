@@ -19,6 +19,7 @@ This package allows you to `create`, `createMultiple`, `withdraw`, `cancel`, `to
 
 You can also `getOne` stream and `get` multiple streams.
 
+Docs: https://streamflow.finance/js-sdk/
 ---
 
 ## Installation
