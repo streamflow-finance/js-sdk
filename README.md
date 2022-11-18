@@ -1,8 +1,6 @@
-Docs: https://streamflow.finance/js-sdk/
-
 # Streamflow
 
-Streamflow is a token distribution platform powered by a streaming payments' protocol.
+Streamflow is a token vesting and streaming payments platform.
 
 There are several ways to use **Streamflow**:
 
