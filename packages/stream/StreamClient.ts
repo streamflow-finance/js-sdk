@@ -950,7 +950,7 @@ async function ata(mint: PublicKey, account: PublicKey) {
     TOKEN_PROGRAM_ID,
     mint,
     account,
-      true
+    true
   );
 }
 
