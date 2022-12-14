@@ -1,11 +1,5 @@
-export { default } from "./Stream";
+export * as StreamflowSolana from "./solana";
+export * as StreamflowAptos from "./aptos";
 
-export { default as StreamClient } from "./StreamClient";
-
-export * from "./utils";
-
-export * from "./types";
-
-export * from "./instructions";
-
-export { default as BN } from "bn.js";
+export * as Types from "./common/types";
+export * from "./common/utils";
