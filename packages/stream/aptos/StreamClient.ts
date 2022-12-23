@@ -1,29 +1,34 @@
 import { AptosAccount, Types } from "aptos";
 
-import { GenericStreamClient } from "../common/StreamClient";
+import { BaseStreamClient } from "../common/BaseStreamClient";
 import {
   ICancelData,
   ICluster,
   ICreateMultipleStreamData,
   ICreateStreamData,
+  IRecipient,
   ITopUpData,
   ITransferData,
   IWithdrawData,
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
-import { ICreateStreamAptosExt, ITransactionAptosExt, ITransactionResult } from "./types";
+import {
+  CreateMultiError,
+  ICreateStreamAptosExt,
+  IMultiTransactionResult,
+  ITransactionAptosExt,
+  ITransactionResult,
+} from "./types";
 
-export default class AptosStreamClient extends GenericStreamClient {
+export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;
 
   private maxGas: string;
 
-  constructor(cluster: ICluster, maxGas = "10000", programId?: string) {
+  constructor(cluster: ICluster = ICluster.Mainnet, maxGas = "10000", programId?: string) {
     super();
 
-    this.programId = programId
-      ? programId
-      : APTOS_PROGRAM_IDS[cluster] || APTOS_PROGRAM_IDS[ICluster.Mainnet];
+    this.programId = programId ? programId : APTOS_PROGRAM_IDS[cluster];
 
     this.maxGas = maxGas;
   }
@@ -34,29 +39,27 @@ export default class AptosStreamClient extends GenericStreamClient {
   ): Promise<ITransactionResult> {
     const acc = new AptosAccount(); // Generate random address as seeds for derriving "escrow" account
     const seeds = acc.address().hex();
-    const strmEncoded: ArrayBuffer = new TextEncoder().encode("STRM");
-    const name: string = Buffer.from(strmEncoded).toString("hex");
     const payload = {
       type: "create",
       function: `${this.programId}::protocol::create`,
       type_arguments: [streamData.tokenId],
       arguments: [
         seeds,
-        streamData.amount,
+        streamData.amount.toString(),
         streamData.period,
-        streamData.amountPerPeriod,
+        streamData.amountPerPeriod.toString(),
         streamData.start,
-        streamData.cliffAmount,
+        streamData.cliffAmount.toString(),
         streamData.cancelableBySender,
         streamData.cancelableByRecipient,
         streamData.transferableBySender,
         streamData.transferableByRecipient,
         streamData.canTopup,
-        streamData.canPause,
-        streamData.canUpdateRate,
-        streamData.automaticWithdrawal,
-        streamData.withdrawalFrequency,
-        name,
+        streamData.canPause || false,
+        streamData.canUpdateRate || false,
+        streamData.automaticWithdrawal || false,
+        streamData.withdrawalFrequency || 0,
+        streamData.name,
         streamData.recipient,
       ],
     };
@@ -69,18 +72,38 @@ export default class AptosStreamClient extends GenericStreamClient {
   public async createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
     { senderWallet }: ICreateStreamAptosExt
-  ): Promise<ITransactionResult[]> {
+  ): Promise<IMultiTransactionResult> {
     const payloads = this.generateMultiPayloads(multipleStreamData);
 
-    const ids: { txId: string }[] = [];
+    const txs: string[] = [];
+    const metadatas: string[] = [];
+    const metadataToRecipient: Record<string, IRecipient> = {};
+    const errors: CreateMultiError[] = [];
 
-    for (const payload of payloads) {
-      const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    for (let i = 0; i < payloads.length; i++) {
+      const payload = payloads[i];
+      const recipient = multipleStreamData.recipients[i];
+      try {
+        const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-      ids.push({ txId: hash });
+        txs.push(hash);
+      } catch (e: any) {
+        errors.push({
+          error: e?.toString() ?? "Unkown error!",
+          recipient: recipient.recipient,
+        });
+      } finally {
+        const metadataId = (payload as any).arguments[0];
+        metadatas.push(metadataId);
+        metadataToRecipient[metadataId] = recipient;
+      }
     }
-
-    return ids;
+    return {
+      txs,
+      metadatas,
+      metadataToRecipient,
+      errors,
+    };
   }
 
   public async withdraw(
@@ -165,29 +188,27 @@ export default class AptosStreamClient extends GenericStreamClient {
     return multipleStreamData.recipients.map((recipient) => {
       const acc = new AptosAccount(); // Generate random address as seeds for derriving "escrow" account
       const seeds = acc.address().hex();
-      const strmEncoded: ArrayBuffer = new TextEncoder().encode("STRM");
-      const name: string = Buffer.from(strmEncoded).toString("hex");
       return {
         type: "create",
         function: `${this.programId}::protocol::create`,
         type_arguments: [multipleStreamData.tokenId],
         arguments: [
           seeds,
-          recipient.amount,
+          recipient.amount.toString(),
           multipleStreamData.period,
-          recipient.amountPerPeriod,
+          recipient.amountPerPeriod.toString(),
           multipleStreamData.start,
-          recipient.cliffAmount,
+          recipient.cliffAmount.toString(),
           multipleStreamData.cancelableBySender,
           multipleStreamData.cancelableByRecipient,
           multipleStreamData.transferableBySender,
           multipleStreamData.transferableByRecipient,
           multipleStreamData.canTopup,
-          multipleStreamData.canPause,
-          multipleStreamData.canUpdateRate,
-          multipleStreamData.automaticWithdrawal,
-          multipleStreamData.withdrawalFrequency,
-          name,
+          multipleStreamData.canPause || false,
+          multipleStreamData.canUpdateRate || false,
+          multipleStreamData.automaticWithdrawal || false,
+          multipleStreamData.withdrawalFrequency || 0,
+          recipient.name,
           recipient.recipient,
         ],
       };

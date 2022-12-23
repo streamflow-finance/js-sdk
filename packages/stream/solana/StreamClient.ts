@@ -74,11 +74,11 @@ import {
   StreamDirection,
   StreamType,
 } from "../common/types";
-import { GenericStreamClient } from "../common/StreamClient";
+import { BaseStreamClient } from "../common/BaseStreamClient";
 
 const METADATA_ACC_SIZE = 1104;
 
-export default class SolanaStreamClient extends GenericStreamClient {
+export default class SolanaStreamClient extends BaseStreamClient {
   private connection: Connection;
 
   private programId: PublicKey;

@@ -8,7 +8,7 @@ import {
   IGetOneData,
 } from "./types";
 
-export abstract class GenericStreamClient {
+export abstract class BaseStreamClient {
   public abstract create(
     streamData: ICreateStreamData,
     ...chainSpecificParams: any[]

@@ -72,3 +72,8 @@ export enum StreamType {
   Vesting = "vesting",
   All = "all",
 }
+
+export enum IChain {
+  Solana = "Solana",
+  Aptos = "Aptos",
+}

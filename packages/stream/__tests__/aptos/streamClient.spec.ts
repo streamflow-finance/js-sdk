@@ -77,11 +77,11 @@ describe("AptosStreamClient", () => {
       delete callParam.arguments;
       args.shift();
       expect(args).toEqual([
-        mockRecipient.amount,
+        mockRecipient.amount.toString(),
         100,
-        mockRecipient.amountPerPeriod,
+        mockRecipient.amountPerPeriod.toString(),
         10,
-        mockRecipient.cliffAmount,
+        mockRecipient.cliffAmount.toString(),
         true,
         false,
         false,
@@ -91,7 +91,7 @@ describe("AptosStreamClient", () => {
         false,
         false,
         10,
-        "5354524d",
+        "test name",
         "0xtest",
       ]);
       expect(callParam).toEqual({
