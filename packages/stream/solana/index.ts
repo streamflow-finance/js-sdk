@@ -1,4 +1,4 @@
-export { default } from "./StreamClient";
+export { default, default as SolanaStreamClient } from "./StreamClient";
 
 export * from "./utils";
 

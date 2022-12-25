@@ -159,7 +159,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     }
 
     const ixs: TransactionInstruction[] = [];
-    const mintPublicKey = isNative ? new PublicKey(mint) : NATIVE_MINT;
+    const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
 
     const metadata = Keypair.generate();
@@ -403,9 +403,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const metadatas = [];
+    const metadatas: Keypair[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
-    const errors = [];
+    const errors: BatchItemError[] = [];
     const signatures: string[] = [];
     const batch: BatchItem[] = [];
 
