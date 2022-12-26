@@ -1,4 +1,4 @@
-import { AptosAccount, Types } from "aptos";
+import { AptosAccount, Types, AptosClient } from "aptos";
 
 import { BaseStreamClient } from "../common/BaseStreamClient";
 import {
@@ -6,6 +6,7 @@ import {
   ICluster,
   ICreateMultipleStreamData,
   ICreateStreamData,
+  IGetOneData,
   IRecipient,
   ITopUpData,
   ITransferData,
@@ -13,11 +14,13 @@ import {
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
 import {
+  Contract,
   CreateMultiError,
   ICreateStreamAptosExt,
   IMultiTransactionResult,
   ITransactionAptosExt,
   ITransactionResult,
+  StreamResource,
 } from "./types";
 
 export default class AptosStreamClient extends BaseStreamClient {
@@ -25,12 +28,21 @@ export default class AptosStreamClient extends BaseStreamClient {
 
   private maxGas: string;
 
-  constructor(cluster: ICluster = ICluster.Mainnet, maxGas = "10000", programId?: string) {
+  private client: AptosClient;
+
+  constructor(
+    clusterUrl: string,
+    cluster: ICluster = ICluster.Mainnet,
+    maxGas = "10000",
+    programId?: string
+  ) {
     super();
 
     this.programId = programId ? programId : APTOS_PROGRAM_IDS[cluster];
 
     this.maxGas = maxGas;
+
+    this.client = new AptosClient(clusterUrl);
   }
 
   public async create(
@@ -170,8 +182,21 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { txId: hash };
   }
 
-  public async getOne(): Promise<any> {
-    throw new Error("Not implemented.");
+  public async getOne({ id }: IGetOneData): Promise<any> {
+    const contractResources = await this.client.getAccountResources(id);
+
+    const contract = contractResources.find((r) => r.type.includes("protocol::Contract"));
+
+    if (!contract) {
+      throw new Error(`Contract with id ${id} could not be found!`);
+    }
+
+    const tokenIdMatch = contract.type.match(/0x[0-9a-f]+::protocol::Contract<(.*)>/);
+    const tokenId = tokenIdMatch?.[1] ?? "";
+
+    const { data } = contract;
+
+    return [id, new Contract(data as unknown as StreamResource, tokenId)];
   }
 
   public getProgramId() {

@@ -14,7 +14,7 @@ describe("AptosStreamClient", () => {
     it("should correctly set passed params", () => {
       const pid = "PID";
       const gas = "30";
-      const instance = new AptosStreamClient(ICluster.Devnet, gas, pid);
+      const instance = new AptosStreamClient("https://cluster", ICluster.Devnet, gas, pid);
 
       expect(instance.getMaxGas()).toEqual({ max_gas_amount: gas });
       expect(instance.getProgramId()).toBe(pid);
@@ -24,10 +24,10 @@ describe("AptosStreamClient", () => {
   describe("create", () => {
     const pid = "PID";
     const gas = "30";
-    let instance = new AptosStreamClient(ICluster.Devnet, gas, pid);
+    let instance = new AptosStreamClient("https://cluster", ICluster.Devnet, gas, pid);
 
     beforeEach(() => {
-      instance = new AptosStreamClient(ICluster.Devnet, gas, pid);
+      instance = new AptosStreamClient("https://cluster", ICluster.Devnet, gas, pid);
     });
 
     test("should create a stream with passed parameters", async () => {

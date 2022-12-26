@@ -20,13 +20,14 @@ import { ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
 export interface SolanaStreamClientOptions {
   chain: IChain.Solana;
   clusterUrl: string;
-  commitment?: Commitment | ConnectionConfig;
   cluster?: ICluster;
   programId?: string;
+  commitment?: Commitment | ConnectionConfig;
 }
 
 export interface AptosStreamClientOptions {
   chain: IChain.Aptos;
+  clusterUrl: string;
   cluster?: ICluster;
   programId?: string;
   maxGas?: string;
@@ -53,6 +54,7 @@ export default class GenericStreamClient extends BaseStreamClient {
       );
     } else {
       this.nativeStreamClient = new AptosStreamClient(
+        options.clusterUrl,
         options.cluster,
         options.maxGas,
         options.programId
