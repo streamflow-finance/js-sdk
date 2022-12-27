@@ -14,8 +14,21 @@ import {
   ITransferData,
   IWithdrawData,
 } from "./types";
-import { ICreateStreamSolanaExt, IInteractStreamSolanaExt, ITopUpStreamSolanaExt } from "../solana";
-import { ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
+import {
+  CreateMultiResponse,
+  CreateResponse,
+  ICreateStreamSolanaExt,
+  IInteractStreamSolanaExt,
+  ITopUpStreamSolanaExt,
+  Stream,
+  TxResponse,
+} from "../solana";
+import {
+  ICreateStreamAptosExt,
+  IMultiTransactionResult,
+  ITransactionAptosExt,
+  ITransactionResult,
+} from "../aptos";
 
 export interface SolanaStreamClientOptions {
   chain: IChain.Solana;
@@ -62,10 +75,13 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
+  /**
+   * Creates a new stream/vesting contract.
+   */
   public create(
     streamData: ICreateStreamData,
     chainSpecificParams: ICreateStreamAptosExt | ICreateStreamSolanaExt
-  ) {
+  ): Promise<CreateResponse | ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <ICreateStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.create(streamData, params);
@@ -75,10 +91,13 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
+  /**
+   * Creates multiple stream/vesting contracts.
+   */
   public createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
     chainSpecificParams: ICreateStreamAptosExt | ICreateStreamSolanaExt
-  ) {
+  ): Promise<CreateMultiResponse | IMultiTransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <ICreateStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.createMultiple(multipleStreamData, params);
@@ -88,10 +107,13 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
+  /**
+   * Attempts withdrawing from the specified stream.
+   */
   public withdraw(
     withdrawData: IWithdrawData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ) {
+  ): Promise<TxResponse | ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.withdraw(withdrawData, params);
@@ -101,10 +123,13 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
+  /**
+   * Attempts canceling the specified stream.
+   */
   public cancel(
     cancelData: ICancelData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ) {
+  ): Promise<TxResponse | ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.cancel(cancelData, params);
@@ -114,10 +139,13 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
+  /**
+   * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
+   */
   public transfer(
     transferData: ITransferData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ) {
+  ): Promise<TxResponse | ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.transfer(transferData, params);
@@ -127,10 +155,13 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
+  /**
+   * Tops up stream account with specified amount.
+   */
   public topup(
     topupData: ITopUpData,
     chainSpecificParams: ITransactionAptosExt | ITopUpStreamSolanaExt
-  ) {
+  ): Promise<TxResponse | ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <ITopUpStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.topup(topupData, params);
@@ -140,7 +171,10 @@ export default class GenericStreamClient extends BaseStreamClient {
     }
   }
 
-  public getOne(getOneData: IGetOneData) {
+  /**
+   * Fetch stream data by its id (address).
+   */
+  public getOne(getOneData: IGetOneData): Promise<Stream> {
     return this.nativeStreamClient.getOne(getOneData);
   }
 }

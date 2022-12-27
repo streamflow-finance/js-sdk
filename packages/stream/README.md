@@ -25,9 +25,12 @@ You can also `getOne` stream and `get` multiple streams.
 
 ## Installation
 
-`npm i @streamflow/stream @solana/web3.js @project-serum/anchor`
+`npm i -s @streamflow/stream`
 
-> _Anchor is needed for the `Wallet` type. We plan on removing this dependency in upcoming releases._
+or
+
+`yarn add @streamflow/stream`
+
 
 ## Import SDK
 
@@ -35,21 +38,10 @@ Most common imports:
 
 ```javascript
 import {
-    StreamClient,
-    Stream,
-    CreateParams,
-    CreateMultiParams,
-    WithdrawParams,
-    TransferParams,
-    TopupParams,
-    CancelParams,
-    GetAllParams,
-    StreamDirection,
-    StreamType,
-    Cluster,
-    TxResponse,
-    CreateResponse,
-    BN,
+    GenericStreamClient,
+    StreamflowSolana,
+    StreamflowAptos,
+    Types,
     getBN,
     getNumberFromBN,
 } from "@streamflow/stream";
@@ -59,45 +51,82 @@ _Check the SDK for other types and utility functions._
 
 ## Create StreamClient instance
 
-Before creating and manipulating streams StreamClient instance must be created.
+Before creating and manipulating streams chain specific or generic StreamClient instance must be created.
 All streams functions are methods on this instance.
 
+### Solana
 ```javascript
-import { StreamClient } from "@streamflow/stream";
+import { StreamflowSolana, Types } from "@streamflow/stream";
 
-const StreamClient = new StreamClient(
-    "https://api.mainnet-beta.solana.com",
-    Cluster.Mainnet,
-    "confirmed"
+const streamClient = new StreamflowSolana.SolanaStreamClient(
+    "https://api.mainnet-beta.solana.com", // RPC cluster URL
+    Types.ICluster.Mainnet, // (optional) (default: Mainnet) Solana cluster
+    "confirmed", // (optional) (default: confirmed) Transaction commitment
 );
 ```
+### Aptos
+```javascript
+import { StreamflowAptos, Types } from "@streamflow/stream";
 
+const StreamClient = new StreamflowAptos.AptosStreamClient(
+    "https://fullnode.mainnet.aptoslabs.com/v1", // RPC cluster URL
+    Types.ICluster.Mainnet, // (optional) (default: Mainnet) Aptos cluster
+    "10000", // (optional) (default: "10000") maxGas for transactions
+);
+```
+### Generic Stream Client
+Provides isomorphic interface to work with streams agnostic of chain.
+```javascript
+import { GenericStreamClient, Types } from "@streamflow/stream";
+
+const StreamClient = new StreamClient({
+    chain: Types.IChain.Aptos, // Blockchain
+    clusterUrl: "https://fullnode.mainnet.aptoslabs.com/v1", // RPC cluster URL
+    cluster: Types.ICluster.Mainnet, // (optional) (default: Mainnet)
+    // ...rest chain specific params e.g. commitment for Solana
+});
+```
+
+All the examples below will contain generic method options descriptions and chain specific params.
+
+
+> NOTE: All timestamp parameters are in seconds.
 ## Create stream
 
 ```javascript
 const createStreamParams = {
-    sender: wallet, // Wallet/Keypair signing the transaction, creating and sending the stream.
-    recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
-    mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
-    start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
-    depositedAmount: getBN(1000000000000, 9), // Deposited amount of tokens (using smallest denomination).
-    period: 1, // Time step (period) in seconds per which the unlocking occurs.
+    tokenId: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL token mint or Aptos Coin type
+    recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Recipient address (base58 string for Solana)
+    amount: getBN(1_000_000, 9), // Deposited amount of tokens (using smallest denomination).
+    amountPerPeriod: getBN(1_000, 9), // Release rate: how many tokens are unlocked per each period.
     cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-    cliffAmount: new BN(100000000000), // Amount (smallest denomination) unlocked at the "cliff" timestamp.
-    amountPerPeriod: getBN(5000000000, 9), // Release rate: how many tokens are unlocked per each period.
+    cliffAmount: getBN(100_000, 9),// Amount (smallest denomination) unlocked at the "cliff" timestamp.
     name: "Transfer to Jane Doe.", // The stream name or subject.
+    period: 1, // Time step (period) in seconds per which the unlocking occurs.
+    start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
     canTopup: false, // setting to FALSE will effectively create a vesting contract.
-    cancelableBySender: true, // Whether or not sender can cancel the stream.
-    cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
-    transferableBySender: true, // Whether or not sender can transfer the stream.
-    transferableByRecipient: false, // Whether or not recipient can transfer the stream.
-    automaticWithdrawal: true, // [WIP] Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
-    withdrawalFrequency: 10, // [WIP] Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-    partner: null, //  (optional) Partner's wallet address (string | null).
+    cancelableBySender: true, // Wether or not sender can cancel the stream.
+    cancelableByRecipient: false, // Wether or not recipient can cancel the stream.
+    transferableBySender: true, // Wether or not sender can transfer the stream.
+    transferableByRecipient: false, // Wether or not recipient can transfer the stream.
+    automaticWithdrawal: true, // [optional] Wether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
+    withdrawalFrequency: 10, // [optional] Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+    canPause: false, // [optional] [WIP] Wether stream is Pausable
+    canUpdateRate: fakse, // [optional] [WIP] Wether stream rate can be updated
+};
+
+const solanaParams = {
+    sender: wallet, // SignerWalletAdapter or Keypair of Sender account
+    partner: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // [optional] Partner Solana address
+    isNative: // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
 };
 
 try {
-    const { ixs, tx, metadata } = await StreamClient.create(createStreamParams);
+    const { ixs, tx, metadata } = await solanaStreamClient.create(createStreamParams, solanaParams);
 } catch (exception) {
     // handle exception
 }
@@ -108,52 +137,68 @@ try {
 ```javascript
 const recipients = [
     {
-        recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
-        depositedAmount: getBN(1000000000000, 9), // Deposited amount of tokens (in the smallest units).
-        name: "January Payroll", // The stream name/subject.
+        recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Recipient address (base58 string for Solana)
+        amount: getBN(1_000_000, 9), // Deposited amount of tokens (using smallest denomination).
+        name: "Transfer to Jane Doe.", // The stream name or subject.
+        cliffAmount: getBN(100_000, 9),// Amount (smallest denomination) unlocked at the "cliff" timestamp.
+        amountPerPeriod: getBN(1_000, 9), // Release rate: how many tokens are unlocked per each period.
     },
+    // ... Other Recipient options
 ];
 
 const createMultiStreamsParams = {
-    sender: wallet, // Wallet/Keypair signing the transaction, creating and sending the stream.
-    recipientsData: recipients, // Array of Solana recipient address.
-    mint: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
-    start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
-    period: 1, // Time step (period) in seconds per which the unlocking occurs.
+    tokenId: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL token mint or Aptos Coin type
     cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-    cliffAmount: getBN(100000000000, 9), // Amount unlocked at the "cliff" timestamp.
-    amountPerPeriod: getBN(5000000000, 9), // Release rate: how many tokens are unlocked per each period.
-    canTopup: true, // setting to FALSE will effectively create a vesting contract.
-    cancelableBySender: true, // Whether or not sender can cancel the stream.
-    cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
-    transferableBySender: true, // Whether or not sender can transfer the stream.
-    transferableByRecipient: false, // Whether or not recipient can transfer the stream.
-    automaticWithdrawal: false, // Whether or not a 3rd party can initiate withdraw in the name of recipient (currently not used, set it to FALSE).
-    partner: null, //  (optional) Partner's wallet address (string | null).
+    period: 1, // Time step (period) in seconds per which the unlocking occurs.
+    start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
+    canTopup: false, // setting to FALSE will effectively create a vesting contract.
+    cancelableBySender: true, // Wether or not sender can cancel the stream.
+    cancelableByRecipient: false, // Wether or not recipient can cancel the stream.
+    transferableBySender: true, // Wether or not sender can transfer the stream.
+    transferableByRecipient: false, // Wether or not recipient can transfer the stream.
+    automaticWithdrawal: true, // [optional] Wether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
+    withdrawalFrequency: 10, // [optional] Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
+    canPause: false, // [optional] [WIP] Wether stream is Pausable
+    canUpdateRate: false, // [optional] [WIP] Wether stream rate can be updated
+};
+
+const solanaParams = {
+    sender: wallet, // SignerWalletAdapter or Keypair of Sender account
+    partner: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // [optional] Partner Solana address
+    isNative: // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
 };
 
 try {
-    const { txs } = await StreamClient.createMultiple(createMultiStreamsParams);
+    const { txs } = await StreamClient.createMultiple(createMultiStreamsParams, solanaParams);
 } catch (exception) {
     // handle exception
 }
 ```
 
-\_Disclaimer: Support for scheduled, automatic token withdrawals/transfers is under development and scheduled to launch in Q1. Once launched, it will be enabled retroactively for all streams that have `automaticWithdrawal` set to `true`.
-
-Please note that transaction fees for the scheduled transfers are paid upfront by the stream creator (sender).\_
-
 ## Withdraw from stream
 
 ```javascript
 const withdrawStreamParams = {
-    invoker: wallet, // Wallet/Keypair signing the transaction.
     id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
     amount: getBN(100000000000, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
 };
 
+const solanaParams = {
+    invoker: wallet, // Wallet/Keypair signing the transaction.
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+
 try {
-    const { ixs, tx } = await StreamClient.withdraw(withdrawStreamParams);
+    const { ixs, tx } = await StreamClient.withdraw(withdrawStreamParams, solanaParams);
 } catch (exception) {
     // handle exception
 }
@@ -168,8 +213,18 @@ const topupStreamParams = {
     amount: getBN(100000000000, 9), // Specified amount to topup (increases deposited amount).
 };
 
+const solanaParams = {
+    invoker: wallet, // Wallet/Keypair signing the transaction.
+    isNative: // [ONLY FOR wSOL STREAMS] [optional] Wether topup is with Native Solanas
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
 try {
-    const { ixs, tx } = await StreamClient.topup(topupStreamParams);
+    const { ixs, tx } = await StreamClient.topup(topupStreamParams, solanaParams);
 } catch (exception) {
     // handle exception
 }
@@ -179,13 +234,22 @@ try {
 
 ```javascript
 const data = {
-    invoker: wallet, // Wallet/Keypair signing the transaction.
-    id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
-    recipientId: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier of a stream to be transferred.
+    id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",// Identifier of a stream to be transferred.
+    recipientId: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // New Recipient address
 };
 
+const solanaParams = {
+    invoker: wallet, // Wallet/Keypair signing the transaction.
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+
 try {
-    const { tx } = await StreamClient.transfer(data);
+    const { tx } = await StreamClient.transfer(data, solanaParams);
 } catch (exception) {
     // handle exception
 }
@@ -195,12 +259,20 @@ try {
 
 ```javascript
 const cancelStreamParams = {
-    invoker: wallet, // Wallet/Keypair signing the transaction.
     id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
 };
 
+const solanaParams = {
+    invoker: wallet, // Wallet/Keypair signing the transaction.
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
 try {
-    const { ixs, tx } = await StreamClient.cancel(cancelStreamParams);
+    const { ixs, tx } = await StreamClient.cancel(cancelStreamParams, solanaParams);
 } catch (exception) {
     // handle exception
 }
@@ -210,15 +282,16 @@ try {
 
 ```javascript
 try {
-    const stream = await StreamClient.getOne(
-        "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA" // Identifier of a stream that is fetched.
-    );
+    const stream = await StreamClient.getOne({
+        id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA" // Identifier of a stream that is fetched.
+    });
 } catch (exception) {
     // handle exception
 }
 ```
 
 ## Get multiple streams for a specific wallet address
+**NOTE: ONLY SUPPORTED FOR SOLANA CLIENT**
 
 ```javascript
 try {
@@ -234,11 +307,14 @@ try {
 
 ## Additional notes
 
-Default import `import Stream from '@streamflow/stream'` is an import of older SDK version that uses Anchor and doesn't support raw instructions, nor multi streams creation.
+Streamflow protocol Solana program ID (devnet): `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
 
-Streamflow protocol program ID (devnet): `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ`
+Streamflow protocol Solana program ID (mainnet): `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`
 
-Streamflow protocol program ID (mainnet): `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`
+Streamflow protocol Aptos program ID (testnet): `0xc6737de143d91b2f99a7e490d4f8348fdfa3bdd1eb8737a27d0455f8a3625688`
+
+Streamflow protocol Aptos program ID (mainnet): `0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0`
+
 
 **All BN amounts are denominated in their smallest units.**
 

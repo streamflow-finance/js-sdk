@@ -45,6 +45,9 @@ export default class AptosStreamClient extends BaseStreamClient {
     this.client = new AptosClient(clusterUrl);
   }
 
+  /**
+   * Creates a new stream/vesting contract.
+   */
   public async create(
     streamData: ICreateStreamData,
     { senderWallet }: ICreateStreamAptosExt
@@ -81,6 +84,9 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { txId: hash };
   }
 
+  /**
+   * Creates multiple stream/vesting contracts.
+   */
   public async createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
     { senderWallet }: ICreateStreamAptosExt
@@ -99,13 +105,13 @@ export default class AptosStreamClient extends BaseStreamClient {
         const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
         txs.push(hash);
-      } catch (e: any) {
+      } catch (e: unknown) {
         errors.push({
           error: e?.toString() ?? "Unkown error!",
           recipient: recipient.recipient,
         });
       } finally {
-        const metadataId = (payload as any).arguments[0];
+        const metadataId = payload.arguments[0];
         metadatas.push(metadataId);
         metadataToRecipient[metadataId] = recipient;
       }
@@ -118,6 +124,9 @@ export default class AptosStreamClient extends BaseStreamClient {
     };
   }
 
+  /**
+   * Attempts withdrawing from the specified stream.
+   */
   public async withdraw(
     withdrawData: IWithdrawData,
     { senderWallet, tokenId }: ITransactionAptosExt
@@ -134,10 +143,13 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { txId: hash };
   }
 
+  /**
+   * Attempts canceling the specified stream.
+   */
   public async cancel(
     cancelData: ICancelData,
     { senderWallet, tokenId }: ITransactionAptosExt
-  ): Promise<any> {
+  ): Promise<ITransactionResult> {
     const payload = {
       type: "cancel",
       function: `${this.programId}::protocol::cancel`,
@@ -150,10 +162,13 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { txId: hash };
   }
 
+  /**
+   * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
+   */
   public async transfer(
     transferData: ITransferData,
     { senderWallet, tokenId }: ITransactionAptosExt
-  ): Promise<any> {
+  ): Promise<ITransactionResult> {
     const payload = {
       type: "transfer",
       function: `${this.programId}::protocol::transfer`,
@@ -166,10 +181,13 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { txId: hash };
   }
 
+  /**
+   * Tops up stream account with specified amount.
+   */
   public async topup(
     topupData: ITopUpData,
     { senderWallet, tokenId }: ITransactionAptosExt
-  ): Promise<any> {
+  ): Promise<ITransactionResult> {
     const payload = {
       type: "topup",
       function: `${this.programId}::protocol::topup`,
@@ -182,7 +200,10 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { txId: hash };
   }
 
-  public async getOne({ id }: IGetOneData): Promise<any> {
+  /**
+   * Fetch stream data by its id (address).
+   */
+  public async getOne({ id }: IGetOneData): Promise<Contract> {
     const contractResources = await this.client.getAccountResources(id);
 
     const contract = contractResources.find((r) => r.type.includes("protocol::Contract"));
@@ -196,20 +217,24 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { data } = contract;
 
-    return [id, new Contract(data as unknown as StreamResource, tokenId)];
+    return new Contract(data as unknown as StreamResource, tokenId);
   }
 
-  public getProgramId() {
+  /**
+   * Returns StreamClient protocol program ID.
+   */
+  public getProgramId(): string {
     return this.programId;
   }
 
-  public getMaxGas() {
+  public getMaxGas(): { max_gas_amount: string } {
     return { max_gas_amount: this.maxGas };
   }
 
+  // Utility function to prepare transaction payloads for multiple recipients.
   private generateMultiPayloads(
     multipleStreamData: ICreateMultipleStreamData
-  ): Types.TransactionPayload[] {
+  ): Types.TransactionPayload_EntryFunctionPayload[] {
     return multipleStreamData.recipients.map((recipient) => {
       const acc = new AptosAccount(); // Generate random address as seeds for derriving "escrow" account
       const seeds = acc.address().hex();

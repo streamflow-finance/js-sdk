@@ -112,26 +112,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
-   * @param {CreateParams} data
-   * @param {WalletAdapter | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
-   * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
-   * @param {string} data.mint - SPL Token mint.
-   * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
-   * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
-   * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
-   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
-   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
-   * @param {string} data.name - Stream name/subject.
-   * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
-   * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
-   * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
-   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
-   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
-   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
-   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
-   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async create(
     {
@@ -248,27 +228,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
    * - initialized contract PDA off chain
    *
    * If you are not sure if you should use create or create_unchecked, go for create to be safer.
-   *
-   * @param {CreateParams} data
-   * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
-   * @param {string} data.recipient - Solana address of the recipient. Associated token account will be derived using this address and token mint address.
-   * @param {string} data.mint - SPL Token mint.
-   * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
-   * @param {BN} data.depositedAmount - Initially deposited amount of tokens (in the smallest units).
-   * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
-   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {BN} data.cliffAmount - Amount unlocked at the "cliff".
-   * @param {BN} data.amountPerPeriod - Amount unlocked per each period.
-   * @param {string} data.name - Stream name/subject.
-   * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
-   * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
-   * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
-   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
-   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
-   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
-   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
-   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async createUnchecked(
     {
@@ -374,24 +333,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Creates a new stream/vesting contract.
+   * Creates multiple stream/vesting contracts.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
-   * @param {CreateMultiParams} data
-   * @param {Wallet | Keypair} data.sender - Wallet signing the transaction. Its address should match the authorized wallet (sender) or transaction will fail.
-   * @param {MultiRecipient[]} data.recipientsData
-   * @param {string} data.mint - SPL Token mint.
-   * @param {number} data.start - Timestamp (in seconds) when the stream/token vesting starts.
-   * @param {number} data.period - Time step (period) in seconds per which the unlocking occurs.
-   * @param {number} data.cliff - Vesting contract "cliff" timestamp in seconds.
-   * @param {boolean} data.canTopup - TRUE for streams, FALSE for vesting contracts.
-   * @param {boolean} data.cancelableBySender - Whether or not sender can cancel the stream.
-   * @param {boolean} data.cancelableByRecipient - Whether or not recipient can cancel the stream.
-   * @param {boolean} data.transferableBySender - Whether or not sender can transfer the stream.
-   * @param {boolean} data.transferableByRecipient - Whether or not recipient can transfer the stream.
-   * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
-   * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-   * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
-   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
@@ -475,11 +418,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Attempts withdrawal from the specified stream.
-   * @param {WithdrawParams} data
-   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (recipient) or transaction will fail.
-   * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be withdrawn from.
-   * @param {BN} data.amount - Requested amount (in the smallest units) to withdraw (while streaming). If stream is completed, the whole amount will be withdrawn.
+   * Attempts withdrawing from the specified stream.
    */
   public async withdraw(
     { id, amount }: IWithdrawData,
@@ -534,9 +473,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts canceling the specified stream.
-   * @param {CancelParams} data
-   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
-   * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be canceled.
    */
   public async cancel(
     { id }: ICancelData,
@@ -595,10 +531,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
-   * @param {TransferParams} data
-   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match authorized wallet (sender or recipient) or transaction will fail.
-   * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be transferred.
-   * @param {string} data.recipientId - Address of a new recipient.
    */
   public async transfer(
     { id, newRecipient: newRecipientString }: ITransferData,
@@ -649,11 +581,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Tops up stream account deposited amount.
-   * @param {TopupParams} data
-   * @param {Wallet | Keypair} data.invoker - Wallet signing the transaction. It's address should match current stream sender or transaction will fail.
-   * @param {string} data.id - Identifier of a stream (escrow account with metadata) to be topped up.
-   * @param {BN} data.amount - Specified amount (in the smallest units) to topup (increases deposited amount).
+   * Tops up stream account with specified amount.
    */
   public async topup(
     { id, amount }: ITopUpData,
@@ -711,7 +639,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Fetch stream data by its id (address).
-   * @param {string} id - Identifier of a stream that is fetched.
    */
   public async getOne({ id }: IGetOneData): Promise<StreamData> {
     const escrow = await this.connection.getAccountInfo(new PublicKey(id), TX_FINALITY_CONFIRMED);
@@ -725,10 +652,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch streams/contracts by providing direction.
    * Streams are sorted by start time in ascending order.
-   * @param {GetAllParams} data
-   * @param {PublicKey} data.wallet - PublicKey of the wallet for which the streams/contracts are fetched.
-   * @param {StreamType} [data.type = StreamType.All] - It can be one of: stream, vesting, all.
-   * @param {StreamDirection} [data.direction = StreamDirection.All] - It can be one of: incoming, outgoing, all.
    */
   public async get({
     wallet,
@@ -809,8 +732,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Forms instructions from params, creates a raw transaction and fetch recent blockhash.
-   * @param {MultiRecipient} recipient - Wallet sending stream to
-   * @param {CreateMultiParams} streamParams - Parameters of stream user wants to create.
    */
   private async prepareStreamTransaction(
     recipient: IRecipient,
