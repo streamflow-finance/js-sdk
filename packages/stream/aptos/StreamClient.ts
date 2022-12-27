@@ -105,7 +105,7 @@ export default class AptosStreamClient extends BaseStreamClient {
         const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
         txs.push(hash);
-      } catch (e: unknown) {
+      } catch (e: any) {
         errors.push({
           error: e?.toString() ?? "Unkown error!",
           recipient: recipient.recipient,
