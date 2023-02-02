@@ -3,6 +3,7 @@ import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@s
 import BN from "bn.js";
 import { sha256 } from "js-sha256";
 import { struct, u8 } from '@solana/buffer-layout';
+import { TextEncoder } from "@polkadot/x-textencoder";
 
 import * as Layout from "./layout";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";

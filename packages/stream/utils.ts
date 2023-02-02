@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
+import { TextDecoder } from "@polkadot/x-textdecoder"
 
 import { streamLayout } from "./layout";
 import { Stream, DecodedStream } from "./types";

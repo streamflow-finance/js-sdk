@@ -1,0 +1,18 @@
+# .nosana-ci.yml
+nosana:
+    description: StreamFlow JS-SDK Nosana Pipeline
+
+global:
+    image: registry.hub.docker.com/library/node:18
+
+    trigger:
+        branch:
+            - master
+
+jobs:
+
+    # Install dependencies
+    - name: install
+      commands:
+        - npm ci --legacy-peer-deps
+        - npm run test 

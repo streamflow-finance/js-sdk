@@ -21,7 +21,7 @@ import {
   Commitment,
   ConnectionConfig,
   sendAndConfirmRawTransaction,
-  BlockheightBasedTransactionConfimationStrategy,
+  BlockheightBasedTransactionConfirmationStrategy,
 } from "@solana/web3.js";
 
 import {
@@ -267,7 +267,7 @@ export default class StreamClient {
    * @param {boolean} data.automaticWithdrawal - Whether or not a 3rd party can initiate withdraw in the name of recipient.
    * @param {number} [data.withdrawalFrequency = 0] - Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
    * @param {boolean} [data.isNative = false] - When true Automatically wraps SOLs to WrappedSOL and creates wSOL stream
-  * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
+   * @param {string | null} [data.partner = null] - Partner's wallet address (optional).
    */
   public async createUnchecked({
     sender,
@@ -809,7 +809,7 @@ export default class StreamClient {
     if (!hash.lastValidBlockHeight || !tx.signature || !hash.blockhash)
       throw Error("Error with transaction parameters.");
 
-    const confirmationStrategy: BlockheightBasedTransactionConfimationStrategy =
+    const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy =
       {
         lastValidBlockHeight: hash.lastValidBlockHeight,
         signature: encode(tx.signature),
@@ -1002,7 +1002,7 @@ async function sendAndConfirmStreamRawTransaction(
     if (!lastValidBlockHeight || !signature || !recentBlockhash)
       throw { recipient: batchItem.recipient, error: "no recent blockhash" };
 
-    const confirmationStrategy: BlockheightBasedTransactionConfimationStrategy =
+    const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy =
       {
         lastValidBlockHeight,
         signature: encode(signature),

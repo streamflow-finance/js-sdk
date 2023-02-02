@@ -4,6 +4,7 @@ import BN from "bn.js";
 import { Buffer } from "buffer";
 import { Idl, Program, Provider, web3 } from "@project-serum/anchor";
 import { Wallet } from "@project-serum/anchor/src/provider";
+import { TextEncoder } from "@polkadot/x-textencoder";
 
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
