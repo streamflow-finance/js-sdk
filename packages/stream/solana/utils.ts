@@ -155,21 +155,24 @@ export async function signAllTransactionWithRecipients(
   sender: Keypair | SignerWalletAdapter,
   items: BatchItem[]
 ): Promise<BatchItem[]> {
-  const signed_batch: BatchItem[] = [];
   const isKeypair = sender instanceof Keypair;
   const isWallet = isSignerWallet(sender);
 
-  if (!isKeypair && !isWallet) return signed_batch;
-
   if (isKeypair) {
-    items.map((t) => {
+    return items.map((t) => {
       t.tx.partialSign(sender);
       return { tx: t.tx, recipient: t.recipient };
     });
   } else if (isWallet) {
-    await sender.signAllTransactions(items.map((t) => t.tx));
+    const signedTxs = await sender.signAllTransactions(items.map((t) => t.tx));
+    return items.map((item, index) => ({
+      ...item,
+      tx: signedTxs[index],
+    }));
+  } else {
+    // If signer is not passed
+    return [];
   }
-  return items;
 }
 
 /**

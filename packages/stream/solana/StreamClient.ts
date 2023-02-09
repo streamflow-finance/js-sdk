@@ -706,20 +706,22 @@ export default class SolanaStreamClient extends BaseStreamClient {
       lastValidBlockHeight: number;
     }>
   ) {
+    let signedTx: Transaction;
     if (isSignerWallet(invoker)) {
-      await invoker.signTransaction(tx);
+      signedTx = await invoker.signTransaction(tx);
     } else {
       tx.partialSign(invoker);
+      signedTx = tx;
     }
 
-    const rawTx = tx.serialize();
+    const rawTx = signedTx.serialize();
 
-    if (!hash.lastValidBlockHeight || !tx.signature || !hash.blockhash)
+    if (!hash.lastValidBlockHeight || !signedTx.signature || !hash.blockhash)
       throw Error("Error with transaction parameters.");
 
     const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
       lastValidBlockHeight: hash.lastValidBlockHeight,
-      signature: bs58.encode(tx.signature),
+      signature: bs58.encode(signedTx.signature),
       blockhash: hash.blockhash,
     };
     const signature = await sendAndConfirmRawTransaction(
