@@ -6,6 +6,7 @@ import {
   ITransferData,
   ITopUpData,
   IGetOneData,
+  IUpdateData,
 } from "./types";
 
 export abstract class BaseStreamClient {
@@ -25,4 +26,6 @@ export abstract class BaseStreamClient {
   protected abstract topup(topupData: ITopUpData, chainSpecificParams: any): Promise<any>;
 
   protected abstract getOne(getOneData: IGetOneData, chainSpecificParams: any): Promise<any>;
+
+  protected abstract update(updateData: IUpdateData, chainSpecificParams: any): Promise<any>;
 }

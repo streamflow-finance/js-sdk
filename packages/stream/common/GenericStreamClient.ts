@@ -12,6 +12,7 @@ import {
   IGetOneData,
   ITopUpData,
   ITransferData,
+  IUpdateData,
   IWithdrawData,
 } from "./types";
 import {
@@ -176,5 +177,21 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public getOne(getOneData: IGetOneData): Promise<Stream> {
     return this.nativeStreamClient.getOne(getOneData);
+  }
+
+  /**
+   * Attempts updating the stream auto withdrawal params and amount per period
+   */
+  public update(
+    updateData: IUpdateData,
+    chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
+  ): Promise<TxResponse | ITransactionResult> {
+    if (this.nativeStreamClient instanceof SolanaStreamClient) {
+      const params = <IInteractStreamSolanaExt>chainSpecificParams;
+      return this.nativeStreamClient.update(updateData, params);
+    } else {
+      const params = <ITransactionAptosExt>chainSpecificParams;
+      return this.nativeStreamClient.update(updateData, params);
+    }
   }
 }

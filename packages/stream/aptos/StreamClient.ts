@@ -10,6 +10,7 @@ import {
   IRecipient,
   ITopUpData,
   ITransferData,
+  IUpdateData,
   IWithdrawData,
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
@@ -218,6 +219,30 @@ export default class AptosStreamClient extends BaseStreamClient {
     const { data } = contract;
 
     return new Contract(data as unknown as StreamResource, tokenId);
+  }
+
+  /**
+   * Attempts updating the stream auto withdrawal params and amount per period
+   */
+  public async update(
+    updateData: IUpdateData,
+    { senderWallet, tokenId }: ITransactionAptosExt
+  ): Promise<ITransactionResult> {
+    const payload = {
+      type: "update",
+      function: `${this.programId}::protocol::update`,
+      type_arguments: [tokenId],
+      arguments: [
+        updateData.id,
+        updateData.enableAutomaticWithdrawal ? [true] : [],
+        updateData.withdrawFrequency ? [updateData.withdrawFrequency.toString()] : [],
+        updateData.amountPerPeriod ? [updateData.amountPerPeriod.toString()] : [],
+      ],
+    };
+
+    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+
+    return { txId: hash };
   }
 
   /**

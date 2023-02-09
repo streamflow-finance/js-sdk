@@ -5,6 +5,7 @@ import {
   ICreateUncheckedStreamLayout,
   IStreamLayout,
   ITopupStreamLayout,
+  IUpdateStreamLayout,
   IWithdrawStreamLayout,
 } from "./instructionTypes";
 
@@ -101,6 +102,42 @@ export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUnchecke
  */
 export const withdrawStreamLayout: BufferLayout.Structure<IWithdrawStreamLayout> =
   BufferLayout.struct([BufferLayout.blob(8, "amount")]);
+
+/**
+ * Encode stream instruction layout
+ */
+export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): number => {
+  const structs: (BufferLayout.UInt | BufferLayout.Blob)[] = [];
+  if (values.enable_automatic_withdrawal) {
+    structs.push(BufferLayout.u8("enable_automatic_withdrawal_exists"));
+    structs.push(BufferLayout.u8("enable_automatic_withdrawal"));
+  } else {
+    structs.push(BufferLayout.u8("enable_automatic_withdrawal_exists"));
+  }
+  if (values.withdraw_frequency) {
+    structs.push(BufferLayout.u8("withdraw_frequency_exists"));
+    structs.push(BufferLayout.blob(8, "withdraw_frequency"));
+  } else {
+    structs.push(BufferLayout.u8("withdraw_frequency_exists"));
+  }
+  if (values.amount_per_period) {
+    structs.push(BufferLayout.u8("amount_per_period_exists"));
+    structs.push(BufferLayout.blob(8, "amount_per_period"));
+  } else {
+    structs.push(BufferLayout.u8("amount_per_period_exists"));
+  }
+  return BufferLayout.struct<any>(structs).encode(
+    {
+      enable_automatic_withdrawal_exists: values.enable_automatic_withdrawal ? 1 : 0,
+      enable_automatic_withdrawal: values.enable_automatic_withdrawal ?? 0,
+      withdraw_frequency_exists: values.withdraw_frequency ? 1 : 0,
+      withdraw_frequency: values.withdraw_frequency ?? 0,
+      amount_per_period_exists: values.amount_per_period ? 1 : 0,
+      amount_per_period: values.amount_per_period ?? 0,
+    },
+    data
+  );
+};
 
 /**
  * Topup stream instruction layout

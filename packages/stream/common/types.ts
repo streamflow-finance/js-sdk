@@ -36,6 +36,13 @@ export interface IWithdrawData {
   amount: BN;
 }
 
+export interface IUpdateData {
+  id: string;
+  enableAutomaticWithdrawal?: boolean;
+  withdrawFrequency?: BN;
+  amountPerPeriod?: BN;
+}
+
 export interface ICancelData {
   id: string;
 }

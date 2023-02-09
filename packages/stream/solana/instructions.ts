@@ -11,6 +11,7 @@ import {
 
 import * as Layout from "./layout";
 import { BASE_FEE } from "./constants";
+import { IUpdateData } from "../common/types";
 
 interface CreateStreamData {
   start: BN;
@@ -287,6 +288,48 @@ export const withdrawStreamInstruction = (
     keys,
     programId,
     data,
+  });
+};
+
+interface UpdateAccounts {
+  authority: PublicKey;
+  metadata: PublicKey;
+  withdrawor: PublicKey;
+  systemProgram: PublicKey;
+}
+export const updateStreamInstruction = (
+  params: IUpdateData,
+  programId: PublicKey,
+  { authority, metadata, withdrawor, systemProgram }: UpdateAccounts
+): TransactionInstruction => {
+  const keys = [
+    { pubkey: authority, isSigner: true, isWritable: true },
+    { pubkey: metadata, isSigner: false, isWritable: true },
+    { pubkey: withdrawor, isSigner: false, isWritable: true },
+    { pubkey: systemProgram, isSigner: false, isWritable: false },
+  ];
+
+  let data = Buffer.alloc(100);
+  const decodedData = {
+    enable_automatic_withdrawal: Number(params.enableAutomaticWithdrawal),
+    withdraw_frequency: params.withdrawFrequency
+      ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8)
+      : undefined,
+    amount_per_period: params.amountPerPeriod
+      ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8)
+      : undefined,
+  };
+  const encodeLength = Layout.encodeUpdateStream(decodedData, data);
+  data = data.slice(0, encodeLength);
+  data = Buffer.concat([
+    Buffer.from(sha256.digest("global:update")).slice(0, 8),
+    data,
+    Buffer.alloc(20),
+  ]);
+  return new TransactionInstruction({
+    keys: keys,
+    programId: programId,
+    data: data,
   });
 };
 

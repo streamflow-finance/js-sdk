@@ -80,6 +80,12 @@ export interface IWithdrawStreamLayout {
   amount: Uint8Array;
 }
 
+export interface IUpdateStreamLayout {
+  enable_automatic_withdrawal?: number;
+  withdraw_frequency?: Uint8Array;
+  amount_per_period?: Uint8Array;
+}
+
 export interface ITopupStreamLayout {
   amount: Uint8Array;
 }

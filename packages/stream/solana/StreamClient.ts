@@ -59,6 +59,7 @@ import {
   createStreamInstruction,
   createUncheckedStreamInstruction,
   prepareWrappedAccount,
+  updateStreamInstruction,
 } from "./instructions";
 import {
   ICancelData,
@@ -70,6 +71,7 @@ import {
   IStreamConfig,
   ITopUpData,
   ITransferData,
+  IUpdateData,
   IWithdrawData,
   StreamDirection,
   StreamType,
@@ -730,6 +732,48 @@ export default class SolanaStreamClient extends BaseStreamClient {
       confirmationStrategy
     );
     return signature;
+  }
+
+  /**
+   * Attempts updating the stream auto withdrawal params and amount per period
+   */
+  public async update(
+    data: IUpdateData,
+    { invoker }: IInteractStreamSolanaExt
+  ): Promise<TxResponse> {
+    if (!invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const streamPublicKey = new PublicKey(data.id);
+    const escrow = await this.connection.getAccountInfo(streamPublicKey);
+
+    if (!escrow) {
+      throw new Error("Couldn't get account info");
+    }
+
+    const updateIx = updateStreamInstruction(data, this.programId, {
+      authority: invoker.publicKey,
+      metadata: streamPublicKey,
+      withdrawor: WITHDRAWOR_PUBLIC_KEY,
+      systemProgram: SystemProgram.programId,
+    });
+    const commitment =
+      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const hash = await this.connection.getLatestBlockhash(commitment);
+
+    const tx = new Transaction({
+      feePayer: invoker.publicKey,
+      blockhash: hash.blockhash,
+      lastValidBlockHeight: hash.lastValidBlockHeight,
+    }).add(updateIx);
+
+    const signature = await this.sign(invoker, tx, hash);
+
+    return {
+      ixs: [updateIx],
+      tx: signature,
+    };
   }
 
   /**
