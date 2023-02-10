@@ -390,17 +390,20 @@ export default class SolanaStreamClient extends BaseStreamClient {
       batch.push({ tx: prepareTransaction, recipient: sender.publicKey.toBase58() });
     }
 
-    const signed_batch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
+    const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
+    signedBatch.forEach((item, index) => {
+      item.tx.lastValidBlockHeight = batch[index].tx.lastValidBlockHeight;
+    });
 
     if (isNative) {
-      const prepareTx = signed_batch.pop();
+      const prepareTx = signedBatch.pop();
       await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!);
     }
 
     //send all transactions in parallel and wait for them to settle.
     //it allows to speed up the process of sending transactions
     //we then filter all promise responses and handle failed transactions
-    const batchTransactionsCalls = signed_batch.map((el) =>
+    const batchTransactionsCalls = signedBatch.map((el) =>
       sendAndConfirmStreamRawTransaction(this.connection, el)
     );
 

@@ -203,7 +203,10 @@ export async function sendAndConfirmStreamRawTransaction(
     );
     return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
-    throw { recipient: batchItem.recipient, error: error.toString() };
+    throw {
+      recipient: batchItem.recipient,
+      error: error?.error ?? error?.message ?? error.toString(),
+    };
   }
 }
 
