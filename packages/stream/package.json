@@ -1,27 +1,41 @@
 {
   "name": "@streamflow/stream",
-  "version": "3.0.16",
+  "version": "4.1.0-beta.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "main": "dist/index.js",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --outDir ./dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -rf ./dist && tsc --outDir ./dist --project ../../tsconfig.json",
+    "test": "jest .",
+    "lint": "eslint .",
+    "prepublishOnly": "npm run lint && npm test && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
-    "@types/bn.js": "5.1.0",
+    "@types/bn.js": "5.1.1",
+    "@types/jest": "29.2.4",
     "date-fns": "2.28.0",
+    "eslint": "8.29.0",
+    "eslint-config-airbnb-typescript": "17.0.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-jest": "27.1.6",
+    "eslint-plugin-prettier": "4.2.1",
+    "jest": "29.3.1",
+    "prettier": "2.8.1",
+    "ts-jest": "29.0.3",
     "typescript": "4.6.4"
   },
   "dependencies": {
-    "@project-serum/anchor": "0.16.2",
-    "@project-serum/common": "0.0.1-beta.3",
-    "@solana/spl-token": "0.1.8",
-    "@solana/wallet-adapter-base": "0.9.2",
-    "@solana/web3.js": "1.42.0",
-    "bn.js": "5.2.0",
-    "buffer-layout": "1.2.1"
+    "@manahippo/aptos-wallet-adapter": "1.0.6",
+    "@solana/buffer-layout": "4.0.1 ",
+    "@solana/spl-token": "0.3.6",
+    "@solana/wallet-adapter-base": "0.9.19",
+    "@solana/web3.js": "1.70.1",
+    "aptos": "1.4.0",
+    "bn.js": "5.2.1",
+    "bs58": "5.0.0",
+    "ethers": "5.7.2",
+    "js-sha256": "0.9.0"
   }
 }
