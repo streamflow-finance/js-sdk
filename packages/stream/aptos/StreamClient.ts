@@ -4,25 +4,21 @@ import { BaseStreamClient } from "../common/BaseStreamClient";
 import {
   ICancelData,
   ICluster,
+  ICreateMultiError,
   ICreateMultipleStreamData,
+  ICreateResult,
   ICreateStreamData,
   IGetOneData,
+  IMultiTransactionResult,
   IRecipient,
   ITopUpData,
+  ITransactionResult,
   ITransferData,
   IUpdateData,
   IWithdrawData,
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
-import {
-  Contract,
-  CreateMultiError,
-  ICreateStreamAptosExt,
-  IMultiTransactionResult,
-  ITransactionAptosExt,
-  ITransactionResult,
-  StreamResource,
-} from "./types";
+import { Contract, ICreateStreamAptosExt, ITransactionAptosExt, StreamResource } from "./types";
 
 export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;
@@ -52,7 +48,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   public async create(
     streamData: ICreateStreamData,
     { senderWallet }: ICreateStreamAptosExt
-  ): Promise<ITransactionResult> {
+  ): Promise<ICreateResult> {
     const acc = new AptosAccount(); // Generate random address as seeds for derriving "escrow" account
     const seeds = acc.address().hex();
     const payload = {
@@ -82,7 +78,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-    return { txId: hash };
+    return { ixs: [payload], txId: hash, metadataId: seeds };
   }
 
   /**
@@ -97,7 +93,7 @@ export default class AptosStreamClient extends BaseStreamClient {
     const txs: string[] = [];
     const metadatas: string[] = [];
     const metadataToRecipient: Record<string, IRecipient> = {};
-    const errors: CreateMultiError[] = [];
+    const errors: ICreateMultiError[] = [];
 
     for (let i = 0; i < payloads.length; i++) {
       const payload = payloads[i];
@@ -141,7 +137,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-    return { txId: hash };
+    return { ixs: [payload], txId: hash };
   }
 
   /**
@@ -160,7 +156,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-    return { txId: hash };
+    return { ixs: [payload], txId: hash };
   }
 
   /**
@@ -179,7 +175,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-    return { txId: hash };
+    return { ixs: [payload], txId: hash };
   }
 
   /**
@@ -198,7 +194,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-    return { txId: hash };
+    return { ixs: [payload], txId: hash };
   }
 
   /**
@@ -219,6 +215,10 @@ export default class AptosStreamClient extends BaseStreamClient {
     const { data } = contract;
 
     return new Contract(data as unknown as StreamResource, tokenId);
+  }
+
+  public async get(): Promise<[string, Contract][]> {
+    throw new Error("Get all method is not supported for Aptos chain!");
   }
 
   /**
@@ -242,7 +242,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     const { hash } = await senderWallet.signAndSubmitTransaction(payload);
 
-    return { txId: hash };
+    return { ixs: [payload], txId: hash };
   }
 
   /**

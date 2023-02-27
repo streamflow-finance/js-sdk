@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "4.0.3",
+  "version": "4.1.0-beta.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "main": "dist/index.js",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
@@ -35,6 +35,7 @@
     "aptos": "1.4.0",
     "bn.js": "5.2.1",
     "bs58": "5.0.0",
+    "ethers": "5.7.2",
     "js-sha256": "0.9.0"
   }
 }

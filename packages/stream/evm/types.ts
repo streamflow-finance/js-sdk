@@ -1,36 +1,26 @@
-import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
+import { BigNumber } from "ethers";
 
 import { getNumberFromBN } from "../common/utils";
 
-export interface ICreateStreamAptosExt {
-  senderWallet: WalletContextState;
-}
-
-export type ITransactionAptosExt = ICreateStreamAptosExt & {
-  tokenId: string;
-};
-
-export interface StreamResource {
-  amount: string;
-  amount_per_period: string;
-  canceled_at: string;
-  cliff_amount: string;
+export interface StreamAbiResult {
+  amount: BigNumber;
+  amount_per_period: BigNumber;
+  canceled_at: BigNumber;
+  cliff_amount: BigNumber;
   closed: boolean;
-  contract_signer_cap: {
-    account: string;
-  };
-  created: string;
-  current_pause_start: string;
-  end: string;
+  created: BigNumber;
+  current_pause_start: BigNumber;
+  end: BigNumber;
   fees: {
-    streamflow_fee: string;
-    streamflow_fee_percentage: string;
-    streamflow_fee_withdrawn: string;
+    streamflow_fee_percentage: BigNumber;
+    streamflow_fee: BigNumber;
+    streamflow_fee_withdrawn: BigNumber;
+    tx_fee: BigNumber;
   };
-  funds_unlocked_at_last_rate_change: string;
-  last_rate_change_time: string;
-  last_withdrawn_at: string;
+  funds_unlocked_at_last_rate_change: BigNumber;
+  last_rate_change_time: BigNumber;
+  last_withdrawn_at: BigNumber;
   meta: {
     automatic_withdrawal: boolean;
     can_topup: boolean;
@@ -41,14 +31,15 @@ export interface StreamResource {
     pausable: boolean;
     transferable_by_recipient: boolean;
     transferable_by_sender: boolean;
-    withdrawal_frequency: string;
+    withdrawal_frequency: BigNumber;
   };
-  pause_cumulative: string;
-  period: string;
+  pause_cumulative: BigNumber;
+  period: BigNumber;
   recipient: string;
   sender: string;
-  start: string;
-  withdrawn: string;
+  start: BigNumber;
+  token: string;
+  withdrawn: BigNumber;
 }
 
 export interface Stream {
@@ -93,7 +84,7 @@ export interface Stream {
   unlocked(currentTimestamp: number, decimals: number): number;
 }
 
-export class Contract implements Stream {
+export class EvmContract implements Stream {
   magic: number;
 
   version: number;
@@ -168,45 +159,44 @@ export class Contract implements Stream {
 
   withdrawalFrequency: number;
 
-  constructor(stream: StreamResource, tokenId: string) {
+  constructor(stream: StreamAbiResult) {
     this.magic = 0;
     this.version = 0;
-    this.createdAt = parseInt(stream.created);
-    this.withdrawnAmount = new BN(stream.withdrawn);
-    this.canceledAt = parseInt(stream.canceled_at);
-    this.end = parseInt(stream.end);
-    this.lastWithdrawnAt = parseInt(stream.last_withdrawn_at);
+    this.createdAt = stream.created.toNumber();
+    this.withdrawnAmount = new BN(stream.withdrawn.toString());
+    this.canceledAt = stream.canceled_at.toNumber();
+    this.end = stream.end.toNumber();
+    this.lastWithdrawnAt = stream.last_withdrawn_at.toNumber();
     this.sender = stream.sender;
     this.senderTokens = stream.sender;
     this.recipient = stream.recipient;
     this.recipientTokens = stream.recipient;
-    this.mint = tokenId;
+    this.mint = stream.token.toLowerCase();
     this.escrowTokens = "";
     this.streamflowTreasury = "";
     this.streamflowTreasuryTokens = "";
-    this.streamflowFeeTotal = new BN(0);
-    this.streamflowFeeWithdrawn = new BN(0);
-    this.streamflowFeePercent = parseInt(stream.fees.streamflow_fee_percentage) / 10000;
+    this.streamflowFeeTotal = new BN(stream.fees.streamflow_fee.toString());
+    this.streamflowFeeWithdrawn = new BN(stream.fees.streamflow_fee_withdrawn.toString());
+    this.streamflowFeePercent = stream.fees.streamflow_fee_percentage.toNumber() / 10000;
     this.partnerFeeTotal = new BN(0);
     this.partnerFeeWithdrawn = new BN(0);
     this.partnerFeePercent = 0;
     this.partner = "";
     this.partnerTokens = "";
-    this.start = parseInt(stream.start);
-    this.depositedAmount = new BN(stream.amount);
-    this.period = parseInt(stream.period);
-    this.amountPerPeriod = new BN(stream.amount_per_period);
-    this.cliff = parseInt(stream.start);
-    this.cliffAmount = new BN(stream.cliff_amount);
+    this.start = stream.start.toNumber();
+    this.depositedAmount = new BN(stream.amount.toString());
+    this.period = stream.period.toNumber();
+    this.amountPerPeriod = new BN(stream.amount_per_period.toString());
+    this.cliff = stream.start.toNumber();
+    this.cliffAmount = new BN(stream.cliff_amount.toString());
     this.cancelableBySender = stream.meta.cancelable_by_sender;
     this.cancelableByRecipient = stream.meta.cancelable_by_recipient;
     this.automaticWithdrawal = stream.meta.automatic_withdrawal;
     this.transferableBySender = stream.meta.transferable_by_sender;
     this.transferableByRecipient = stream.meta.transferable_by_recipient;
     this.canTopup = stream.meta.can_topup;
-    const name = stream.meta.contract_name.replace("0x", "");
-    this.name = Buffer.from(name, "hex").toString("utf8");
-    this.withdrawalFrequency = parseInt(stream.meta.withdrawal_frequency);
+    this.name = stream.meta.contract_name;
+    this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
   }
 
   unlocked(currentTimestamp: number, decimals: number): number {

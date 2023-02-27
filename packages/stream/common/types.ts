@@ -1,3 +1,5 @@
+import { TransactionInstruction } from "@solana/web3.js";
+import { Types } from "aptos";
 import BN from "bn.js";
 
 // Stream Client Types
@@ -61,6 +63,35 @@ export interface IGetOneData {
   id: string;
 }
 
+export interface IGetAllData {
+  address: string;
+  type?: StreamType;
+  direction?: StreamDirection;
+}
+
+export interface ICreateMultiError {
+  recipient: string;
+  error: string;
+}
+
+type MetadataId = string;
+
+export interface ITransactionResult {
+  ixs: (TransactionInstruction | Types.TransactionPayload)[];
+  txId: string;
+}
+
+export interface ICreateResult extends ITransactionResult {
+  metadataId: MetadataId;
+}
+
+export interface IMultiTransactionResult {
+  txs: string[];
+  metadatas: MetadataId[];
+  metadataToRecipient: Record<MetadataId, IRecipient>;
+  errors: ICreateMultiError[];
+}
+
 // Utility types
 export enum ICluster {
   Mainnet = "mainnet",
@@ -83,4 +114,6 @@ export enum StreamType {
 export enum IChain {
   Solana = "Solana",
   Aptos = "Aptos",
+  Etherium = "Etherium",
+  BSC = "BSC",
 }

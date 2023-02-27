@@ -1,4 +1,5 @@
 import { Commitment, ConnectionConfig } from "@solana/web3.js";
+import { Signer } from "ethers";
 
 import SolanaStreamClient from "../solana/StreamClient";
 import AptosStreamClient from "../aptos/StreamClient";
@@ -14,22 +15,19 @@ import {
   ITransferData,
   IUpdateData,
   IWithdrawData,
+  ITransactionResult,
+  IMultiTransactionResult,
+  ICreateResult,
+  IGetAllData,
 } from "./types";
 import {
-  CreateMultiResponse,
-  CreateResponse,
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
   Stream,
-  TxResponse,
 } from "../solana";
-import {
-  ICreateStreamAptosExt,
-  IMultiTransactionResult,
-  ITransactionAptosExt,
-  ITransactionResult,
-} from "../aptos";
+import { ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
+import { EvmStreamClient } from "../evm";
 
 export interface SolanaStreamClientOptions {
   chain: IChain.Solana;
@@ -47,10 +45,21 @@ export interface AptosStreamClientOptions {
   maxGas?: string;
 }
 
-type GenericStreamClientOptions = SolanaStreamClientOptions | AptosStreamClientOptions;
+export interface EvmStreamClientOptions {
+  chain: IChain.Etherium | IChain.BSC;
+  clusterUrl: string;
+  signer: Signer;
+  cluster?: ICluster;
+  programId?: string;
+}
+
+type GenericStreamClientOptions =
+  | SolanaStreamClientOptions
+  | AptosStreamClientOptions
+  | EvmStreamClientOptions;
 
 export default class GenericStreamClient extends BaseStreamClient {
-  public nativeStreamClient: SolanaStreamClient | AptosStreamClient;
+  public nativeStreamClient: SolanaStreamClient | AptosStreamClient | EvmStreamClient;
 
   public chain: IChain;
 
@@ -59,20 +68,33 @@ export default class GenericStreamClient extends BaseStreamClient {
 
     this.chain = options.chain;
 
-    if (options.chain === IChain.Solana) {
-      this.nativeStreamClient = new SolanaStreamClient(
-        options.clusterUrl,
-        options.cluster,
-        options.commitment,
-        options.programId
-      );
-    } else {
-      this.nativeStreamClient = new AptosStreamClient(
-        options.clusterUrl,
-        options.cluster,
-        options.maxGas,
-        options.programId
-      );
+    switch (options.chain) {
+      case IChain.Solana:
+        this.nativeStreamClient = new SolanaStreamClient(
+          options.clusterUrl,
+          options.cluster,
+          options.commitment,
+          options.programId
+        );
+        break;
+      case IChain.Aptos:
+        this.nativeStreamClient = new AptosStreamClient(
+          options.clusterUrl,
+          options.cluster,
+          options.maxGas,
+          options.programId
+        );
+        break;
+      case IChain.BSC:
+      case IChain.Etherium:
+        this.nativeStreamClient = new EvmStreamClient(
+          options.clusterUrl,
+          options.chain,
+          options.signer,
+          options.cluster,
+          options.programId
+        );
+        break;
     }
   }
 
@@ -82,7 +104,7 @@ export default class GenericStreamClient extends BaseStreamClient {
   public create(
     streamData: ICreateStreamData,
     chainSpecificParams: ICreateStreamAptosExt | ICreateStreamSolanaExt
-  ): Promise<CreateResponse | ITransactionResult> {
+  ): Promise<ICreateResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <ICreateStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.create(streamData, params);
@@ -98,7 +120,7 @@ export default class GenericStreamClient extends BaseStreamClient {
   public createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
     chainSpecificParams: ICreateStreamAptosExt | ICreateStreamSolanaExt
-  ): Promise<CreateMultiResponse | IMultiTransactionResult> {
+  ): Promise<IMultiTransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <ICreateStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.createMultiple(multipleStreamData, params);
@@ -114,7 +136,7 @@ export default class GenericStreamClient extends BaseStreamClient {
   public withdraw(
     withdrawData: IWithdrawData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ): Promise<TxResponse | ITransactionResult> {
+  ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.withdraw(withdrawData, params);
@@ -130,7 +152,7 @@ export default class GenericStreamClient extends BaseStreamClient {
   public cancel(
     cancelData: ICancelData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ): Promise<TxResponse | ITransactionResult> {
+  ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.cancel(cancelData, params);
@@ -146,7 +168,7 @@ export default class GenericStreamClient extends BaseStreamClient {
   public transfer(
     transferData: ITransferData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ): Promise<TxResponse | ITransactionResult> {
+  ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.transfer(transferData, params);
@@ -162,7 +184,7 @@ export default class GenericStreamClient extends BaseStreamClient {
   public topup(
     topupData: ITopUpData,
     chainSpecificParams: ITransactionAptosExt | ITopUpStreamSolanaExt
-  ): Promise<TxResponse | ITransactionResult> {
+  ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <ITopUpStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.topup(topupData, params);
@@ -180,12 +202,19 @@ export default class GenericStreamClient extends BaseStreamClient {
   }
 
   /**
+   * Fetch streams by sender or recipient address.
+   */
+  public get(getAllData: IGetAllData): Promise<[string, Stream][]> {
+    return this.nativeStreamClient.get(getAllData);
+  }
+
+  /**
    * Attempts updating the stream auto withdrawal params and amount per period
    */
   public update(
     updateData: IUpdateData,
     chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
-  ): Promise<TxResponse | ITransactionResult> {
+  ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
       const params = <IInteractStreamSolanaExt>chainSpecificParams;
       return this.nativeStreamClient.update(updateData, params);

@@ -6,10 +6,16 @@ import BN from "bn.js";
  * @param {number} value - Number of tokens you want to convert to its BN representation.
  * @param {number} decimals - Number of decimals the token has.
  */
-export const getBN = (value: number, decimals: number): BN =>
-  value > (2 ** 53 - 1) / 10 ** decimals
-    ? new BN(value).mul(new BN(10 ** decimals))
-    : new BN(value * 10 ** decimals);
+export const getBN = (value: number, decimals: number): BN => {
+  const decimalPart = value - Math.trunc(value);
+  const integerPart = new BN(Math.trunc(value));
+
+  const decimalE = new BN(decimalPart * 1e9);
+
+  const sum = integerPart.mul(new BN(1e9)).add(decimalE);
+  const resultE = sum.mul(new BN(10).pow(new BN(decimals)));
+  return resultE.div(new BN(1e9));
+};
 
 /**
  * Used for token amounts conversion from their Big Number representation to number.

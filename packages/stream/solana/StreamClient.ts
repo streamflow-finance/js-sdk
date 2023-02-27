@@ -21,10 +21,6 @@ import {
 import {
   Stream as StreamData,
   Account,
-  GetAllParams,
-  CreateResponse,
-  CreateMultiResponse,
-  TxResponse,
   MetadataRecipientHashMap,
   Contract,
   BatchItem,
@@ -65,11 +61,15 @@ import {
   ICancelData,
   ICluster,
   ICreateMultipleStreamData,
+  ICreateResult,
   ICreateStreamData,
+  IGetAllData,
   IGetOneData,
+  IMultiTransactionResult,
   IRecipient,
   IStreamConfig,
   ITopUpData,
+  ITransactionResult,
   ITransferData,
   IUpdateData,
   IWithdrawData,
@@ -103,7 +103,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
   }
 
-  public getConnection() {
+  public getConnection(): Connection {
     return this.connection;
   }
 
@@ -135,7 +135,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawalFrequency = 0,
     }: ICreateStreamData,
     { sender, partner = null, isNative = false }: ICreateStreamSolanaExt
-  ): Promise<CreateResponse> {
+  ): Promise<ICreateResult> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
@@ -218,7 +218,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const signature = await this.sign(sender, tx, hash);
 
-    return { ixs, tx: signature, metadata };
+    return { ixs, txId: signature, metadataId: metadata.publicKey.toBase58() };
   }
 
   /**
@@ -251,7 +251,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawalFrequency = 0,
     }: ICreateStreamData,
     { sender, partner = null, isNative = false }: ICreateStreamSolanaExt
-  ): Promise<CreateResponse> {
+  ): Promise<ICreateResult> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
@@ -331,7 +331,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const signature = await this.sign(sender, tx, hash);
 
-    return { ixs, tx: signature, metadata };
+    return { ixs, txId: signature, metadataId: metadata.publicKey.toBase58() };
   }
 
   /**
@@ -341,7 +341,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async createMultiple(
     data: ICreateMultipleStreamData,
     { sender, partner = null, isNative = false }: ICreateStreamSolanaExt
-  ): Promise<CreateMultiResponse> {
+  ): Promise<IMultiTransactionResult> {
     const { recipients } = data;
 
     if (!sender.publicKey) {
@@ -419,7 +419,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       .map((el) => el.reason as BatchItemError);
     errors.push(...failures);
 
-    return { txs: signatures, metadatas, metadataToRecipient, errors };
+    const metadataIds = metadatas.map((pk) => pk.publicKey.toBase58());
+
+    return { txs: signatures, metadatas: metadataIds, metadataToRecipient, errors };
   }
 
   /**
@@ -428,7 +430,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async withdraw(
     { id, amount }: IWithdrawData,
     { invoker }: IInteractStreamSolanaExt
-  ): Promise<TxResponse> {
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -473,7 +475,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const signature = await this.sign(invoker, tx, hash);
 
-    return { ixs, tx: signature };
+    return { ixs, txId: signature };
   }
 
   /**
@@ -482,18 +484,18 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async cancel(
     { id }: ICancelData,
     { invoker }: IInteractStreamSolanaExt
-  ): Promise<TxResponse> {
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
     const streamPublicKey = new PublicKey(id);
-    const escrow_acc = await this.connection.getAccountInfo(streamPublicKey);
-    if (!escrow_acc?.data) {
+    const escrowAcc = await this.connection.getAccountInfo(streamPublicKey);
+    if (!escrowAcc?.data) {
       throw new Error("Couldn't get account info");
     }
 
-    const data = decodeStream(escrow_acc?.data);
+    const data = decodeStream(escrowAcc?.data);
 
     const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY);
     const partnerTokens = await ata(data.mint, data.partner);
@@ -530,7 +532,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const signature = await this.sign(invoker, tx, hash);
 
-    return { ixs, tx: signature };
+    return { ixs, txId: signature };
   }
 
   /**
@@ -540,7 +542,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async transfer(
     { id, newRecipient: newRecipientString }: ITransferData,
     { invoker }: IInteractStreamSolanaExt
-  ): Promise<TxResponse> {
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -582,7 +584,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const signature = await this.sign(invoker, tx, hash);
 
-    return { ixs, tx: signature };
+    return { ixs, txId: signature };
   }
 
   /**
@@ -591,7 +593,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async topup(
     { id, amount }: ITopUpData,
     { invoker, isNative }: ITopUpStreamSolanaExt
-  ): Promise<TxResponse> {
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -639,7 +641,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const signature = await this.sign(invoker, tx, hash);
 
-    return { ixs, tx: signature };
+    return { ixs, txId: signature };
   }
 
   /**
@@ -659,22 +661,23 @@ export default class SolanaStreamClient extends BaseStreamClient {
    * Streams are sorted by start time in ascending order.
    */
   public async get({
-    wallet,
+    address,
     type = StreamType.All,
     direction = StreamDirection.All,
-  }: GetAllParams): Promise<[string, StreamData][]> {
+  }: IGetAllData): Promise<[string, StreamData][]> {
+    const publicKey = new PublicKey(address);
     let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
     if (direction === "all") {
       const outgoingAccounts = await getProgramAccounts(
         this.connection,
-        wallet,
+        publicKey,
         STREAM_STRUCT_OFFSET_SENDER,
         this.programId
       );
       const incomingAccounts = await getProgramAccounts(
         this.connection,
-        wallet,
+        publicKey,
         STREAM_STRUCT_OFFSET_RECIPIENT,
         this.programId
       );
@@ -682,10 +685,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
     } else {
       const offset =
         direction === "outgoing" ? STREAM_STRUCT_OFFSET_SENDER : STREAM_STRUCT_OFFSET_RECIPIENT;
-      accounts = await getProgramAccounts(this.connection, wallet, offset, this.programId);
+      accounts = await getProgramAccounts(this.connection, publicKey, offset, this.programId);
     }
 
-    let streams: { [s: string]: any } = {};
+    let streams: Record<string, any> = {};
 
     accounts.forEach((account) => {
       const decoded = new Contract(decodeStream(account.account.data));
@@ -743,7 +746,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async update(
     data: IUpdateData,
     { invoker }: IInteractStreamSolanaExt
-  ): Promise<TxResponse> {
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -775,7 +778,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     return {
       ixs: [updateIx],
-      tx: signature,
+      txId: signature,
     };
   }
 

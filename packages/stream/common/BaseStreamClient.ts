@@ -1,3 +1,4 @@
+import { Stream } from "../solana";
 import {
   ICreateStreamData,
   ICreateMultipleStreamData,
@@ -7,25 +8,52 @@ import {
   ITopUpData,
   IGetOneData,
   IUpdateData,
+  ITransactionResult,
+  IMultiTransactionResult,
+  ICreateResult,
+  IGetAllData,
 } from "./types";
 
 export abstract class BaseStreamClient {
-  protected abstract create(streamData: ICreateStreamData, chainSpecificParams: any): Promise<any>;
+  protected abstract create(
+    streamData: ICreateStreamData,
+    chainSpecificParams: any
+  ): Promise<ICreateResult>;
 
   protected abstract createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
     chainSpecificParams: any
-  ): Promise<any>;
+  ): Promise<IMultiTransactionResult>;
 
-  protected abstract withdraw(withdrawData: IWithdrawData, chainSpecificParams: any): Promise<any>;
+  protected abstract withdraw(
+    withdrawData: IWithdrawData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
-  protected abstract cancel(cancelData: ICancelData, chainSpecificParams: any): Promise<any>;
+  protected abstract cancel(
+    cancelData: ICancelData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
-  protected abstract transfer(transferData: ITransferData, chainSpecificParams: any): Promise<any>;
+  protected abstract transfer(
+    transferData: ITransferData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
-  protected abstract topup(topupData: ITopUpData, chainSpecificParams: any): Promise<any>;
+  protected abstract topup(
+    topupData: ITopUpData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
-  protected abstract getOne(getOneData: IGetOneData, chainSpecificParams: any): Promise<any>;
+  protected abstract getOne(getOneData: IGetOneData, chainSpecificParams: any): Promise<Stream>;
 
-  protected abstract update(updateData: IUpdateData, chainSpecificParams: any): Promise<any>;
+  protected abstract get(
+    getAllData: IGetAllData,
+    chainSpecificParams: any
+  ): Promise<[string, Stream][]>;
+
+  protected abstract update(
+    updateData: IUpdateData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 }
