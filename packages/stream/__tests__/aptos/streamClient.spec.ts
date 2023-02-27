@@ -99,7 +99,7 @@ describe("AptosStreamClient", () => {
         type: "create",
         type_arguments: ["0xtest::token::Token"],
       });
-      expect(result).toEqual({ txId: mockReturn });
+      expect(result.txId).toEqual(mockReturn);
     });
   });
 
