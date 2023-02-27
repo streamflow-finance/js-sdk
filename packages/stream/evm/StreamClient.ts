@@ -73,7 +73,7 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const fees = await this.readContract.getWithdrawalFees(...this.getFeeParams(multiParams));
 
-    const args = this.generateMultiPayloads(multiParams)[0];
+    const args = (await this.generateMultiPayloads(multiParams))[0];
 
     const sum = streamData.amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
 
@@ -97,7 +97,7 @@ export default class EvmStreamClient extends BaseStreamClient {
       ...this.getFeeParams(multipleStreamData)
     );
 
-    const args = this.generateMultiPayloads(multipleStreamData);
+    const args = await this.generateMultiPayloads(multipleStreamData);
 
     const sum = multipleStreamData.recipients
       .reduce((acc, v) => acc.add(v.amount), new BN(0))
@@ -212,7 +212,10 @@ export default class EvmStreamClient extends BaseStreamClient {
   }
 
   // Utility function to prepare transaction payloads for multiple recipients.
-  private generateMultiPayloads(multipleStreamData: ICreateMultipleStreamData): any[] {
+  private async generateMultiPayloads(
+    multipleStreamData: ICreateMultipleStreamData
+  ): Promise<any[]> {
+    const sender = await this.signer.getAddress();
     return multipleStreamData.recipients.map((recipient) => {
       return [
         multipleStreamData.tokenId,
@@ -234,6 +237,7 @@ export default class EvmStreamClient extends BaseStreamClient {
           recipient.name,
         ],
         recipient.recipient,
+        multipleStreamData.partner || sender,
       ];
     });
   }

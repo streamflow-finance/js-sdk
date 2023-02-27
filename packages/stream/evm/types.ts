@@ -16,6 +16,9 @@ export interface StreamAbiResult {
     streamflow_fee_percentage: BigNumber;
     streamflow_fee: BigNumber;
     streamflow_fee_withdrawn: BigNumber;
+    partner_fee_percentage: BigNumber;
+    partner_fee: BigNumber;
+    partner_fee_withdrawn: BigNumber;
     tx_fee: BigNumber;
   };
   funds_unlocked_at_last_rate_change: BigNumber;
@@ -37,6 +40,7 @@ export interface StreamAbiResult {
   period: BigNumber;
   recipient: string;
   sender: string;
+  partner: string;
   start: BigNumber;
   token: string;
   withdrawn: BigNumber;
