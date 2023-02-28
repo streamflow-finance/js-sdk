@@ -101,7 +101,7 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => {
     name: stream.name,
     withdrawalFrequency: stream.withdrawFrequency.toNumber(),
     unlocked: function () {
-      return 0;
+      return new BN(0);
     }, //phantom method to preserve partial support of this object
     withdrawn: function () {
       return new BN(0);

@@ -85,7 +85,7 @@ export interface Stream {
   name: string;
   withdrawalFrequency: number;
 
-  unlocked(currentTimestamp: number, decimals: number): number;
+  unlocked(currentTimestamp: number, decimals: number): BN;
 }
 
 export class EvmContract implements Stream {
@@ -203,18 +203,17 @@ export class EvmContract implements Stream {
     this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
   }
 
-  unlocked(currentTimestamp: number, decimals: number): number {
-    const deposited = getNumberFromBN(this.depositedAmount, decimals);
+  unlocked(currentTimestamp: number): BN {
+    const deposited = this.depositedAmount;
 
-    if (currentTimestamp < this.cliff) return 0;
+    if (currentTimestamp < this.cliff) return new BN(0);
     if (currentTimestamp > this.end) return deposited;
 
-    const streamedBN = this.cliffAmount.add(
+    const streamed = this.cliffAmount.add(
       new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(this.amountPerPeriod)
     );
-    const streamed = getNumberFromBN(streamedBN, decimals);
 
-    return streamed < deposited ? streamed : deposited;
+    return streamed.lt(deposited) ? streamed : deposited;
   }
 
   remaining(decimals: number): number {

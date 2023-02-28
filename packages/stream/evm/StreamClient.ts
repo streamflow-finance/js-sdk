@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { BN } from "bn.js";
+import { toChecksumAddress } from "ethereum-checksum-address";
 
 import { BaseStreamClient } from "../common/BaseStreamClient";
 import {
@@ -12,6 +13,7 @@ import {
   IGetAllData,
   IGetOneData,
   IMultiTransactionResult,
+  IRecipient,
   ITopUpData,
   ITransactionResult,
   ITransferData,
@@ -83,10 +85,14 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const result = await this.writeContract.create(...args, { value: fees.value });
 
+    const confirmedTx = await result.wait();
+
+    const metadataId = this.formatMetadataId(confirmedTx.logs[confirmedTx.logs.length - 1].data);
+
     return {
       ixs: [],
       txId: result.hash,
-      metadataId: result.hash,
+      metadataId,
     };
   }
 
@@ -113,23 +119,36 @@ export default class EvmStreamClient extends BaseStreamClient {
     );
 
     const signatures: string[] = [];
-    const errors: any[] = [];
-    const results = await Promise.allSettled(creationPromises);
-    const successes = results
+    const results = await Promise.all(creationPromises);
+
+    const confirmations = await Promise.allSettled(results.map((result) => result.wait()));
+    const successes = confirmations
       .filter((el): el is PromiseFulfilledResult<any> => el.status === "fulfilled")
       .map((el) => el.value);
     signatures.push(...successes.map((el) => el.hash));
 
-    const failures = results
+    const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
+      result.status === "fulfilled"
+        ? this.formatMetadataId(result.value.logs[result.value.logs.length - 1].data)
+        : null
+    );
+    const metadataToRecipient = metadatas.reduce((acc, value, index) => {
+      if (value) {
+        acc[value] = multipleStreamData.recipients[index];
+      }
+
+      return acc;
+    }, {} as Record<string, IRecipient>);
+
+    const failures = confirmations
       .filter((el): el is PromiseRejectedResult => el.status === "rejected")
       .map((el) => el.reason);
-    errors.push(...failures);
 
     return {
       txs: signatures,
-      metadatas: [],
-      metadataToRecipient: {},
-      errors,
+      metadatas: metadatas.filter(Boolean) as string[],
+      metadataToRecipient,
+      errors: failures,
     };
   }
 
@@ -176,13 +195,21 @@ export default class EvmStreamClient extends BaseStreamClient {
   }
 
   public async update(updateData: IUpdateData): Promise<ITransactionResult> {
-    console.log(updateData);
-    throw new Error("Not Implemented!");
+    const result = await this.writeContract.update(
+      updateData.id,
+      updateData.enableAutomaticWithdrawal ? [true] : [],
+      updateData.withdrawFrequency ? [updateData.withdrawFrequency.toString()] : [],
+      updateData.amountPerPeriod ? [updateData.amountPerPeriod.toString()] : []
+    );
+    return {
+      ixs: [],
+      txId: result.hash,
+    };
   }
 
   public async getOne({ id }: IGetOneData): Promise<Stream> {
     const result: StreamAbiResult = await this.readContract.getById(id);
-    throw new EvmContract(result);
+    return new EvmContract(result);
   }
 
   public async get({
@@ -252,5 +279,9 @@ export default class EvmStreamClient extends BaseStreamClient {
       multipleStreamData.automaticWithdrawal || false,
       multipleStreamData.withdrawalFrequency || 0,
     ];
+  }
+
+  private formatMetadataId(id: string): string {
+    return toChecksumAddress(`0x${id.replace(/^0x0+/, "")}`);
   }
 }
