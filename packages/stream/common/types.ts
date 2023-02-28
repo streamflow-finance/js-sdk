@@ -25,6 +25,7 @@ export interface IStreamConfig {
   tokenId: string;
   canPause?: boolean;
   canUpdateRate?: boolean;
+  partner?: string;
 }
 
 export type ICreateStreamData = IStreamConfig & IRecipient;

@@ -133,8 +133,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       transferableByRecipient,
       automaticWithdrawal = false,
       withdrawalFrequency = 0,
+      partner,
     }: ICreateStreamData,
-    { sender, partner = null, isNative = false }: ICreateStreamSolanaExt
+    { sender, isNative = false }: ICreateStreamSolanaExt
   ): Promise<ICreateResult> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
@@ -249,8 +250,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       transferableByRecipient,
       automaticWithdrawal = false,
       withdrawalFrequency = 0,
+      partner,
     }: ICreateStreamData,
-    { sender, partner = null, isNative = false }: ICreateStreamSolanaExt
+    { sender, isNative = false }: ICreateStreamSolanaExt
   ): Promise<ICreateResult> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
@@ -340,7 +342,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
-    { sender, partner = null, isNative = false }: ICreateStreamSolanaExt
+    { sender, isNative = false }: ICreateStreamSolanaExt
   ): Promise<IMultiTransactionResult> {
     const { recipients } = data;
 
@@ -357,7 +359,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
     for (const recipientData of recipients) {
       const { tx, metadata } = await this.prepareStreamTransaction(recipientData, data, {
         sender,
-        partner,
       });
 
       const metadataPubKey = metadata.publicKey.toBase58();
@@ -802,9 +803,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
       transferableByRecipient,
       automaticWithdrawal = false,
       withdrawalFrequency = 0,
+      partner,
     } = streamParams;
 
-    const { sender, partner = null } = solanaExtendedConfig;
+    const { sender } = solanaExtendedConfig;
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");

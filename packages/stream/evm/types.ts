@@ -16,6 +16,9 @@ export interface StreamAbiResult {
     streamflow_fee_percentage: BigNumber;
     streamflow_fee: BigNumber;
     streamflow_fee_withdrawn: BigNumber;
+    partner_fee_percentage: BigNumber;
+    partner_fee: BigNumber;
+    partner_fee_withdrawn: BigNumber;
     tx_fee: BigNumber;
   };
   funds_unlocked_at_last_rate_change: BigNumber;
@@ -37,6 +40,7 @@ export interface StreamAbiResult {
   period: BigNumber;
   recipient: string;
   sender: string;
+  partner: string;
   start: BigNumber;
   token: string;
   withdrawn: BigNumber;
@@ -81,7 +85,7 @@ export interface Stream {
   name: string;
   withdrawalFrequency: number;
 
-  unlocked(currentTimestamp: number, decimals: number): number;
+  unlocked(currentTimestamp: number, decimals: number): BN;
 }
 
 export class EvmContract implements Stream {
@@ -199,18 +203,17 @@ export class EvmContract implements Stream {
     this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
   }
 
-  unlocked(currentTimestamp: number, decimals: number): number {
-    const deposited = getNumberFromBN(this.depositedAmount, decimals);
+  unlocked(currentTimestamp: number): BN {
+    const deposited = this.depositedAmount;
 
-    if (currentTimestamp < this.cliff) return 0;
+    if (currentTimestamp < this.cliff) return new BN(0);
     if (currentTimestamp > this.end) return deposited;
 
-    const streamedBN = this.cliffAmount.add(
+    const streamed = this.cliffAmount.add(
       new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(this.amountPerPeriod)
     );
-    const streamed = getNumberFromBN(streamedBN, decimals);
 
-    return streamed < deposited ? streamed : deposited;
+    return streamed.lt(deposited) ? streamed : deposited;
   }
 
   remaining(decimals: number): number {
