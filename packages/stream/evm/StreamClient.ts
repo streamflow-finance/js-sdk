@@ -22,7 +22,7 @@ import {
   StreamDirection,
 } from "../common/types";
 import { Stream } from "../solana";
-import { BSC_PROGRAM_IDS, ETHERIUM_PROGRAM_IDS } from "./constants";
+import { BNB_PROGRAM_IDS, ETHERIUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE } from "../solana/constants";
@@ -48,15 +48,24 @@ export default class EvmStreamClient extends BaseStreamClient {
   ) {
     super();
 
-    if (chain !== IChain.Etherium && chain !== IChain.BSC) {
-      throw new Error("Wrong chain. Supported chains are Etherium and BSC");
+    if (chain !== IChain.Etherium && chain !== IChain.BNB && chain !== IChain.Polygon) {
+      throw new Error("Wrong chain. Supported chains are Etherium , BNB and Polygon!");
     }
 
     if (programId) {
       this.programId = programId;
     } else {
-      this.programId =
-        chain === IChain.Etherium ? ETHERIUM_PROGRAM_IDS[cluster] : BSC_PROGRAM_IDS[cluster];
+      switch (chain) {
+        case IChain.Etherium:
+          this.programId = ETHERIUM_PROGRAM_IDS[cluster];
+          break;
+        case IChain.BNB:
+          this.programId = BNB_PROGRAM_IDS[cluster];
+          break;
+        case IChain.Polygon:
+          this.programId = POLYGON_PROGRAM_IDS[cluster];
+          break;
+      }
     }
 
     this.provider = new ethers.providers.JsonRpcProvider(clusterUrl);
@@ -172,7 +181,7 @@ export default class EvmStreamClient extends BaseStreamClient {
   }
 
   public async transfer(transferData: ITransferData): Promise<ITransactionResult> {
-    const result = await this.writeContract.cancel(transferData.id, transferData.newRecipient);
+    const result = await this.writeContract.transfer(transferData.id, transferData.newRecipient);
     return {
       ixs: [],
       txId: result.hash,
@@ -185,7 +194,15 @@ export default class EvmStreamClient extends BaseStreamClient {
       topupData.amount.toString()
     );
 
-    const result = await this.writeContract.create(topupData.id, topupData.amount.toString(), {
+    const sum = topupData.amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
+
+    const stream = await this.getOne({ id: topupData.id });
+
+    const tokenContract = new ethers.Contract(stream.mint, ercAbi, this.signer);
+    const approvalTx = await tokenContract.approve(this.programId, sum.toString());
+    await approvalTx.wait();
+
+    const result = await this.writeContract.topUp(topupData.id, topupData.amount.toString(), {
       value: fees.value,
     });
     return {
@@ -282,6 +299,7 @@ export default class EvmStreamClient extends BaseStreamClient {
   }
 
   private formatMetadataId(id: string): string {
-    return toChecksumAddress(`0x${id.replace(/^0x0+/, "")}`);
+    // 40 chars is etherium address size
+    return toChecksumAddress(`0x${id.slice(-40)}`);
   }
 }

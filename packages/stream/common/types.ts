@@ -116,5 +116,6 @@ export enum IChain {
   Solana = "Solana",
   Aptos = "Aptos",
   Etherium = "Etherium",
-  BSC = "BSC",
+  BNB = "BNB",
+  Polygon = "Polygon",
 }
