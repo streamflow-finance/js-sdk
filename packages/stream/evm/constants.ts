@@ -1,6 +1,6 @@
 import { ICluster } from "../common/types";
 
-export const ETHERIUM_PROGRAM_IDS: Record<ICluster, string> = {
+export const ETHEREUM_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Mainnet]: "0x35fC2D13D97c13d6697Dc273fEDF93eBC92B7743",
   [ICluster.Devnet]: "0x35fC2D13D97c13d6697Dc273fEDF93eBC92B7743",
   [ICluster.Testnet]: "0x35fC2D13D97c13d6697Dc273fEDF93eBC92B7743",
