@@ -86,12 +86,6 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const args = (await this.generateMultiPayloads(multiParams))[0];
 
-    const sum = streamData.amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
-
-    const tokenContract = new ethers.Contract(streamData.tokenId, ercAbi, this.signer);
-    const approvalTx = await tokenContract.approve(this.programId, sum.toString());
-    await approvalTx.wait();
-
     const result = await this.writeContract.create(...args, { value: fees.value });
 
     const confirmedTx = await result.wait();
