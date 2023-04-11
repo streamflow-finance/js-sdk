@@ -7,6 +7,7 @@ import {
   ICancelData,
   IChain,
   ICluster,
+  ICreateMultiError,
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
@@ -112,37 +113,41 @@ export default class EvmStreamClient extends BaseStreamClient {
       this.writeContract.create(...item, { value: fees.value })
     );
 
-    const signatures: string[] = [];
-    const results = await Promise.all(creationPromises);
+    const results = await Promise.allSettled(creationPromises);
 
-    const confirmations = await Promise.allSettled(results.map((result) => result.wait()));
-    const successes = confirmations
-      .filter((el): el is PromiseFulfilledResult<any> => el.status === "fulfilled")
-      .map((el) => el.value);
-    signatures.push(...successes.map((el) => el.hash));
-
-    const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
-      result.status === "fulfilled"
-        ? this.formatMetadataId(result.value.logs[result.value.logs.length - 1].data)
-        : null
+    const confirmations = await Promise.allSettled(
+      results.map((result) =>
+        result.status === "fulfilled" ? result.value.wait() : Promise.reject(result.reason)
+      )
     );
-    const metadataToRecipient = metadatas.reduce((acc, value, index) => {
-      if (value) {
-        acc[value] = multipleStreamData.recipients[index];
+
+    const signatures: string[] = [];
+    const metadatas: string[] = [];
+    const errors: ICreateMultiError[] = [];
+    const metadataToRecipient: Record<string, IRecipient> = {};
+
+    confirmations.forEach((result, index) => {
+      const recipient = multipleStreamData.recipients[index];
+      if (result.status === "fulfilled") {
+        const metadataId = this.formatMetadataId(
+          result.value.logs[result.value.logs.length - 1].data
+        );
+        metadatas.push(metadataId);
+        signatures.push(result.value.hash);
+        metadataToRecipient[metadataId] = recipient;
+      } else {
+        errors.push({
+          recipient: recipient.recipient,
+          error: result.reason?.toString() ?? "Unknown error!",
+        });
       }
-
-      return acc;
-    }, {} as Record<string, IRecipient>);
-
-    const failures = confirmations
-      .filter((el): el is PromiseRejectedResult => el.status === "rejected")
-      .map((el) => el.reason);
+    });
 
     return {
       txs: signatures,
       metadatas: metadatas.filter(Boolean) as string[],
       metadataToRecipient,
-      errors: failures,
+      errors,
     };
   }
 
