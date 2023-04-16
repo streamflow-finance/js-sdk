@@ -48,25 +48,11 @@ export default class EvmStreamClient extends BaseStreamClient {
   ) {
     super();
 
-    if (chain !== IChain.Etherium && chain !== IChain.BNB && chain !== IChain.Polygon) {
-      throw new Error("Wrong chain. Supported chains are Etherium , BNB and Polygon!");
+    if (![IChain.Etherium, IChain.BNB, IChain.Polygon].includes(chain)) {
+      throw new Error("Wrong chain. Supported chains are Etherium, BNB, and Polygon!");
     }
 
-    if (programId) {
-      this.programId = programId;
-    } else {
-      switch (chain) {
-        case IChain.Etherium:
-          this.programId = ETHERIUM_PROGRAM_IDS[cluster];
-          break;
-        case IChain.BNB:
-          this.programId = BNB_PROGRAM_IDS[cluster];
-          break;
-        case IChain.Polygon:
-          this.programId = POLYGON_PROGRAM_IDS[cluster];
-          break;
-      }
-    }
+    this.programId = programId || getProgramIdForChainAndCluster(chain, cluster);
 
     this.provider = new ethers.providers.JsonRpcProvider(clusterUrl);
     this.signer = signer;
@@ -74,6 +60,19 @@ export default class EvmStreamClient extends BaseStreamClient {
     const baseContract = new ethers.Contract(this.programId, abi);
     this.readContract = baseContract.connect(this.provider);
     this.writeContract = baseContract.connect(this.signer);
+
+    function getProgramIdForChainAndCluster(chain, cluster) {
+      switch (chain) {
+        case IChain.Etherium:
+          return ETHERIUM_PROGRAM_IDS[cluster];
+        case IChain.BNB:
+          return BNB_PROGRAM_IDS[cluster];
+        case IChain.Polygon:
+          return POLYGON_PROGRAM_IDS[cluster];
+        default:
+          return null;
+      }
+    }
   }
 
   public async create(streamData: ICreateStreamData): Promise<ICreateResult> {
