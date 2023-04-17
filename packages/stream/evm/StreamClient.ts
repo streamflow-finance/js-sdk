@@ -136,9 +136,10 @@ export default class EvmStreamClient extends BaseStreamClient {
         signatures.push(result.value.hash);
         metadataToRecipient[metadataId] = recipient;
       } else {
+        const error = result.reason?.data?.message ?? result.reason?.message ?? result.reason;
         errors.push({
           recipient: recipient.recipient,
-          error: result.reason?.toString() ?? "Unknown error!",
+          error: error?.toString() ?? "Unknown error!",
         });
       }
     });
