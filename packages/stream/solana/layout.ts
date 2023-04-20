@@ -55,6 +55,7 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.blob(4, "ghost"),
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
+  BufferLayout.blob(4, "create_stream_params_padding_length"),
   BufferLayout.seq(BufferLayout.u8(), CREATE_PARAMS_PADDING, "create_params_padding"),
   BufferLayout.u8("closed"),
   BufferLayout.blob(8, "current_pause_start"),

@@ -39,6 +39,7 @@ export interface IStreamLayout {
   ghost: Uint8Array;
   pausable: number;
   can_update_rate: number;
+  create_params_padding_length: number;
   create_params_padding: number[];
   closed: number;
   current_pause_start: Uint8Array;

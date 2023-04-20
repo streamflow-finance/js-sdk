@@ -35,6 +35,7 @@ export interface StreamAbiResult {
     transferable_by_recipient: boolean;
     transferable_by_sender: boolean;
     withdrawal_frequency: BigNumber;
+    closed: boolean;
   };
   pause_cumulative: BigNumber;
   period: BigNumber;
@@ -163,6 +164,8 @@ export class EvmContract implements Stream {
 
   withdrawalFrequency: number;
 
+  closed: boolean;
+
   constructor(stream: StreamAbiResult) {
     this.magic = 0;
     this.version = 0;
@@ -201,6 +204,7 @@ export class EvmContract implements Stream {
     this.canTopup = stream.meta.can_topup;
     this.name = stream.meta.contract_name;
     this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
+    this.closed = stream.meta.closed;
   }
 
   unlocked(currentTimestamp: number): BN {

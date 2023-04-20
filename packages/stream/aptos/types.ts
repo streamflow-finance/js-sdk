@@ -42,6 +42,7 @@ export interface StreamResource {
     transferable_by_recipient: boolean;
     transferable_by_sender: boolean;
     withdrawal_frequency: string;
+    closed: boolean;
   };
   pause_cumulative: string;
   period: string;
@@ -168,6 +169,8 @@ export class Contract implements Stream {
 
   withdrawalFrequency: number;
 
+  closed: boolean;
+
   constructor(stream: StreamResource, tokenId: string) {
     this.magic = 0;
     this.version = 0;
@@ -207,6 +210,7 @@ export class Contract implements Stream {
     const name = stream.meta.contract_name.replace("0x", "");
     this.name = Buffer.from(name, "hex").toString("utf8");
     this.withdrawalFrequency = parseInt(stream.meta.withdrawal_frequency);
+    this.closed = stream.meta.closed;
   }
 
   unlocked(currentTimestamp: number): BN {

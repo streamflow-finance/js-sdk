@@ -57,6 +57,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     canTopup: Boolean(raw.can_topup),
     name: decoder.decode(raw.stream_name),
     withdrawFrequency: new BN(raw.withdraw_frequency, LE),
+    closed: Boolean(raw.closed),
   };
 };
 // DeprecationWarning: This object will be deprecated starting from the version 4.0.0. Use
@@ -100,6 +101,7 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => {
     canTopup: stream.canTopup,
     name: stream.name,
     withdrawalFrequency: stream.withdrawFrequency.toNumber(),
+    closed: stream.closed,
     unlocked: function () {
       return new BN(0);
     }, //phantom method to preserve partial support of this object

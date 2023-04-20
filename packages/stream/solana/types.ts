@@ -207,6 +207,7 @@ export interface Stream {
   canTopup: boolean;
   name: string;
   withdrawalFrequency: number;
+  closed: boolean;
 
   unlocked(currentTimestamp: number): BN;
 }
@@ -286,6 +287,8 @@ export class Contract implements Stream {
 
   withdrawalFrequency: number;
 
+  closed: boolean;
+
   constructor(stream: DecodedStream) {
     this.magic = stream.magic.toNumber();
     this.version = stream.version.toNumber();
@@ -324,6 +327,7 @@ export class Contract implements Stream {
     this.canTopup = stream.canTopup;
     this.name = stream.name;
     this.withdrawalFrequency = stream.withdrawFrequency.toNumber();
+    this.closed = stream.closed;
   }
 
   unlocked(currentTimestamp: number): BN {
@@ -382,6 +386,7 @@ export interface DecodedStream {
   canTopup: boolean;
   name: string;
   withdrawFrequency: BN;
+  closed: boolean;
 }
 
 export interface TransactionResponse {
