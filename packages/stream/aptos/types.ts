@@ -2,6 +2,7 @@ import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 
 import { getNumberFromBN } from "../common/utils";
+import { calculateUnlocked } from "../common/ContractUtils";
 
 export interface ICreateStreamAptosExt {
   senderWallet: WalletContextState;
@@ -171,6 +172,14 @@ export class Contract implements Stream {
 
   closed: boolean;
 
+  currentPauseStart: number;
+
+  pauseCumulative: number;
+
+  lastRateChangeTime: number;
+
+  fundsUnlockedAtLastRateChange: BN;
+
   constructor(stream: StreamResource, tokenId: string) {
     this.magic = 0;
     this.version = 0;
@@ -211,19 +220,24 @@ export class Contract implements Stream {
     this.name = Buffer.from(name, "hex").toString("utf8");
     this.withdrawalFrequency = parseInt(stream.meta.withdrawal_frequency);
     this.closed = stream.meta.closed;
+    this.currentPauseStart = parseInt(stream.current_pause_start);
+    this.pauseCumulative = parseInt(stream.pause_cumulative);
+    this.lastRateChangeTime = parseInt(stream.last_rate_change_time);
+    this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change);
   }
 
   unlocked(currentTimestamp: number): BN {
-    const deposited = this.depositedAmount;
-
-    if (currentTimestamp < this.cliff) return new BN(0);
-    if (currentTimestamp > this.end) return deposited;
-
-    const streamed = this.cliffAmount.add(
-      new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(this.amountPerPeriod)
+    return calculateUnlocked(
+      this.depositedAmount,
+      this.cliff,
+      this.cliffAmount,
+      this.end,
+      currentTimestamp,
+      this.lastRateChangeTime,
+      this.period,
+      this.amountPerPeriod,
+      this.fundsUnlockedAtLastRateChange
     );
-
-    return streamed.lt(deposited) ? streamed : deposited;
   }
 
   remaining(decimals: number): number {

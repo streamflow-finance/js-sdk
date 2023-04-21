@@ -58,6 +58,10 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     name: decoder.decode(raw.stream_name),
     withdrawFrequency: new BN(raw.withdraw_frequency, LE),
     closed: Boolean(raw.closed),
+    currentPauseStart: new BN(raw.current_pause_start, LE),
+    pauseCumulative: new BN(raw.pause_cumulative, LE),
+    lastRateChangeTime: new BN(raw.last_rate_change_time, LE),
+    fundsUnlockedAtLastRateChange: new BN(raw.funds_unlocked_at_last_rate_change, LE),
   };
 };
 // DeprecationWarning: This object will be deprecated starting from the version 4.0.0. Use
@@ -102,6 +106,11 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => {
     name: stream.name,
     withdrawalFrequency: stream.withdrawFrequency.toNumber(),
     closed: stream.closed,
+    currentPauseStart: stream.currentPauseStart.toNumber(),
+    pauseCumulative: stream.pauseCumulative.toNumber(),
+    lastRateChangeTime: stream.lastRateChangeTime.toNumber(),
+    fundsUnlockedAtLastRateChange: stream.fundsUnlockedAtLastRateChange,
+
     unlocked: function () {
       return new BN(0);
     }, //phantom method to preserve partial support of this object
