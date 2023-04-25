@@ -2,7 +2,7 @@ import BN from "bn.js";
 import { BigNumber } from "ethers";
 
 import { getNumberFromBN } from "../common/utils";
-import { calculateUnlocked } from "../common/ContractUtils";
+import { calculateUnlocked } from "../common/contractUtils";
 
 export interface StreamAbiResult {
   amount: BigNumber;
@@ -170,7 +170,7 @@ export class EvmContract implements Stream {
 
   currentPauseStart: number;
 
-  pauseCumulative: number;
+  pauseCumulative: BN;
 
   lastRateChangeTime: number;
 
@@ -216,7 +216,7 @@ export class EvmContract implements Stream {
     this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
     this.closed = stream.meta.closed;
     this.currentPauseStart = stream.current_pause_start.toNumber();
-    this.pauseCumulative = stream.pause_cumulative.toNumber();
+    this.pauseCumulative = new BN(stream.pause_cumulative.toString());
     this.lastRateChangeTime = stream.last_rate_change_time.toNumber();
     this.fundsUnlockedAtLastRateChange = new BN(
       stream.funds_unlocked_at_last_rate_change.toString()

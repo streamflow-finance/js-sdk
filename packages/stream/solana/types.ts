@@ -12,7 +12,7 @@ import BN from "bn.js";
 
 import { IRecipient, StreamDirection, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
-import { calculateUnlocked } from "../common/ContractUtils";
+import { calculateUnlocked } from "../common/contractUtils";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
@@ -210,7 +210,7 @@ export interface Stream {
   withdrawalFrequency: number;
   closed: boolean;
   currentPauseStart: number;
-  pauseCumulative: number;
+  pauseCumulative: BN;
   lastRateChangeTime: number;
   fundsUnlockedAtLastRateChange: BN;
 
@@ -296,7 +296,7 @@ export class Contract implements Stream {
 
   currentPauseStart: number;
 
-  pauseCumulative: number;
+  pauseCumulative: BN;
 
   lastRateChangeTime: number;
 
@@ -342,7 +342,7 @@ export class Contract implements Stream {
     this.withdrawalFrequency = stream.withdrawFrequency.toNumber();
     this.closed = stream.closed;
     this.currentPauseStart = stream.currentPauseStart.toNumber();
-    this.pauseCumulative = stream.pauseCumulative.toNumber();
+    this.pauseCumulative = stream.pauseCumulative;
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
   }

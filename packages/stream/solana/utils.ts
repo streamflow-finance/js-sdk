@@ -107,7 +107,7 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => {
     withdrawalFrequency: stream.withdrawFrequency.toNumber(),
     closed: stream.closed,
     currentPauseStart: stream.currentPauseStart.toNumber(),
-    pauseCumulative: stream.pauseCumulative.toNumber(),
+    pauseCumulative: stream.pauseCumulative,
     lastRateChangeTime: stream.lastRateChangeTime.toNumber(),
     fundsUnlockedAtLastRateChange: stream.fundsUnlockedAtLastRateChange,
 

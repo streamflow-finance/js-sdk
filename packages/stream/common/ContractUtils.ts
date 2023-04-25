@@ -16,39 +16,12 @@ export const calculateUnlocked = (
   if (currentTimestamp < cliff) return new BN(0);
   if (currentTimestamp > end) return deposited;
 
-  const streamed =
-    lastRateChangeTime !== 0
-      ? nonLinearReleaseRateUnlocked(
-          currentTimestamp,
-          lastRateChangeTime,
-          period,
-          amountPerPeriod,
-          fundsUnlockedAtLastRateChange
-        )
-      : linearReleaseRateUnlocked(currentTimestamp, cliff, period, cliffAmount, amountPerPeriod);
+  const savedUnlockedFunds = lastRateChangeTime === 0 ? cliffAmount : fundsUnlockedAtLastRateChange;
+  const savedUnlockedFundsTime = lastRateChangeTime === 0 ? cliff : lastRateChangeTime;
+
+  const streamed = new BN(Math.floor((currentTimestamp - savedUnlockedFundsTime) / period))
+    .mul(amountPerPeriod)
+    .add(savedUnlockedFunds);
 
   return streamed.lt(deposited) ? streamed : deposited;
-};
-
-const linearReleaseRateUnlocked = (
-  currentTime: number,
-  cliffTime: number,
-  period: number,
-  cliffAmount: BN,
-  releaseRate: BN
-) => {
-  const perPeriod = new BN(Math.floor((currentTime - cliffTime) / period));
-  return cliffAmount.add(perPeriod.mul(releaseRate));
-};
-
-const nonLinearReleaseRateUnlocked = (
-  currentTime: number,
-  lastRateChangeTime: number,
-  period: number,
-  releaseRate: BN,
-  fundsUnlockedAtLastRateChange: BN
-) => {
-  return new BN(Math.floor((currentTime - lastRateChangeTime) / period))
-    .mul(releaseRate)
-    .add(fundsUnlockedAtLastRateChange);
 };

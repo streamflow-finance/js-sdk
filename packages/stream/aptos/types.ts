@@ -2,7 +2,7 @@ import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 
 import { getNumberFromBN } from "../common/utils";
-import { calculateUnlocked } from "../common/ContractUtils";
+import { calculateUnlocked } from "../common/contractUtils";
 
 export interface ICreateStreamAptosExt {
   senderWallet: WalletContextState;
@@ -174,7 +174,7 @@ export class Contract implements Stream {
 
   currentPauseStart: number;
 
-  pauseCumulative: number;
+  pauseCumulative: BN;
 
   lastRateChangeTime: number;
 
@@ -221,7 +221,7 @@ export class Contract implements Stream {
     this.withdrawalFrequency = parseInt(stream.meta.withdrawal_frequency);
     this.closed = stream.meta.closed;
     this.currentPauseStart = parseInt(stream.current_pause_start);
-    this.pauseCumulative = parseInt(stream.pause_cumulative);
+    this.pauseCumulative = new BN(stream.pause_cumulative);
     this.lastRateChangeTime = parseInt(stream.last_rate_change_time);
     this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change);
   }
