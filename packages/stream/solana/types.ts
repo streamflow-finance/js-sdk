@@ -12,6 +12,7 @@ import BN from "bn.js";
 
 import { IRecipient, StreamDirection, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
+import { calculateUnlocked } from "../common/contractUtils";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
@@ -207,6 +208,11 @@ export interface Stream {
   canTopup: boolean;
   name: string;
   withdrawalFrequency: number;
+  closed: boolean;
+  currentPauseStart: number;
+  pauseCumulative: BN;
+  lastRateChangeTime: number;
+  fundsUnlockedAtLastRateChange: BN;
 
   unlocked(currentTimestamp: number): BN;
 }
@@ -286,6 +292,16 @@ export class Contract implements Stream {
 
   withdrawalFrequency: number;
 
+  closed: boolean;
+
+  currentPauseStart: number;
+
+  pauseCumulative: BN;
+
+  lastRateChangeTime: number;
+
+  fundsUnlockedAtLastRateChange: BN;
+
   constructor(stream: DecodedStream) {
     this.magic = stream.magic.toNumber();
     this.version = stream.version.toNumber();
@@ -324,19 +340,25 @@ export class Contract implements Stream {
     this.canTopup = stream.canTopup;
     this.name = stream.name;
     this.withdrawalFrequency = stream.withdrawFrequency.toNumber();
+    this.closed = stream.closed;
+    this.currentPauseStart = stream.currentPauseStart.toNumber();
+    this.pauseCumulative = stream.pauseCumulative;
+    this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
+    this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
   }
 
   unlocked(currentTimestamp: number): BN {
-    const deposited = this.depositedAmount;
-
-    if (currentTimestamp < this.cliff) return new BN(0);
-    if (currentTimestamp > this.end) return deposited;
-
-    const streamed = this.cliffAmount.add(
-      new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(this.amountPerPeriod)
+    return calculateUnlocked(
+      this.depositedAmount,
+      this.cliff,
+      this.cliffAmount,
+      this.end,
+      currentTimestamp,
+      this.lastRateChangeTime,
+      this.period,
+      this.amountPerPeriod,
+      this.fundsUnlockedAtLastRateChange
     );
-
-    return streamed.lt(deposited) ? streamed : deposited;
   }
 
   remaining(decimals: number): number {
@@ -382,6 +404,11 @@ export interface DecodedStream {
   canTopup: boolean;
   name: string;
   withdrawFrequency: BN;
+  closed: boolean;
+  currentPauseStart: BN;
+  pauseCumulative: BN;
+  lastRateChangeTime: BN;
+  fundsUnlockedAtLastRateChange: BN;
 }
 
 export interface TransactionResponse {

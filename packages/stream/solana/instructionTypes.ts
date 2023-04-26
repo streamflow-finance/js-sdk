@@ -36,6 +36,16 @@ export interface IStreamLayout {
   can_topup: number;
   stream_name: Uint8Array;
   withdraw_frequency: Uint8Array;
+  ghost: Uint8Array;
+  pausable: number;
+  can_update_rate: number;
+  create_params_padding_length: number;
+  create_params_padding: number[];
+  closed: number;
+  current_pause_start: Uint8Array;
+  pause_cumulative: Uint8Array;
+  last_rate_change_time: Uint8Array;
+  funds_unlocked_at_last_rate_change: Uint8Array;
 }
 
 export interface ICreateStreamLayout {
