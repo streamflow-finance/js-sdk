@@ -2,6 +2,7 @@ import BN from "bn.js";
 import { BigNumber } from "ethers";
 
 import { getNumberFromBN } from "../common/utils";
+import { calculateUnlocked } from "../common/contractUtils";
 
 export interface StreamAbiResult {
   amount: BigNumber;
@@ -35,6 +36,7 @@ export interface StreamAbiResult {
     transferable_by_recipient: boolean;
     transferable_by_sender: boolean;
     withdrawal_frequency: BigNumber;
+    closed: boolean;
   };
   pause_cumulative: BigNumber;
   period: BigNumber;
@@ -44,6 +46,7 @@ export interface StreamAbiResult {
   start: BigNumber;
   token: string;
   withdrawn: BigNumber;
+  unlocked(currentTimestamp: number): BN;
 }
 
 export interface Stream {
@@ -163,6 +166,16 @@ export class EvmContract implements Stream {
 
   withdrawalFrequency: number;
 
+  closed: boolean;
+
+  currentPauseStart: number;
+
+  pauseCumulative: BN;
+
+  lastRateChangeTime: number;
+
+  fundsUnlockedAtLastRateChange: BN;
+
   constructor(stream: StreamAbiResult) {
     this.magic = 0;
     this.version = 0;
@@ -201,19 +214,27 @@ export class EvmContract implements Stream {
     this.canTopup = stream.meta.can_topup;
     this.name = stream.meta.contract_name;
     this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
+    this.closed = stream.meta.closed;
+    this.currentPauseStart = stream.current_pause_start.toNumber();
+    this.pauseCumulative = new BN(stream.pause_cumulative.toString());
+    this.lastRateChangeTime = stream.last_rate_change_time.toNumber();
+    this.fundsUnlockedAtLastRateChange = new BN(
+      stream.funds_unlocked_at_last_rate_change.toString()
+    );
   }
 
   unlocked(currentTimestamp: number): BN {
-    const deposited = this.depositedAmount;
-
-    if (currentTimestamp < this.cliff) return new BN(0);
-    if (currentTimestamp > this.end) return deposited;
-
-    const streamed = this.cliffAmount.add(
-      new BN(Math.floor((currentTimestamp - this.cliff) / this.period)).mul(this.amountPerPeriod)
+    return calculateUnlocked(
+      this.depositedAmount,
+      this.cliff,
+      this.cliffAmount,
+      this.end,
+      currentTimestamp,
+      this.lastRateChangeTime,
+      this.period,
+      this.amountPerPeriod,
+      this.fundsUnlockedAtLastRateChange
     );
-
-    return streamed.lt(deposited) ? streamed : deposited;
   }
 
   remaining(decimals: number): number {
