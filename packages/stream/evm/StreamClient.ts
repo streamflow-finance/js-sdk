@@ -40,6 +40,8 @@ export default class EvmStreamClient extends BaseStreamClient {
 
   private writeContract: ethers.Contract;
 
+  private chain: IChain;
+
   constructor(
     clusterUrl: string,
     chain: IChain,
@@ -52,6 +54,8 @@ export default class EvmStreamClient extends BaseStreamClient {
     if (chain !== IChain.Ethereum && chain !== IChain.BNB && chain !== IChain.Polygon) {
       throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
     }
+
+    this.chain = chain;
 
     if (programId) {
       this.programId = programId;
@@ -129,9 +133,11 @@ export default class EvmStreamClient extends BaseStreamClient {
     confirmations.forEach((result, index) => {
       const recipient = multipleStreamData.recipients[index];
       if (result.status === "fulfilled") {
-        const metadataId = this.formatMetadataId(
-          result.value.logs[result.value.logs.length - 1].data
-        );
+        const eventsCount = result.value.logs.length;
+        const creationEventIndex =
+          this.chain === IChain.Polygon ? eventsCount - 2 : eventsCount - 1;
+
+        const metadataId = this.formatMetadataId(result.value.logs[creationEventIndex].data);
         metadatas.push(metadataId);
         signatures.push(result.value.hash);
         metadataToRecipient[metadataId] = recipient;
