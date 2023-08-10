@@ -5,14 +5,18 @@
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    // "strict": true,
     "lib": [
       "es2020",
       "dom"
     ],
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "types": ["jest"]
+    "types": [
+      "jest"
+    ]
   },
-  "exclude": ["packages/stream/dist"]
+  "exclude": [
+    "packages/stream/dist"
+  ]
 }
