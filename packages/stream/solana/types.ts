@@ -10,7 +10,7 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { calculateUnlocked } from "../common/contractUtils";
+import { calculateUnlockedAmount } from "../common/contractUtils";
 import { IRecipient, StreamDirection, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
@@ -348,7 +348,7 @@ export class Contract implements Stream {
   }
 
   unlocked(currentTimestamp: number): BN {
-    return calculateUnlocked(
+    return calculateUnlockedAmount(
       this.depositedAmount,
       this.cliff,
       this.cliffAmount,

@@ -1,7 +1,7 @@
 import BN from "bn.js";
 import { BigNumber } from "ethers";
 
-import { calculateUnlocked } from "../common/contractUtils";
+import { calculateUnlockedAmount } from "../common/contractUtils";
 import { getNumberFromBN } from "../common/utils";
 
 export interface StreamAbiResult {
@@ -227,7 +227,7 @@ export class EvmContract implements Stream {
   }
 
   unlocked(currentTimestamp: number): BN {
-    return calculateUnlocked(
+    return calculateUnlockedAmount(
       this.depositedAmount,
       this.cliff,
       this.cliffAmount,

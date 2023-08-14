@@ -51,8 +51,10 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.u8("can_topup"),
   BufferLayout.blob(64, "stream_name"),
   BufferLayout.blob(8, "withdraw_frequency"),
+
   // Unused, kept for backward compatibility™
   BufferLayout.blob(4, "ghost"),
+
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
   BufferLayout.blob(4, "create_stream_params_padding_length"),

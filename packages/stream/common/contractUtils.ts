@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-export const calculateUnlocked = (
+export const calculateUnlockedAmount = (
   depositedAmount: BN,
   cliff: number,
   cliffAmount: BN,

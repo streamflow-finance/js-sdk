@@ -1,7 +1,7 @@
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 
-import { calculateUnlocked } from "../common/contractUtils";
+import { calculateUnlockedAmount } from "../common/contractUtils";
 import { getNumberFromBN } from "../common/utils";
 
 export interface ICreateStreamAptosExt {
@@ -231,7 +231,7 @@ export class Contract implements Stream {
   }
 
   unlocked(currentTimestamp: number): BN {
-    return calculateUnlocked(
+    return calculateUnlockedAmount(
       this.depositedAmount,
       this.cliff,
       this.cliffAmount,
