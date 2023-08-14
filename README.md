@@ -72,7 +72,7 @@ const aptosClient = new StreamflowSolana.SolanaStreamClient(
 // Init Ethereum Client
 const ethereumClient = new StreamflowEVM.EvmStreamClient(
   "YOUR_ETHEREUM_NODE_URL",
-  Types.IChain.Etherium,
+  Types.IChain.Ethereum,
   signer // will be sender in a stream and authority for all stream related transactions
 );
 
