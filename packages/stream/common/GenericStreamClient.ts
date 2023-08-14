@@ -46,24 +46,50 @@ export interface AptosStreamClientOptions {
 }
 
 export interface EvmStreamClientOptions {
-  chain: IChain.Etherium | IChain.BNB | IChain.Polygon;
+  chain: IChain.Ethereum | IChain.BNB | IChain.Polygon;
   clusterUrl: string;
   signer: Signer;
   cluster?: ICluster;
   programId?: string;
 }
 
-type GenericStreamClientOptions =
-  | SolanaStreamClientOptions
-  | AptosStreamClientOptions
-  | EvmStreamClientOptions;
+type StreamClientOptions<T extends IChain> = T extends IChain.Solana
+  ? SolanaStreamClientOptions
+  : T extends IChain.Aptos
+  ? AptosStreamClientOptions
+  : EvmStreamClientOptions;
+type StreamClientType<T extends IChain> = T extends IChain.Solana
+  ? SolanaStreamClient
+  : T extends IChain.Aptos
+  ? AptosStreamClient
+  : EvmStreamClient;
+type ChainSpecificParams<T, SolanaExt, AptosExt> = T extends SolanaStreamClient
+  ? SolanaExt
+  : T extends AptosStreamClient
+  ? AptosExt
+  : undefined;
+type CreateSpecificParams<T extends IChain> = ChainSpecificParams<
+  StreamClientType<T>,
+  ICreateStreamSolanaExt,
+  ICreateStreamAptosExt
+>;
+type TopupSpecificParams<T extends IChain> = ChainSpecificParams<
+  StreamClientType<T>,
+  ITopUpStreamSolanaExt,
+  ITransactionAptosExt
+>;
+type InteractSpecificParams<T extends IChain> = ChainSpecificParams<
+  StreamClientType<T>,
+  IInteractStreamSolanaExt,
+  ITransactionAptosExt
+>;
 
-export default class GenericStreamClient extends BaseStreamClient {
-  public nativeStreamClient: SolanaStreamClient | AptosStreamClient | EvmStreamClient;
+export default class GenericStreamClient<T extends IChain> extends BaseStreamClient {
+  public nativeStreamClient: StreamClientType<T>;
 
   public chain: IChain;
 
-  constructor(options: GenericStreamClientOptions) {
+  constructor(options: StreamClientOptions<T>) {
     super();
 
     this.chain = options.chain;
@@ -75,7 +101,7 @@ export default class GenericStreamClient extends BaseStreamClient {
           options.cluster,
           options.commitment,
           options.programId
-        );
+        ) as StreamClientType<T>;
         break;
       case IChain.Aptos:
         this.nativeStreamClient = new AptosStreamClient(
@@ -83,10 +109,10 @@ export default class GenericStreamClient extends BaseStreamClient {
           options.cluster,
           options.maxGas,
           options.programId
-        );
+        ) as StreamClientType<T>;
         break;
       case IChain.BNB:
-      case IChain.Etherium:
+      case IChain.Ethereum:
       case IChain.Polygon:
         this.nativeStreamClient = new EvmStreamClient(
           options.clusterUrl,
@@ -94,7 +120,7 @@ export default class GenericStreamClient extends BaseStreamClient {
           options.signer,
           options.cluster,
           options.programId
-        );
+        ) as StreamClientType<T>;
         break;
     }
   }
@@ -104,15 +130,20 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public create(
     streamData: ICreateStreamData,
-    chainSpecificParams: ICreateStreamAptosExt | ICreateStreamSolanaExt
+    chainSpecificParams?: CreateSpecificParams<T>
   ): Promise<ICreateResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <ICreateStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.create(streamData, params);
-    } else {
-      const params = <ICreateStreamAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.create(streamData, params);
+      return this.nativeStreamClient.create(
+        streamData,
+        chainSpecificParams as ICreateStreamSolanaExt
+      );
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.create(
+        streamData,
+        chainSpecificParams as ICreateStreamAptosExt
+      );
     }
+    return this.nativeStreamClient.create(streamData);
   }
 
   /**
@@ -120,15 +151,20 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
-    chainSpecificParams: ICreateStreamAptosExt | ICreateStreamSolanaExt
+    chainSpecificParams?: CreateSpecificParams<T>
   ): Promise<IMultiTransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <ICreateStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.createMultiple(multipleStreamData, params);
-    } else {
-      const params = <ICreateStreamAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.createMultiple(multipleStreamData, params);
+      return this.nativeStreamClient.createMultiple(
+        multipleStreamData,
+        chainSpecificParams as ICreateStreamSolanaExt
+      );
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.createMultiple(
+        multipleStreamData,
+        chainSpecificParams as ICreateStreamAptosExt
+      );
     }
+    return this.nativeStreamClient.createMultiple(multipleStreamData);
   }
 
   /**
@@ -136,15 +172,20 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public withdraw(
     withdrawData: IWithdrawData,
-    chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
+    chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <IInteractStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.withdraw(withdrawData, params);
-    } else {
-      const params = <ITransactionAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.withdraw(withdrawData, params);
+      return this.nativeStreamClient.withdraw(
+        withdrawData,
+        chainSpecificParams as IInteractStreamSolanaExt
+      );
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.withdraw(
+        withdrawData,
+        chainSpecificParams as ITransactionAptosExt
+      );
     }
+    return this.nativeStreamClient.withdraw(withdrawData);
   }
 
   /**
@@ -152,15 +193,20 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public cancel(
     cancelData: ICancelData,
-    chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
+    chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <IInteractStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.cancel(cancelData, params);
-    } else {
-      const params = <ITransactionAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.cancel(cancelData, params);
+      return this.nativeStreamClient.cancel(
+        cancelData,
+        chainSpecificParams as IInteractStreamSolanaExt
+      );
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.cancel(
+        cancelData,
+        chainSpecificParams as ITransactionAptosExt
+      );
     }
+    return this.nativeStreamClient.cancel(cancelData);
   }
 
   /**
@@ -168,15 +214,20 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public transfer(
     transferData: ITransferData,
-    chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
+    chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <IInteractStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.transfer(transferData, params);
-    } else {
-      const params = <ITransactionAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.transfer(transferData, params);
+      return this.nativeStreamClient.transfer(
+        transferData,
+        chainSpecificParams as IInteractStreamSolanaExt
+      );
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.transfer(
+        transferData,
+        chainSpecificParams as ITransactionAptosExt
+      );
     }
+    return this.nativeStreamClient.transfer(transferData);
   }
 
   /**
@@ -184,15 +235,14 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public topup(
     topupData: ITopUpData,
-    chainSpecificParams: ITransactionAptosExt | ITopUpStreamSolanaExt
+    chainSpecificParams?: TopupSpecificParams<T>
   ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <ITopUpStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.topup(topupData, params);
-    } else {
-      const params = <ITransactionAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.topup(topupData, params);
+      return this.nativeStreamClient.topup(topupData, chainSpecificParams as ITopUpStreamSolanaExt);
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.topup(topupData, chainSpecificParams as ITransactionAptosExt);
     }
+    return this.nativeStreamClient.topup(topupData);
   }
 
   /**
@@ -214,14 +264,19 @@ export default class GenericStreamClient extends BaseStreamClient {
    */
   public update(
     updateData: IUpdateData,
-    chainSpecificParams: ITransactionAptosExt | IInteractStreamSolanaExt
+    chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
     if (this.nativeStreamClient instanceof SolanaStreamClient) {
-      const params = <IInteractStreamSolanaExt>chainSpecificParams;
-      return this.nativeStreamClient.update(updateData, params);
-    } else {
-      const params = <ITransactionAptosExt>chainSpecificParams;
-      return this.nativeStreamClient.update(updateData, params);
+      return this.nativeStreamClient.update(
+        updateData,
+        chainSpecificParams as IInteractStreamSolanaExt
+      );
+    } else if (this.nativeStreamClient instanceof AptosStreamClient) {
+      return this.nativeStreamClient.update(
+        updateData,
+        chainSpecificParams as ITransactionAptosExt
+      );
     }
+    return this.nativeStreamClient.update(updateData);
   }
 }

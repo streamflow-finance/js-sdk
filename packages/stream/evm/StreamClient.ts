@@ -22,7 +22,7 @@ import {
   StreamDirection,
 } from "../common/types";
 import { Stream } from "../solana";
-import { BNB_PROGRAM_IDS, ETHERIUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
+import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE } from "../solana/constants";
@@ -48,16 +48,16 @@ export default class EvmStreamClient extends BaseStreamClient {
   ) {
     super();
 
-    if (chain !== IChain.Etherium && chain !== IChain.BNB && chain !== IChain.Polygon) {
-      throw new Error("Wrong chain. Supported chains are Etherium , BNB and Polygon!");
+    if (chain !== IChain.Ethereum && chain !== IChain.BNB && chain !== IChain.Polygon) {
+      throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
     }
 
     if (programId) {
       this.programId = programId;
     } else {
       switch (chain) {
-        case IChain.Etherium:
-          this.programId = ETHERIUM_PROGRAM_IDS[cluster];
+        case IChain.Ethereum:
+          this.programId = ETHEREUM_PROGRAM_IDS[cluster];
           break;
         case IChain.BNB:
           this.programId = BNB_PROGRAM_IDS[cluster];
@@ -96,7 +96,9 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const confirmedTx = await result.wait();
 
-    const metadataId = this.formatMetadataId(confirmedTx.logs[confirmedTx.logs.length - 1].data);
+    const metadataId = this.formatMetadataId(
+      confirmedTx.events!.find((item) => item.event === "ContractCreated")!.args![0]
+    );
 
     return {
       ixs: [],
@@ -138,7 +140,9 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
       result.status === "fulfilled"
-        ? this.formatMetadataId(result.value.logs[result.value.logs.length - 1].data)
+        ? this.formatMetadataId(
+            result.value.events!.find((item) => item.event === "ContractCreated")!.args![0]
+          )
         : null
     );
     const metadataToRecipient = metadatas.reduce((acc, value, index) => {
@@ -299,7 +303,7 @@ export default class EvmStreamClient extends BaseStreamClient {
   }
 
   private formatMetadataId(id: string): string {
-    // 40 chars is etherium address size
+    // 40 chars is ethereum address size
     return toChecksumAddress(`0x${id.slice(-40)}`);
   }
 }

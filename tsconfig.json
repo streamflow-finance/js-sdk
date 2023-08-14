@@ -12,7 +12,11 @@
     ],
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "types": ["jest"]
+    "types": [
+      "jest"
+    ]
   },
-  "exclude": ["packages/stream/dist"]
+  "exclude": [
+    "packages/stream/dist"
+  ]
 }

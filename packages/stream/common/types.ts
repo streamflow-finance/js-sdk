@@ -115,7 +115,8 @@ export enum StreamType {
 export enum IChain {
   Solana = "Solana",
   Aptos = "Aptos",
-  Etherium = "Etherium",
+  Ethereum = "Ethereum",
   BNB = "BNB",
   Polygon = "Polygon",
+  Sui = "Sui",
 }

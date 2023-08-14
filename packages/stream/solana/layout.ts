@@ -1,5 +1,6 @@
 import * as BufferLayout from "@solana/buffer-layout";
 
+import { CREATE_PARAMS_PADDING } from "./constants";
 import {
   ICreateStreamLayout,
   ICreateUncheckedStreamLayout,
@@ -50,6 +51,19 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.u8("can_topup"),
   BufferLayout.blob(64, "stream_name"),
   BufferLayout.blob(8, "withdraw_frequency"),
+
+  // Unused, kept for backward compatibility™
+  BufferLayout.blob(4, "ghost"),
+
+  BufferLayout.u8("pausable"),
+  BufferLayout.u8("can_update_rate"),
+  BufferLayout.blob(4, "create_stream_params_padding_length"),
+  BufferLayout.seq(BufferLayout.u8(), CREATE_PARAMS_PADDING, "create_params_padding"),
+  BufferLayout.u8("closed"),
+  BufferLayout.blob(8, "current_pause_start"),
+  BufferLayout.blob(8, "pause_cumulative"),
+  BufferLayout.blob(8, "last_rate_change_time"),
+  BufferLayout.blob(8, "funds_unlocked_at_last_rate_change"),
 ]);
 
 /**
