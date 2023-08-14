@@ -97,7 +97,7 @@ export default class EvmStreamClient extends BaseStreamClient {
     const confirmedTx = await result.wait();
 
     const metadataId = this.formatMetadataId(
-      confirmedTx.events!.find((item) => item.event === "ContractCreated")!.args![0]
+      confirmedTx.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0]
     );
 
     return {
@@ -141,7 +141,8 @@ export default class EvmStreamClient extends BaseStreamClient {
     const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
       result.status === "fulfilled"
         ? this.formatMetadataId(
-            result.value.events!.find((item) => item.event === "ContractCreated")!.args![0]
+            result.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!
+              .args![0]
           )
         : null
     );
