@@ -96,7 +96,9 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const confirmedTx = await result.wait();
 
-    const metadataId = this.formatMetadataId(confirmedTx.logs[confirmedTx.logs.length - 1].data);
+    const metadataId = this.formatMetadataId(
+      confirmedTx.events!.find((item) => item.event === "ContractCreated")!.args![0]
+    );
 
     return {
       ixs: [],
@@ -138,7 +140,9 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
       result.status === "fulfilled"
-        ? this.formatMetadataId(result.value.logs[result.value.logs.length - 1].data)
+        ? this.formatMetadataId(
+            result.value.events!.find((item) => item.event === "ContractCreated")!.args![0]
+          )
         : null
     );
     const metadataToRecipient = metadatas.reduce((acc, value, index) => {
