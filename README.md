@@ -19,9 +19,16 @@ This package allows you to `create`, `createMultiple`, `withdraw`, `cancel`, `to
 
 You can also `getOne` stream and `get` multiple streams.
 
+---
+
 ## Installation
 
-`npm i @streamflow/stream`
+`npm i -s @streamflow/stream`
+
+or
+
+`yarn add @streamflow/stream`
+
 
 ## Import SDK
 
@@ -34,56 +41,75 @@ import { Types, GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/
 
 _Check the SDK for other types and utility functions._
 
-## Create GenericStreamClient instance
+## Create StreamClient instance
 
-GenericStreamClient wraps calls to chain client implementation.
+Before creating and manipulating streams chain specific or generic StreamClient instance must be created. All streams functions are methods on this instance.
 
-```javascript
-import { GenericStreamClient, Types } from "@streamflow/stream";
-
-const client =
-  new GenericStreamClient<Types.IChain.Solana>({
-    chain: Types.IChain.Solana,
-    clusterUrl: "https://api.mainnet-beta.solana.com",
-    cluster: Types.ICluster.Mainnet,
-  });
-```
-
-You can also initialize a chain client directly.
+### Solana
 
 ```javascript
 import {
   StreamflowSolana,
+  Types,
+} from "@streamflow/stream";
+
+const solanaClient = new StreamflowSolana.SolanaStreamClient(
+  "https://api.mainnet-beta.solana.com"
+);
+```
+
+### Aptos
+
+```javascript
+import {
   StreamflowAptos,
+  Types,
+} from "@streamflow/stream";
+
+const aptosClient = new StreamflowAptos.AptosStreamClient(
+  "https://fullnode.mainnet.aptoslabs.com/v1"
+);
+```
+
+### Ethereum
+
+```javascript
+import {
   StreamflowEVM,
   Types,
 } from "@streamflow/stream";
 
-// Init Solana Client
-const solanaClient = new StreamflowSolana.SolanaStreamClient(
-  "https://api.mainnet-beta.solana.com"
-);
-
-// Init Aptos Client
-const aptosClient = new StreamflowSolana.SolanaStreamClient(
-  "https://fullnode.mainnet.aptoslabs.com/v1"
-);
-
-// Init Ethereum Client
 const ethereumClient = new StreamflowEVM.EvmStreamClient(
   "YOUR_ETHEREUM_NODE_URL",
   Types.IChain.Ethereum,
   signer // will be sender in a stream and authority for all stream related transactions
 );
+```
 
-// Init Polygon Client
+
+### Polygon
+
+```javascript
+import {
+  StreamflowEVM,
+  Types,
+} from "@streamflow/stream";
+
 const polygonClient = new StreamflowEVM.EvmStreamClient(
   "YOUR_POLYGON_NODE_URL",
   Types.IChain.Polygon,
   signer // will be sender in a stream and authority for all stream related transactions
 );
+```
 
-// Init BNB Client
+### BNB
+
+```javascript
+import {
+  StreamflowEVM,
+  Types,
+} from "@streamflow/stream";
+
 const bnbClient = new StreamflowEVM.EvmStreamClient(
   "https://bsc-dataseed1.binance.org/",
   Types.IChain.BNB,
@@ -91,12 +117,33 @@ const bnbClient = new StreamflowEVM.EvmStreamClient(
 );
 ```
 
+
+### Generic Stream Client
+
+GenericStreamClient provides isomorphic interface to work with streams agnostic of chain.
+
+```javascript
+import { GenericStreamClient, Types } from "@streamflow/stream";
+
+const client =
+  new GenericStreamClient<Types.IChain.Solana>({
+    chain: Types.IChain.Solana, // Blockchain
+    clusterUrl: "https://api.mainnet-beta.solana.com", // RPC cluster URL
+    cluster: Types.ICluster.Mainnet, // (optional) (default: Mainnet)
+    // ...rest chain specific params e.g. commitment for Solana
+  });
+```
+
+All the examples below will contain generic method options descriptions and chain specific params.
+
+
+> NOTE: All timestamp parameters are in seconds.
 ## Create stream
 
 ```javascript
 const createStreamParams: Types.ICreateStreamData = {
-  recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
-  tokenId: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
+  recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Recipient address.
+  tokenId: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // Token mint address.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
   amount: getBN(100, 9), // depositing 100 tokens with 9 decimals mint.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
@@ -114,27 +161,19 @@ const createStreamParams: Types.ICreateStreamData = {
   partner: null, //  (optional) Partner's wallet address (string | null).
 };
 
-// Solana example
-try {
-  const { ixs, tx, metadata } = await client.create(createStreamParams, {
-    sender: wallet, // SignerWalletAdapter | Keypair
-  });
-} catch (exception) {
-  // handle exception
-}
+const solanaParams = {
+    sender: wallet, // SignerWalletAdapter or Keypair of Sender account
+    isNative: // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
+};
 
-// Aptos example
-try {
-  const { ixs, tx, metadata } = await client.create(createStreamParams, {
-    senderWallet: wallet, // WalletContextState
-  });
-} catch (exception) {
-  // handle exception
-}
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
+};
 
-// EVM Example
+const ethereumParams = undefined;
+
 try {
-  const { ixs, tx, metadata } = await client.create(createStreamParams);
+  const { ixs, tx, metadata } = await client.create(createStreamParams, solanaParams); // second argument differ depending on a chain
 } catch (exception) {
   // handle exception
 }
@@ -168,10 +207,19 @@ const createStreamParams: Types.ICreateMultipleStreamData = {
   partner: null, //  (optional) Partner's wallet address (string | null).
 };
 
+const solanaParams = {
+    sender: wallet, // SignerWalletAdapter or Keypair of Sender account
+    isNative: // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of sender
+};
+
+const ethereumParams = undefined;
+
 try {
-  const { txs } = await client.createMultiple(createMultiStreamsParams, {
-    sender: wallet, // SignerWalletAdapter | Keypair
-  });
+  const { txs } = await client.createMultiple(createMultiStreamsParams, solanaParams);
 } catch (exception) {
   // handle exception
 }
@@ -201,10 +249,19 @@ const withdrawStreamParams: Types.IWithdrawData = {
   amount: getBN(100, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
 };
 
+const solanaParams = {
+    invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of wallet signing the transaction
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+const ethereumParams = undefined;
+
 try {
-  const { ixs, tx } = await client.withdraw(withdrawStreamParams, {
-    invoker: wallet, // SignerWalletAdapter | Keypair
-  });
+  const { ixs, tx } = await client.withdraw(withdrawStreamParams, solanaParams);
 } catch (exception) {
   // handle exception
 }
@@ -218,10 +275,20 @@ const topupStreamParams: Types.ITopUpData = {
   amount: getBN(100, 9), // Specified amount to topup (increases deposited amount).
 };
 
+const solanaParams = {
+    invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction
+    isNative: // [ONLY FOR wSOL STREAMS] [optional] Wether topup is with Native Solanas
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of wallet signing the transaction
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+const ethereumParams = undefined;
+
 try {
-  const { ixs, tx } = await client.topup(topupStreamParams, {
-    invoker: wallet, // SignerWalletAdapter | Keypair
-  });
+  const { ixs, tx } = await client.topup(topupStreamParams, solanaParams);
 } catch (exception) {
   // handle exception
 }
@@ -235,10 +302,19 @@ const data: Types.ITransferData = {
   newRecipient: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier of a stream to be transferred.
 };
 
+const solanaParams = {
+    invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of wallet signing the transaction
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+const ethereumParams = undefined;
+
 try {
-  const { tx } = await client.transfer(data, {
-    invoker: wallet, // SignerWalletAdapter | Keypair
-  });
+  const { tx } = await client.transfer(data, solanaParams);
 } catch (exception) {
   // handle exception
 }
@@ -251,10 +327,19 @@ const cancelStreamParams: Types.ICancelData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
 };
 
+const solanaParams = {
+    invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction
+};
+
+const aptosParams = {
+    senderWallet: wallet, // AptosWalletAdapter Wallet of wallet signing the transaction
+    tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+const ethereumParams = undefined;
+
 try {
-  const { ixs, tx } = await StreamClient.cancel(cancelStreamParams, {
-    invoker: wallet, // SignerWalletAdapter | Keypair
-  });
+  const { ixs, tx } = await StreamClient.cancel(cancelStreamParams, solanaParams);
 } catch (exception) {
   // handle exception
 }
