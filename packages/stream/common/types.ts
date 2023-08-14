@@ -118,4 +118,5 @@ export enum IChain {
   Ethereum = "Ethereum",
   BNB = "BNB",
   Polygon = "Polygon",
+  Sui = "Sui",
 }
