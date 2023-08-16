@@ -10,7 +10,7 @@ import {
 } from "@solana/spl-token";
 
 import * as Layout from "./layout";
-import { BASE_FEE } from "./constants";
+import { BASE_FEE } from "../common/constants";
 import { IUpdateData } from "../common/types";
 
 interface CreateStreamData {

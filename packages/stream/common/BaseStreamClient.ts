@@ -1,4 +1,3 @@
-import { Stream } from "../solana";
 import {
   ICreateStreamData,
   ICreateMultipleStreamData,
@@ -12,6 +11,7 @@ import {
   IMultiTransactionResult,
   ICreateResult,
   IGetAllData,
+  Stream,
 } from "./types";
 
 export abstract class BaseStreamClient {

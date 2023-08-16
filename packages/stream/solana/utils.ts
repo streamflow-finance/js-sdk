@@ -11,7 +11,8 @@ import BN from "bn.js";
 import bs58 from "bs58";
 
 import { streamLayout } from "./layout";
-import { Stream, DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
+import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
+import { Stream } from "../common/types";
 
 const decoder = new TextDecoder("utf-8");
 const LE = "le"; //little endian

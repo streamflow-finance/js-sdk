@@ -19,7 +19,6 @@ import {
 } from "@solana/web3.js";
 
 import {
-  Stream as StreamData,
   Account,
   MetadataRecipientHashMap,
   Contract,
@@ -75,6 +74,7 @@ import {
   IWithdrawData,
   StreamDirection,
   StreamType,
+  Stream,
 } from "../common/types";
 import { BaseStreamClient } from "../common/BaseStreamClient";
 
@@ -648,7 +648,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch stream data by its id (address).
    */
-  public async getOne({ id }: IGetOneData): Promise<StreamData> {
+  public async getOne({ id }: IGetOneData): Promise<Stream> {
     const escrow = await this.connection.getAccountInfo(new PublicKey(id), TX_FINALITY_CONFIRMED);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info.");
@@ -665,7 +665,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     address,
     type = StreamType.All,
     direction = StreamDirection.All,
-  }: IGetAllData): Promise<[string, StreamData][]> {
+  }: IGetAllData): Promise<[string, Stream][]> {
     const publicKey = new PublicKey(address);
     let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
