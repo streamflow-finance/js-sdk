@@ -1,16 +1,28 @@
 import BN from "bn.js";
 
-export const calculateUnlockedAmount = (
-  depositedAmount: BN,
-  cliff: number,
-  cliffAmount: BN,
-  end: number,
-  currentTimestamp: number,
-  lastRateChangeTime: number,
-  period: number,
-  amountPerPeriod: BN,
-  fundsUnlockedAtLastRateChange: BN
-): BN => {
+interface ICalculateUnlockedAmount {
+  depositedAmount: BN;
+  cliff: number;
+  cliffAmount: BN;
+  end: number;
+  currentTimestamp: number;
+  lastRateChangeTime: number;
+  period: number;
+  amountPerPeriod: BN;
+  fundsUnlockedAtLastRateChange: BN;
+}
+
+export const calculateUnlockedAmount = ({
+  depositedAmount,
+  cliff,
+  cliffAmount,
+  end,
+  currentTimestamp,
+  lastRateChangeTime,
+  period,
+  amountPerPeriod,
+  fundsUnlockedAtLastRateChange,
+}: ICalculateUnlockedAmount): BN => {
   const deposited = depositedAmount;
 
   if (currentTimestamp < cliff) return new BN(0);

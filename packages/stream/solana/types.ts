@@ -301,17 +301,10 @@ export class Contract implements Stream {
   }
 
   unlocked(currentTimestamp: number): BN {
-    return calculateUnlockedAmount(
-      this.depositedAmount,
-      this.cliff,
-      this.cliffAmount,
-      this.end,
+    return calculateUnlockedAmount({
+      ...this,
       currentTimestamp,
-      this.lastRateChangeTime,
-      this.period,
-      this.amountPerPeriod,
-      this.fundsUnlockedAtLastRateChange
-    );
+    });
   }
 
   remaining(decimals: number): number {

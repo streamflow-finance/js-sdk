@@ -1,3 +1,3 @@
-export { default, default as SuiStreamClient } from "./StreamClient";
+export { default as SuiStreamClient } from "./StreamClient";
 
 export * from "./types";

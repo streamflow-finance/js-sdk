@@ -224,17 +224,10 @@ export class Contract implements Stream {
   }
 
   unlocked(currentTimestamp: number): BN {
-    return calculateUnlockedAmount(
-      this.depositedAmount,
-      this.cliff,
-      this.cliffAmount,
-      this.end,
+    return calculateUnlockedAmount({
+      ...this,
       currentTimestamp,
-      this.lastRateChangeTime,
-      this.period,
-      this.amountPerPeriod,
-      this.fundsUnlockedAtLastRateChange
-    );
+    });
   }
 
   remaining(decimals: number): number {
@@ -273,8 +266,7 @@ export class SuiWalletWrapper<T extends WalletContextState | Keypair> {
         ...input,
         signer: this.wallet,
       });
-    } else {
-      return this.wallet.signAndExecuteTransactionBlock(input);
     }
+    return this.wallet.signAndExecuteTransactionBlock(input);
   }
 }
