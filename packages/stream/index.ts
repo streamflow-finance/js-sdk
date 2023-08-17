@@ -5,5 +5,6 @@ export * as StreamflowSui from "./sui";
 
 export * as Types from "./common/types";
 export * from "./common/utils";
+export * from "./common/constants";
 
 export { default as GenericStreamClient } from "./common/GenericStreamClient";
