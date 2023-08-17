@@ -166,5 +166,5 @@ export interface Stream {
   lastRateChangeTime: number;
   fundsUnlockedAtLastRateChange: BN;
 
-  unlocked(currentTimestamp: number, decimals: number): BN;
+  unlocked(currentTimestamp: number): BN;
 }
