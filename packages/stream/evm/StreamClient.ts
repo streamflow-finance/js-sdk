@@ -19,13 +19,13 @@ import {
   ITransferData,
   IUpdateData,
   IWithdrawData,
+  Stream,
   StreamDirection,
 } from "../common/types";
-import { Stream } from "../solana";
 import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
-import { BASE_FEE } from "../solana/constants";
+import { BASE_FEE } from "../common/constants";
 import { EvmContract, StreamAbiResult } from "./types";
 
 export default class EvmStreamClient extends BaseStreamClient {

@@ -11,7 +11,7 @@ import {
 import BN from "bn.js";
 
 import { calculateUnlockedAmount } from "../common/contractUtils";
-import { IRecipient, StreamDirection, StreamType } from "../common/types";
+import { IRecipient, Stream, StreamDirection, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
@@ -170,53 +170,6 @@ export interface GetAllParams {
   direction?: StreamDirection;
 }
 
-export interface Stream {
-  magic: number;
-  version: number;
-  createdAt: number;
-  withdrawnAmount: BN;
-  canceledAt: number;
-  end: number;
-  lastWithdrawnAt: number;
-  sender: string;
-  senderTokens: string;
-  recipient: string;
-  recipientTokens: string;
-  mint: string;
-  escrowTokens: string;
-  streamflowTreasury: string;
-  streamflowTreasuryTokens: string;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: number;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
-  partnerFeePercent: number;
-  partner: string;
-  partnerTokens: string;
-  start: number;
-  depositedAmount: BN;
-  period: number;
-  amountPerPeriod: BN;
-  cliff: number;
-  cliffAmount: BN;
-  cancelableBySender: boolean;
-  cancelableByRecipient: boolean;
-  automaticWithdrawal: boolean;
-  transferableBySender: boolean;
-  transferableByRecipient: boolean;
-  canTopup: boolean;
-  name: string;
-  withdrawalFrequency: number;
-  closed: boolean;
-  currentPauseStart: number;
-  pauseCumulative: BN;
-  lastRateChangeTime: number;
-  fundsUnlockedAtLastRateChange: BN;
-
-  unlocked(currentTimestamp: number): BN;
-}
-
 export class Contract implements Stream {
   magic: number;
 
@@ -348,17 +301,10 @@ export class Contract implements Stream {
   }
 
   unlocked(currentTimestamp: number): BN {
-    return calculateUnlockedAmount(
-      this.depositedAmount,
-      this.cliff,
-      this.cliffAmount,
-      this.end,
+    return calculateUnlockedAmount({
+      ...this,
       currentTimestamp,
-      this.lastRateChangeTime,
-      this.period,
-      this.amountPerPeriod,
-      this.fundsUnlockedAtLastRateChange
-    );
+    });
   }
 
   remaining(decimals: number): number {

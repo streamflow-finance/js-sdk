@@ -1,55 +1,91 @@
-import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
+import { Keypair } from "@mysten/sui.js/cryptography";
+import { WalletContextState } from "@suiet/wallet-kit";
+import { TransactionBlock } from "@mysten/sui.js/transactions";
+import {
+  ExecuteTransactionRequestType,
+  SuiClient,
+  SuiTransactionBlockResponse,
+  SuiTransactionBlockResponseOptions,
+} from "@mysten/sui.js/client";
 import BN from "bn.js";
 
 import { calculateUnlockedAmount } from "../common/contractUtils";
 import { Stream } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
-export interface ICreateStreamAptosExt {
-  senderWallet: WalletContextState;
+export interface ICreateStreamSuiExt {
+  senderWallet: WalletContextState | Keypair;
 }
 
-export type ITransactionAptosExt = ICreateStreamAptosExt & {
+export interface ITransactionSuiExt {
+  senderWallet: WalletContextState | Keypair;
   tokenId: string;
-};
+}
+
+export interface ISuiIdParameters {
+  program: string;
+  config: string;
+  feeTable: string;
+}
+
+export interface IContractCreated {
+  address: string;
+}
+
+export interface IContractWithdrawn {
+  address: string;
+  amount: number;
+  streamflow_amount: number;
+  partner_amount: number;
+}
 
 export interface StreamResource {
+  id: { id: string };
   amount: string;
   amount_per_period: string;
+  balance: string;
   canceled_at: string;
   cliff_amount: string;
   closed: boolean;
-  contract_signer_cap: {
-    account: string;
-  };
   created: string;
   current_pause_start: string;
   end: string;
   fees: {
-    streamflow_fee: string;
-    streamflow_fee_percentage: string;
-    streamflow_fee_withdrawn: string;
+    fields: {
+      partner_fee: string;
+      partner_fee_percentage: string;
+      partner_fee_withdrawn: string;
+      streamflow_fee: string;
+      streamflow_fee_percentage: string;
+      streamflow_fee_withdrawn: string;
+    };
+    type: string;
   };
   funds_unlocked_at_last_rate_change: string;
   last_rate_change_time: string;
   last_withdrawn_at: string;
   meta: {
-    automatic_withdrawal: boolean;
-    can_topup: boolean;
-    can_update_rate: boolean;
-    cancelable_by_recipient: boolean;
-    cancelable_by_sender: boolean;
-    contract_name: string;
-    pausable: boolean;
-    transferable_by_recipient: boolean;
-    transferable_by_sender: boolean;
-    withdrawal_frequency: string;
+    fields: {
+      automatic_withdrawal: boolean;
+      can_topup: boolean;
+      can_update_rate: boolean;
+      cancelable_by_recipient: boolean;
+      cancelable_by_sender: boolean;
+      contract_name: number[];
+      pausable: boolean;
+      transferable_by_recipient: boolean;
+      transferable_by_sender: boolean;
+      withdrawal_frequency: string;
+    };
+    type: string;
   };
+  partner: string;
   pause_cumulative: string;
   period: string;
   recipient: string;
   sender: string;
   start: string;
+  version: string;
   withdrawn: string;
 }
 
@@ -139,8 +175,11 @@ export class Contract implements Stream {
   fundsUnlockedAtLastRateChange: BN;
 
   constructor(stream: StreamResource, tokenId: string) {
+    const meta = stream.meta.fields;
+    const fees = stream.fees.fields;
+
     this.magic = 0;
-    this.version = 0;
+    this.version = parseInt(stream.version);
     this.createdAt = parseInt(stream.created);
     this.withdrawnAmount = new BN(stream.withdrawn);
     this.canceledAt = parseInt(stream.canceled_at);
@@ -156,11 +195,11 @@ export class Contract implements Stream {
     this.streamflowTreasuryTokens = "";
     this.streamflowFeeTotal = new BN(0);
     this.streamflowFeeWithdrawn = new BN(0);
-    this.streamflowFeePercent = parseInt(stream.fees.streamflow_fee_percentage) / 10000;
+    this.streamflowFeePercent = parseInt(fees.streamflow_fee_percentage) / 10000;
     this.partnerFeeTotal = new BN(0);
     this.partnerFeeWithdrawn = new BN(0);
-    this.partnerFeePercent = 0;
-    this.partner = "";
+    this.partnerFeePercent = parseInt(fees.partner_fee_percentage) / 10000;
+    this.partner = stream.partner;
     this.partnerTokens = "";
     this.start = parseInt(stream.start);
     this.depositedAmount = new BN(stream.amount);
@@ -168,15 +207,15 @@ export class Contract implements Stream {
     this.amountPerPeriod = new BN(stream.amount_per_period);
     this.cliff = parseInt(stream.start);
     this.cliffAmount = new BN(stream.cliff_amount);
-    this.cancelableBySender = stream.meta.cancelable_by_sender;
-    this.cancelableByRecipient = stream.meta.cancelable_by_recipient;
-    this.automaticWithdrawal = stream.meta.automatic_withdrawal;
-    this.transferableBySender = stream.meta.transferable_by_sender;
-    this.transferableByRecipient = stream.meta.transferable_by_recipient;
-    this.canTopup = stream.meta.can_topup;
-    const name = stream.meta.contract_name.replace("0x", "");
+    this.cancelableBySender = meta.cancelable_by_sender;
+    this.cancelableByRecipient = meta.cancelable_by_recipient;
+    this.automaticWithdrawal = meta.automatic_withdrawal;
+    this.transferableBySender = meta.transferable_by_sender;
+    this.transferableByRecipient = meta.transferable_by_recipient;
+    this.canTopup = meta.can_topup;
+    const name = String.fromCharCode(...meta.contract_name);
     this.name = Buffer.from(name, "hex").toString("utf8");
-    this.withdrawalFrequency = parseInt(stream.meta.withdrawal_frequency);
+    this.withdrawalFrequency = parseInt(meta.withdrawal_frequency);
     this.closed = stream.closed;
     this.currentPauseStart = parseInt(stream.current_pause_start);
     this.pauseCumulative = new BN(stream.pause_cumulative);
@@ -193,5 +232,41 @@ export class Contract implements Stream {
 
   remaining(decimals: number): number {
     return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
+  }
+}
+
+export interface SuiSignAndExecuteTransactionBlockInput {
+  transactionBlock: TransactionBlock;
+  requestType?: ExecuteTransactionRequestType;
+  options?: SuiTransactionBlockResponseOptions;
+}
+
+export class SuiWalletWrapper<T extends WalletContextState | Keypair> {
+  wallet: T;
+
+  address: string;
+
+  client: SuiClient;
+
+  constructor(wallet: T, client: SuiClient) {
+    this.client = client;
+    this.wallet = wallet;
+    if (wallet instanceof Keypair) {
+      this.address = wallet.toSuiAddress();
+    } else {
+      this.address = wallet.address!;
+    }
+  }
+
+  public async signAndExecuteTransactionBlock(
+    input: SuiSignAndExecuteTransactionBlockInput
+  ): Promise<SuiTransactionBlockResponse> {
+    if (this.wallet instanceof Keypair) {
+      return this.client.signAndExecuteTransactionBlock({
+        ...input,
+        signer: this.wallet,
+      });
+    }
+    return this.wallet.signAndExecuteTransactionBlock(input);
   }
 }
