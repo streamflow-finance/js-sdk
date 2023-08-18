@@ -689,7 +689,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       accounts = await getProgramAccounts(this.connection, publicKey, offset, this.programId);
     }
 
-    let streams: Record<string, any> = {};
+    let streams: Record<string, Contract> = {};
 
     accounts.forEach((account) => {
       const decoded = new Contract(decodeStream(account.account.data));
@@ -697,14 +697,12 @@ export default class SolanaStreamClient extends BaseStreamClient {
     });
 
     const sortedStreams = Object.entries(streams).sort(
-      ([, stream1], [, stream2]) => stream2.startTime - stream1.startTime
+      ([, stream1], [, stream2]) => stream2.start - stream1.start
     );
 
     if (type === "all") return sortedStreams;
 
-    return type === "stream"
-      ? sortedStreams.filter((stream) => stream[1].canTopup)
-      : sortedStreams.filter((stream) => !stream[1].canTopup);
+    return sortedStreams.filter((stream) => stream[1].type === type);
   }
 
   private async sign(

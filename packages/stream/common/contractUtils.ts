@@ -1,5 +1,7 @@
 import BN from "bn.js";
 
+import { StreamType } from "./types";
+
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
   cliff: number;
@@ -36,4 +38,30 @@ export const calculateUnlockedAmount = ({
     .add(savedUnlockedFunds);
 
   return streamed.lt(deposited) ? streamed : deposited;
+};
+
+export const isPayment = (streamData: { canTopup: boolean }): boolean => {
+  return streamData.canTopup;
+};
+
+export const isTokenLock = (streamData: {
+  canTopup: boolean;
+  depositedAmount: BN;
+  cliffAmount: BN;
+}): boolean => {
+  return (
+    !streamData.canTopup && streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN("1")))
+  );
+};
+
+export const buildStreamType = (streamData: {
+  canTopup: boolean;
+  depositedAmount: BN;
+  cliffAmount: BN;
+}): StreamType => {
+  return isPayment(streamData)
+    ? StreamType.Payment
+    : isTokenLock(streamData)
+    ? StreamType.Lock
+    : StreamType.Vesting;
 };

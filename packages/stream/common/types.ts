@@ -107,9 +107,10 @@ export enum StreamDirection {
 }
 
 export enum StreamType {
-  Stream = "stream",
-  Vesting = "vesting",
   All = "all",
+  Payment = "payment",
+  Vesting = "vesting",
+  Lock = "lock",
 }
 
 export enum IChain {
@@ -165,6 +166,8 @@ export interface Stream {
   pauseCumulative: BN;
   lastRateChangeTime: number;
   fundsUnlockedAtLastRateChange: BN;
+
+  type: StreamType;
 
   unlocked(currentTimestamp: number): BN;
 }

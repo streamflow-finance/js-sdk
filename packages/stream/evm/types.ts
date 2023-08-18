@@ -1,8 +1,8 @@
 import BN from "bn.js";
 import { BigNumber } from "ethers";
 
-import { calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream } from "../common/types";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
+import { Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
 export interface StreamAbiResult {
@@ -133,6 +133,8 @@ export class EvmContract implements Stream {
 
   fundsUnlockedAtLastRateChange: BN;
 
+  type: StreamType;
+
   constructor(stream: StreamAbiResult) {
     this.magic = 0;
     this.version = 0;
@@ -178,6 +180,7 @@ export class EvmContract implements Stream {
     this.fundsUnlockedAtLastRateChange = new BN(
       stream.funds_unlocked_at_last_rate_change.toString()
     );
+    this.type = buildStreamType(this);
   }
 
   unlocked(currentTimestamp: number): BN {
