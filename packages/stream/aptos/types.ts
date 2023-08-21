@@ -1,8 +1,8 @@
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 
-import { calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream } from "../common/types";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
+import { Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
 export interface ICreateStreamAptosExt {
@@ -138,6 +138,8 @@ export class Contract implements Stream {
 
   fundsUnlockedAtLastRateChange: BN;
 
+  type: StreamType;
+
   constructor(stream: StreamResource, tokenId: string) {
     this.magic = 0;
     this.version = 0;
@@ -182,6 +184,7 @@ export class Contract implements Stream {
     this.pauseCumulative = new BN(stream.pause_cumulative);
     this.lastRateChangeTime = parseInt(stream.last_rate_change_time);
     this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change);
+    this.type = buildStreamType(this);
   }
 
   unlocked(currentTimestamp: number): BN {

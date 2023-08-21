@@ -10,7 +10,7 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { calculateUnlockedAmount } from "../common/contractUtils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
 import { IRecipient, Stream, StreamDirection, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
@@ -255,6 +255,8 @@ export class Contract implements Stream {
 
   fundsUnlockedAtLastRateChange: BN;
 
+  type: StreamType;
+
   constructor(stream: DecodedStream) {
     this.magic = stream.magic.toNumber();
     this.version = stream.version.toNumber();
@@ -298,6 +300,7 @@ export class Contract implements Stream {
     this.pauseCumulative = stream.pauseCumulative;
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
+    this.type = buildStreamType(this);
   }
 
   unlocked(currentTimestamp: number): BN {
