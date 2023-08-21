@@ -13,6 +13,7 @@ import bs58 from "bs58";
 import { streamLayout } from "./layout";
 import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
 import { Stream } from "../common/types";
+import { buildStreamType } from "../common/contractUtils";
 
 const decoder = new TextDecoder("utf-8");
 const LE = "le"; //little endian
@@ -111,6 +112,7 @@ export const formatDecodedStream = (stream: DecodedStream): Stream => {
     pauseCumulative: stream.pauseCumulative,
     lastRateChangeTime: stream.lastRateChangeTime.toNumber(),
     fundsUnlockedAtLastRateChange: stream.fundsUnlockedAtLastRateChange,
+    type: buildStreamType(stream),
     unlocked: function () {
       return new BN(0);
     }, //phantom method to preserve partial support of this object
