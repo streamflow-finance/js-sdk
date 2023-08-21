@@ -59,9 +59,11 @@ export const buildStreamType = (streamData: {
   depositedAmount: BN;
   cliffAmount: BN;
 }): StreamType => {
-  return isPayment(streamData)
-    ? StreamType.Payment
-    : isTokenLock(streamData)
-    ? StreamType.Lock
-    : StreamType.Vesting;
+  if (isPayment(streamData)) {
+    return StreamType.Payment;
+  }
+  if (isTokenLock(streamData)) {
+    return StreamType.Lock;
+  }
+  return StreamType.Vesting;
 };
