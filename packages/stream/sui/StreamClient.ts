@@ -138,7 +138,7 @@ export default class SuiStreamClient extends BaseStreamClient {
         txb.object(withdrawData.id),
         txb.object(this.configId),
         txb.object(SUI_CLOCK_OBJECT_ID),
-        txb.pure(withdrawData.amount),
+        txb.pure(withdrawData.amount.toString()),
       ],
     });
 
@@ -225,7 +225,7 @@ export default class SuiStreamClient extends BaseStreamClient {
         txb.object(this.configId),
         coinObject,
         txb.gas,
-        txb.pure(topupData.amount),
+        txb.pure(topupData.amount.toString()),
       ],
     });
     this.returnSplittedCoinObject(txb, tokenId, coins, coinObject);
@@ -293,11 +293,13 @@ export default class SuiStreamClient extends BaseStreamClient {
           "vector<bool>"
         ),
         txb.pure(
-          updateData.withdrawFrequency !== undefined ? [updateData.withdrawFrequency] : [],
+          updateData.withdrawFrequency !== undefined
+            ? [updateData.withdrawFrequency.toString()]
+            : [],
           "vector<u64>"
         ),
         txb.pure(
-          updateData.amountPerPeriod !== undefined ? [updateData.amountPerPeriod] : [],
+          updateData.amountPerPeriod !== undefined ? [updateData.amountPerPeriod.toString()] : [],
           "vector<u64>"
         ),
       ],
@@ -349,11 +351,11 @@ export default class SuiStreamClient extends BaseStreamClient {
           txb.object(SUI_CLOCK_OBJECT_ID),
           coinObject,
           txb.gas,
-          txb.pure(recipient.amount),
+          txb.pure(recipient.amount.toString()),
           txb.pure(multipleStreamData.period),
-          txb.pure(recipient.amountPerPeriod),
+          txb.pure(recipient.amountPerPeriod.toString()),
           txb.pure(multipleStreamData.start),
-          txb.pure(recipient.cliffAmount),
+          txb.pure(recipient.cliffAmount.toString()),
           txb.pure(multipleStreamData.cancelableBySender),
           txb.pure(multipleStreamData.cancelableByRecipient),
           txb.pure(multipleStreamData.cancelableBySender),
@@ -421,7 +423,7 @@ export default class SuiStreamClient extends BaseStreamClient {
       );
     }
     const sum = amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
-    return txb.splitCoins(coinObject, [txb.pure(sum)])[0];
+    return txb.splitCoins(coinObject, [txb.pure(sum.toString())])[0];
   }
 
   /**
