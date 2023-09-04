@@ -215,8 +215,7 @@ export class Contract implements Stream {
     this.transferableBySender = meta.transferable_by_sender;
     this.transferableByRecipient = meta.transferable_by_recipient;
     this.canTopup = meta.can_topup;
-    const name = String.fromCharCode(...meta.contract_name);
-    this.name = Buffer.from(name, "hex").toString("utf8");
+    this.name = String.fromCharCode(...meta.contract_name);
     this.withdrawalFrequency = parseInt(meta.withdrawal_frequency);
     this.closed = stream.closed;
     this.currentPauseStart = parseInt(stream.current_pause_start);
