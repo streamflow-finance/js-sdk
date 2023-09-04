@@ -40,30 +40,57 @@ export const calculateUnlockedAmount = ({
   return streamed.lt(deposited) ? streamed : deposited;
 };
 
+export const isCliffCloseToDepositedAmount = (streamData: {
+  depositedAmount: BN;
+  cliffAmount: BN;
+}): boolean => {
+  return streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN("1")));
+};
+
 export const isPayment = (streamData: { canTopup: boolean }): boolean => {
   return streamData.canTopup;
 };
 
+export const isVesting = (streamData: { canTopup: boolean }): boolean => {
+  return !streamData.canTopup && !isCliffCloseToDepositedAmount;
+};
+
 export const isTokenLock = (streamData: {
   canTopup: boolean;
+  automaticWithdrawal: boolean;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
 }): boolean => {
   return (
-    !streamData.canTopup && streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN("1")))
+    !streamData.canTopup &&
+    !streamData.automaticWithdrawal &&
+    !streamData.cancelableBySender &&
+    !streamData.cancelableByRecipient &&
+    !streamData.transferableBySender &&
+    !streamData.transferableByRecipient &&
+    isCliffCloseToDepositedAmount(streamData)
   );
 };
 
 export const buildStreamType = (streamData: {
   canTopup: boolean;
+  automaticWithdrawal: boolean;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
 }): StreamType => {
-  if (isPayment(streamData)) {
-    return StreamType.Payment;
+  if (isVesting(streamData)) {
+    return StreamType.Vesting;
   }
   if (isTokenLock(streamData)) {
     return StreamType.Lock;
   }
-  return StreamType.Vesting;
+  return StreamType.Payment;
 };
