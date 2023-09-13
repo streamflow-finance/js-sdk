@@ -1,5 +1,6 @@
 import { ICluster } from "../common/types";
 
+// TODO: remove Devnet and Local addresses as they are not deployed, they are just a copy Testnet values
 export const SUI_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Mainnet]: "0xa283fd6b45f1103176e7ae27e870c89df7c8783b15345e2b13faa81ec25c4fa6",
   [ICluster.Devnet]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
