@@ -86,7 +86,6 @@ const ethereumClient = new StreamflowEVM.EvmStreamClient(
 );
 ```
 
-
 ### Polygon
 
 ```javascript
@@ -117,6 +116,18 @@ const bnbClient = new StreamflowEVM.EvmStreamClient(
 );
 ```
 
+### Sui
+
+```javascript
+import {
+  StreamflowSui,
+  Types,
+} from "@streamflow/stream";
+
+const suiClient = new StreamflowSui.SuiStreamClient(
+  "https://fullnode.testnet.sui.io:443"
+);
+```
 
 ### Generic Stream Client
 
@@ -170,6 +181,10 @@ const aptosParams = {
     senderWallet: wallet, // AptosWalletAdapter Wallet of sender
 };
 
+const suiParams = {
+    senderWallet: wallet, // WalletContextState | Keypair
+};
+
 const ethereumParams = undefined;
 
 try {
@@ -216,6 +231,10 @@ const aptosParams = {
     senderWallet: wallet, // AptosWalletAdapter Wallet of sender
 };
 
+const suiParams = {
+    senderWallet: wallet, // WalletContextState | Keypair
+};
+
 const ethereumParams = undefined;
 
 try {
@@ -258,6 +277,11 @@ const aptosParams = {
     tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
 };
 
+const suiParams = {
+    senderWallet: wallet, // WalletContextState | Keypair
+    tokenId: "0x2::sui::SUI"
+};
+
 const ethereumParams = undefined;
 
 try {
@@ -283,6 +307,11 @@ const solanaParams = {
 const aptosParams = {
     senderWallet: wallet, // AptosWalletAdapter Wallet of wallet signing the transaction
     tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
+};
+
+const suiParams = {
+    senderWallet: wallet, // WalletContextState | Keypair
+    tokenId: "0x2::sui::SUI"
 };
 
 const ethereumParams = undefined;
@@ -311,6 +340,11 @@ const aptosParams = {
     tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
 };
 
+const suiParams = {
+    senderWallet: wallet, // WalletContextState | Keypair
+    tokenId: "0x2::sui::SUI"
+};
+
 const ethereumParams = undefined;
 
 try {
@@ -336,10 +370,15 @@ const aptosParams = {
     tokenId: "0x1::aptos_coin::AptosCoin", // Aptos Coin type
 };
 
+const suiParams = {
+    senderWallet: wallet, // WalletContextState | Keypair
+    tokenId: "0x2::sui::SUI"
+};
+
 const ethereumParams = undefined;
 
 try {
-  const { ixs, tx } = await StreamClient.cancel(cancelStreamParams, solanaParams);
+  const { ixs, tx } = await client.cancel(cancelStreamParams, solanaParams);
 } catch (exception) {
   // handle exception
 }
@@ -429,6 +468,11 @@ Streamflow protocol program IDs
 | ------- | ------------------------------------------------------------------ |
 | Testnet | 0xc6737de143d91b2f99a7e490d4f8348fdfa3bdd1eb8737a27d0455f8a3625688 |
 | Mainnet | 0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0 |
+
+| Sui     |                                                                    |
+| ------- | ------------------------------------------------------------------ |
+| Testnet | 0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a |
+| Mainnet | 0xa283fd6b45f1103176e7ae27e870c89df7c8783b15345e2b13faa81ec25c4fa6 |
 
 **All BN amounts are denominated in their smallest units.**
 
