@@ -51,7 +51,11 @@ export const isPayment = (streamData: { canTopup: boolean }): boolean => {
   return streamData.canTopup;
 };
 
-export const isVesting = (streamData: { canTopup: boolean }): boolean => {
+export const isVesting = (streamData: {
+  canTopup: boolean;
+  depositedAmount: BN;
+  cliffAmount: BN;
+}): boolean => {
   return !streamData.canTopup && !isCliffCloseToDepositedAmount(streamData);
 };
 
