@@ -35,6 +35,7 @@ describe("AptosStreamClient", () => {
       const mockSigner = jest.fn();
       const mockWallet: any = {
         signAndSubmitTransaction: mockSigner,
+        account: { address: "" },
       };
       const mockRecipient = {
         recipient: "0xtest",
