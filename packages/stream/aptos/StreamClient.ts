@@ -18,13 +18,8 @@ import {
   IWithdrawData,
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
-import {
-  Contract,
-  ICreateStreamAptosExt,
-  ITransactionAptosExt,
-  StreamResource,
-  AptosWalletWrapper,
-} from "./types";
+import { Contract, ICreateStreamAptosExt, ITransactionAptosExt, StreamResource } from "./types";
+import { AptosWalletWrapper } from "./wallet";
 
 export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;
