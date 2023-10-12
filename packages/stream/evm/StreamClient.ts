@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import { toChecksumAddress } from "ethereum-checksum-address";
 
 import { BaseStreamClient } from "../common/BaseStreamClient";
@@ -88,9 +88,7 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const sum = streamData.amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
 
-    const tokenContract = new ethers.Contract(streamData.tokenId, ercAbi, this.signer);
-    const approvalTx = await tokenContract.approve(this.programId, sum.toString());
-    await approvalTx.wait();
+    await this.approveTokens(streamData.tokenId, sum);
 
     const result = await this.writeContract.create(...args, { value: fees.value });
 
@@ -120,10 +118,7 @@ export default class EvmStreamClient extends BaseStreamClient {
       .reduce((acc, v) => acc.add(v.amount), new BN(0))
       .mul(new BN(BASE_FEE))
       .div(new BN(1000000));
-
-    const tokenContract = new ethers.Contract(multipleStreamData.tokenId, ercAbi, this.signer);
-    const approvalTx = await tokenContract.approve(this.programId, sum.toString());
-    await approvalTx.wait();
+    await this.approveTokens(multipleStreamData.tokenId, sum);
 
     const creationPromises = args.map((item) =>
       this.writeContract.create(...item, { value: fees.value })
@@ -203,9 +198,7 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const stream = await this.getOne({ id: topupData.id });
 
-    const tokenContract = new ethers.Contract(stream.mint, ercAbi, this.signer);
-    const approvalTx = await tokenContract.approve(this.programId, sum.toString());
-    await approvalTx.wait();
+    await this.approveTokens(stream.mint, sum);
 
     const result = await this.writeContract.topUp(topupData.id, topupData.amount.toString(), {
       value: fees.value,
@@ -258,6 +251,17 @@ export default class EvmStreamClient extends BaseStreamClient {
    */
   public getProgramId(): string {
     return this.programId;
+  }
+
+  public async approveTokens(tokenId: string, amount: BN): Promise<void> {
+    const tokenContract = new ethers.Contract(tokenId, ercAbi, this.signer);
+    const address = await this.signer.getAddress();
+    const allowance = await tokenContract.allowance(address, this.programId);
+    if (new BN(allowance.toString()).gte(amount)) {
+      return;
+    }
+    const approvalTx = await tokenContract.approve(this.programId, amount.toString());
+    await approvalTx.wait();
   }
 
   // Utility function to prepare transaction payloads for multiple recipients.
