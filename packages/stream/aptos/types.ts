@@ -1,3 +1,4 @@
+import { AptosAccount } from "aptos";
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 
@@ -6,7 +7,7 @@ import { Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
 export interface ICreateStreamAptosExt {
-  senderWallet: WalletContextState;
+  senderWallet: WalletContextState | AptosAccount;
 }
 
 export type ITransactionAptosExt = ICreateStreamAptosExt & {

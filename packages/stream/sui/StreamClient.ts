@@ -28,9 +28,9 @@ import {
   ICreateStreamSuiExt,
   ITransactionSuiExt,
   ISuiIdParameters,
-  SuiWalletWrapper,
   StreamResource,
 } from "./types";
+import { SuiWalletWrapper } from "./wallet";
 
 export default class SuiStreamClient extends BaseStreamClient {
   private programId: string;

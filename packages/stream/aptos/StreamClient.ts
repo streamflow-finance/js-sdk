@@ -19,6 +19,7 @@ import {
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
 import { Contract, ICreateStreamAptosExt, ITransactionAptosExt, StreamResource } from "./types";
+import { AptosWalletWrapper } from "./wallet";
 
 export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;
@@ -49,36 +50,19 @@ export default class AptosStreamClient extends BaseStreamClient {
     streamData: ICreateStreamData,
     { senderWallet }: ICreateStreamAptosExt
   ): Promise<ICreateResult> {
-    const acc = new AptosAccount(); // Generate random address as seeds for derriving "escrow" account
-    const seeds = acc.address().hex();
-    const payload = {
-      type: "create",
-      function: `${this.programId}::protocol::create`,
-      type_arguments: [streamData.tokenId],
-      arguments: [
-        seeds,
-        streamData.amount.toString(),
-        streamData.period,
-        streamData.amountPerPeriod.toString(),
-        streamData.start,
-        streamData.cliffAmount.toString(),
-        streamData.cancelableBySender,
-        streamData.cancelableByRecipient,
-        streamData.transferableBySender,
-        streamData.transferableByRecipient,
-        streamData.canTopup,
-        streamData.canPause || false,
-        streamData.canUpdateRate || false,
-        streamData.automaticWithdrawal || false,
-        streamData.withdrawalFrequency || 0,
-        streamData.name,
-        streamData.recipient,
-      ],
-    };
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
-    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    const [metadataId, payload] = this.generateMultiPayloads(
+      {
+        ...streamData,
+        recipients: [{ ...streamData }],
+      },
+      wallet
+    )[0];
 
-    return { ixs: [payload], txId: hash, metadataId: seeds };
+    const hash = await wallet.signAndSubmitTransaction(payload);
+
+    return { ixs: [payload], txId: hash, metadataId };
   }
 
   /**
@@ -88,7 +72,9 @@ export default class AptosStreamClient extends BaseStreamClient {
     multipleStreamData: ICreateMultipleStreamData,
     { senderWallet }: ICreateStreamAptosExt
   ): Promise<IMultiTransactionResult> {
-    const payloads = this.generateMultiPayloads(multipleStreamData);
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
+
+    const payloads = this.generateMultiPayloads(multipleStreamData, wallet);
 
     const txs: string[] = [];
     const metadatas: string[] = [];
@@ -96,19 +82,18 @@ export default class AptosStreamClient extends BaseStreamClient {
     const errors: ICreateMultiError[] = [];
 
     for (let i = 0; i < payloads.length; i++) {
-      const payload = payloads[i];
+      const [metadataId, payload] = payloads[i];
       const recipient = multipleStreamData.recipients[i];
       try {
-        const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+        const hash = await wallet.signAndSubmitTransaction(payload);
 
         txs.push(hash);
       } catch (e: any) {
         errors.push({
-          error: e?.toString() ?? "Unkown error!",
+          error: e?.toString() ?? "Unknown error!",
           recipient: recipient.recipient,
         });
       } finally {
-        const metadataId = payload.arguments[0];
         metadatas.push(metadataId);
         metadataToRecipient[metadataId] = recipient;
       }
@@ -134,8 +119,9 @@ export default class AptosStreamClient extends BaseStreamClient {
       type_arguments: [tokenId],
       arguments: [withdrawData.id, withdrawData.amount.toString()],
     };
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
-    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    const hash = await wallet.signAndSubmitTransaction(payload);
 
     return { ixs: [payload], txId: hash };
   }
@@ -153,8 +139,9 @@ export default class AptosStreamClient extends BaseStreamClient {
       type_arguments: [tokenId],
       arguments: [cancelData.id],
     };
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
-    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    const hash = await wallet.signAndSubmitTransaction(payload);
 
     return { ixs: [payload], txId: hash };
   }
@@ -172,8 +159,9 @@ export default class AptosStreamClient extends BaseStreamClient {
       type_arguments: [tokenId],
       arguments: [transferData.id, transferData.newRecipient],
     };
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
-    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    const hash = await wallet.signAndSubmitTransaction(payload);
 
     return { ixs: [payload], txId: hash };
   }
@@ -191,8 +179,9 @@ export default class AptosStreamClient extends BaseStreamClient {
       type_arguments: [tokenId],
       arguments: [topupData.id, topupData.amount.toString()],
     };
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
-    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    const hash = await wallet.signAndSubmitTransaction(payload);
 
     return { ixs: [payload], txId: hash };
   }
@@ -228,6 +217,8 @@ export default class AptosStreamClient extends BaseStreamClient {
     updateData: IUpdateData,
     { senderWallet, tokenId }: ITransactionAptosExt
   ): Promise<ITransactionResult> {
+    const wallet = new AptosWalletWrapper(senderWallet, this.client);
+
     const payload = {
       type: "update",
       function: `${this.programId}::protocol::update`,
@@ -240,7 +231,7 @@ export default class AptosStreamClient extends BaseStreamClient {
       ],
     };
 
-    const { hash } = await senderWallet.signAndSubmitTransaction(payload);
+    const hash = await wallet.signAndSubmitTransaction(payload);
 
     return { ixs: [payload], txId: hash };
   }
@@ -258,35 +249,44 @@ export default class AptosStreamClient extends BaseStreamClient {
 
   // Utility function to prepare transaction payloads for multiple recipients.
   private generateMultiPayloads(
-    multipleStreamData: ICreateMultipleStreamData
-  ): Types.TransactionPayload_EntryFunctionPayload[] {
+    multipleStreamData: ICreateMultipleStreamData,
+    wallet: AptosWalletWrapper<any>
+  ): [string, Types.TransactionPayload_EntryFunctionPayload][] {
     return multipleStreamData.recipients.map((recipient) => {
-      const acc = new AptosAccount(); // Generate random address as seeds for derriving "escrow" account
-      const seeds = acc.address().hex();
-      return {
-        type: "create",
-        function: `${this.programId}::protocol::create`,
-        type_arguments: [multipleStreamData.tokenId],
-        arguments: [
-          seeds,
-          recipient.amount.toString(),
-          multipleStreamData.period,
-          recipient.amountPerPeriod.toString(),
-          multipleStreamData.start,
-          recipient.cliffAmount.toString(),
-          multipleStreamData.cancelableBySender,
-          multipleStreamData.cancelableByRecipient,
-          multipleStreamData.transferableBySender,
-          multipleStreamData.transferableByRecipient,
-          multipleStreamData.canTopup,
-          multipleStreamData.canPause || false,
-          multipleStreamData.canUpdateRate || false,
-          multipleStreamData.automaticWithdrawal || false,
-          multipleStreamData.withdrawalFrequency || 0,
-          recipient.name,
-          recipient.recipient,
-        ],
-      };
+      const acc = new AptosAccount(); // Generate random address as seeds for deriving "escrow" account
+      const seeds = acc.address();
+      const metadataId = AptosAccount.getResourceAccountAddress(
+        wallet.address,
+        seeds.toUint8Array()
+      );
+      console.log(seeds);
+      return [
+        metadataId.toString(),
+        {
+          type: "create",
+          function: `${this.programId}::protocol::create`,
+          type_arguments: [multipleStreamData.tokenId],
+          arguments: [
+            seeds.toUint8Array(),
+            recipient.amount.toString(),
+            multipleStreamData.period,
+            recipient.amountPerPeriod.toString(),
+            multipleStreamData.start,
+            recipient.cliffAmount.toString(),
+            multipleStreamData.cancelableBySender,
+            multipleStreamData.cancelableByRecipient,
+            multipleStreamData.transferableBySender,
+            multipleStreamData.transferableByRecipient,
+            multipleStreamData.canTopup,
+            multipleStreamData.canPause || false,
+            multipleStreamData.canUpdateRate || false,
+            multipleStreamData.automaticWithdrawal || false,
+            multipleStreamData.withdrawalFrequency || 0,
+            recipient.name,
+            recipient.recipient,
+          ],
+        },
+      ];
     });
   }
 }

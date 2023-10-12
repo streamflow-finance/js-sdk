@@ -3,8 +3,6 @@ import { WalletContextState } from "@suiet/wallet-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import {
   ExecuteTransactionRequestType,
-  SuiClient,
-  SuiTransactionBlockResponse,
   SuiTransactionBlockResponseOptions,
 } from "@mysten/sui.js/client";
 import BN from "bn.js";
@@ -241,34 +239,4 @@ export interface SuiSignAndExecuteTransactionBlockInput {
   transactionBlock: TransactionBlock;
   requestType?: ExecuteTransactionRequestType;
   options?: SuiTransactionBlockResponseOptions;
-}
-
-export class SuiWalletWrapper<T extends WalletContextState | Keypair> {
-  wallet: T;
-
-  address: string;
-
-  client: SuiClient;
-
-  constructor(wallet: T, client: SuiClient) {
-    this.client = client;
-    this.wallet = wallet;
-    if (wallet instanceof Keypair) {
-      this.address = wallet.toSuiAddress();
-    } else {
-      this.address = wallet.address!;
-    }
-  }
-
-  public async signAndExecuteTransactionBlock(
-    input: SuiSignAndExecuteTransactionBlockInput
-  ): Promise<SuiTransactionBlockResponse> {
-    if (this.wallet instanceof Keypair) {
-      return this.client.signAndExecuteTransactionBlock({
-        ...input,
-        signer: this.wallet,
-      });
-    }
-    return this.wallet.signAndExecuteTransactionBlock(input);
-  }
 }
