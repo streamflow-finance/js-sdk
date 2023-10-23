@@ -235,6 +235,18 @@ export class Contract implements Stream {
   }
 }
 
+export interface SuiParsedError {
+  module: "protocol" | "admin" | "fee_manager";
+  code: number;
+  name: string;
+}
+
+export interface SuiErrorInfo {
+  index?: number;
+  text: string;
+  parsed?: SuiParsedError;
+}
+
 export interface SuiSignAndExecuteTransactionBlockInput {
   transactionBlock: TransactionBlock;
   requestType?: ExecuteTransactionRequestType;

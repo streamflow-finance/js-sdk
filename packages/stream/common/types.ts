@@ -73,6 +73,7 @@ export interface IGetAllData {
 export interface ICreateMultiError {
   recipient: string;
   error: string;
+  parsedError?: string;
 }
 
 type MetadataId = string;

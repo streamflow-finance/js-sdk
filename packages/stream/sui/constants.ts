@@ -21,3 +21,32 @@ export const SUI_FEE_TABLE_IDS: Record<ICluster, string> = {
   [ICluster.Testnet]: "0xf3661941207b5027fb4b85a74ca5a9fd1389fb57a8f2c57bd312b950e7d48012",
   [ICluster.Local]: "0xf3661941207b5027fb4b85a74ca5a9fd1389fb57a8f2c57bd312b950e7d48012",
 };
+
+export const SUI_ERROR_MATCH_REGEX =
+  /MoveAbort\(MoveLocation \{ module: ModuleId \{ address: (\w+), name: Identifier\("([\w_]+)"\) }, function: \d+, instruction: \d+, function_name: Some\("([\w_]+)"\) }, (\d+)\) in command (\d+)/;
+
+export const SUI_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } = {
+  protocol: {
+    1: "ECONTRACT_NOT_INIT",
+    2: "EBAD_AMOUNT",
+    3: "ENO_PERMISSIONS",
+    4: "EBADINPUT",
+    5: "ECLOSED",
+    6: "EBAD_INPUT_AMOUNT_PER_PERIOD",
+    8: "EBAD_INPUT_UPDATE_RATE",
+    9: "EBAD_INPUT_CLIFF_AMOUNT",
+    10: "EBAD_INPUT_PERIOD",
+    11: "EBAD_INPUT_START",
+    13: "EBAD_INSUFFICIENT_WITHDRAWAL_FEES",
+    14: "EBAD_INSUFFICIENT_AMOUNT",
+    15: "EPAUSED",
+    16: "ENOTPAUSED",
+  },
+  admin: {
+    0: "EADMIN_NOT_AUTHORIZED",
+    1: "EWITHDRAWOR_NOT_AUTHORIZED",
+  },
+  fee_manager: {
+    1: "EFEE_NOT_VALID",
+  },
+};
