@@ -56,4 +56,9 @@ export abstract class BaseStreamClient {
     updateData: IUpdateData,
     chainSpecificParams: any
   ): Promise<ITransactionResult>;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  extractErrorCode(err: Error): string | null {
+    return null;
+  }
 }

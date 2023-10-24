@@ -333,6 +333,11 @@ export default class SuiStreamClient extends BaseStreamClient {
     };
   }
 
+  public extractErrorCode(err: Error): string | null {
+    const errorInfo = extractSuiErrorInfo(err.toString() ?? "Unknown error!");
+    return errorInfo?.parsed?.name || null;
+  }
+
   /**
    * Returns StreamClient protocol program ID.
    */

@@ -1,5 +1,7 @@
 import BN from "bn.js";
 
+import { ContractError } from "./types";
+
 /**
  * Used for conversion of token amounts to their Big Number representation.
  * Get Big Number representation in the smallest units from the same value in the highest units.
@@ -27,3 +29,20 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
   value.gt(new BN(2 ** 53 - 1))
     ? value.div(new BN(10 ** decimals)).toNumber()
     : value.toNumber() / 10 ** decimals;
+
+export async function handleError<T>(
+  func: () => Promise<T>,
+  callback?: (err: Error) => string | null
+): Promise<T> {
+  try {
+    return await func();
+  } catch (err: any) {
+    if (err instanceof Error) {
+      if (callback) {
+        throw new ContractError(err, callback(err));
+      }
+      throw new ContractError(err);
+    }
+    throw err;
+  }
+}

@@ -1,4 +1,4 @@
-import { ContractError, ICluster } from "../common/types";
+import { ContractErrorCode, ICluster } from "../common/types";
 
 export const APTOS_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Mainnet]: "0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0",
@@ -10,23 +10,23 @@ export const APTOS_PROGRAM_IDS: Record<ICluster, string> = {
 
 export const APTOS_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } = {
   protocol: {
-    1: ContractError.ECONTRACT_NOT_INIT,
-    2: ContractError.EBAD_AMOUNT,
-    3: ContractError.ENO_PERMISSIONS,
-    4: ContractError.EBADINPUT,
-    5: ContractError.ECLOSED,
-    6: ContractError.EBAD_INPUT_AMOUNT_PER_PERIOD,
-    8: ContractError.EBAD_INPUT_UPDATE_RATE,
-    9: ContractError.EBAD_INPUT_CLIFF_AMOUNT,
-    10: ContractError.EBAD_INPUT_PERIOD,
-    11: ContractError.EBAD_INPUT_START,
-    12: ContractError.ENO_RECIPIENT_COIN_ADDRESS,
+    1: ContractErrorCode.ECONTRACT_NOT_INIT,
+    2: ContractErrorCode.EBAD_AMOUNT,
+    3: ContractErrorCode.ENO_PERMISSIONS,
+    4: ContractErrorCode.EBADINPUT,
+    5: ContractErrorCode.ECLOSED,
+    6: ContractErrorCode.EBAD_INPUT_AMOUNT_PER_PERIOD,
+    8: ContractErrorCode.EBAD_INPUT_UPDATE_RATE,
+    9: ContractErrorCode.EBAD_INPUT_CLIFF_AMOUNT,
+    10: ContractErrorCode.EBAD_INPUT_PERIOD,
+    11: ContractErrorCode.EBAD_INPUT_START,
+    12: ContractErrorCode.ENO_RECIPIENT_COIN_ADDRESS,
   },
   admin: {
-    0: ContractError.EADMIN_NOT_AUTHORIZED,
-    1: ContractError.EWITHDRAWOR_NOT_AUTHORIZED,
+    0: ContractErrorCode.EADMIN_NOT_AUTHORIZED,
+    1: ContractErrorCode.EWITHDRAWOR_NOT_AUTHORIZED,
   },
   fees: {
-    1: ContractError.EFEE_NOT_VALID,
+    1: ContractErrorCode.EFEE_NOT_VALID,
   },
 };

@@ -123,7 +123,7 @@ export enum IChain {
   Sui = "Sui",
 }
 
-export enum ContractError {
+export enum ContractErrorCode {
   ECONTRACT_NOT_INIT = "ECONTRACT_NOT_INIT",
   EBAD_AMOUNT = "EBAD_AMOUNT",
   ENO_PERMISSIONS = "ENO_PERMISSIONS",
@@ -195,4 +195,22 @@ export interface Stream {
   type: StreamType;
 
   unlocked(currentTimestamp: number): BN;
+}
+
+export class ContractError extends Error {
+  public contractErrorCode: string | null;
+
+  constructor(error: Error, code?: string | null) {
+    super(error.message); // Call the base class constructor with the error message
+    this.name = "ContractError"; // Set the name property
+    this.contractErrorCode = code ?? null;
+
+    // Copy properties from the original error
+    Object.getOwnPropertyNames(error).forEach((key) => {
+      (this as any)[key] = (error as any)[key];
+    });
+
+    // If you want to capture the stack trace:
+    this.stack = error.stack;
+  }
 }
