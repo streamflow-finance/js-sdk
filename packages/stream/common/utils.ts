@@ -30,7 +30,13 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
     ? value.div(new BN(10 ** decimals)).toNumber()
     : value.toNumber() / 10 ** decimals;
 
-export async function handleError<T>(
+/**
+ * Used to make on chain calls to the contract and wrap raised errors if any
+ * @param func function that interacts with the contract
+ * @param callback callback that may be used to extract error code
+ * @returns {T}
+ */
+export async function handleContractError<T>(
   func: () => Promise<T>,
   callback?: (err: Error) => string | null
 ): Promise<T> {

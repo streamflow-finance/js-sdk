@@ -19,7 +19,7 @@ import {
   IGetAllData,
   Stream,
 } from "./types";
-import { handleError } from "./utils";
+import { handleContractError } from "./utils";
 import { AptosStreamClient, ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
 import { EvmStreamClient } from "../evm";
 import {
@@ -155,7 +155,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     streamData: ICreateStreamData,
     chainSpecificParams?: CreateSpecificParams<T>
   ): Promise<ICreateResult> {
-    return handleError(
+    return handleContractError(
       () => this.nativeStreamClient.create(streamData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
@@ -178,7 +178,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     withdrawData: IWithdrawData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return handleError(
+    return handleContractError(
       () => this.nativeStreamClient.withdraw(withdrawData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
@@ -191,7 +191,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     cancelData: ICancelData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return handleError(
+    return handleContractError(
       () => this.nativeStreamClient.cancel(cancelData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
@@ -204,7 +204,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     transferData: ITransferData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return handleError(
+    return handleContractError(
       () => this.nativeStreamClient.transfer(transferData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
@@ -217,7 +217,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     topupData: ITopUpData,
     chainSpecificParams?: TopupSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return handleError(
+    return handleContractError(
       () => this.nativeStreamClient.topup(topupData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
@@ -244,7 +244,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     updateData: IUpdateData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return handleError(
+    return handleContractError(
       () => this.nativeStreamClient.update(updateData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );

@@ -197,9 +197,17 @@ export interface Stream {
   unlocked(currentTimestamp: number): BN;
 }
 
+/**
+ * Error wrapper for calls made to the contract on chain
+ */
 export class ContractError extends Error {
   public contractErrorCode: string | null;
 
+  /**
+   * Constructs the Error Wrapper
+   * @param error Original error raised probably by the chain SDK
+   * @param code extracted code from the error if managed to parse it
+   */
   constructor(error: Error, code?: string | null) {
     super(error.message); // Call the base class constructor with the error message
     this.name = "ContractError"; // Set the name property
