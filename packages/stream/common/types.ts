@@ -73,7 +73,7 @@ export interface IGetAllData {
 export interface ICreateMultiError {
   recipient: string;
   error: string;
-  parsedError?: string;
+  contractErrorCode?: string;
 }
 
 type MetadataId = string;
@@ -123,28 +123,96 @@ export enum IChain {
   Sui = "Sui",
 }
 
+/**
+ * Error codes raised by all protocols except for Solana
+ */
 export enum ContractErrorCode {
+  /** Contract does not exist */
   ECONTRACT_NOT_INIT = "ECONTRACT_NOT_INIT",
+  /** Invalid total amount */
   EBAD_AMOUNT = "EBAD_AMOUNT",
+  /** No permissions to perform an operation */
   ENO_PERMISSIONS = "ENO_PERMISSIONS",
+  /** Invalid input parameters on create/update */
   EBADINPUT = "EBADINPUT",
+  /** Contract is already ended */
   ECLOSED = "ECLOSED",
+  /** Invalid amount per period input */
   EBAD_INPUT_AMOUNT_PER_PERIOD = "EBAD_INPUT_AMOUNT_PER_PERIOD",
+  /** Pause feature is not supported */
   EBAD_INPUT_PAUSABLE = "EBAD_INPUT_PAUSABLE",
+  /** Not used currently  */
   EBAD_INPUT_UPDATE_RATE = "EBAD_INPUT_UPDATE_RATE",
+  /** Invalid cliff amount input */
   EBAD_INPUT_CLIFF_AMOUNT = "EBAD_INPUT_CLIFF_AMOUNT",
+  /** Invalid period input */
   EBAD_INPUT_PERIOD = "EBAD_INPUT_PERIOD",
+  /** Invalid start time of the contract */
   EBAD_INPUT_START = "EBAD_INPUT_START",
+  /** EVM: token allowance is not enough to create a Contract */
   EBAD_INSUFFICIENT_TOKEN_ALLOWANCE = "EBAD_INSUFFICIENT_TOKEN_ALLOWANCE",
+  /** EVM: not enough coins were passed for withdrawal fees */
   EBAD_INSUFFICIENT_WITHDRAWAL_FEES = "EBAD_INSUFFICIENT_WITHDRAWAL_FEES",
-  EADDRESS_NOT_VALID = "EADDRESS_NOT_VALID",
-  EFEE_NOT_VALID = "EFEE_NOT_VALID",
+  /** Sui: Insufficient amount of tokens passed */
   EBAD_INSUFFICIENT_AMOUNT = "EBAD_INSUFFICIENT_AMOUNT",
+  /** Contract is already paused */
   EPAUSED = "EPAUSED",
+  /** Contract is not paused */
   ENOTPAUSED = "ENOTPAUSED",
-  EADMIN_NOT_AUTHORIZED = "EADMIN_NOT_AUTHORIZED",
-  EWITHDRAWOR_NOT_AUTHORIZED = "EWITHDRAWOR_NOT_AUTHORIZED",
+  /** Aptos: user opt out from direct coin transfers feature and has not coin wallet registered */
   ENO_RECIPIENT_COIN_ADDRESS = "ENO_RECIPIENT_COIN_ADDRESS",
+}
+
+/**
+ * Error codes raised by Solana protocol specifically
+ */
+export enum SolanaContractErrorCode {
+  /** Accounts not writable */
+  AccountsNotWritable = "AccountsNotWritable",
+  /** Invalid Metadata */
+  InvalidMetadata = "InvalidMetadata",
+  /** Invalid metadata account */
+  InvalidMetadataAccount = "InvalidMetadataAccount",
+  /** Provided accounts don't match the ones in contract */
+  MetadataAccountMismatch = "MetadataAccountMismatch",
+  /** Invalid escrow account */
+  InvalidEscrowAccount = "InvalidEscrowAccount",
+  /** Provided account(s) is/are not valid associated token accounts */
+  NotAssociated = "NotAssociated",
+  /** Sender mint does not match accounts mint */
+  MintMismatch = "MintMismatch",
+  /** Recipient not transferable for account */
+  TransferNotAllowed = "TransferNotAllowed",
+  /** Contract closed */
+  ContractClosed = "ContractClosed",
+  /** Invalid Streamflow Treasury accounts supplied */
+  InvalidTreasury = "InvalidTreasury",
+  /** Given timestamps are invalid */
+  InvalidTimestamps = "InvalidTimestamps",
+  /** Invalid deposit configuration */
+  InvalidDepositConfiguration = "InvalidDepositConfiguration",
+  /** Amount cannot be zero */
+  AmountIsZero = "AmountIsZero",
+  /** Amount requested is larger than available */
+  AmountMoreThanAvailable = "AmountMoreThanAvailable",
+  /** Amount currently available is zero */
+  AmountAvailableIsZero = "AmountAvailableIsZero",
+  /** Arithmetic error */
+  ArithmeticError = "ArithmeticError",
+  /** Metadata account data must be 1104 bytes long */
+  InvalidMetadataSize = "InvalidMetadataSize",
+  /** Metadata state account must be initialized */
+  UninitializedMetadata = "UninitializedMetadata",
+  /** Authority does not have permission for this action */
+  Unauthorized = "Unauthorized",
+  /** Contract is not transferable to the original recipient */
+  SelfTransfer = "SelfTransfer",
+  /** Contract is already paused */
+  AlreadyPaused = "AlreadyPaused",
+  /** Contract is not paused */
+  NotPaused = "NotPaused",
+  /** Meta account is not rent exempt */
+  MetadataNotRentExempt = "MetadataNotRentExempt",
 }
 
 // Base types, implemented by each chain package

@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 
-import { ICluster } from "../common/types";
+import { ICluster, SolanaContractErrorCode } from "../common/types";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
 
@@ -33,28 +33,30 @@ export const AIRDROP_TEST_TOKEN = "Gssm3vfi8s65R31SBdmQRq6cKeYojGgup7whkw4VCiQj"
 
 export const AIRDROP_AMOUNT = 1; // 1 SOL is the cap on the testnet
 
+export const SOLANA_ERROR_MATCH_REGEX = /custom program error: (0x\d{2})/;
+
 export const SOLANA_ERROR_MAP: { [key: number]: string } = {
-  0x60: "AccountsNotWritable",
-  0x61: "InvalidMetadata",
-  0x62: "InvalidMetadataAccount",
-  0x63: "MetadataAccountMismatch",
-  0x64: "InvalidEscrowAccount",
-  0x65: "NotAssociated",
-  0x66: "MintMismatch",
-  0x67: "TransferNotAllowed",
-  0x68: "ContractClosed",
-  0x69: "InvalidTreasury",
-  0x70: "InvalidTimestamps",
-  0x71: "InvalidDepositConfiguration",
-  0x72: "AmountIsZero",
-  0x73: "AmountMoreThanAvailable",
-  0x74: "AmountAvailableIsZero",
-  0x80: "ArithmeticError",
-  0x81: "InvalidMetadataSize",
-  0x82: "UninitializedMetadata",
-  0x83: "Unauthorized",
-  0x84: "SelfTransfer",
-  0x85: "AlreadyPaused",
-  0x86: "NotPaused",
-  0x87: "MetadataNotRentExempt",
+  0x60: SolanaContractErrorCode.AccountsNotWritable,
+  0x61: SolanaContractErrorCode.InvalidMetadata,
+  0x62: SolanaContractErrorCode.InvalidMetadataAccount,
+  0x63: SolanaContractErrorCode.MetadataAccountMismatch,
+  0x64: SolanaContractErrorCode.InvalidEscrowAccount,
+  0x65: SolanaContractErrorCode.NotAssociated,
+  0x66: SolanaContractErrorCode.MintMismatch,
+  0x67: SolanaContractErrorCode.TransferNotAllowed,
+  0x68: SolanaContractErrorCode.ContractClosed,
+  0x69: SolanaContractErrorCode.InvalidTreasury,
+  0x70: SolanaContractErrorCode.InvalidTimestamps,
+  0x71: SolanaContractErrorCode.InvalidDepositConfiguration,
+  0x72: SolanaContractErrorCode.AmountIsZero,
+  0x73: SolanaContractErrorCode.AmountMoreThanAvailable,
+  0x74: SolanaContractErrorCode.AmountAvailableIsZero,
+  0x80: SolanaContractErrorCode.ArithmeticError,
+  0x81: SolanaContractErrorCode.InvalidMetadataSize,
+  0x82: SolanaContractErrorCode.UninitializedMetadata,
+  0x83: SolanaContractErrorCode.Unauthorized,
+  0x84: SolanaContractErrorCode.SelfTransfer,
+  0x85: SolanaContractErrorCode.AlreadyPaused,
+  0x86: SolanaContractErrorCode.NotPaused,
+  0x87: SolanaContractErrorCode.MetadataNotRentExempt,
 };

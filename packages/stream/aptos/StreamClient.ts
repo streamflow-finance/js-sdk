@@ -20,6 +20,7 @@ import {
 import { APTOS_PROGRAM_IDS } from "./constants";
 import { Contract, ICreateStreamAptosExt, ITransactionAptosExt, StreamResource } from "./types";
 import { AptosWalletWrapper } from "./wallet";
+import { extractAptosErrorCode } from "./utils";
 
 export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;
@@ -236,6 +237,10 @@ export default class AptosStreamClient extends BaseStreamClient {
     return { ixs: [payload], txId: hash };
   }
 
+  public extractErrorCode(err: Error): string | null {
+    return extractAptosErrorCode(err.toString() ?? "Unknown error!");
+  }
+
   /**
    * Returns StreamClient protocol program ID.
    */
@@ -259,7 +264,6 @@ export default class AptosStreamClient extends BaseStreamClient {
         wallet.address,
         seeds.toUint8Array()
       );
-      console.log(seeds);
       return [
         metadataId.toString(),
         {

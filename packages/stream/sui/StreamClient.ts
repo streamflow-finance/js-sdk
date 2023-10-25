@@ -126,7 +126,7 @@ export default class SuiStreamClient extends BaseStreamClient {
           errors.push({
             error: errorInfo.text,
             recipient: recipient.recipient,
-            parsedError: errorInfo.parsed?.name,
+            contractErrorCode: errorInfo.parsed?.name,
           });
         }
       });

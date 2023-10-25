@@ -61,6 +61,7 @@ export interface SuiStreamClientOptions {
   ids?: ISuiIdParameters;
 }
 
+/** Type referencing options for specific Chain Client */
 type StreamClientOptions<T extends IChain> = T extends IChain.Solana
   ? SolanaStreamClientOptions
   : T extends IChain.Aptos
@@ -68,6 +69,7 @@ type StreamClientOptions<T extends IChain> = T extends IChain.Solana
   : T extends IChain.Sui
   ? SuiStreamClientOptions
   : EvmStreamClientOptions;
+/** Type referencing Chain Client implementation */
 type StreamClientType<T extends IChain> = T extends IChain.Solana
   ? SolanaStreamClient
   : T extends IChain.Aptos
@@ -75,6 +77,7 @@ type StreamClientType<T extends IChain> = T extends IChain.Solana
   : T extends IChain.Sui
   ? SuiStreamClient
   : EvmStreamClient;
+/** Type referencing additional parameters used by a Chain Client */
 type ChainSpecificParams<T, SolanaExt, AptosExt, SuiExt> = T extends SolanaStreamClient
   ? SolanaExt
   : T extends AptosStreamClient
@@ -82,18 +85,21 @@ type ChainSpecificParams<T, SolanaExt, AptosExt, SuiExt> = T extends SolanaStrea
   : T extends SuiStreamClient
   ? SuiExt
   : undefined;
+/** Type referencing additional parameters used on Create by a Chain Client */
 type CreateSpecificParams<T extends IChain> = ChainSpecificParams<
   StreamClientType<T>,
   ICreateStreamSolanaExt,
   ICreateStreamAptosExt,
   ICreateStreamSuiExt
 >;
+/** Type referencing additional parameters used on Topup by a Chain Client */
 type TopupSpecificParams<T extends IChain> = ChainSpecificParams<
   StreamClientType<T>,
   ITopUpStreamSolanaExt,
   ITransactionAptosExt,
   ITransactionSuiExt
 >;
+/** Type referencing additional parameters used on other interactions by a Chain Client */
 type InteractSpecificParams<T extends IChain> = ChainSpecificParams<
   StreamClientType<T>,
   IInteractStreamSolanaExt,
@@ -101,6 +107,10 @@ type InteractSpecificParams<T extends IChain> = ChainSpecificParams<
   ITransactionSuiExt
 >;
 
+/** Generic Stream Client implementation that wrap Chain Client methods and enriches error messages if possible
+ * @property {StreamClientType} - Chain Client implementation
+ * @property {chain} - Chain
+ */
 export default class GenericStreamClient<T extends IChain> extends BaseStreamClient {
   public nativeStreamClient: StreamClientType<T>;
 
@@ -168,7 +178,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     multipleStreamData: ICreateMultipleStreamData,
     chainSpecificParams?: CreateSpecificParams<T>
   ): Promise<IMultiTransactionResult> {
-    return this.nativeStreamClient.createMultiple(multipleStreamData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.createMultiple(multipleStreamData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**

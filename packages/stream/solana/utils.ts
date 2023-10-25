@@ -14,6 +14,7 @@ import { streamLayout } from "./layout";
 import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
 import { Stream } from "../common/types";
 import { buildStreamType } from "../common/contractUtils";
+import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants";
 
 const decoder = new TextDecoder("utf-8");
 const LE = "le"; //little endian
@@ -150,12 +151,27 @@ export async function getProgramAccounts(
 }
 
 /**
- * Utility function to check if the transaction initiator is a KeyPair or a Wallet object
+ * Utility function to check if the transaction initiator is a Wallet object
  * @param {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
  * @return {boolean} - Returns true if parameter is a Wallet.
  */
 export function isSignerWallet(walletOrKeypair: Keypair | SignerWalletAdapter): boolean {
   return (<SignerWalletAdapter>walletOrKeypair).signTransaction !== undefined;
+}
+
+/**
+ * Utility function to check if the transaction initiator a Keypair object, tries to mitigate version mismatch issues
+ * @param walletOrKeypair {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
+ * @returns {boolean} - Returns true if parameter is a Keypair.
+ */
+function isSignerKeypair(
+  walletOrKeypair: Keypair | SignerWalletAdapter
+): walletOrKeypair is Keypair {
+  return (
+    walletOrKeypair instanceof Keypair ||
+    walletOrKeypair.constructor === Keypair ||
+    walletOrKeypair.constructor.name === Keypair.prototype.constructor.name
+  );
 }
 
 /**
@@ -168,7 +184,7 @@ export async function signAllTransactionWithRecipients(
   sender: Keypair | SignerWalletAdapter,
   items: BatchItem[]
 ): Promise<BatchItem[]> {
-  const isKeypair = sender instanceof Keypair;
+  const isKeypair = isSignerKeypair(sender);
   const isWallet = isSignerWallet(sender);
 
   if (isKeypair) {
@@ -231,4 +247,15 @@ export async function sendAndConfirmStreamRawTransaction(
  */
 export function ata(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
   return getAssociatedTokenAddress(mint, owner, true);
+}
+
+export function extractSolanaErrorCode(errorText: string): string | null {
+  const match = SOLANA_ERROR_MATCH_REGEX.exec(errorText);
+
+  if (!match) {
+    return null;
+  }
+
+  const errorCode = Number(match[1]);
+  return SOLANA_ERROR_MAP[errorCode] || null;
 }

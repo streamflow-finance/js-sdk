@@ -35,12 +35,15 @@
     "@solana/spl-token": "0.3.6",
     "@solana/wallet-adapter-base": "0.9.19",
     "@solana/web3.js": "1.70.1",
-    "@suiet/wallet-kit": "^0.2.17",
+    "@suiet/wallet-kit": "0.2.18",
     "aptos": "1.4.0",
     "bn.js": "5.2.1",
     "bs58": "5.0.0",
     "ethereum-checksum-address": "0.0.8",
     "ethers": "5.7.2",
     "js-sha256": "0.9.0"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "1.70.1"
   }
 }

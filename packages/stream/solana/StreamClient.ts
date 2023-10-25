@@ -32,6 +32,7 @@ import {
 import {
   ata,
   decodeStream,
+  extractSolanaErrorCode,
   getProgramAccounts,
   isSignerWallet,
   sendAndConfirmStreamRawTransaction,
@@ -75,6 +76,7 @@ import {
   StreamDirection,
   StreamType,
   Stream,
+  ICreateMultiError,
 } from "../common/types";
 import { BaseStreamClient } from "../common/BaseStreamClient";
 
@@ -352,7 +354,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const metadatas: Keypair[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
-    const errors: BatchItemError[] = [];
+    const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
     const batch: BatchItem[] = [];
 
@@ -417,7 +419,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const failures = responses
       .filter((el): el is PromiseRejectedResult => el.status === "rejected")
-      .map((el) => el.reason as BatchItemError);
+      .map((el) => ({
+        ...(el.reason as BatchItemError),
+        contractErrorCode: this.extractErrorCode(el.reason.error) || undefined,
+      }));
     errors.push(...failures);
 
     const metadataIds = metadatas.map((pk) => pk.publicKey.toBase58());
@@ -779,6 +784,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
       ixs: [updateIx],
       txId: signature,
     };
+  }
+
+  public extractErrorCode(err: Error): string | null {
+    return extractSolanaErrorCode(err.toString() ?? "Unknown error!");
   }
 
   /**

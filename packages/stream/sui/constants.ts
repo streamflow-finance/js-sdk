@@ -42,11 +42,4 @@ export const SUI_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } 
     15: ContractErrorCode.EPAUSED,
     16: ContractErrorCode.ENOTPAUSED,
   },
-  admin: {
-    0: ContractErrorCode.EADMIN_NOT_AUTHORIZED,
-    1: ContractErrorCode.EWITHDRAWOR_NOT_AUTHORIZED,
-  },
-  fee_manager: {
-    1: ContractErrorCode.EFEE_NOT_VALID,
-  },
 };

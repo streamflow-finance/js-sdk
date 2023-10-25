@@ -8,6 +8,8 @@ export const APTOS_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Local]: "0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0",
 };
 
+export const APTOS_ERROR_MATCH_REGEX = /Move abort in [a-z0-9]+::([^:]+): ([A-Z_]+)/;
+
 export const APTOS_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } = {
   protocol: {
     1: ContractErrorCode.ECONTRACT_NOT_INIT,
@@ -21,12 +23,5 @@ export const APTOS_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } 
     10: ContractErrorCode.EBAD_INPUT_PERIOD,
     11: ContractErrorCode.EBAD_INPUT_START,
     12: ContractErrorCode.ENO_RECIPIENT_COIN_ADDRESS,
-  },
-  admin: {
-    0: ContractErrorCode.EADMIN_NOT_AUTHORIZED,
-    1: ContractErrorCode.EWITHDRAWOR_NOT_AUTHORIZED,
-  },
-  fees: {
-    1: ContractErrorCode.EFEE_NOT_VALID,
   },
 };

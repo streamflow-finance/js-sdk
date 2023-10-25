@@ -27,6 +27,7 @@ import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE } from "../common/constants";
 import { EvmContract, StreamAbiResult } from "./types";
+import { extractEvmErrorCode } from "./utils";
 
 export default class EvmStreamClient extends BaseStreamClient {
   private programId: string;
@@ -244,6 +245,10 @@ export default class EvmStreamClient extends BaseStreamClient {
     const uniqueAddresses = [...new Set(addresses)];
     const results: StreamAbiResult[] = await this.readContract.getMultiple(uniqueAddresses);
     return results.map((result, index) => [uniqueAddresses[index], new EvmContract(result)]);
+  }
+
+  public extractErrorCode(err: Error): string | null {
+    return extractEvmErrorCode(err.toString() ?? "Unknown error!");
   }
 
   /**
