@@ -7,10 +7,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc --outDir ./dist --project ../../tsconfig.json",
-    "build-docs": "typedoc ./index.ts",
     "test": "jest .",
     "lint": "eslint .",
-    "prepublishOnly": "npm run lint && npm test && npm run build-docs && npm run build"
+    "prepublishOnly": "npm run lint && npm test && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
