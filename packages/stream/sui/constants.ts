@@ -1,4 +1,4 @@
-import { ICluster } from "../common/types";
+import { ContractErrorCode, ICluster } from "../common/types";
 
 // TODO: remove Devnet and Local addresses as they are not deployed, they are just a copy Testnet values
 export const SUI_PROGRAM_IDS: Record<ICluster, string> = {
@@ -20,4 +20,26 @@ export const SUI_FEE_TABLE_IDS: Record<ICluster, string> = {
   [ICluster.Devnet]: "0xf3661941207b5027fb4b85a74ca5a9fd1389fb57a8f2c57bd312b950e7d48012",
   [ICluster.Testnet]: "0xf3661941207b5027fb4b85a74ca5a9fd1389fb57a8f2c57bd312b950e7d48012",
   [ICluster.Local]: "0xf3661941207b5027fb4b85a74ca5a9fd1389fb57a8f2c57bd312b950e7d48012",
+};
+
+export const SUI_ERROR_MATCH_REGEX =
+  /MoveAbort\(MoveLocation \{ module: ModuleId \{ address: (\w+), name: Identifier\("([\w_]+)"\) }, function: \d+, instruction: \d+, function_name: Some\("([\w_]+)"\) }, (\d+)\) in command (\d+)/;
+
+export const SUI_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } = {
+  protocol: {
+    1: ContractErrorCode.ECONTRACT_NOT_INIT,
+    2: ContractErrorCode.EBAD_AMOUNT,
+    3: ContractErrorCode.ENO_PERMISSIONS,
+    4: ContractErrorCode.EBADINPUT,
+    5: ContractErrorCode.ECLOSED,
+    6: ContractErrorCode.EBAD_INPUT_AMOUNT_PER_PERIOD,
+    8: ContractErrorCode.EBAD_INPUT_UPDATE_RATE,
+    9: ContractErrorCode.EBAD_INPUT_CLIFF_AMOUNT,
+    10: ContractErrorCode.EBAD_INPUT_PERIOD,
+    11: ContractErrorCode.EBAD_INPUT_START,
+    13: ContractErrorCode.EBAD_INSUFFICIENT_WITHDRAWAL_FEES,
+    14: ContractErrorCode.EBAD_INSUFFICIENT_AMOUNT,
+    15: ContractErrorCode.EPAUSED,
+    16: ContractErrorCode.ENOTPAUSED,
+  },
 };

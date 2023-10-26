@@ -441,12 +441,11 @@ try {
 
 ## Handling errors
 
-Protocol raises custom errors on:
-
-- validation errors
-- state missmatch errors (such as canceling a stream that is complete/already canceled)
-
-Errors are returned per blockchain specification format.
+`GenericStreamClient` wraps all errors when making on-chain calls with `ContractError` error class:
+- this class inherits original traceback
+- error may optionally contain `contractErrorCode` property that can be further mapped to a specific **Contract** error
+- for `createMultiple` method errors are wrapped individually for every recipient address
+- please check documentation for common enums `ContractErrorCode` and `SolanaContractErrorCode` to see short description for each error
 
 A public map of protocol errors is available [here](https://streamflow.notion.site/Streamflow-protocol-docs-0accad86d5c44e5db84fd4fb49b8ff54).
 
@@ -481,7 +480,5 @@ E.g, if the amount is 1 SOL than this amount in lamports is `1000 \* 10^9 = 1_00
 And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
-
-`npx typedoc packages/stream/index.ts`
 
 WAGMI.

@@ -1,15 +1,16 @@
 {
   "name": "@streamflow/stream",
-  "version": "5.5.0",
+  "version": "5.6.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "main": "dist/index.js",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc --outDir ./dist --project ../../tsconfig.json",
+    "build-docs": "typedoc ./index.ts",
     "test": "jest .",
     "lint": "eslint .",
-    "prepublishOnly": "npm run lint && npm test && npm run build"
+    "prepublishOnly": "npm run lint && npm test && npm run build-docs && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
@@ -35,7 +36,7 @@
     "@solana/spl-token": "0.3.6",
     "@solana/wallet-adapter-base": "0.9.19",
     "@solana/web3.js": "1.70.1",
-    "@suiet/wallet-kit": "^0.2.17",
+    "@suiet/wallet-kit": "0.2.18",
     "aptos": "1.4.0",
     "bn.js": "5.2.1",
     "bs58": "5.0.0",

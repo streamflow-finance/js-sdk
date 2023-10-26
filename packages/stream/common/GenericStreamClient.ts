@@ -19,6 +19,7 @@ import {
   IGetAllData,
   Stream,
 } from "./types";
+import { handleContractError } from "./utils";
 import { AptosStreamClient, ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
 import { EvmStreamClient } from "../evm";
 import {
@@ -60,6 +61,7 @@ export interface SuiStreamClientOptions {
   ids?: ISuiIdParameters;
 }
 
+/** Type referencing options for specific Chain Client */
 type StreamClientOptions<T extends IChain> = T extends IChain.Solana
   ? SolanaStreamClientOptions
   : T extends IChain.Aptos
@@ -67,6 +69,7 @@ type StreamClientOptions<T extends IChain> = T extends IChain.Solana
   : T extends IChain.Sui
   ? SuiStreamClientOptions
   : EvmStreamClientOptions;
+/** Type referencing Chain Client implementation */
 type StreamClientType<T extends IChain> = T extends IChain.Solana
   ? SolanaStreamClient
   : T extends IChain.Aptos
@@ -74,6 +77,7 @@ type StreamClientType<T extends IChain> = T extends IChain.Solana
   : T extends IChain.Sui
   ? SuiStreamClient
   : EvmStreamClient;
+/** Type referencing additional parameters used by a Chain Client */
 type ChainSpecificParams<T, SolanaExt, AptosExt, SuiExt> = T extends SolanaStreamClient
   ? SolanaExt
   : T extends AptosStreamClient
@@ -81,18 +85,21 @@ type ChainSpecificParams<T, SolanaExt, AptosExt, SuiExt> = T extends SolanaStrea
   : T extends SuiStreamClient
   ? SuiExt
   : undefined;
+/** Type referencing additional parameters used on Create by a Chain Client */
 type CreateSpecificParams<T extends IChain> = ChainSpecificParams<
   StreamClientType<T>,
   ICreateStreamSolanaExt,
   ICreateStreamAptosExt,
   ICreateStreamSuiExt
 >;
+/** Type referencing additional parameters used on Topup by a Chain Client */
 type TopupSpecificParams<T extends IChain> = ChainSpecificParams<
   StreamClientType<T>,
   ITopUpStreamSolanaExt,
   ITransactionAptosExt,
   ITransactionSuiExt
 >;
+/** Type referencing additional parameters used on other interactions by a Chain Client */
 type InteractSpecificParams<T extends IChain> = ChainSpecificParams<
   StreamClientType<T>,
   IInteractStreamSolanaExt,
@@ -100,6 +107,10 @@ type InteractSpecificParams<T extends IChain> = ChainSpecificParams<
   ITransactionSuiExt
 >;
 
+/** Generic Stream Client implementation that wrap Chain Client methods and enriches error messages if possible
+ * @property {StreamClientType} - Chain Client implementation
+ * @property {chain} - Chain
+ */
 export default class GenericStreamClient<T extends IChain> extends BaseStreamClient {
   public nativeStreamClient: StreamClientType<T>;
 
@@ -154,7 +165,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     streamData: ICreateStreamData,
     chainSpecificParams?: CreateSpecificParams<T>
   ): Promise<ICreateResult> {
-    return this.nativeStreamClient.create(streamData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.create(streamData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**
@@ -164,7 +178,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     multipleStreamData: ICreateMultipleStreamData,
     chainSpecificParams?: CreateSpecificParams<T>
   ): Promise<IMultiTransactionResult> {
-    return this.nativeStreamClient.createMultiple(multipleStreamData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.createMultiple(multipleStreamData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**
@@ -174,7 +191,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     withdrawData: IWithdrawData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return this.nativeStreamClient.withdraw(withdrawData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.withdraw(withdrawData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**
@@ -184,7 +204,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     cancelData: ICancelData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return this.nativeStreamClient.cancel(cancelData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.cancel(cancelData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**
@@ -194,7 +217,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     transferData: ITransferData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return this.nativeStreamClient.transfer(transferData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.transfer(transferData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**
@@ -204,7 +230,10 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     topupData: ITopUpData,
     chainSpecificParams?: TopupSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return this.nativeStreamClient.topup(topupData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.topup(topupData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 
   /**
@@ -228,6 +257,9 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     updateData: IUpdateData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
-    return this.nativeStreamClient.update(updateData, chainSpecificParams as any);
+    return handleContractError(
+      () => this.nativeStreamClient.update(updateData, chainSpecificParams as any),
+      this.nativeStreamClient.extractErrorCode
+    );
   }
 }

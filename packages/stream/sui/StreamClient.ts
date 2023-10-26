@@ -30,6 +30,7 @@ import {
   ISuiIdParameters,
   StreamResource,
 } from "./types";
+import { extractSuiErrorInfo } from "./utils";
 import { SuiWalletWrapper } from "./wallet";
 
 export default class SuiStreamClient extends BaseStreamClient {
@@ -59,7 +60,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet }: ICreateStreamSuiExt
   ): Promise<ICreateResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const [txb] = await this.generateCreateTransactions(wallet.address, {
+    const [txb] = await this.generateCreateBlock(wallet.address, {
       ...streamData,
       recipients: [{ ...streamData }],
     });
@@ -85,33 +86,50 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet }: ICreateStreamSuiExt
   ): Promise<IMultiTransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const transactions = await this.generateCreateTransactions(wallet.address, multipleStreamData);
+    const [txb, firstIndex] = await this.generateCreateBlock(wallet.address, multipleStreamData);
 
     const txs: string[] = [];
     const metadatas: string[] = [];
     const metadataToRecipient: Record<string, IRecipient> = {};
     const errors: ICreateMultiError[] = [];
 
-    for (let i = 0; i < transactions.length; i++) {
-      const txb = transactions[i];
-      const recipient = multipleStreamData.recipients[i];
-      try {
-        const { digest, events } = await wallet.signAndExecuteTransactionBlock({
-          transactionBlock: txb,
-          options: { showEvents: true },
+    try {
+      const { digest, events, effects } = await wallet.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+        options: { showEffects: true, showEvents: true },
+      });
+      txs.push(digest);
+
+      if (effects!.status.status === "failure") {
+        multipleStreamData.recipients.forEach((recipient) => {
+          errors.push({
+            error: effects!.status.error ?? "Unknown error!",
+            recipient: recipient.recipient,
+          });
         });
-
-        txs.push(digest);
-
-        const metadataId = (events![0].parsedJson as IContractCreated).address;
-        metadatas.push(metadataId);
-        metadataToRecipient[metadataId] = recipient;
-      } catch (e: any) {
-        errors.push({
-          error: e?.toString() ?? "Unkown error!",
-          recipient: recipient.recipient,
+      } else {
+        multipleStreamData.recipients.forEach((recipient, index) => {
+          const metadataId = (events![index].parsedJson as IContractCreated).address;
+          metadatas.push(metadataId);
+          metadataToRecipient[metadataId] = recipient;
         });
       }
+    } catch (e: any) {
+      const errorInfo = extractSuiErrorInfo(e.toString() ?? "Unknown error!");
+      multipleStreamData.recipients.forEach((recipient, index) => {
+        if (
+          errorInfo.index === undefined ||
+          errorInfo.index < index + firstIndex ||
+          errorInfo.index >= multipleStreamData.recipients.length + firstIndex ||
+          errorInfo.index === index + firstIndex
+        ) {
+          errors.push({
+            error: errorInfo.text,
+            recipient: recipient.recipient,
+            contractErrorCode: errorInfo.parsed?.name,
+          });
+        }
+      });
     }
 
     return {
@@ -315,6 +333,11 @@ export default class SuiStreamClient extends BaseStreamClient {
     };
   }
 
+  public extractErrorCode(err: Error): string | null {
+    const errorInfo = extractSuiErrorInfo(err.toString() ?? "Unknown error!");
+    return errorInfo?.parsed?.name || null;
+  }
+
   /**
    * Returns StreamClient protocol program ID.
    */
@@ -325,24 +348,26 @@ export default class SuiStreamClient extends BaseStreamClient {
   /**
    * Utility function to generate Transaction Block to create streams
    */
-  private async generateCreateTransactions(
+  private async generateCreateBlock(
     walletAddress: string,
     multipleStreamData: ICreateMultipleStreamData
-  ): Promise<TransactionBlock[]> {
+  ): Promise<[TransactionBlock, number]> {
     let coins = await this.getAllCoins(walletAddress, multipleStreamData.tokenId);
+    const totalAmount = multipleStreamData.recipients
+      .map((recipiient) => recipiient.amount)
+      .reduce((prev, current) => current.add(prev));
+    const txb = new TransactionBlock();
+    const coinObject = this.splitCoinObjectForAmount(
+      txb,
+      totalAmount,
+      multipleStreamData.tokenId,
+      coins
+    );
+    coins = [coins[0]];
+    let firstIndex: number | null = null;
 
-    return multipleStreamData.recipients.map((recipient) => {
-      const txb = new TransactionBlock();
-      const coinObject = this.splitCoinObjectForAmount(
-        txb,
-        recipient.amount,
-        multipleStreamData.tokenId,
-        coins
-      );
-      // Overwrite coins because after first split we merge all existing object to the first coin
-      coins = [coins[0]];
-
-      txb.moveCall({
+    multipleStreamData.recipients.forEach((recipient) => {
+      const result = txb.moveCall({
         target: `${this.programId}::protocol::create`,
         typeArguments: [multipleStreamData.tokenId],
         arguments: [
@@ -370,9 +395,12 @@ export default class SuiStreamClient extends BaseStreamClient {
           txb.pure(multipleStreamData.partner || walletAddress),
         ],
       });
-      this.returnSplittedCoinObject(txb, multipleStreamData.tokenId, coins, coinObject);
-      return txb;
+      if (result.kind === "Result" && firstIndex === null) {
+        firstIndex = result.index;
+      }
     });
+    this.returnSplittedCoinObject(txb, multipleStreamData.tokenId, coins, coinObject);
+    return [txb, firstIndex!];
   }
 
   /**
