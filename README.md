@@ -481,6 +481,4 @@ And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
 
-`npx typedoc packages/stream/index.ts`
-
 WAGMI.
