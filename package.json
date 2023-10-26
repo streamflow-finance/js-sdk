@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "lerna run build",
+    "build-docs": "typedoc packages/stream/index.ts",
     "test": "lerna run test",
     "lint": "lerna run lint",
     "publish": "lerna run publish",
