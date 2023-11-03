@@ -1,0 +1,21 @@
+name: Node.js Package
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm test
+  discord-notify:
+    uses: streamflow-finance/streamflow-common/.github/workflows/pr.yml@main
+    needs: [tests]
+    secrets: inherit

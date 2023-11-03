@@ -4,8 +4,8 @@ import AptosStreamClient from "../../aptos/StreamClient";
 import { ICluster } from "../../common/types";
 
 describe("AptosStreamClient", () => {
-  describe("coreClient", () => {
-    it("should succesfully create AptosStreamInstance", () => {
+  describe("init", () => {
+    it("should successfully create AptosStreamInstance", () => {
       const instance = new AptosStreamClient(ICluster.Devnet);
 
       expect(instance).toBeInstanceOf(AptosStreamClient);
