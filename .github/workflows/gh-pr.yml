@@ -15,7 +15,3 @@ jobs:
           node-version: 18
       - run: npm ci
       - run: npm test
-  discord-notify:
-    uses: streamflow-finance/streamflow-common/.github/workflows/pr.yml@main
-    needs: [tests]
-    secrets: inherit
