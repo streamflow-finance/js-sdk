@@ -20,6 +20,7 @@
   "exclude": [
     "node_modules",
     "__tests__",
-    "packages/stream/dist"
+    "packages/stream/dist",
+    "local"
   ]
 }
