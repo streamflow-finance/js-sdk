@@ -24,7 +24,7 @@
     "build-docs": "typedoc packages/stream/index.ts",
     "test": "lerna run test",
     "lint": "lerna run lint",
-    "publish": "lerna run publish",
+    "publish": "lerna publish",
     "prepare": "husky install"
   },
   "devDependencies": {
