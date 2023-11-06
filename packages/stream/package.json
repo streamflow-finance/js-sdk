@@ -1,12 +1,11 @@
 {
   "name": "@streamflow/stream",
-  "version": "5.6.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "main": "dist/index.js",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rm -rf ./dist && tsc --outDir ./dist --project ../../tsconfig.json",
+    "build": "rm -rf dist; tsc -p tsconfig.json",
     "test": "jest .",
     "lint": "eslint .",
     "prepublishOnly": "npm run lint && npm test && npm run build"

@@ -14,9 +14,13 @@
     "downlevelIteration": true,
     "types": [
       "jest"
-    ]
+    ],
+    "outDir": "./dist"
   },
   "exclude": [
-    "packages/stream/dist"
+    "node_modules",
+    "__tests__",
+    "packages/stream/dist",
+    "local"
   ]
 }

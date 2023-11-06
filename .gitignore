@@ -14,7 +14,7 @@ target/
 .idea/
 .gitattributes
 
-packages/*/dist/
+dist/
 /local/
 .DS_Store
 packages/.DS_Store
