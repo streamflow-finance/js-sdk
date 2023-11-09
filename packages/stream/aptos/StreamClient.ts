@@ -260,10 +260,11 @@ export default class AptosStreamClient extends BaseStreamClient {
     return multipleStreamData.recipients.map((recipient) => {
       const acc = new AptosAccount(); // Generate random address as seeds for deriving "escrow" account
       const seeds = acc.address();
-      const metadataId = AptosAccount.getResourceAccountAddress(
-        wallet.address,
-        seeds.toUint8Array()
-      );
+      const encoder = new TextEncoder();
+      // A workaround to pass a String in seeds because different wallets seem
+      // to serialize vector<u8> differently and String should be safer that Uin8Array
+      const actualSeeds = encoder.encode(seeds.hex());
+      const metadataId = AptosAccount.getResourceAccountAddress(wallet.address, actualSeeds);
       return [
         metadataId.toString(),
         {
@@ -271,7 +272,7 @@ export default class AptosStreamClient extends BaseStreamClient {
           function: `${this.programId}::protocol::create`,
           type_arguments: [multipleStreamData.tokenId],
           arguments: [
-            seeds.toUint8Array(),
+            seeds.hex(),
             recipient.amount.toString(),
             multipleStreamData.period,
             recipient.amountPerPeriod.toString(),
