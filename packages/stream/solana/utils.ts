@@ -193,14 +193,7 @@ export async function signAllTransactionWithRecipients(
       return { tx: t.tx, recipient: t.recipient };
     });
   } else if (isWallet) {
-    const signedTxs =
-      sender.name === "SquadsX"
-        ? await Promise.all(
-            items.map((t) => {
-              return sender.signTransaction(t.tx);
-            })
-          )
-        : await sender.signAllTransactions(items.map((t) => t.tx));
+    const signedTxs = await sender.signAllTransactions(items.map((t) => t.tx));
     return items.map((item, index) => ({
       ...item,
       tx: signedTxs[index],
