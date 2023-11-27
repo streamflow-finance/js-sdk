@@ -15,47 +15,32 @@ import {
 } from "./types";
 
 export abstract class BaseStreamClient {
-  protected abstract create(
-    streamData: ICreateStreamData,
-    chainSpecificParams: any
-  ): Promise<ICreateResult>;
+  abstract create(streamData: ICreateStreamData, chainSpecificParams: any): Promise<ICreateResult>;
 
-  protected abstract createMultiple(
+  abstract createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
     chainSpecificParams: any
   ): Promise<IMultiTransactionResult>;
 
-  protected abstract withdraw(
+  abstract withdraw(
     withdrawData: IWithdrawData,
     chainSpecificParams: any
   ): Promise<ITransactionResult>;
 
-  protected abstract cancel(
-    cancelData: ICancelData,
-    chainSpecificParams: any
-  ): Promise<ITransactionResult>;
+  abstract cancel(cancelData: ICancelData, chainSpecificParams: any): Promise<ITransactionResult>;
 
-  protected abstract transfer(
+  abstract transfer(
     transferData: ITransferData,
     chainSpecificParams: any
   ): Promise<ITransactionResult>;
 
-  protected abstract topup(
-    topupData: ITopUpData,
-    chainSpecificParams: any
-  ): Promise<ITransactionResult>;
+  abstract topup(topupData: ITopUpData, chainSpecificParams: any): Promise<ITransactionResult>;
 
-  protected abstract getOne(getOneData: IGetOneData, chainSpecificParams: any): Promise<Stream>;
+  abstract getOne(getOneData: IGetOneData, chainSpecificParams: any): Promise<Stream>;
 
-  protected abstract get(
-    getAllData: IGetAllData,
-    chainSpecificParams: any
-  ): Promise<[string, Stream][]>;
+  abstract get(getAllData: IGetAllData, chainSpecificParams: any): Promise<[string, Stream][]>;
 
-  protected abstract update(
-    updateData: IUpdateData,
-    chainSpecificParams: any
-  ): Promise<ITransactionResult>;
+  abstract update(updateData: IUpdateData, chainSpecificParams: any): Promise<ITransactionResult>;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   extractErrorCode(err: Error): string | null {
