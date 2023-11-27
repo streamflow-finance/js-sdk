@@ -263,6 +263,8 @@ export interface Stream {
   type: StreamType;
 
   unlocked(currentTimestamp: number): BN;
+
+  remaining(decimals: number): number;
 }
 
 /**

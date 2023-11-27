@@ -12,8 +12,6 @@ import bs58 from "bs58";
 
 import { streamLayout } from "./layout";
 import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
-import { Stream } from "../common/types";
-import { buildStreamType } from "../common/contractUtils";
 import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants";
 
 const decoder = new TextDecoder("utf-8");
@@ -66,62 +64,6 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     lastRateChangeTime: new BN(raw.last_rate_change_time, LE),
     fundsUnlockedAtLastRateChange: new BN(raw.funds_unlocked_at_last_rate_change, LE),
   };
-};
-// DeprecationWarning: This object will be deprecated starting from the version 4.0.0. Use
-// types/Contract instead
-export const formatDecodedStream = (stream: DecodedStream): Stream => {
-  const resp = {
-    magic: stream.magic.toNumber(),
-    version: stream.version.toNumber(),
-    createdAt: stream.createdAt.toNumber(),
-    withdrawnAmount: stream.withdrawnAmount,
-    canceledAt: stream.canceledAt.toNumber(),
-    end: stream.end.toNumber(),
-    lastWithdrawnAt: stream.lastWithdrawnAt.toNumber(),
-    sender: stream.sender.toBase58(),
-    senderTokens: stream.senderTokens.toBase58(),
-    recipient: stream.recipient.toBase58(),
-    recipientTokens: stream.recipientTokens.toBase58(),
-    mint: stream.mint.toBase58(),
-    escrowTokens: stream.escrowTokens.toBase58(),
-    streamflowTreasury: stream.streamflowTreasury.toBase58(),
-    streamflowTreasuryTokens: stream.streamflowTreasuryTokens.toBase58(),
-    streamflowFeeTotal: stream.streamflowFeeTotal,
-    streamflowFeeWithdrawn: stream.streamflowFeeWithdrawn,
-    streamflowFeePercent: stream.streamflowFeePercent.toNumber(),
-    partnerFeeTotal: stream.partnerFeeTotal,
-    partnerFeeWithdrawn: stream.partnerFeeWithdrawn,
-    partnerFeePercent: stream.partnerFeePercent.toNumber(),
-    partner: stream.partner.toBase58(),
-    partnerTokens: stream.partnerTokens?.toBase58(),
-    start: stream.start.toNumber(),
-    depositedAmount: stream.depositedAmount,
-    period: stream.period.toNumber(),
-    amountPerPeriod: stream.amountPerPeriod,
-    cliff: stream.cliff.toNumber(),
-    cliffAmount: stream.cliffAmount,
-    cancelableBySender: stream.cancelableBySender,
-    cancelableByRecipient: stream.cancelableByRecipient,
-    automaticWithdrawal: stream.automaticWithdrawal,
-    transferableBySender: stream.transferableBySender,
-    transferableByRecipient: stream.transferableByRecipient,
-    canTopup: stream.canTopup,
-    name: stream.name,
-    withdrawalFrequency: stream.withdrawFrequency.toNumber(),
-    closed: stream.closed,
-    currentPauseStart: stream.currentPauseStart.toNumber(),
-    pauseCumulative: stream.pauseCumulative,
-    lastRateChangeTime: stream.lastRateChangeTime.toNumber(),
-    fundsUnlockedAtLastRateChange: stream.fundsUnlockedAtLastRateChange,
-    type: buildStreamType(stream),
-    unlocked: function () {
-      return new BN(0);
-    }, //phantom method to preserve partial support of this object
-    withdrawn: function () {
-      return new BN(0);
-    }, //phantom method to preserve partial support of this object
-  };
-  return resp;
 };
 
 /**
