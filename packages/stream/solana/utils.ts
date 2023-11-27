@@ -12,8 +12,6 @@ import bs58 from "bs58";
 
 import { streamLayout } from "./layout";
 import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
-import { Stream } from "../common/types";
-import { buildStreamType } from "../common/contractUtils";
 import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants";
 
 const decoder = new TextDecoder("utf-8");
