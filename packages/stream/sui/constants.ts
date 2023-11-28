@@ -2,7 +2,7 @@ import { ContractErrorCode, ICluster } from "../common/types";
 
 // TODO: remove Devnet and Local addresses as they are not deployed, they are just a copy Testnet values
 export const SUI_PROGRAM_IDS: Record<ICluster, string> = {
-  [ICluster.Mainnet]: "0xa283fd6b45f1103176e7ae27e870c89df7c8783b15345e2b13faa81ec25c4fa6",
+  [ICluster.Mainnet]: "0x527b334ab7216f01a5f0521ffb3dfff0cc4df06b65b2cd0d0864e05b13cf911a",
   [ICluster.Devnet]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
   [ICluster.Testnet]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
   [ICluster.Local]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
