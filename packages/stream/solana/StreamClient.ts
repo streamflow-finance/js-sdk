@@ -370,7 +370,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const metadatas: Keypair[] = [];
+    const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
@@ -379,15 +379,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
-      const { tx, metadata } = await this.prepareStreamTransaction(recipientData, data, {
+      const { tx, metadataPubKey } = await this.prepareStreamTransaction(recipientData, data, {
         sender,
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
       });
 
-      const metadataPubKey = metadata.publicKey.toBase58();
-      metadataToRecipient[metadataPubKey] = recipientData;
+      metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
-      metadatas.push(metadata);
+      metadatas.push(metadataPubKey.toBase58());
       batch.push({ tx, recipient: recipientData.recipient });
     }
 
@@ -446,9 +445,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       }));
     errors.push(...failures);
 
-    const metadataIds = metadatas.map((pk) => pk.publicKey.toBase58());
-
-    return { txs: signatures, metadatas: metadataIds, metadataToRecipient, errors };
+    return { txs: signatures, metadatas, metadataToRecipient, errors };
   }
 
   /**
@@ -834,7 +831,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       partner,
     } = streamParams;
 
-    const { sender } = solanaExtendedConfig;
+    const { sender, metadataPubKeys } = solanaExtendedConfig;
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
@@ -845,9 +842,16 @@ export default class SolanaStreamClient extends BaseStreamClient {
       typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const recipientPublicKey = new PublicKey(recipient.recipient);
     const mintPublicKey = new PublicKey(mint);
-    const metadata = Keypair.generate();
+    let metadata: Keypair | null = null;
+    let metadataPubKey: PublicKey;
+    if (!metadataPubKeys) {
+      metadata = Keypair.generate();
+      metadataPubKey = metadata.publicKey;
+    } else {
+      metadataPubKey = metadataPubKeys[0];
+    }
     const [escrowTokens] = PublicKey.findProgramAddressSync(
-      [Buffer.from("strm"), metadata.publicKey.toBuffer()],
+      [Buffer.from("strm"), metadataPubKey.toBuffer()],
       this.programId
     );
 
@@ -882,7 +886,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
           sender: sender.publicKey,
           senderTokens,
           recipient: new PublicKey(recipient.recipient),
-          metadata: metadata.publicKey,
+          metadata: metadataPubKey,
           escrowTokens,
           recipientTokens,
           streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
@@ -906,7 +910,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
-    tx.partialSign(metadata);
-    return { tx, metadata };
+    if (metadata) {
+      tx.partialSign(metadata);
+    }
+    return { tx, metadataPubKey };
   }
 }
