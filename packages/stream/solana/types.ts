@@ -23,6 +23,8 @@ export interface Account {
 
 export interface ICreateStreamSolanaExt {
   sender: SignerWalletAdapter | Keypair;
+  // allow custom Metadata Account to be passed, i.e. an ephemeral signer, accepts array to be compatible in createMultiple
+  metadataPubKeys?: PublicKey[];
   partner?: string | null;
   isNative?: boolean;
 }
