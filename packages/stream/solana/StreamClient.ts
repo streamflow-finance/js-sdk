@@ -147,14 +147,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
 
-    let metadata: Keypair | null = null;
-    let metadataPubKey: PublicKey;
-    if (!metadataPubKeys) {
-      metadata = Keypair.generate();
-      metadataPubKey = metadata.publicKey;
-    } else {
-      metadataPubKey = metadataPubKeys[0];
-    }
+    const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
       this.programId
@@ -271,15 +264,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
-
-    let metadata: Keypair | null = null;
-    let metadataPubKey: PublicKey;
-    if (!metadataPubKeys) {
-      metadata = Keypair.generate();
-      metadataPubKey = metadata.publicKey;
-    } else {
-      metadataPubKey = metadataPubKeys[0];
-    }
+    const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
 
     const rentToExempt = await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
     const createMetadataInstruction = SystemProgram.createAccount({
@@ -423,14 +408,26 @@ export default class SolanaStreamClient extends BaseStreamClient {
       await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!);
     }
 
-    //send all transactions in parallel and wait for them to settle.
-    //it allows to speed up the process of sending transactions
-    //we then filter all promise responses and handle failed transactions
-    const batchTransactionsCalls = signedBatch.map((el) =>
-      sendAndConfirmStreamRawTransaction(this.connection, el)
-    );
-
-    const responses = await Promise.allSettled(batchTransactionsCalls);
+    const responses: PromiseSettledResult<BatchItem>[] = [];
+    if (metadataPubKeys.length > 0) {
+      //if metadata pub keys were passed we should execute transaction sequentially
+      //ephemeral signer need to be used first before proceeding with the next
+      for (const batchTx of signedBatch) {
+        responses.push(
+          ...(await Promise.allSettled([
+            sendAndConfirmStreamRawTransaction(this.connection, batchTx),
+          ]))
+        );
+      }
+    } else {
+      //send all transactions in parallel and wait for them to settle.
+      //it allows to speed up the process of sending transactions
+      //we then filter all promise responses and handle failed transactions
+      const batchTransactionsCalls = signedBatch.map((el) =>
+        sendAndConfirmStreamRawTransaction(this.connection, el)
+      );
+      responses.push(...(await Promise.allSettled(batchTransactionsCalls)));
+    }
 
     const successes = responses
       .filter((el): el is PromiseFulfilledResult<BatchItemSuccess> => el.status === "fulfilled")
@@ -842,14 +839,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const recipientPublicKey = new PublicKey(recipient.recipient);
     const mintPublicKey = new PublicKey(mint);
-    let metadata: Keypair | null = null;
-    let metadataPubKey: PublicKey;
-    if (!metadataPubKeys) {
-      metadata = Keypair.generate();
-      metadataPubKey = metadata.publicKey;
-    } else {
-      metadataPubKey = metadataPubKeys[0];
-    }
+    const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
       this.programId
@@ -914,5 +904,22 @@ export default class SolanaStreamClient extends BaseStreamClient {
       tx.partialSign(metadata);
     }
     return { tx, metadataPubKey };
+  }
+
+  /**
+   * Utility function to generate metadata for a Contract or return existing Pubkey
+   */
+  private getOrCreateStreamMetadata(metadataPubKeys?: PublicKey[]) {
+    let metadata;
+    let metadataPubKey;
+
+    if (!metadataPubKeys) {
+      metadata = Keypair.generate();
+      metadataPubKey = metadata.publicKey;
+    } else {
+      metadataPubKey = metadataPubKeys[0];
+    }
+
+    return { metadata, metadataPubKey };
   }
 }
