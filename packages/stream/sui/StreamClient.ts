@@ -381,8 +381,8 @@ export default class SuiStreamClient extends BaseStreamClient {
     const valueFields = (valueContent.fields as unknown as FeeValueResource).value.fields;
 
     return {
-      streamflow_fee: Number(valueFields.streamflow_fee) / 100,
-      partner_fee: Number(valueFields.partner_fee) / 100,
+      streamflowFee: Number(valueFields.streamflow_fee) / 100,
+      partnerFee: Number(valueFields.partner_fee) / 100,
     };
   }
 

@@ -260,7 +260,7 @@ export default class AptosStreamClient extends BaseStreamClient {
     if (!value) {
       return null;
     }
-    return { streamflow_fee: Number(value) / 100, partner_fee: 0 };
+    return { streamflowFee: Number(value) / 100, partnerFee: 0 };
   }
 
   public async getDefaultStreamflowFee(): Promise<number> {

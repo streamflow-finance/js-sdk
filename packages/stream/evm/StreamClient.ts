@@ -259,8 +259,8 @@ export default class EvmStreamClient extends BaseStreamClient {
       return null;
     }
     return {
-      streamflow_fee: fees.streamflow_fee.toNumber() / 100,
-      partner_fee: fees.partner_fee.toNumber() / 100,
+      streamflowFee: fees.streamflow_fee.toNumber() / 100,
+      partnerFee: fees.partner_fee.toNumber() / 100,
     };
   }
 

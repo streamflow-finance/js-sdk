@@ -826,8 +826,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
       return null;
     }
     return {
-      streamflow_fee: Number(filteredPartners[0].strm_fee.toFixed(4)),
-      partner_fee: Number(filteredPartners[0].partner_fee.toFixed(4)),
+      streamflowFee: Number(filteredPartners[0].strm_fee.toFixed(4)),
+      partnerFee: Number(filteredPartners[0].partner_fee.toFixed(4)),
     };
   }
 

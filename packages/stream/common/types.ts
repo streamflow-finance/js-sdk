@@ -88,8 +88,8 @@ export interface ITransactionResult {
 }
 
 export interface IFees {
-  streamflow_fee: number;
-  partner_fee: number;
+  streamflowFee: number;
+  partnerFee: number;
 }
 
 export interface ICreateResult extends ITransactionResult {
