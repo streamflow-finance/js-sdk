@@ -48,6 +48,12 @@ export interface StreamAbiResult {
   withdrawn: BigNumber;
 }
 
+export interface FeesAbiResult {
+  exists: boolean;
+  streamflow_fee: BigNumber;
+  partner_fee: BigNumber;
+}
+
 export class EvmContract implements Stream {
   magic: number;
 

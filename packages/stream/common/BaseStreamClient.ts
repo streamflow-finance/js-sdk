@@ -1,10 +1,12 @@
 import {
   ICreateStreamData,
   ICreateMultipleStreamData,
+  IFees,
   IWithdrawData,
   ICancelData,
   ITransferData,
   ITopUpData,
+  IGetFeesData,
   IGetOneData,
   IUpdateData,
   ITransactionResult,
@@ -41,6 +43,10 @@ export abstract class BaseStreamClient {
   abstract get(getAllData: IGetAllData, chainSpecificParams: any): Promise<[string, Stream][]>;
 
   abstract update(updateData: IUpdateData, chainSpecificParams: any): Promise<ITransactionResult>;
+
+  abstract getFees(getFeesData: IGetFeesData, chainSpecificParams: any): Promise<IFees | null>;
+
+  abstract getDefaultStreamflowFee(chainSpecificParams: any): Promise<number>;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   extractErrorCode(err: Error): string | null {

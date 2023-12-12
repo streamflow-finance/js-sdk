@@ -4,6 +4,7 @@ import { CREATE_PARAMS_PADDING } from "./constants";
 import {
   ICreateStreamLayout,
   ICreateUncheckedStreamLayout,
+  IPartnerLayout,
   IStreamLayout,
   ITopupStreamLayout,
   IUpdateStreamLayout,
@@ -64,6 +65,12 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.blob(8, "pause_cumulative"),
   BufferLayout.blob(8, "last_rate_change_time"),
   BufferLayout.blob(8, "funds_unlocked_at_last_rate_change"),
+]);
+
+export const partnerLayout: BufferLayout.Structure<IPartnerLayout> = BufferLayout.struct([
+  BufferLayout.blob(32, "pubkey"),
+  BufferLayout.f32("partner_fee"),
+  BufferLayout.f32("strm_fee"),
 ]);
 
 /**
