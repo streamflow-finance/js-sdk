@@ -10,8 +10,10 @@ import {
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
+  IGetFeesData,
   IGetAllData,
   IGetOneData,
+  IFees,
   IMultiTransactionResult,
   IRecipient,
   ITopUpData,
@@ -26,7 +28,7 @@ import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./co
 import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE } from "../common/constants";
-import { EvmContract, StreamAbiResult } from "./types";
+import { EvmContract, FeesAbiResult, StreamAbiResult } from "./types";
 import { extractEvmErrorCode } from "./utils";
 
 export default class EvmStreamClient extends BaseStreamClient {
@@ -249,6 +251,22 @@ export default class EvmStreamClient extends BaseStreamClient {
 
   public extractErrorCode(err: Error): string | null {
     return extractEvmErrorCode(err.toString() ?? "Unknown error!");
+  }
+
+  public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
+    const fees: FeesAbiResult = await this.readContract.getFees(address);
+    if (!fees.exists) {
+      return null;
+    }
+    return {
+      streamflowFee: fees.streamflow_fee.toNumber() / 100,
+      partnerFee: fees.partner_fee.toNumber() / 100,
+    };
+  }
+
+  public async getDefaultStreamflowFee(): Promise<number> {
+    const fee = await this.readContract.getStreamflowFees();
+    return fee.toNumber() / 100;
   }
 
   /**

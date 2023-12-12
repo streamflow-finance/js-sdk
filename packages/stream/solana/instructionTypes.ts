@@ -99,3 +99,9 @@ export interface IUpdateStreamLayout {
 export interface ITopupStreamLayout {
   amount: Uint8Array;
 }
+
+export interface IPartnerLayout {
+  pubkey: Uint8Array;
+  partner_fee: number;
+  strm_fee: number;
+}

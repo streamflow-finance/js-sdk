@@ -87,6 +87,35 @@ export interface StreamResource {
   withdrawn: string;
 }
 
+export interface ClassResource {
+  streamflow_fee: string;
+  treasury: string;
+  tx_fee: string;
+  withdrawor: string;
+}
+
+export interface FeeTableResource {
+  values: {
+    type: string;
+    fields: {
+      id: {
+        id: string;
+      };
+    };
+  };
+}
+
+export interface FeeValueResource {
+  name: string;
+  value: {
+    type: string;
+    fields: {
+      partner_fee: string;
+      streamflow_fee: string;
+    };
+  };
+}
+
 export class Contract implements Stream {
   magic: number;
 

@@ -17,6 +17,7 @@ import {
   sendAndConfirmRawTransaction,
   BlockheightBasedTransactionConfirmationStrategy,
 } from "@solana/web3.js";
+import * as borsh from "borsh";
 
 import {
   Account,
@@ -46,6 +47,10 @@ import {
   TX_FINALITY_CONFIRMED,
   WITHDRAWOR_PUBLIC_KEY,
   FEE_ORACLE_PUBLIC_KEY,
+  DEFAULT_STREAMFLOW_FEE,
+  PARTNER_ORACLE_PROGRAM_ID,
+  FEES_METADATA_SEED,
+  PARTNERS_SCHEMA,
 } from "./constants";
 import {
   withdrawStreamInstruction,
@@ -64,7 +69,9 @@ import {
   ICreateResult,
   ICreateStreamData,
   IGetAllData,
+  IGetFeesData,
   IGetOneData,
+  IFees,
   IMultiTransactionResult,
   IRecipient,
   IStreamConfig,
@@ -79,6 +86,7 @@ import {
   ICreateMultiError,
 } from "../common/types";
 import { BaseStreamClient } from "../common/BaseStreamClient";
+import { IPartnerLayout } from "./instructionTypes";
 
 const METADATA_ACC_SIZE = 1104;
 
@@ -799,6 +807,32 @@ export default class SolanaStreamClient extends BaseStreamClient {
       ixs: [updateIx],
       txId: signature,
     };
+  }
+
+  public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
+    const [metadataPubKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(FEES_METADATA_SEED)],
+      new PublicKey(PARTNER_ORACLE_PROGRAM_ID)
+    );
+    const data = await this.connection.getAccountInfo(metadataPubKey);
+    if (!data) {
+      return null;
+    }
+    const partners = borsh.deserialize(PARTNERS_SCHEMA, data!.data) as unknown as IPartnerLayout[];
+    const filteredPartners = partners.filter(
+      (item) => new PublicKey(item.pubkey).toString() === address
+    );
+    if (filteredPartners.length === 0) {
+      return null;
+    }
+    return {
+      streamflowFee: Number(filteredPartners[0].strm_fee.toFixed(4)),
+      partnerFee: Number(filteredPartners[0].partner_fee.toFixed(4)),
+    };
+  }
+
+  public async getDefaultStreamflowFee(): Promise<number> {
+    return DEFAULT_STREAMFLOW_FEE;
   }
 
   public extractErrorCode(err: Error): string | null {

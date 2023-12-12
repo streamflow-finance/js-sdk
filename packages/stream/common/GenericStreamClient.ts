@@ -18,6 +18,8 @@ import {
   ICreateResult,
   IGetAllData,
   Stream,
+  IFees,
+  IGetFeesData,
 } from "./types";
 import { handleContractError } from "./utils";
 import { AptosStreamClient, ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
@@ -261,5 +263,19 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
       () => this.nativeStreamClient.update(updateData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
+  }
+
+  /**
+   * Returns streamflow and partner fees for the specific wallet in %
+   */
+  public getFees(getFeesData: IGetFeesData): Promise<IFees | null> {
+    return this.nativeStreamClient.getFees(getFeesData);
+  }
+
+  /**
+   * Returns default Streamflow Fee in %
+   */
+  public getDefaultStreamflowFee(): Promise<number> {
+    return this.nativeStreamClient.getDefaultStreamflowFee();
   }
 }

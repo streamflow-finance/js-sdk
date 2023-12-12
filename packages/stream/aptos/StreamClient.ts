@@ -8,7 +8,9 @@ import {
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
+  IGetFeesData,
   IGetOneData,
+  IFees,
   IMultiTransactionResult,
   IRecipient,
   ITopUpData,
@@ -18,7 +20,14 @@ import {
   IWithdrawData,
 } from "../common/types";
 import { APTOS_PROGRAM_IDS } from "./constants";
-import { Contract, ICreateStreamAptosExt, ITransactionAptosExt, StreamResource } from "./types";
+import {
+  ConfigResource,
+  Contract,
+  FeeTableResource,
+  ICreateStreamAptosExt,
+  ITransactionAptosExt,
+  StreamResource,
+} from "./types";
 import { AptosWalletWrapper } from "./wallet";
 import { extractAptosErrorCode } from "./utils";
 
@@ -235,6 +244,31 @@ export default class AptosStreamClient extends BaseStreamClient {
     const hash = await wallet.signAndSubmitTransaction(payload);
 
     return { ixs: [payload], txId: hash };
+  }
+
+  public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
+    const resource = await this.client.getAccountResource(
+      this.programId,
+      `${this.programId}::fees::FeeTable`
+    );
+    const data = resource.data as unknown as FeeTableResource;
+    const value = await this.client.getTableItem(data.values.handle, {
+      key_type: "address",
+      key: address,
+      value_type: "u64",
+    });
+    if (!value) {
+      return null;
+    }
+    return { streamflowFee: Number(value) / 100, partnerFee: 0 };
+  }
+
+  public async getDefaultStreamflowFee(): Promise<number> {
+    const resource = await this.client.getAccountResource(
+      this.programId,
+      `${this.programId}::admin::ConfigV2`
+    );
+    return Number((resource.data as unknown as ConfigResource).streamflow_fees) / 100;
   }
 
   public extractErrorCode(err: Error): string | null {

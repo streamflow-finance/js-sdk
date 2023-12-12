@@ -64,6 +64,10 @@ export interface IGetOneData {
   id: string;
 }
 
+export interface IGetFeesData {
+  address: string;
+}
+
 export interface IGetAllData {
   address: string;
   type?: StreamType;
@@ -81,6 +85,11 @@ type MetadataId = string;
 export interface ITransactionResult {
   ixs: (TransactionInstruction | Types.TransactionPayload)[];
   txId: string;
+}
+
+export interface IFees {
+  streamflowFee: number;
+  partnerFee: number;
 }
 
 export interface ICreateResult extends ITransactionResult {

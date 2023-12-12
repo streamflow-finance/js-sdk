@@ -11,7 +11,9 @@ import {
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
+  IGetFeesData,
   IGetOneData,
+  IFees,
   IMultiTransactionResult,
   IRecipient,
   ITopUpData,
@@ -29,6 +31,9 @@ import {
   ITransactionSuiExt,
   ISuiIdParameters,
   StreamResource,
+  ClassResource,
+  FeeTableResource,
+  FeeValueResource,
 } from "./types";
 import { extractSuiErrorInfo } from "./utils";
 import { SuiWalletWrapper } from "./wallet";
@@ -336,6 +341,65 @@ export default class SuiStreamClient extends BaseStreamClient {
   public extractErrorCode(err: Error): string | null {
     const errorInfo = extractSuiErrorInfo(err.toString() ?? "Unknown error!");
     return errorInfo?.parsed?.name || null;
+  }
+
+  public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
+    const response = await this.client.getObject({
+      id: this.feeTableId,
+      options: {
+        showContent: true,
+      },
+    });
+
+    const content = response.data!.content!;
+    if (content.dataType !== "moveObject") {
+      throw new Error(`Not a Move Object!`);
+    }
+    const fields = content.fields as unknown as FeeTableResource;
+
+    const fieldsResponse = await this.client.getDynamicFields({
+      parentId: fields.values.fields.id.id,
+    });
+    const partnerDynamicField = fieldsResponse.data.filter(
+      (item) => item.name.value === address
+    )[0];
+
+    if (!partnerDynamicField) {
+      return null;
+    }
+
+    const valueResponse = await this.client.getObject({
+      id: partnerDynamicField.objectId,
+      options: {
+        showContent: true,
+      },
+    });
+    const valueContent = valueResponse.data!.content!;
+    if (valueContent.dataType !== "moveObject") {
+      throw new Error(`Not a Move Object!`);
+    }
+    const valueFields = (valueContent.fields as unknown as FeeValueResource).value.fields;
+
+    return {
+      streamflowFee: Number(valueFields.streamflow_fee) / 100,
+      partnerFee: Number(valueFields.partner_fee) / 100,
+    };
+  }
+
+  public async getDefaultStreamflowFee(): Promise<number> {
+    const response = await this.client.getObject({
+      id: this.configId,
+      options: {
+        showContent: true,
+      },
+    });
+
+    const content = response.data!.content!;
+    if (content.dataType !== "moveObject") {
+      throw new Error(`Not a Move Object!`);
+    }
+    const fields = content.fields as unknown as ClassResource;
+    return Number(fields.streamflow_fee) / 100;
   }
 
   /**
