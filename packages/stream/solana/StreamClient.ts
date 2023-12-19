@@ -10,6 +10,7 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  ComputeBudgetProgram,
   TransactionInstruction,
   Transaction,
   Commitment,
@@ -587,6 +588,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const newRecipientTokens = await ata(mint, newRecipient);
 
+    ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 100001 }));
     ixs.push(
       transferStreamInstruction(this.programId, {
         authority: invoker.publicKey,
