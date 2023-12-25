@@ -954,18 +954,31 @@ export default class SolanaStreamClient extends BaseStreamClient {
     { invoker }: IInteractStreamSolanaExt,
     ixs: TransactionInstruction[]
   ) {
-    const accountExists = await this.connection.getAccountInfo(data.recipientTokens);
-    if (!accountExists?.data) {
-      ixs.push(
-        createAssociatedTokenAccountInstruction(
-          invoker.publicKey!,
-          data.recipientTokens,
-          data.recipient,
-          data.mint,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID
-        )
-      );
+    const checkedKeys: PublicKey[] = [];
+    for (const accountTokens of [
+      [data.sender, data.senderTokens],
+      [data.recipient, data.recipientTokens],
+      [data.partner, data.partnerTokens],
+      [data.streamflowTreasury, data.streamflowTreasuryTokens],
+    ]) {
+      const [accountKey, tokensKey] = accountTokens;
+      if (checkedKeys.includes(accountKey)) {
+        continue;
+      }
+      checkedKeys.push(accountKey);
+      const accountExists = await this.connection.getAccountInfo(tokensKey);
+      if (!accountExists?.data) {
+        ixs.push(
+          createAssociatedTokenAccountInstruction(
+            invoker.publicKey!,
+            accountKey,
+            tokensKey,
+            data.mint,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID
+          )
+        );
+      }
     }
   }
 
