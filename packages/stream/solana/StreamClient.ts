@@ -18,6 +18,7 @@ import {
   sendAndConfirmRawTransaction,
   BlockheightBasedTransactionConfirmationStrategy,
 } from "@solana/web3.js";
+import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 import * as borsh from "borsh";
 
 import {
@@ -30,6 +31,7 @@ import {
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
+  CheckAssociatedTokenAccountData,
 } from "./types";
 import {
   ata,
@@ -477,6 +479,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY);
     const partnerTokens = await ata(data.mint, data.partner);
+    await this.checkAssociatedTokenAccount(data, { invoker }, ixs);
 
     ixs.push(
       withdrawStreamInstruction(amount, this.programId, {
@@ -531,6 +534,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const partnerTokens = await ata(data.mint, data.partner);
 
     const ixs: TransactionInstruction[] = [];
+    await this.checkAssociatedTokenAccount(data, { invoker }, ixs);
 
     ixs.push(
       cancelStreamInstruction(this.programId, {
@@ -940,6 +944,29 @@ export default class SolanaStreamClient extends BaseStreamClient {
       tx.partialSign(metadata);
     }
     return { tx, metadataPubKey };
+  }
+
+  /**
+   * Utility function that checks whether associated token account for the recipient exists and adds an instruction to add if not
+   */
+  private async checkAssociatedTokenAccount(
+    data: CheckAssociatedTokenAccountData,
+    { invoker }: IInteractStreamSolanaExt,
+    ixs: TransactionInstruction[]
+  ) {
+    const accountExists = await this.connection.getAccountInfo(data.recipientTokens);
+    if (!accountExists?.data) {
+      ixs.push(
+        createAssociatedTokenAccountInstruction(
+          invoker.publicKey!,
+          data.recipientTokens,
+          data.recipient,
+          data.mint,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        )
+      );
+    }
   }
 
   /**

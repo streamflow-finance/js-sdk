@@ -426,6 +426,12 @@ export interface CreateMultipleStreamsValues {
   recipients: Recipient[];
 }
 
+export interface CheckAssociatedTokenAccountData {
+  recipient: PublicKey;
+  recipientTokens: PublicKey;
+  mint: PublicKey;
+}
+
 export interface BatchItem {
   recipient: string;
   tx: Transaction;
