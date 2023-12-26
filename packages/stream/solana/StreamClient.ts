@@ -974,7 +974,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       accountArrays.map((item) => item[1])
     );
     for (let i = 0; i < response.length; i++) {
-      if (!response[1]) {
+      if (!response[i]) {
         ixs.push(
           createAssociatedTokenAccountInstruction(
             invoker.publicKey!,
