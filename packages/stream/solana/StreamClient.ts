@@ -951,10 +951,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   private async checkAssociatedTokenAccounts(
     data: CheckAssociatedTokenAccountsData,
-    { invoker, skipAccountsCheck }: IInteractStreamSolanaExt,
+    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt,
     ixs: TransactionInstruction[]
   ) {
-    if (skipAccountsCheck) {
+    if (!checkTokenAccounts) {
       return;
     }
     const checkedKeys: Set<PublicKey> = new Set();

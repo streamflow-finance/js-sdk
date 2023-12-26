@@ -31,7 +31,7 @@ export interface ICreateStreamSolanaExt {
 
 export interface IInteractStreamSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
-  skipAccountsCheck?: boolean;
+  checkTokenAccounts?: boolean;
 }
 
 export interface ITopUpStreamSolanaExt {
