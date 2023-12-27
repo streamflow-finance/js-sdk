@@ -31,7 +31,7 @@ import {
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
-  CheckAssociatedTokenAccountData,
+  CheckAssociatedTokenAccountsData,
 } from "./types";
 import {
   ata,
@@ -479,7 +479,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY);
     const partnerTokens = await ata(data.mint, data.partner);
-    await this.checkAssociatedTokenAccount(data, { invoker }, ixs);
+    await this.checkAssociatedTokenAccounts(data, { invoker }, ixs);
 
     ixs.push(
       withdrawStreamInstruction(amount, this.programId, {
@@ -534,7 +534,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const partnerTokens = await ata(data.mint, data.partner);
 
     const ixs: TransactionInstruction[] = [];
-    await this.checkAssociatedTokenAccount(data, { invoker }, ixs);
+    await this.checkAssociatedTokenAccounts(data, { invoker }, ixs);
 
     ixs.push(
       cancelStreamInstruction(this.programId, {
@@ -947,25 +947,46 @@ export default class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Utility function that checks whether associated token account for the recipient exists and adds an instruction to add if not
+   * Utility function that checks whether associated token accounts still exist and adds instructions to add them if not
    */
-  private async checkAssociatedTokenAccount(
-    data: CheckAssociatedTokenAccountData,
-    { invoker }: IInteractStreamSolanaExt,
+  private async checkAssociatedTokenAccounts(
+    data: CheckAssociatedTokenAccountsData,
+    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt,
     ixs: TransactionInstruction[]
   ) {
-    const accountExists = await this.connection.getAccountInfo(data.recipientTokens);
-    if (!accountExists?.data) {
-      ixs.push(
-        createAssociatedTokenAccountInstruction(
-          invoker.publicKey!,
-          data.recipientTokens,
-          data.recipient,
-          data.mint,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID
-        )
-      );
+    if (!checkTokenAccounts) {
+      return;
+    }
+    const checkedKeys: Set<PublicKey> = new Set();
+    // TODO: optimize fetching and maps/arrays
+    const accountArrays = [
+      [data.sender, data.senderTokens],
+      [data.recipient, data.recipientTokens],
+      [data.partner, data.partnerTokens],
+      [data.streamflowTreasury, data.streamflowTreasuryTokens],
+    ].filter((value) => {
+      if (checkedKeys.has(value[1])) {
+        return false;
+      }
+      checkedKeys.add(value[1]);
+      return true;
+    });
+    const response = await this.connection.getMultipleAccountsInfo(
+      accountArrays.map((item) => item[1])
+    );
+    for (let i = 0; i < response.length; i++) {
+      if (!response[i]) {
+        ixs.push(
+          createAssociatedTokenAccountInstruction(
+            invoker.publicKey!,
+            accountArrays[i][0],
+            accountArrays[i][1],
+            data.mint,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID
+          )
+        );
+      }
     }
   }
 
