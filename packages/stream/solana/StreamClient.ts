@@ -461,7 +461,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     { id, amount }: IWithdrawData,
-    { invoker }: IInteractStreamSolanaExt
+    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -479,7 +479,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY);
     const partnerTokens = await ata(data.mint, data.partner);
-    await this.checkAssociatedTokenAccounts(data, { invoker }, ixs);
+    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs);
 
     ixs.push(
       withdrawStreamInstruction(amount, this.programId, {
@@ -516,7 +516,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async cancel(
     { id }: ICancelData,
-    { invoker }: IInteractStreamSolanaExt
+    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -534,7 +534,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const partnerTokens = await ata(data.mint, data.partner);
 
     const ixs: TransactionInstruction[] = [];
-    await this.checkAssociatedTokenAccounts(data, { invoker }, ixs);
+    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs);
 
     ixs.push(
       cancelStreamInstruction(this.programId, {
