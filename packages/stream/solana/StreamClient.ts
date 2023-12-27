@@ -958,6 +958,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       return;
     }
     const checkedKeys: Set<PublicKey> = new Set();
+    // TODO: optimize fetching and maps/arrays
     const accountArrays = [
       [data.sender, data.senderTokens],
       [data.recipient, data.recipientTokens],
