@@ -979,8 +979,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
         ixs.push(
           createAssociatedTokenAccountInstruction(
             invoker.publicKey!,
-            accountArrays[i][0],
             accountArrays[i][1],
+            accountArrays[i][0],
             data.mint,
             TOKEN_PROGRAM_ID,
             ASSOCIATED_TOKEN_PROGRAM_ID
