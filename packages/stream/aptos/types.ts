@@ -5,6 +5,7 @@ import BN from "bn.js";
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
 import { Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
+import { normalizeAptosAddress } from "./utils";
 
 export interface ICreateStreamAptosExt {
   senderWallet: WalletContextState | AptosAccount;
@@ -163,10 +164,10 @@ export class Contract implements Stream {
     this.canceledAt = parseInt(stream.canceled_at);
     this.end = parseInt(stream.end);
     this.lastWithdrawnAt = parseInt(stream.last_withdrawn_at);
-    this.sender = stream.sender;
-    this.senderTokens = stream.sender;
-    this.recipient = stream.recipient;
-    this.recipientTokens = stream.recipient;
+    this.sender = normalizeAptosAddress(stream.sender);
+    this.senderTokens = normalizeAptosAddress(stream.sender);
+    this.recipient = normalizeAptosAddress(stream.recipient);
+    this.recipientTokens = normalizeAptosAddress(stream.recipient);
     this.mint = tokenId;
     this.escrowTokens = "";
     this.streamflowTreasury = "";
