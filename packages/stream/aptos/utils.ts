@@ -19,7 +19,7 @@ function isAddressSpecial(address: string): boolean {
 
 /**
  * Aptos has inconsistencies in how it returns addresses.
- * This method normalizes them to be 64 characters long, or leaves it as SPECIAL ADDRESS (0x0 - 0xf inclusive)
+ * This method normalizes them to be 64+2(0x...) characters long, or leaves it as SPECIAL ADDRESS (0x0 - 0xf inclusive)
  * Per this: https://github.com/aptos-labs/aptos-ts-sdk/blob/main/src/core/accountAddress.ts#L115
  * */
 export function normalizeAptosAddress(address: string): string {
@@ -28,10 +28,10 @@ export function normalizeAptosAddress(address: string): string {
   }
 
   const length = address.length;
-  if (length === 64) {
+  if (length === 66 || length < 3) {
     return address;
   }
 
-  const missingZeros = 64 - length;
+  const missingZeros = 66 - length;
   return address.slice(0, 2) + "0".repeat(missingZeros) + address.slice(2);
 }
