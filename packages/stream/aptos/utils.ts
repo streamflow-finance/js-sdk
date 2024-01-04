@@ -28,7 +28,7 @@ export function normalizeAptosAddress(address: string): string {
   }
 
   const length = address.length;
-  if (length === 66) {
+  if (length === 66 || length < 3) {
     return address;
   }
 
