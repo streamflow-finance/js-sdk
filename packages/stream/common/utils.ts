@@ -52,3 +52,5 @@ export async function handleContractError<T>(
     throw err;
   }
 }
+
+export { normalizeAptosAddress } from "../aptos/utils";
