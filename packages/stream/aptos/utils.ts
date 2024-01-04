@@ -17,7 +17,11 @@ function isAddressSpecial(address: string): boolean {
   return false;
 }
 
-// Per this: https://github.com/aptos-labs/aptos-ts-sdk/blob/main/src/core/accountAddress.ts#L115
+/**
+ * Aptos has inconsistencies in how it returns addresses.
+ * This method normalizes them to be 64 characters long, or leaves it as SPECIAL ADDRESS (0x0 - 0xf inclusive)
+ * Per this: https://github.com/aptos-labs/aptos-ts-sdk/blob/main/src/core/accountAddress.ts#L115
+ * */
 export function normalizeAptosAddress(address: string): string {
   if (isAddressSpecial(address)) {
     return address;
