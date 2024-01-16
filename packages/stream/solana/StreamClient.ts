@@ -957,7 +957,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     if (!checkTokenAccounts) {
       return;
     }
-    const checkedKeys: Set<PublicKey> = new Set();
+    const checkedKeys: Set<string> = new Set();
     // TODO: optimize fetching and maps/arrays
     const accountArrays = [
       [data.sender, data.senderTokens],
@@ -965,10 +965,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
       [data.partner, data.partnerTokens],
       [data.streamflowTreasury, data.streamflowTreasuryTokens],
     ].filter((value) => {
-      if (checkedKeys.has(value[1])) {
+      if (checkedKeys.has(value[1].toBase58())) {
         return false;
       }
-      checkedKeys.add(value[1]);
+      checkedKeys.add(value[1].toBase58());
       return true;
     });
     const response = await this.connection.getMultipleAccountsInfo(
@@ -988,6 +988,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         );
       }
     }
+    throw new Error();
   }
 
   /**
