@@ -293,5 +293,6 @@ export class ContractError extends Error {
     // Copy properties from the original error
     Object.setPrototypeOf(this, ContractError.prototype);
     this.name = "ContractError"; // Set the name property
+    this.stack = error.stack;
   }
 }
