@@ -1,10 +1,36 @@
 {
   "name": "@streamflow/stream",
-  "version": "5.9.9",
+  "version": "5.10.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
-  "main": "dist/index.js",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./aptos": "./dist/aptos/index.js",
+    "./evm": "./dist/evm/index.js",
+    "./solana": "./dist/solana/index.js",
+    "./sui": "./dist/sui/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/index.d.ts"
+      ],
+      "./aptos": [
+        "./dist/aptos/index.d.ts"
+      ],
+      "./evm": [
+        "./dist/evm/index.d.ts"
+      ],
+      "./solana": [
+        "./dist/solana/index.d.ts"
+      ],
+      "./sui": [
+        "./dist/sui/index.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "build": "rm -rf dist; tsc -p tsconfig.json",
     "test": "jest .",

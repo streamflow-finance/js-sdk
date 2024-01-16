@@ -2,7 +2,6 @@
 
 import BN from "bn.js";
 import { Buffer } from "buffer";
-import bs58 from "bs58";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   Connection,
@@ -15,8 +14,6 @@ import {
   Transaction,
   Commitment,
   ConnectionConfig,
-  sendAndConfirmRawTransaction,
-  BlockheightBasedTransactionConfirmationStrategy,
 } from "@solana/web3.js";
 import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 import * as borsh from "borsh";
@@ -38,9 +35,9 @@ import {
   decodeStream,
   extractSolanaErrorCode,
   getProgramAccounts,
-  isSignerWallet,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
+  signAndExecuteTransaction,
 } from "./utils";
 import {
   PROGRAM_ID,
@@ -232,7 +229,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       tx.partialSign(metadata);
     }
 
-    const signature = await this.sign(sender, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, sender, tx, hash);
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
@@ -347,7 +344,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       tx.partialSign(metadata);
     }
 
-    const signature = await this.sign(sender, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, sender, tx, hash);
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
@@ -506,7 +503,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -564,7 +561,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -617,7 +614,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await this.sign(invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -674,7 +671,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...nativeInstructions, ...ixs);
 
-    const signature = await this.sign(invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -739,40 +736,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
     return sortedStreams.filter((stream) => stream[1].type === type);
   }
 
-  private async sign(
-    invoker: any,
-    tx: Transaction,
-    hash: Readonly<{
-      blockhash: string;
-      lastValidBlockHeight: number;
-    }>
-  ) {
-    let signedTx: Transaction;
-    if (isSignerWallet(invoker)) {
-      signedTx = await invoker.signTransaction(tx);
-    } else {
-      tx.partialSign(invoker);
-      signedTx = tx;
-    }
-
-    const rawTx = signedTx.serialize();
-
-    if (!hash.lastValidBlockHeight || !signedTx.signature || !hash.blockhash)
-      throw Error("Error with transaction parameters.");
-
-    const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
-      lastValidBlockHeight: hash.lastValidBlockHeight,
-      signature: bs58.encode(signedTx.signature),
-      blockhash: hash.blockhash,
-    };
-    const signature = await sendAndConfirmRawTransaction(
-      this.connection,
-      rawTx,
-      confirmationStrategy
-    );
-    return signature;
-  }
-
   /**
    * Attempts updating the stream auto withdrawal params and amount per period
    */
@@ -807,7 +770,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(updateIx);
 
-    const signature = await this.sign(invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return {
       ixs: [updateIx],
@@ -981,9 +944,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
             invoker.publicKey!,
             accountArrays[i][1],
             accountArrays[i][0],
-            data.mint,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID
+            data.mint
           )
         );
       }
