@@ -17,7 +17,7 @@ import BN from "bn.js";
 import bs58 from "bs58";
 
 import { streamLayout } from "./layout";
-import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
+import { AtaParams, DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
 import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants";
 
 const decoder = new TextDecoder("utf-8");
@@ -245,17 +245,15 @@ export function ata(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
 /**
  * Function that checks whether ATA exists for each provided owner
  * @param connection - Solana client connection
- * @param mint - SPL token Mint address
- * @param owners - Array of owner addresses
+ * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
  * @returns Array of boolean where each members corresponds to owners member
  */
 export async function ataBatchExist(
   connection: Connection,
-  mint: PublicKey,
-  owners: PublicKey[]
+  paramsBatch: AtaParams[]
 ): Promise<boolean[]> {
   const tokenAccounts = await Promise.all(
-    owners.map(async (owner) => {
+    paramsBatch.map(async ({ mint, owner }) => {
       const pubkey = await ata(mint, owner);
       return pubkey;
     })
@@ -268,21 +266,19 @@ export async function ataBatchExist(
  * Generates a Transaction to create ATA for an array of owners
  * @param connection - Solana client connection
  * @param payer - Transaction invoker, should be a signer
- * @param mint - SPL token Mint address
- * @param owners - Array of owner addresses
+ * @param coparamsBatchnfigs - Array of Params for an each ATA account: {mint, owner}
  * @returns Unsigned Transaction with create ATA instructions
  */
 export async function generateCreateAtaBatchTx(
   connection: Connection,
   payer: PublicKey,
-  mint: PublicKey,
-  owners: PublicKey[]
+  paramsBatch: AtaParams[]
 ): Promise<{
   tx: Transaction;
   hash: BlockhashWithExpiryBlockHeight;
 }> {
   const ixs: TransactionInstruction[] = await Promise.all(
-    owners.map(async (owner) => {
+    paramsBatch.map(async ({ mint, owner }) => {
       return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
     })
   );
@@ -299,17 +295,15 @@ export async function generateCreateAtaBatchTx(
  * Creates ATA for an array of owners
  * @param connection - Solana client connection
  * @param invoker - Transaction invoker and payer
- * @param mint - SPL token Mint address
- * @param owners - Array of owner addresses
+ * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
  * @returns Transaction signature
  */
 export async function createAtaBatch(
   connection: Connection,
   invoker: Keypair | SignerWalletAdapter,
-  mint: PublicKey,
-  owners: PublicKey[]
+  paramsBatch: AtaParams[]
 ): Promise<string> {
-  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, mint, owners);
+  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
   const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
   return signature;
 }

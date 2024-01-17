@@ -17,16 +17,16 @@
       ".": [
         "./dist/index.d.ts"
       ],
-      "./aptos": [
+      "aptos": [
         "./dist/aptos/index.d.ts"
       ],
-      "./evm": [
+      "evm": [
         "./dist/evm/index.d.ts"
       ],
-      "./solana": [
+      "solana": [
         "./dist/solana/index.d.ts"
       ],
-      "./sui": [
+      "sui": [
         "./dist/sui/index.d.ts"
       ]
     }
