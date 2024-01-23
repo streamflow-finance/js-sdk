@@ -949,7 +949,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
         );
       }
     }
-    throw new Error();
   }
 
   /**
