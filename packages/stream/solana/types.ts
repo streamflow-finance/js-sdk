@@ -452,4 +452,9 @@ export interface BatchItemError extends BatchItem {
   error: string;
 }
 
+export interface AtaParams {
+  mint: PublicKey;
+  owner: PublicKey;
+}
+
 export type BatchItemResult = BatchItemSuccess | BatchItemError;

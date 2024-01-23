@@ -1,17 +1,23 @@
-import { getAssociatedTokenAddress } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+} from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import {
   BlockheightBasedTransactionConfirmationStrategy,
   Connection,
   Keypair,
   PublicKey,
+  TransactionInstruction,
+  Transaction,
   sendAndConfirmRawTransaction,
+  BlockhashWithExpiryBlockHeight,
 } from "@solana/web3.js";
 import BN from "bn.js";
 import bs58 from "bs58";
 
 import { streamLayout } from "./layout";
-import { DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
+import { AtaParams, DecodedStream, Account, BatchItem, BatchItemResult } from "./types";
 import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants";
 
 const decoder = new TextDecoder("utf-8");
@@ -97,7 +103,9 @@ export async function getProgramAccounts(
  * @param {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
  * @return {boolean} - Returns true if parameter is a Wallet.
  */
-export function isSignerWallet(walletOrKeypair: Keypair | SignerWalletAdapter): boolean {
+export function isSignerWallet(
+  walletOrKeypair: Keypair | SignerWalletAdapter
+): walletOrKeypair is SignerWalletAdapter {
   return (<SignerWalletAdapter>walletOrKeypair).signTransaction !== undefined;
 }
 
@@ -106,7 +114,7 @@ export function isSignerWallet(walletOrKeypair: Keypair | SignerWalletAdapter): 
  * @param walletOrKeypair {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
  * @returns {boolean} - Returns true if parameter is a Keypair.
  */
-function isSignerKeypair(
+export function isSignerKeypair(
   walletOrKeypair: Keypair | SignerWalletAdapter
 ): walletOrKeypair is Keypair {
   return (
@@ -114,6 +122,20 @@ function isSignerKeypair(
     walletOrKeypair.constructor === Keypair ||
     walletOrKeypair.constructor.name === Keypair.prototype.constructor.name
   );
+}
+
+export async function signTransaction(
+  invoker: Keypair | SignerWalletAdapter,
+  tx: Transaction
+): Promise<Transaction> {
+  let signedTx: Transaction;
+  if (isSignerWallet(invoker)) {
+    signedTx = await invoker.signTransaction(tx);
+  } else {
+    tx.partialSign(invoker);
+    signedTx = tx;
+  }
+  return signedTx;
 }
 
 /**
@@ -144,6 +166,35 @@ export async function signAllTransactionWithRecipients(
     // If signer is not passed
     return [];
   }
+}
+
+/**
+ * Signs, sends and confirms Transaction
+ * @param connection - Solana client connection
+ * @param invoker - Keypair used as signer
+ * @param tx - Transaction instance
+ * @param hash - blockhash information, the same hash should be used in the Transaction
+ * @returns Transaction signature
+ */
+export async function signAndExecuteTransaction(
+  connection: Connection,
+  invoker: Keypair | SignerWalletAdapter,
+  tx: Transaction,
+  hash: BlockhashWithExpiryBlockHeight
+): Promise<string> {
+  const signedTx = await signTransaction(invoker, tx);
+  const rawTx = signedTx.serialize();
+
+  if (!hash.lastValidBlockHeight || !signedTx.signature || !hash.blockhash)
+    throw Error("Error with transaction parameters.");
+
+  const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
+    lastValidBlockHeight: hash.lastValidBlockHeight,
+    signature: bs58.encode(signedTx.signature),
+    blockhash: hash.blockhash,
+  };
+  const signature = await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
+  return signature;
 }
 
 /**
@@ -189,6 +240,72 @@ export async function sendAndConfirmStreamRawTransaction(
  */
 export function ata(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
   return getAssociatedTokenAddress(mint, owner, true);
+}
+
+/**
+ * Function that checks whether ATA exists for each provided owner
+ * @param connection - Solana client connection
+ * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
+ * @returns Array of boolean where each members corresponds to owners member
+ */
+export async function ataBatchExist(
+  connection: Connection,
+  paramsBatch: AtaParams[]
+): Promise<boolean[]> {
+  const tokenAccounts = await Promise.all(
+    paramsBatch.map(async ({ mint, owner }) => {
+      const pubkey = await ata(mint, owner);
+      return pubkey;
+    })
+  );
+  const response = await connection.getMultipleAccountsInfo(tokenAccounts);
+  return response.map((accInfo) => !!accInfo);
+}
+
+/**
+ * Generates a Transaction to create ATA for an array of owners
+ * @param connection - Solana client connection
+ * @param payer - Transaction invoker, should be a signer
+ * @param coparamsBatchnfigs - Array of Params for an each ATA account: {mint, owner}
+ * @returns Unsigned Transaction with create ATA instructions
+ */
+export async function generateCreateAtaBatchTx(
+  connection: Connection,
+  payer: PublicKey,
+  paramsBatch: AtaParams[]
+): Promise<{
+  tx: Transaction;
+  hash: BlockhashWithExpiryBlockHeight;
+}> {
+  const ixs: TransactionInstruction[] = await Promise.all(
+    paramsBatch.map(async ({ mint, owner }) => {
+      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
+    })
+  );
+  const hash = await connection.getLatestBlockhash();
+  const tx = new Transaction({
+    feePayer: payer,
+    blockhash: hash.blockhash,
+    lastValidBlockHeight: hash.lastValidBlockHeight,
+  }).add(...ixs);
+  return { tx, hash };
+}
+
+/**
+ * Creates ATA for an array of owners
+ * @param connection - Solana client connection
+ * @param invoker - Transaction invoker and payer
+ * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
+ * @returns Transaction signature
+ */
+export async function createAtaBatch(
+  connection: Connection,
+  invoker: Keypair | SignerWalletAdapter,
+  paramsBatch: AtaParams[]
+): Promise<string> {
+  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
+  const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
+  return signature;
 }
 
 export function extractSolanaErrorCode(errorText: string): string | null {
