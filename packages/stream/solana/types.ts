@@ -21,12 +21,15 @@ export interface Account {
   account: AccountInfo<Buffer>;
 }
 
-export interface ICreateStreamSolanaExt {
+export interface ICreateSolanaExt {
   sender: SignerWalletAdapter | Keypair;
+  isNative?: boolean;
+}
+
+export interface ICreateStreamSolanaExt extends ICreateSolanaExt {
   // allow custom Metadata Account to be passed, ephemeral signer is most cases, accepts array to be compatible in createMultiple
   metadataPubKeys?: PublicKey[];
   partner?: string | null;
-  isNative?: boolean;
 }
 
 export interface IInteractStreamSolanaExt {
