@@ -27,7 +27,7 @@ import {
   IGetDistributors,
 } from "./types";
 import { ICreateSolanaExt, IInteractStreamSolanaExt } from "../types";
-import { ata, signAndExecuteTransaction } from "../utils";
+import { ata } from "../utils";
 import {
   ClaimLockedAccounts,
   ClawbackAccounts,
@@ -42,7 +42,7 @@ import {
 } from "./generated/instructions";
 import { prepareWrappedAccount } from "../instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
-import { getClaimantStatusPda, getDistributorPda } from "./utils";
+import { getClaimantStatusPda, getDistributorPda, wrappedSignAndExecuteTransaction } from "./utils";
 
 interface IInitOptions {
   clusterUrl: string;
@@ -138,7 +138,7 @@ export default class SolanaDistributorClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await signAndExecuteTransaction(this.connection, sender, tx, hash);
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, sender, tx, hash);
 
     return { ixs, txId: signature, metadataId: distributorPublicKey.toBase58() };
   }
@@ -197,7 +197,7 @@ export default class SolanaDistributorClient {
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
-    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -238,7 +238,7 @@ export default class SolanaDistributorClient {
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
-    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }

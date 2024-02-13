@@ -1,4 +1,15 @@
-import { PublicKey } from "@solana/web3.js";
+import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import {
+  BlockhashWithExpiryBlockHeight,
+  Connection,
+  Keypair,
+  PublicKey,
+  Transaction,
+} from "@solana/web3.js";
+
+import { fromTxError } from "./generated/errors";
+import { signAndExecuteTransaction } from "../utils";
+import { ContractError } from "../../common/types";
 
 export function getDistributorPda(
   programId: PublicKey,
@@ -26,4 +37,24 @@ export function getClaimantStatusPda(
 
   // Finding the PDA
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
+}
+
+export async function wrappedSignAndExecuteTransaction(
+  connection: Connection,
+  invoker: Keypair | SignerWalletAdapter,
+  tx: Transaction,
+  hash: BlockhashWithExpiryBlockHeight
+): Promise<string> {
+  try {
+    const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
+    return signature;
+  } catch (err: any) {
+    if (err instanceof Error) {
+      const parsed = fromTxError(err);
+      if (parsed) {
+        throw new ContractError(err, parsed.name);
+      }
+    }
+    throw err;
+  }
 }
