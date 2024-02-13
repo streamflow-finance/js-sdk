@@ -318,3 +318,34 @@ export function extractSolanaErrorCode(errorText: string): string | null {
   const errorCode = Number(match[1]);
   return SOLANA_ERROR_MAP[errorCode] || null;
 }
+
+/**
+ * Utility function that checks whether associated token accounts exist and return instructions to populate them if not
+ * @param connection - Solana client connection
+ * @param owners - Array of ATA owners
+ * @param mint - Mint for which ATA will be checked
+ * @param invoker - Transaction invoker and payer
+ * @returns Array of Transaction Instructions that should be added to a transaction
+ */
+export async function checkOrCreateAtaBatch(
+  connection: Connection,
+  owners: PublicKey[],
+  mint: PublicKey,
+  invoker: SignerWalletAdapter | Keypair
+): Promise<TransactionInstruction[]> {
+  const ixs: TransactionInstruction[] = [];
+  // TODO: optimize fetching and maps/arrays
+  const atas: PublicKey[] = [];
+  for (const owner of owners) {
+    atas.push(await ata(mint, owner));
+  }
+  const response = await connection.getMultipleAccountsInfo(atas);
+  for (let i = 0; i < response.length; i++) {
+    if (!response[i]) {
+      ixs.push(
+        createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint)
+      );
+    }
+  }
+  return ixs;
+}

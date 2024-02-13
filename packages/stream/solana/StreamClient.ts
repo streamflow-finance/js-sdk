@@ -36,6 +36,7 @@ import {
 } from "./types";
 import {
   ata,
+  checkOrCreateAtaBatch,
   decodeStream,
   extractSolanaErrorCode,
   getProgramAccounts,
@@ -938,35 +939,16 @@ export default class SolanaStreamClient extends BaseStreamClient {
     if (!checkTokenAccounts) {
       return;
     }
-    const checkedKeys: Set<string> = new Set();
-    // TODO: optimize fetching and maps/arrays
-    const accountArrays = [
-      [data.sender, data.senderTokens],
-      [data.recipient, data.recipientTokens],
-      [data.partner, data.partnerTokens],
-      [data.streamflowTreasury, data.streamflowTreasuryTokens],
-    ].filter((value) => {
-      if (checkedKeys.has(value[1].toBase58())) {
-        return false;
-      }
-      checkedKeys.add(value[1].toBase58());
-      return true;
-    });
-    const response = await this.connection.getMultipleAccountsInfo(
-      accountArrays.map((item) => item[1])
+    const owners = Array.from(
+      new Set([
+        data.sender.toBase58(),
+        data.recipient.toBase58(),
+        data.partner.toBase58(),
+        data.streamflowTreasury.toBase58(),
+      ]),
+      (address) => new PublicKey(address)
     );
-    for (let i = 0; i < response.length; i++) {
-      if (!response[i]) {
-        ixs.push(
-          createAssociatedTokenAccountInstruction(
-            invoker.publicKey!,
-            accountArrays[i][1],
-            accountArrays[i][0],
-            data.mint
-          )
-        );
-      }
-    }
+    ixs.push(...(await checkOrCreateAtaBatch(this.connection, owners, data.mint, invoker)));
   }
 
   /**

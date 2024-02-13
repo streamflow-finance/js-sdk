@@ -432,13 +432,9 @@ export interface CreateMultipleStreamsValues {
 
 export interface CheckAssociatedTokenAccountsData {
   sender: PublicKey;
-  senderTokens: PublicKey;
   recipient: PublicKey;
-  recipientTokens: PublicKey;
   partner: PublicKey;
-  partnerTokens: PublicKey;
   streamflowTreasury: PublicKey;
-  streamflowTreasuryTokens: PublicKey;
   mint: PublicKey;
 }
 

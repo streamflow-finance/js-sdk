@@ -27,7 +27,7 @@ import {
   IGetDistributors,
 } from "./types";
 import { ICreateSolanaExt, IInteractStreamSolanaExt } from "../types";
-import { ata } from "../utils";
+import { ata, checkOrCreateAtaBatch } from "../utils";
 import {
   ClaimLockedAccounts,
   ClawbackAccounts,
@@ -151,7 +151,6 @@ export default class SolanaDistributorClient {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = [];
     const distributorPublicKey = new PublicKey(data.id);
     const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
 
@@ -159,6 +158,12 @@ export default class SolanaDistributorClient {
       throw new Error("Couldn't get account info");
     }
 
+    const ixs = await checkOrCreateAtaBatch(
+      this.connection,
+      [invoker.publicKey],
+      distributor.mint,
+      invoker
+    );
     const invokerTokens = await ata(distributor.mint, invoker.publicKey);
     const claimStatusPublicKey = getClaimantStatusPda(
       this.programId,
@@ -210,7 +215,6 @@ export default class SolanaDistributorClient {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = [];
     const distributorPublicKey = new PublicKey(data.id);
     const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
 
@@ -218,6 +222,12 @@ export default class SolanaDistributorClient {
       throw new Error("Couldn't get account info");
     }
 
+    const ixs = await checkOrCreateAtaBatch(
+      this.connection,
+      [invoker.publicKey],
+      distributor.mint,
+      invoker
+    );
     const accounts: ClawbackAccounts = {
       distributor: distributorPublicKey,
       from: distributor.tokenVault,
