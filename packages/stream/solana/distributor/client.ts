@@ -23,6 +23,8 @@ import {
   IClawbackData,
   ICreateDistributorData,
   ICreateDistributorResult,
+  IGetClaimsData,
+  IGetDistributors,
 } from "./types";
 import { ICreateSolanaExt, IInteractStreamSolanaExt } from "../types";
 import { ata, signAndExecuteTransaction } from "../utils";
@@ -40,7 +42,14 @@ import {
 } from "./generated/instructions";
 import { prepareWrappedAccount } from "../instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
-import { getClaimantStatusPda } from "./utils";
+import { getClaimantStatusPda, getDistributorPda } from "./utils";
+
+interface IInitOptions {
+  clusterUrl: string;
+  cluster?: ICluster;
+  commitment?: Commitment | ConnectionConfig;
+  programId?: string;
+}
 
 export default class SolanaDistributorClient {
   private connection: Connection;
@@ -52,12 +61,12 @@ export default class SolanaDistributorClient {
   /**
    * Create Stream instance
    */
-  constructor(
-    clusterUrl: string,
-    cluster: ICluster = ICluster.Mainnet,
-    commitment: Commitment | ConnectionConfig = "confirmed",
-    programId = ""
-  ) {
+  constructor({
+    clusterUrl,
+    cluster = ICluster.Mainnet,
+    commitment = "confirmed",
+    programId = "",
+  }: IInitOptions) {
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId =
@@ -75,7 +84,7 @@ export default class SolanaDistributorClient {
     const ixs: TransactionInstruction[] = [];
     const mint = isNative ? NATIVE_MINT : new PublicKey(data.mint);
     const mintAccount = await getMint(this.connection, mint);
-    const distributorPublicKey = new PublicKey(data.id);
+    const distributorPublicKey = getDistributorPda(this.programId, mint, data.version);
     const tokenVault = await ata(mint, distributorPublicKey);
     const senderTokens = await ata(mint, sender.publicKey);
 
@@ -131,7 +140,7 @@ export default class SolanaDistributorClient {
 
     const signature = await signAndExecuteTransaction(this.connection, sender, tx, hash);
 
-    return { ixs, txId: signature, metadataId: data.id };
+    return { ixs, txId: signature, metadataId: distributorPublicKey.toBase58() };
   }
 
   public async claim(
@@ -232,5 +241,18 @@ export default class SolanaDistributorClient {
     const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
+  }
+
+  public async getClaims(data: IGetClaimsData): Promise<(ClaimStatus | null)[]> {
+    const distributorPublicKey = new PublicKey(data.id);
+    const claimStatusPublicKeys = data.recipients.map((recipient) => {
+      return getClaimantStatusPda(this.programId, distributorPublicKey, new PublicKey(recipient));
+    });
+    return ClaimStatus.fetchMultiple(this.connection, claimStatusPublicKeys, this.programId);
+  }
+
+  public async getDistributors(data: IGetDistributors): Promise<(MerkleDistributor | null)[]> {
+    const distributorPublicKeys = data.ids.map((distributorId) => new PublicKey(distributorId));
+    return MerkleDistributor.fetchMultiple(this.connection, distributorPublicKeys, this.programId);
   }
 }

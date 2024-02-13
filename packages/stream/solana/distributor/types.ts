@@ -3,10 +3,9 @@ import BN from "bn.js";
 import { ITransactionResult } from "../../common/types";
 
 export interface ICreateDistributorData {
-  id: string;
   mint: string;
-
   version: number;
+
   root: Array<number>;
   maxTotalClaim: BN;
   maxNumNodes: BN;
@@ -27,6 +26,16 @@ export interface IClaimData {
 
 export interface IClawbackData {
   id: string;
+}
+
+export interface IGetClaimsData {
+  id: string;
+
+  recipients: string[];
+}
+
+export interface IGetDistributors {
+  ids: string[];
 }
 
 export interface ISetDataAdmin {
