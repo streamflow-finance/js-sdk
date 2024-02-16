@@ -2,8 +2,9 @@ import BN from "bn.js";
 
 import { ContractError } from "./types";
 
-const FEE_PRECISION = 10000;
-const FEE_MULTIPLIER = new BN(1000000);
+const FEE_PRECISION = 4;
+const FEE_NORMALIZER = 10 ** FEE_PRECISION;
+const FEE_MULTIPLIER = new BN(10 ** 6);
 
 /**
  * Used for conversion of token amounts to their Big Number representation.
@@ -36,14 +37,14 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
 /**
  * Calculate total amount of a Contract including all fees.
  * - first we convert fee floating to a BN with up to 4 decimals precision
- * - then we reverse the fee with `feeMultiplier` to safely multiply it by depositedAmount
+ * - then we reverse the fee with `FEE_MULTIPLIER` to safely multiply it by depositedAmount
  *   to receive a total number and not percentage of depositedAmount
  * @param depositedAmount deposited raw tokens
  * @param totalFee sum of all fees in percentage as floating number, e.g. 0.99% should be supplied as 0.99
  * @returns total tokens amount that Contract will retrieve from the Sender
  */
 export const calculateTotalAmountToDeposit = (depositedAmount: BN, totalFee: number): BN => {
-  const totalFeeNormalized = new BN(totalFee * FEE_PRECISION);
+  const totalFeeNormalized = new BN(totalFee * FEE_NORMALIZER);
   return depositedAmount.mul(totalFeeNormalized.add(FEE_MULTIPLIER)).div(FEE_MULTIPLIER);
 };
 
