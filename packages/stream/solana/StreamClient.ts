@@ -173,7 +173,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
     if (isNative) {
       const totalFee = await this.getTotalFee({ address: partner ?? sender.publicKey.toBase58() });
       const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
-      console.log(totalAmount.toString());
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
