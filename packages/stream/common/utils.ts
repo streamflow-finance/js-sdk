@@ -2,6 +2,9 @@ import BN from "bn.js";
 
 import { ContractError } from "./types";
 
+const FEE_PRECISION = 10000;
+const FEE_MULTIPLIER = new BN(1000000);
+
 /**
  * Used for conversion of token amounts to their Big Number representation.
  * Get Big Number representation in the smallest units from the same value in the highest units.
@@ -40,9 +43,8 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
  * @returns total tokens amount that Contract will retrieve from the Sender
  */
 export const calculateTotalAmountToDeposit = (depositedAmount: BN, totalFee: number): BN => {
-  const totalFeeNormalized = new BN(totalFee * 10000);
-  const feeMultiplier = new BN(1000000);
-  return depositedAmount.mul(totalFeeNormalized.add(feeMultiplier)).div(feeMultiplier);
+  const totalFeeNormalized = new BN(totalFee * FEE_PRECISION);
+  return depositedAmount.mul(totalFeeNormalized.add(FEE_MULTIPLIER)).div(FEE_MULTIPLIER);
 };
 
 /**
