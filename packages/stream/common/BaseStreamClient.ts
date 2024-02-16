@@ -44,9 +44,23 @@ export abstract class BaseStreamClient {
 
   abstract update(updateData: IUpdateData, chainSpecificParams: any): Promise<ITransactionResult>;
 
-  abstract getFees(getFeesData: IGetFeesData, chainSpecificParams: any): Promise<IFees | null>;
+  abstract getFees(getFeesData: IGetFeesData, chainSpecificParams?: any): Promise<IFees | null>;
 
-  abstract getDefaultStreamflowFee(chainSpecificParams: any): Promise<number>;
+  abstract getDefaultStreamflowFee(chainSpecificParams?: any): Promise<number>;
+
+  /**
+   * Returns total fee percent, streamflow fees + partner fees
+   * @param getFeesData structure with address for which we need to derive fee, either sender or partner usually
+   * @param chainSpecificParams additional parameters required by chain client
+   * @returns fee as floating number, so if fee is 0.99%, it will return 0.99
+   */
+  public async getTotalFee(getFeesData: IGetFeesData, chainSpecificParams?: any): Promise<number> {
+    const fees = await this.getFees(getFeesData, chainSpecificParams);
+    if (fees) {
+      return fees.partnerFee + fees.streamflowFee;
+    }
+    return this.getDefaultStreamflowFee(chainSpecificParams);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   extractErrorCode(err: Error): string | null {
