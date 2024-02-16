@@ -538,7 +538,6 @@ export default class SuiStreamClient extends BaseStreamClient {
       );
     }
     const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-    console.log(totalAmount.toString());
     return txb.splitCoins(coinObject, [txb.pure(totalAmount.toString())])[0];
   }
 
