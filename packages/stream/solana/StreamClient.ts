@@ -371,19 +371,44 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
     const batch: BatchItem[] = [];
+    const instructionsBatch: {
+      ixs: TransactionInstruction[];
+      metadata: Keypair | undefined;
+      recipient: string;
+    }[] = [];
     metadataPubKeys = metadataPubKeys || [];
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
-      const { tx, metadataPubKey } = await this.prepareStreamTransaction(recipientData, data, {
-        sender,
-        metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-      });
+      const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(
+        recipientData,
+        data,
+        {
+          sender,
+          metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
+        }
+      );
 
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
       metadatas.push(metadataPubKey.toBase58());
-      batch.push({ tx, recipient: recipientData.recipient });
+      instructionsBatch.push({ ixs, metadata, recipient: recipientData.recipient });
+    }
+
+    const commitment =
+      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const hash = await this.connection.getLatestBlockhash(commitment);
+
+    for (const { ixs, metadata, recipient } of instructionsBatch) {
+      const tx = new Transaction({
+        feePayer: sender.publicKey,
+        blockhash: hash.blockhash,
+        lastValidBlockHeight: hash.lastValidBlockHeight,
+      }).add(...ixs);
+      if (metadata) {
+        tx.partialSign(metadata);
+      }
+      batch.push({ tx, recipient });
     }
 
     if (isNative) {
@@ -397,9 +422,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
         totalDepositedAmount
       );
 
-      const commitment =
-        typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
-      const hash = await this.connection.getLatestBlockhash(commitment);
       const prepareTransaction = new Transaction({
         feePayer: sender.publicKey,
         blockhash: hash.blockhash,
@@ -814,7 +836,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Forms instructions from params, creates a raw transaction and fetch recent blockhash.
    */
-  private async prepareStreamTransaction(
+  private async prepareStreamInstructions(
     recipient: IRecipient,
     streamParams: IStreamConfig,
     solanaExtendedConfig: ICreateStreamSolanaExt
@@ -841,8 +863,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
     }
 
     const ixs: TransactionInstruction[] = [];
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const recipientPublicKey = new PublicKey(recipient.recipient);
     const mintPublicKey = new PublicKey(mint);
     const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
@@ -900,16 +920,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         }
       )
     );
-    const hash = await this.connection.getLatestBlockhash(commitment);
-    const tx = new Transaction({
-      feePayer: sender.publicKey,
-      blockhash: hash.blockhash,
-      lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
-    if (metadata) {
-      tx.partialSign(metadata);
-    }
-    return { tx, metadataPubKey };
+    return { ixs, metadata, metadataPubKey };
   }
 
   /**
