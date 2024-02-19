@@ -87,6 +87,7 @@ import {
 } from "../common/types";
 import { BaseStreamClient } from "../common/BaseStreamClient";
 import { IPartnerLayout } from "./instructionTypes";
+import { calculateTotalAmountToDeposit } from "../common/utils";
 
 const METADATA_ACC_SIZE = 1104;
 
@@ -169,9 +170,11 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
-    const nativeInstructions = isNative
-      ? await prepareWrappedAccount(this.connection, sender.publicKey, depositedAmount)
-      : ([] as TransactionInstruction[]);
+    if (isNative) {
+      const totalFee = await this.getTotalFee({ address: partner ?? sender.publicKey.toBase58() });
+      const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
+      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
+    }
 
     ixs.push(
       createStreamInstruction(
@@ -223,7 +226,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       feePayer: sender.publicKey,
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...nativeInstructions, ...ixs);
+    }).add(...ixs);
 
     if (metadata) {
       tx.partialSign(metadata);

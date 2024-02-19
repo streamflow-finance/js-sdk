@@ -10,7 +10,6 @@ import {
 } from "@solana/spl-token";
 
 import * as Layout from "./layout";
-import { BASE_FEE } from "../common/constants";
 import { IUpdateData } from "../common/types";
 
 interface CreateStreamData {
@@ -545,7 +544,7 @@ export const prepareWrappedAccount = async (
     SystemProgram.transfer({
       fromPubkey: senderAddress,
       toPubkey: tokenAccount,
-      lamports: amount.mul(new BN(BASE_FEE)).div(new BN(1000000)).toNumber(),
+      lamports: amount.toNumber(),
     }),
     createSyncNativeInstruction(tokenAccount),
   ];

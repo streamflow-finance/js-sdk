@@ -22,7 +22,6 @@ import {
   IUpdateData,
   IWithdrawData,
 } from "../common/types";
-import { BASE_FEE } from "../common/constants";
 import { SUI_PROGRAM_IDS, SUI_FEE_TABLE_IDS, SUI_CONFIG_IDS } from "./constants";
 import {
   Contract,
@@ -37,6 +36,7 @@ import {
 } from "./types";
 import { extractSuiErrorInfo } from "./utils";
 import { SuiWalletWrapper } from "./wallet";
+import { calculateTotalAmountToDeposit } from "../common/utils";
 
 export default class SuiStreamClient extends BaseStreamClient {
   private programId: string;
@@ -65,10 +65,15 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet }: ICreateStreamSuiExt
   ): Promise<ICreateResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const [txb] = await this.generateCreateBlock(wallet.address, {
-      ...streamData,
-      recipients: [{ ...streamData }],
-    });
+    const totalFee = await this.getTotalFee({ address: streamData.partner ?? wallet.address });
+    const [txb] = await this.generateCreateBlock(
+      wallet.address,
+      {
+        ...streamData,
+        recipients: [{ ...streamData }],
+      },
+      totalFee
+    );
 
     const { digest, events } = await wallet.signAndExecuteTransactionBlock({
       transactionBlock: txb,
@@ -91,7 +96,14 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet }: ICreateStreamSuiExt
   ): Promise<IMultiTransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const [txb, firstIndex] = await this.generateCreateBlock(wallet.address, multipleStreamData);
+    const totalFee = await this.getTotalFee({
+      address: multipleStreamData.partner ?? wallet.address,
+    });
+    const [txb, firstIndex] = await this.generateCreateBlock(
+      wallet.address,
+      multipleStreamData,
+      totalFee
+    );
 
     const txs: string[] = [];
     const metadatas: string[] = [];
@@ -239,7 +251,15 @@ export default class SuiStreamClient extends BaseStreamClient {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
     const coins = await this.getAllCoins(wallet.address, tokenId);
-    const coinObject = this.splitCoinObjectForAmount(txb, topupData.amount, tokenId, coins);
+    const stream = await this.getOne({ id: topupData.id });
+    const totalFee = (stream.partnerFeePercent + stream.streamflowFeePercent) / 100;
+    const coinObject = this.splitCoinObjectForAmount(
+      txb,
+      topupData.amount,
+      tokenId,
+      coins,
+      totalFee
+    );
     txb.moveCall({
       target: `${this.programId}::protocol::topup`,
       typeArguments: [tokenId],
@@ -414,7 +434,8 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   private async generateCreateBlock(
     walletAddress: string,
-    multipleStreamData: ICreateMultipleStreamData
+    multipleStreamData: ICreateMultipleStreamData,
+    totalFee: number
   ): Promise<[TransactionBlock, number]> {
     let coins = await this.getAllCoins(walletAddress, multipleStreamData.tokenId);
     const totalAmount = multipleStreamData.recipients
@@ -425,7 +446,8 @@ export default class SuiStreamClient extends BaseStreamClient {
       txb,
       totalAmount,
       multipleStreamData.tokenId,
-      coins
+      coins,
+      totalFee
     );
     coins = [coins[0]];
     let firstIndex: number | null = null;
@@ -504,7 +526,8 @@ export default class SuiStreamClient extends BaseStreamClient {
     txb: TransactionBlock,
     amount: BN,
     coinType: string,
-    coins: CoinStruct[]
+    coins: CoinStruct[],
+    totalFee: number
   ): TransactionArgument {
     const coinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
 
@@ -514,8 +537,8 @@ export default class SuiStreamClient extends BaseStreamClient {
         coins.slice(1).map((item) => txb.object(item.coinObjectId))
       );
     }
-    const sum = amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
-    return txb.splitCoins(coinObject, [txb.pure(sum.toString())])[0];
+    const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
+    return txb.splitCoins(coinObject, [txb.pure(totalAmount.toString())])[0];
   }
 
   /**
