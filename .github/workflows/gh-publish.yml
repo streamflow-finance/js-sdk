@@ -16,13 +16,14 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
         with:
           version: 8
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: "pnpm"
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
