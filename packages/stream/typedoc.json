@@ -3,6 +3,10 @@
         "../../typedoc.base.json"
     ],
     "entryPoints": [
-        "./index.ts"
+        "./index.ts",
+        "./aptos/index.ts",
+        "./evm/index.ts",
+        "./solana/index.ts",
+        "./sui/index.ts"
     ]
 }

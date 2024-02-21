@@ -50,6 +50,9 @@ importers:
       '@solana/web3.js':
         specifier: 1.70.1
         version: 1.70.1
+      aptos:
+        specifier: 1.4.0
+        version: 1.4.0
       bn.js:
         specifier: 5.2.1
         version: 5.2.1
