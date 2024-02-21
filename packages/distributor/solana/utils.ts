@@ -6,10 +6,10 @@ import {
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
+import { ContractError } from "@streamflow/common";
+import { signAndExecuteTransaction } from "@streamflow/common/solana";
 
 import { fromTxError } from "./generated/errors";
-import { signAndExecuteTransaction } from "../utils";
-import { ContractError } from "../../common/types";
 
 export function getDistributorPda(
   programId: PublicKey,

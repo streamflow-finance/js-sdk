@@ -16,13 +16,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node ${{ matrix.node_version }}
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
           registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: pnpm install
       - name: Git Identity
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -30,8 +34,6 @@ jobs:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install dependencies
-        run: npm ci
       - name: Set Current Version
         run: |
           CURRENT_VERSION=$(node -p 'require("./lerna.json").version')
@@ -64,7 +66,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ env.CURRENT_VERSION }}
-          name: ${{ github.event.pull_request.title }}
+          name: v${{ env.CURRENT_VERSION }}
           body: |
             ${{ github.event.pull_request.body }}
           draft: false

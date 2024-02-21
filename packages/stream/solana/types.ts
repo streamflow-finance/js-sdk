@@ -5,9 +5,9 @@ import {
   PublicKey,
   Keypair,
   TransactionSignature,
-  TransactionInstruction,
   Transaction,
 } from "@solana/web3.js";
+import { TransactionResponse, TxResponse } from "@streamflow/common/solana";
 import BN from "bn.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
@@ -366,17 +366,8 @@ export interface DecodedStream {
   fundsUnlockedAtLastRateChange: BN;
 }
 
-export interface TransactionResponse {
-  tx: TransactionSignature;
-}
-
 export interface CreateStreamResponse extends TransactionResponse {
   id: string;
-}
-
-export interface TxResponse {
-  ixs: TransactionInstruction[];
-  tx: TransactionSignature;
 }
 
 export interface CreateResponse extends TxResponse {
@@ -430,14 +421,6 @@ export interface CreateMultipleStreamsValues {
   recipients: Recipient[];
 }
 
-export interface CheckAssociatedTokenAccountsData {
-  sender: PublicKey;
-  recipient: PublicKey;
-  partner: PublicKey;
-  streamflowTreasury: PublicKey;
-  mint: PublicKey;
-}
-
 export interface BatchItem {
   recipient: string;
   tx: Transaction;
@@ -449,11 +432,6 @@ export interface BatchItemSuccess extends BatchItem {
 
 export interface BatchItemError extends BatchItem {
   error: string;
-}
-
-export interface AtaParams {
-  mint: PublicKey;
-  owner: PublicKey;
 }
 
 export type BatchItemResult = BatchItemSuccess | BatchItemError;

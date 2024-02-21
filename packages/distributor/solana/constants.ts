@@ -1,4 +1,4 @@
-import { ICluster } from "../../common/types";
+import { ICluster } from "@streamflow/common";
 
 export const DISTRIBUTOR_PROGRAM_ID = {
   [ICluster.Devnet]: "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",

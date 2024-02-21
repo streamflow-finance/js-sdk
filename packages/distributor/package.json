@@ -1,30 +1,18 @@
 {
-  "name": "@streamflow/stream",
+  "name": "@streamflow/distributor",
   "version": "6.0.0",
-  "description": "JavaScript SDK to interact with Streamflow protocol.",
+  "description": "JavaScript SDK to interact with Streamflow Airdrop protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./aptos": "./dist/aptos/index.js",
-    "./evm": "./dist/evm/index.js",
-    "./solana": "./dist/solana/index.js",
-    "./sui": "./dist/sui/index.js"
+    "./solana": "./dist/solana/index.js"
   },
   "typesVersions": {
     "*": {
-      "aptos": [
-        "dist/aptos/index.d.ts"
-      ],
-      "evm": [
-        "dist/evm/index.d.ts"
-      ],
       "solana": [
         "dist/solana/index.d.ts"
-      ],
-      "sui": [
-        "dist/sui/index.d.ts"
       ]
     }
   },
@@ -38,7 +26,6 @@
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
     "@types/bn.js": "5.1.1",
-    "@types/ethereum-checksum-address": "^0.0.0",
     "@types/jest": "29.2.4",
     "date-fns": "2.28.0",
     "eslint": "8.29.0",
@@ -49,24 +36,17 @@
     "jest": "29.3.1",
     "prettier": "2.8.1",
     "ts-jest": "29.0.3",
-    "typescript": "^5.3.3"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "@streamflow/common": "workspace:*",
     "@coral-xyz/borsh": "^0.29.0",
-    "@manahippo/aptos-wallet-adapter": "1.0.6",
-    "@mysten/sui.js": "^0.45.1",
     "@solana/buffer-layout": "4.0.1 ",
     "@solana/spl-token": "0.3.6",
     "@solana/wallet-adapter-base": "0.9.19",
     "@solana/web3.js": "1.70.1",
-    "@suiet/wallet-kit": "0.2.22",
-    "aptos": "1.4.0",
     "bn.js": "5.2.1",
     "borsh": "^2.0.0",
-    "bs58": "5.0.0",
-    "ethereum-checksum-address": "0.0.8",
-    "ethers": "5.7.2",
-    "js-sha256": "0.9.0"
+    "bs58": "5.0.0"
   }
 }

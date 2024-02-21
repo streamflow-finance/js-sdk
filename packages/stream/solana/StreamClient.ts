@@ -20,6 +20,13 @@ import {
   Commitment,
   ConnectionConfig,
 } from "@solana/web3.js";
+import {
+  CheckAssociatedTokenAccountsData,
+  ata,
+  checkOrCreateAtaBatch,
+  signAndExecuteTransaction,
+  getProgramAccounts,
+} from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
 import {
@@ -32,17 +39,12 @@ import {
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
-  CheckAssociatedTokenAccountsData,
 } from "./types";
 import {
-  ata,
-  checkOrCreateAtaBatch,
   decodeStream,
   extractSolanaErrorCode,
-  getProgramAccounts,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
-  signAndExecuteTransaction,
 } from "./utils";
 import {
   PROGRAM_ID,

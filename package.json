@@ -22,6 +22,7 @@
   "scripts": {
     "build": "lerna run build",
     "build-docs": "typedoc packages/stream/index.ts",
+    "pack": "lerna run pack",
     "test": "lerna run test",
     "lint": "lerna run lint",
     "publish": "lerna publish",
@@ -35,7 +36,7 @@
     "lint-staged": "^13.1.0",
     "ts-jest": "^29.1.1",
     "typedoc": "0.24.8",
-    "typescript": "4.8.4"
+    "typescript": "^4.9.5"
   },
   "version": "4.0.1",
   "workspaces": [
