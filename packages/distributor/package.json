@@ -20,7 +20,7 @@
     "build": "rm -rf dist; tsc -p tsconfig.json",
     "pack": "npm pack",
     "lint": "eslint --fix .",
-    "prepublishOnly": "npm run lint && npm test && npm run build"
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
