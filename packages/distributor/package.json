@@ -19,7 +19,6 @@
   "scripts": {
     "build": "rm -rf dist; tsc -p tsconfig.json",
     "pack": "npm pack",
-    "test": "jest .",
     "lint": "eslint .",
     "prepublishOnly": "npm run lint && npm test && npm run build"
   },
