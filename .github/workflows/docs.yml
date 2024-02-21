@@ -1,8 +1,8 @@
-name: "typedoc"
+name: "Publish Docs"
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 permissions:
   contents: read
