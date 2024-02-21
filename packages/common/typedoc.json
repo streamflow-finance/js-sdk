@@ -3,6 +3,7 @@
         "../../typedoc.base.json"
     ],
     "entryPoints": [
-        "./index.ts"
+        "./index.ts",
+        "./solana/index.ts",
     ]
 }
