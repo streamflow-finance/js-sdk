@@ -1,7 +1,10 @@
 import BN from "bn.js";
 import { BigNumber } from "ethers";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
+import {
+  buildStreamType,
+  calculateUnlockedAmount,
+} from "../common/contractUtils";
 import { Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
@@ -158,8 +161,11 @@ export class EvmContract implements Stream {
     this.streamflowTreasury = "";
     this.streamflowTreasuryTokens = "";
     this.streamflowFeeTotal = new BN(stream.fees.streamflow_fee.toString());
-    this.streamflowFeeWithdrawn = new BN(stream.fees.streamflow_fee_withdrawn.toString());
-    this.streamflowFeePercent = stream.fees.streamflow_fee_percentage.toNumber() / 10000;
+    this.streamflowFeeWithdrawn = new BN(
+      stream.fees.streamflow_fee_withdrawn.toString()
+    );
+    this.streamflowFeePercent =
+      stream.fees.streamflow_fee_percentage.toNumber() / 10000;
     this.partnerFeeTotal = new BN(0);
     this.partnerFeeWithdrawn = new BN(0);
     this.partnerFeePercent = 0;
@@ -197,6 +203,9 @@ export class EvmContract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
+    return getNumberFromBN(
+      this.depositedAmount.sub(this.withdrawnAmount),
+      decimals
+    );
   }
 }

@@ -152,7 +152,9 @@ export class MerkleDistributor {
   /** Buffer for additional fields */
   readonly buffer3: Array<number>;
 
-  static readonly discriminator = Buffer.from([77, 119, 139, 70, 84, 247, 12, 26]);
+  static readonly discriminator = Buffer.from([
+    77, 119, 139, 70, 84, 247, 12, 26,
+  ]);
 
   static readonly layout = borsh.struct([
     borsh.u8("bump"),

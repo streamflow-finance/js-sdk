@@ -33,7 +33,11 @@ export function getClaimantStatusPda(
   claimant: PublicKey
 ): PublicKey {
   // Constructing the seed for the PDA
-  const seeds = [Buffer.from("ClaimStatus"), claimant.toBuffer(), distributor.toBuffer()];
+  const seeds = [
+    Buffer.from("ClaimStatus"),
+    claimant.toBuffer(),
+    distributor.toBuffer(),
+  ];
 
   // Finding the PDA
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
@@ -46,7 +50,12 @@ export async function wrappedSignAndExecuteTransaction(
   hash: BlockhashWithExpiryBlockHeight
 ): Promise<string> {
   try {
-    const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(
+      connection,
+      invoker,
+      tx,
+      hash
+    );
     return signature;
   } catch (err: any) {
     if (err instanceof Error) {

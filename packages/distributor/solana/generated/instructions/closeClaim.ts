@@ -1,4 +1,8 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
+import {
+  TransactionInstruction,
+  PublicKey,
+  AccountMeta,
+} from "@solana/web3.js";
 
 import { PROGRAM_ID } from "../programId";
 

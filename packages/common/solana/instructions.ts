@@ -1,4 +1,9 @@
-import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import {
   createAssociatedTokenAccountInstruction,
@@ -12,7 +17,11 @@ export const prepareWrappedAccount = async (
   senderAddress: PublicKey,
   amount: BN
 ): Promise<TransactionInstruction[]> => {
-  const tokenAccount = await getAssociatedTokenAddress(NATIVE_MINT, senderAddress, true);
+  const tokenAccount = await getAssociatedTokenAddress(
+    NATIVE_MINT,
+    senderAddress,
+    true
+  );
 
   const accInfo = await connection.getParsedAccountInfo(tokenAccount);
 

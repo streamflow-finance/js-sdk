@@ -8,7 +8,9 @@ export function fromCode(
   code: number,
   logs?: string[]
 ): custom.CustomError | anchor.AnchorError | null {
-  return code >= 6000 ? custom.fromCode(code, logs) : anchor.fromCode(code, logs);
+  return code >= 6000
+    ? custom.fromCode(code, logs)
+    : anchor.fromCode(code, logs);
 }
 
 function hasOwnProperty<X extends object, Y extends PropertyKey>(

@@ -85,7 +85,11 @@ export const createStreamInstruction = (
   let bufferData = Buffer.alloc(Layout.createStreamLayout.span);
 
   const encodedUIntArray = new TextEncoder().encode(data.name);
-  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
+  const streamNameBuffer = Buffer.alloc(64).fill(
+    encodedUIntArray,
+    0,
+    encodedUIntArray.byteLength
+  );
 
   const decodedData = {
     start_time: data.start.toArrayLike(Buffer, "le", 8),
@@ -103,7 +107,10 @@ export const createStreamInstruction = (
     stream_name: streamNameBuffer,
     withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
   };
-  const encodeLength = Layout.createStreamLayout.encode(decodedData, bufferData);
+  const encodeLength = Layout.createStreamLayout.encode(
+    decodedData,
+    bufferData
+  );
   bufferData = bufferData.slice(0, encodeLength);
   bufferData = Buffer.concat([
     Buffer.from(sha256.digest("global:create")).slice(0, 8),
@@ -182,7 +189,11 @@ export const createUncheckedStreamInstruction = (
   let bufferData = Buffer.alloc(Layout.createUncheckedStreamLayout.span);
 
   const encodedUIntArray = new TextEncoder().encode(data.name);
-  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
+  const streamNameBuffer = Buffer.alloc(64).fill(
+    encodedUIntArray,
+    0,
+    encodedUIntArray.byteLength
+  );
 
   const decodedData = {
     start_time: data.start.toArrayLike(Buffer, "le", 8),
@@ -204,12 +215,19 @@ export const createUncheckedStreamInstruction = (
     pausable: 1,
     can_update_rate: 1,
   };
-  const encodeLength = Layout.createUncheckedStreamLayout.encode(decodedData, bufferData);
+  const encodeLength = Layout.createUncheckedStreamLayout.encode(
+    decodedData,
+    bufferData
+  );
   bufferData = bufferData.slice(0, encodeLength);
   const digest = accounts.payer
     ? sha256.digest("global:create_unchecked_with_payer")
     : sha256.digest("global:create_unchecked");
-  bufferData = Buffer.concat([Buffer.from(digest).slice(0, 8), bufferData, Buffer.alloc(10)]);
+  bufferData = Buffer.concat([
+    Buffer.from(digest).slice(0, 8),
+    bufferData,
+    Buffer.alloc(10),
+  ]);
 
   return new TransactionInstruction({
     keys,

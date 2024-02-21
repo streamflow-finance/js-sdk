@@ -10,8 +10,16 @@ import {
 import { TransactionResponse, TxResponse } from "@streamflow/common/solana";
 import BN from "bn.js";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { IRecipient, Stream, StreamDirection, StreamType } from "../common/types";
+import {
+  buildStreamType,
+  calculateUnlockedAmount,
+} from "../common/contractUtils";
+import {
+  IRecipient,
+  Stream,
+  StreamDirection,
+  StreamType,
+} from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
 export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
@@ -317,7 +325,10 @@ export class Contract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
+    return getNumberFromBN(
+      this.depositedAmount.sub(this.withdrawnAmount),
+      decimals
+    );
   }
 }
 

@@ -202,13 +202,17 @@ export default class AptosStreamClient extends BaseStreamClient {
   public async getOne({ id }: IGetOneData): Promise<Contract> {
     const contractResources = await this.client.getAccountResources(id);
 
-    const contract = contractResources.find((r) => r.type.includes("protocol::Contract"));
+    const contract = contractResources.find((r) =>
+      r.type.includes("protocol::Contract")
+    );
 
     if (!contract) {
       throw new Error(`Contract with id ${id} could not be found!`);
     }
 
-    const tokenIdMatch = contract.type.match(/0x[0-9a-f]+::protocol::Contract<(.*)>/);
+    const tokenIdMatch = contract.type.match(
+      /0x[0-9a-f]+::protocol::Contract<(.*)>/
+    );
     const tokenId = tokenIdMatch?.[1] ?? "";
 
     const { data } = contract;
@@ -236,8 +240,12 @@ export default class AptosStreamClient extends BaseStreamClient {
       arguments: [
         updateData.id,
         updateData.enableAutomaticWithdrawal ? [true] : [],
-        updateData.withdrawFrequency ? [updateData.withdrawFrequency.toString()] : [],
-        updateData.amountPerPeriod ? [updateData.amountPerPeriod.toString()] : [],
+        updateData.withdrawFrequency
+          ? [updateData.withdrawFrequency.toString()]
+          : [],
+        updateData.amountPerPeriod
+          ? [updateData.amountPerPeriod.toString()]
+          : [],
       ],
     };
 
@@ -268,7 +276,9 @@ export default class AptosStreamClient extends BaseStreamClient {
       this.programId,
       `${this.programId}::admin::ConfigV2`
     );
-    return Number((resource.data as unknown as ConfigResource).streamflow_fees) / 100;
+    return (
+      Number((resource.data as unknown as ConfigResource).streamflow_fees) / 100
+    );
   }
 
   public extractErrorCode(err: Error): string | null {
@@ -298,7 +308,10 @@ export default class AptosStreamClient extends BaseStreamClient {
       // A workaround to pass a String in seeds because different wallets seem
       // to serialize vector<u8> differently and String should be safer that Uin8Array
       const actualSeeds = encoder.encode(seeds.hex());
-      const metadataId = AptosAccount.getResourceAccountAddress(wallet.address, actualSeeds);
+      const metadataId = AptosAccount.getResourceAccountAddress(
+        wallet.address,
+        actualSeeds
+      );
       return [
         metadataId.toString(),
         {

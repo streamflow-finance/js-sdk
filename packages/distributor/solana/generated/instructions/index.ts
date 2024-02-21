@@ -1,5 +1,8 @@
 export { newDistributor } from "./newDistributor";
-export type { NewDistributorArgs, NewDistributorAccounts } from "./newDistributor";
+export type {
+  NewDistributorArgs,
+  NewDistributorAccounts,
+} from "./newDistributor";
 export { newClaim } from "./newClaim";
 export type { NewClaimArgs, NewClaimAccounts } from "./newClaim";
 export { claimLocked } from "./claimLocked";

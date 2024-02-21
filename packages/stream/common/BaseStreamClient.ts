@@ -17,7 +17,10 @@ import {
 } from "./types";
 
 export abstract class BaseStreamClient {
-  abstract create(streamData: ICreateStreamData, chainSpecificParams: any): Promise<ICreateResult>;
+  abstract create(
+    streamData: ICreateStreamData,
+    chainSpecificParams: any
+  ): Promise<ICreateResult>;
 
   abstract createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
@@ -29,22 +32,40 @@ export abstract class BaseStreamClient {
     chainSpecificParams: any
   ): Promise<ITransactionResult>;
 
-  abstract cancel(cancelData: ICancelData, chainSpecificParams: any): Promise<ITransactionResult>;
+  abstract cancel(
+    cancelData: ICancelData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
   abstract transfer(
     transferData: ITransferData,
     chainSpecificParams: any
   ): Promise<ITransactionResult>;
 
-  abstract topup(topupData: ITopUpData, chainSpecificParams: any): Promise<ITransactionResult>;
+  abstract topup(
+    topupData: ITopUpData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
-  abstract getOne(getOneData: IGetOneData, chainSpecificParams: any): Promise<Stream>;
+  abstract getOne(
+    getOneData: IGetOneData,
+    chainSpecificParams: any
+  ): Promise<Stream>;
 
-  abstract get(getAllData: IGetAllData, chainSpecificParams: any): Promise<[string, Stream][]>;
+  abstract get(
+    getAllData: IGetAllData,
+    chainSpecificParams: any
+  ): Promise<[string, Stream][]>;
 
-  abstract update(updateData: IUpdateData, chainSpecificParams: any): Promise<ITransactionResult>;
+  abstract update(
+    updateData: IUpdateData,
+    chainSpecificParams: any
+  ): Promise<ITransactionResult>;
 
-  abstract getFees(getFeesData: IGetFeesData, chainSpecificParams?: any): Promise<IFees | null>;
+  abstract getFees(
+    getFeesData: IGetFeesData,
+    chainSpecificParams?: any
+  ): Promise<IFees | null>;
 
   abstract getDefaultStreamflowFee(chainSpecificParams?: any): Promise<number>;
 
@@ -54,7 +75,10 @@ export abstract class BaseStreamClient {
    * @param chainSpecificParams additional parameters required by chain client
    * @returns fee as floating number, so if fee is 0.99%, it will return 0.99
    */
-  public async getTotalFee(getFeesData: IGetFeesData, chainSpecificParams?: any): Promise<number> {
+  public async getTotalFee(
+    getFeesData: IGetFeesData,
+    chainSpecificParams?: any
+  ): Promise<number> {
     const fees = await this.getFees(getFeesData, chainSpecificParams);
     if (fees) {
       return fees.partnerFee + fees.streamflowFee;

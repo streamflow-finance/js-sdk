@@ -31,10 +31,16 @@ export class AptosWalletWrapper<T extends WalletContextState | AptosAccount> {
       const builder = new TransactionBuilderRemoteABI(this.client, {
         sender: this.address,
       });
-      const rawTxn = await builder.build(input.function, input.type_arguments, input.arguments);
+      const rawTxn = await builder.build(
+        input.function,
+        input.type_arguments,
+        input.arguments
+      );
       const res = await this.client.simulateTransaction(this.wallet, rawTxn);
       if (!res[0].success) {
-        throw new Error(`Transaction Simulation failed: ${JSON.stringify(res)}`);
+        throw new Error(
+          `Transaction Simulation failed: ${JSON.stringify(res)}`
+        );
       }
       const signedTx = await this.client.signTransaction(this.wallet, rawTxn);
       const tx = await this.client.submitSignedBCSTransaction(signedTx);

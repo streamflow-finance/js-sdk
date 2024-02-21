@@ -63,6 +63,12 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
     devDependencies:
+      '@streamflow/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@streamflow/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
       '@types/bn.js':
         specifier: 5.1.1
         version: 5.1.1
@@ -72,27 +78,9 @@ importers:
       date-fns:
         specifier: 2.28.0
         version: 2.28.0
-      eslint:
-        specifier: 8.29.0
-        version: 8.29.0
-      eslint-config-airbnb-typescript:
-        specifier: 17.0.0
-        version: 17.0.0(@typescript-eslint/eslint-plugin@5.62.0)(@typescript-eslint/parser@5.62.0)(eslint-plugin-import@2.29.1)(eslint@8.29.0)
-      eslint-config-prettier:
-        specifier: 8.5.0
-        version: 8.5.0(eslint@8.29.0)
-      eslint-plugin-jest:
-        specifier: 27.1.6
-        version: 27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.3.1)(typescript@4.9.5)
-      eslint-plugin-prettier:
-        specifier: 4.2.1
-        version: 4.2.1(eslint-config-prettier@8.5.0)(eslint@8.29.0)(prettier@2.8.1)
       jest:
         specifier: 29.3.1
         version: 29.3.1
-      prettier:
-        specifier: 2.8.1
-        version: 2.8.1
       ts-jest:
         specifier: 29.0.3
         version: 29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@4.9.5)
@@ -130,6 +118,12 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
     devDependencies:
+      '@streamflow/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@streamflow/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
       '@types/bn.js':
         specifier: 5.1.1
         version: 5.1.1
@@ -139,6 +133,18 @@ importers:
       date-fns:
         specifier: 2.28.0
         version: 2.28.0
+      jest:
+        specifier: 29.3.1
+        version: 29.3.1
+      ts-jest:
+        specifier: 29.0.3
+        version: 29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@4.9.5)
+      typescript:
+        specifier: ^4.9.5
+        version: 4.9.5
+
+  packages/eslint-config:
+    devDependencies:
       eslint:
         specifier: 8.29.0
         version: 8.29.0
@@ -150,22 +156,19 @@ importers:
         version: 8.5.0(eslint@8.29.0)
       eslint-plugin-jest:
         specifier: 27.1.6
-        version: 27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.3.1)(typescript@4.9.5)
+        version: 27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.7.0)(typescript@4.9.5)
       eslint-plugin-prettier:
         specifier: 4.2.1
         version: 4.2.1(eslint-config-prettier@8.5.0)(eslint@8.29.0)(prettier@2.8.1)
-      jest:
-        specifier: 29.3.1
-        version: 29.3.1
       prettier:
         specifier: 2.8.1
         version: 2.8.1
-      ts-jest:
-        specifier: 29.0.3
-        version: 29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@4.9.5)
-      typescript:
-        specifier: ^4.9.5
-        version: 4.9.5
+
+  packages/prettier-config:
+    devDependencies:
+      prettier:
+        specifier: 2.8.1
+        version: 2.8.1
 
   packages/stream:
     dependencies:
@@ -218,6 +221,12 @@ importers:
         specifier: 0.9.0
         version: 0.9.0
     devDependencies:
+      '@streamflow/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@streamflow/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
       '@types/bn.js':
         specifier: 5.1.1
         version: 5.1.1
@@ -230,27 +239,9 @@ importers:
       date-fns:
         specifier: 2.28.0
         version: 2.28.0
-      eslint:
-        specifier: 8.29.0
-        version: 8.29.0
-      eslint-config-airbnb-typescript:
-        specifier: 17.0.0
-        version: 17.0.0(@typescript-eslint/eslint-plugin@5.62.0)(@typescript-eslint/parser@5.62.0)(eslint-plugin-import@2.29.1)(eslint@8.29.0)
-      eslint-config-prettier:
-        specifier: 8.5.0
-        version: 8.5.0(eslint@8.29.0)
-      eslint-plugin-jest:
-        specifier: 27.1.6
-        version: 27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.3.1)(typescript@4.9.5)
-      eslint-plugin-prettier:
-        specifier: 4.2.1
-        version: 4.2.1(eslint-config-prettier@8.5.0)(eslint@8.29.0)(prettier@2.8.1)
       jest:
         specifier: 29.3.1
         version: 29.3.1
-      prettier:
-        specifier: 2.8.1
-        version: 2.8.1
       ts-jest:
         specifier: 29.0.3
         version: 29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@4.9.5)
@@ -5497,7 +5488,7 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-plugin-jest@27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.3.1)(typescript@4.9.5):
+  /eslint-plugin-jest@27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.7.0)(typescript@4.9.5):
     resolution: {integrity: sha512-XA7RFLSrlQF9IGtAmhddkUkBuICCTuryfOTfCSWcZHiHb69OilIH05oozH2XA6CEOtztnOd0vgXyvxZodkxGjg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     peerDependencies:
@@ -5513,7 +5504,7 @@ packages:
       '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@4.9.5)
       '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
       eslint: 8.29.0
-      jest: 29.3.1
+      jest: 29.7.0
     transitivePeerDependencies:
       - supports-color
       - typescript

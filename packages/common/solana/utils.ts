@@ -103,12 +103,17 @@ export async function signAndExecuteTransaction(
   if (!hash.lastValidBlockHeight || !signedTx.signature || !hash.blockhash)
     throw Error("Error with transaction parameters.");
 
-  const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
-    lastValidBlockHeight: hash.lastValidBlockHeight,
-    signature: bs58.encode(signedTx.signature),
-    blockhash: hash.blockhash,
-  };
-  const signature = await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
+  const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy =
+    {
+      lastValidBlockHeight: hash.lastValidBlockHeight,
+      signature: bs58.encode(signedTx.signature),
+      blockhash: hash.blockhash,
+    };
+  const signature = await sendAndConfirmRawTransaction(
+    connection,
+    rawTx,
+    confirmationStrategy
+  );
   return signature;
 }
 
@@ -159,7 +164,12 @@ export async function generateCreateAtaBatchTx(
 }> {
   const ixs: TransactionInstruction[] = await Promise.all(
     paramsBatch.map(async ({ mint, owner }) => {
-      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
+      return createAssociatedTokenAccountInstruction(
+        payer,
+        await ata(mint, owner),
+        owner,
+        mint
+      );
     })
   );
   const hash = await connection.getLatestBlockhash();
@@ -183,8 +193,17 @@ export async function createAtaBatch(
   invoker: Keypair | SignerWalletAdapter,
   paramsBatch: AtaParams[]
 ): Promise<string> {
-  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
-  const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
+  const { tx, hash } = await generateCreateAtaBatchTx(
+    connection,
+    invoker.publicKey!,
+    paramsBatch
+  );
+  const signature = await signAndExecuteTransaction(
+    connection,
+    invoker,
+    tx,
+    hash
+  );
   return signature;
 }
 
@@ -212,7 +231,12 @@ export async function checkOrCreateAtaBatch(
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
       ixs.push(
-        createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint)
+        createAssociatedTokenAccountInstruction(
+          invoker.publicKey!,
+          atas[i],
+          owners[i],
+          mint
+        )
       );
     }
   }

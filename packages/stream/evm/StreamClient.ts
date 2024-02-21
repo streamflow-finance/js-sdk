@@ -24,7 +24,11 @@ import {
   Stream,
   StreamDirection,
 } from "../common/types";
-import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
+import {
+  BNB_PROGRAM_IDS,
+  ETHEREUM_PROGRAM_IDS,
+  POLYGON_PROGRAM_IDS,
+} from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE } from "../common/constants";
@@ -51,8 +55,14 @@ export default class EvmStreamClient extends BaseStreamClient {
   ) {
     super();
 
-    if (chain !== IChain.Ethereum && chain !== IChain.BNB && chain !== IChain.Polygon) {
-      throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
+    if (
+      chain !== IChain.Ethereum &&
+      chain !== IChain.BNB &&
+      chain !== IChain.Polygon
+    ) {
+      throw new Error(
+        "Wrong chain. Supported chains are Ethereum , BNB and Polygon!"
+      );
     }
 
     if (programId) {
@@ -85,7 +95,9 @@ export default class EvmStreamClient extends BaseStreamClient {
       recipients: [streamData],
     };
 
-    const fees = await this.readContract.getWithdrawalFees(...this.getFeeParams(multiParams));
+    const fees = await this.readContract.getWithdrawalFees(
+      ...this.getFeeParams(multiParams)
+    );
 
     const args = (await this.generateMultiPayloads(multiParams))[0];
 
@@ -93,12 +105,16 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     await this.approveTokens(streamData.tokenId, sum);
 
-    const result = await this.writeContract.create(...args, { value: fees.value });
+    const result = await this.writeContract.create(...args, {
+      value: fees.value,
+    });
 
     const confirmedTx = await result.wait();
 
     const metadataId = this.formatMetadataId(
-      confirmedTx.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0]
+      confirmedTx.events!.find(
+        (item: ethers.Event) => item.event === "ContractCreated"
+      )!.args![0]
     );
 
     return {
@@ -130,17 +146,22 @@ export default class EvmStreamClient extends BaseStreamClient {
     const signatures: string[] = [];
     const results = await Promise.all(creationPromises);
 
-    const confirmations = await Promise.allSettled(results.map((result) => result.wait()));
+    const confirmations = await Promise.allSettled(
+      results.map((result) => result.wait())
+    );
     const successes = confirmations
-      .filter((el): el is PromiseFulfilledResult<any> => el.status === "fulfilled")
+      .filter(
+        (el): el is PromiseFulfilledResult<any> => el.status === "fulfilled"
+      )
       .map((el) => el.value);
     signatures.push(...successes.map((el) => el.hash));
 
     const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
       result.status === "fulfilled"
         ? this.formatMetadataId(
-            result.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!
-              .args![0]
+            result.value.events!.find(
+              (item: ethers.Event) => item.event === "ContractCreated"
+            )!.args![0]
           )
         : null
     );
@@ -164,7 +185,9 @@ export default class EvmStreamClient extends BaseStreamClient {
     };
   }
 
-  public async withdraw(withdrawData: IWithdrawData): Promise<ITransactionResult> {
+  public async withdraw(
+    withdrawData: IWithdrawData
+  ): Promise<ITransactionResult> {
     const result = await this.writeContract.withdraw(
       withdrawData.id,
       withdrawData.amount.toString()
@@ -183,8 +206,13 @@ export default class EvmStreamClient extends BaseStreamClient {
     };
   }
 
-  public async transfer(transferData: ITransferData): Promise<ITransactionResult> {
-    const result = await this.writeContract.transfer(transferData.id, transferData.newRecipient);
+  public async transfer(
+    transferData: ITransferData
+  ): Promise<ITransactionResult> {
+    const result = await this.writeContract.transfer(
+      transferData.id,
+      transferData.newRecipient
+    );
     return {
       ixs: [],
       txId: result.hash,
@@ -203,9 +231,13 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     await this.approveTokens(stream.mint, sum);
 
-    const result = await this.writeContract.topUp(topupData.id, topupData.amount.toString(), {
-      value: fees.value,
-    });
+    const result = await this.writeContract.topUp(
+      topupData.id,
+      topupData.amount.toString(),
+      {
+        value: fees.value,
+      }
+    );
     return {
       ixs: [],
       txId: result.hash,
@@ -216,7 +248,9 @@ export default class EvmStreamClient extends BaseStreamClient {
     const result = await this.writeContract.update(
       updateData.id,
       updateData.enableAutomaticWithdrawal ? [true] : [],
-      updateData.withdrawFrequency ? [updateData.withdrawFrequency.toString()] : [],
+      updateData.withdrawFrequency
+        ? [updateData.withdrawFrequency.toString()]
+        : [],
       updateData.amountPerPeriod ? [updateData.amountPerPeriod.toString()] : []
     );
     return {
@@ -236,17 +270,30 @@ export default class EvmStreamClient extends BaseStreamClient {
     direction = StreamDirection.All,
   }: IGetAllData): Promise<[string, Stream][]> {
     const addresses: string[] = [];
-    if (direction === StreamDirection.All || direction === StreamDirection.Outgoing) {
+    if (
+      direction === StreamDirection.All ||
+      direction === StreamDirection.Outgoing
+    ) {
       const senderAddresses = await this.readContract.getBySender(address);
       addresses.push(...senderAddresses);
     }
-    if (direction === StreamDirection.All || direction === StreamDirection.Incoming) {
-      const recipientAddresses = await this.readContract.getByRecipient(address);
+    if (
+      direction === StreamDirection.All ||
+      direction === StreamDirection.Incoming
+    ) {
+      const recipientAddresses = await this.readContract.getByRecipient(
+        address
+      );
       addresses.push(...recipientAddresses);
     }
     const uniqueAddresses = [...new Set(addresses)];
-    const results: StreamAbiResult[] = await this.readContract.getMultiple(uniqueAddresses);
-    return results.map((result, index) => [uniqueAddresses[index], new EvmContract(result)]);
+    const results: StreamAbiResult[] = await this.readContract.getMultiple(
+      uniqueAddresses
+    );
+    return results.map((result, index) => [
+      uniqueAddresses[index],
+      new EvmContract(result),
+    ]);
   }
 
   public extractErrorCode(err: Error): string | null {
@@ -283,7 +330,10 @@ export default class EvmStreamClient extends BaseStreamClient {
     if (new BN(allowance.toString()).gte(amount)) {
       return;
     }
-    const approvalTx = await tokenContract.approve(this.programId, amount.toString());
+    const approvalTx = await tokenContract.approve(
+      this.programId,
+      amount.toString()
+    );
     await approvalTx.wait();
   }
 

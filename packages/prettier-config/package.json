@@ -1,0 +1,12 @@
+{
+  "name": "@streamflow/prettier-config",
+  "version": "6.0.0",
+  "license": "ISC",
+  "main": "index.js",
+  "devDependencies": {
+    "prettier": "2.8.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
