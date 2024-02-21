@@ -16,7 +16,7 @@ import {
   ConnectionConfig,
 } from "@solana/web3.js";
 import { ICluster, ITransactionResult } from "@streamflow/common";
-import { ata, checkOrCreateAtaBatch } from "@streamflow/common/solana";
+import { ata, checkOrCreateAtaBatch, prepareWrappedAccount } from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
 import {
@@ -41,7 +41,6 @@ import {
   newClaim,
   newDistributor,
 } from "./generated/instructions";
-import { prepareWrappedAccount } from "../../stream/solana/instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
 import { getClaimantStatusPda, getDistributorPda, wrappedSignAndExecuteTransaction } from "./utils";
 

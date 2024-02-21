@@ -26,6 +26,7 @@ import {
   checkOrCreateAtaBatch,
   signAndExecuteTransaction,
   getProgramAccounts,
+  prepareWrappedAccount,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
@@ -66,7 +67,6 @@ import {
   topupStreamInstruction,
   createStreamInstruction,
   createUncheckedStreamInstruction,
-  prepareWrappedAccount,
   updateStreamInstruction,
 } from "./instructions";
 import {

@@ -8,7 +8,7 @@ export interface IInteractSolanaExt {
 }
 
 export interface ICreateSolanaExt extends IInteractSolanaExt {
-  isNative: boolean;
+  isNative?: boolean;
 }
 
 export interface ICreateDistributorData {
