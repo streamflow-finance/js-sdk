@@ -1,6 +1,6 @@
 import BN from "bn.js";
 import { CoinStruct, SuiClient } from "@mysten/sui.js/client";
-import { TransactionBlock, TransactionArgument } from "@mysten/sui.js/transactions";
+import { TransactionBlock, TransactionObjectArgument } from "@mysten/sui.js/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
 
 import { BaseStreamClient } from "../common/BaseStreamClient";
@@ -528,7 +528,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     coinType: string,
     coins: CoinStruct[],
     totalFee: number
-  ): TransactionArgument {
+  ): TransactionObjectArgument {
     const coinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
 
     if (coins.length > 1) {
@@ -552,7 +552,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     txb: TransactionBlock,
     coinType: string,
     coins: CoinStruct[],
-    coinObject: TransactionArgument
+    coinObject: TransactionObjectArgument
   ): void {
     const firstCoinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
     txb.mergeCoins(firstCoinObject, [coinObject]);

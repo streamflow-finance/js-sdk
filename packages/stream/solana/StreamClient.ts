@@ -2,7 +2,12 @@
 
 import BN from "bn.js";
 import { Buffer } from "buffer";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+} from "@solana/spl-token";
 import {
   Connection,
   Keypair,
@@ -15,7 +20,6 @@ import {
   Commitment,
   ConnectionConfig,
 } from "@solana/web3.js";
-import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 import * as borsh from "borsh";
 
 import {
