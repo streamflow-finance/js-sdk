@@ -4,7 +4,7 @@ import { ContractErrorCode, ICluster } from "../common/types";
 export const SUI_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Mainnet]: "0x19007172b22fcfc00c22f1598a9cec7ab52de2b0ea0d111813bc1295a136fc10",
   [ICluster.Devnet]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
-  [ICluster.Testnet]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
+  [ICluster.Testnet]: "0xc76590fa8711cd77b9360e00761d80cd09ceb8638e6c8ebcbcd749dcd21a9466",
   [ICluster.Local]: "0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a",
 };
 
