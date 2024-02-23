@@ -10,8 +10,5 @@
     "eslint-plugin-jest": "27.1.6",
     "eslint-plugin-prettier": "4.2.1",
     "prettier": "2.8.1"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

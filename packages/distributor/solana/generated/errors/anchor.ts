@@ -131,13 +131,10 @@ export class IdlInstructionInvalidProgram extends Error {
 
   readonly name = "IdlInstructionInvalidProgram";
 
-  readonly msg =
-    "The transaction was given an invalid program for the IDL instruction";
+  readonly msg = "The transaction was given an invalid program for the IDL instruction";
 
   constructor(readonly logs?: string[]) {
-    super(
-      "1001: The transaction was given an invalid program for the IDL instruction"
-    );
+    super("1001: The transaction was given an invalid program for the IDL instruction");
   }
 }
 
@@ -638,13 +635,10 @@ export class AccountOwnedByWrongProgram extends Error {
 
   readonly name = "AccountOwnedByWrongProgram";
 
-  readonly msg =
-    "The given account is owned by a different program than expected";
+  readonly msg = "The given account is owned by a different program than expected";
 
   constructor(readonly logs?: string[]) {
-    super(
-      "3007: The given account is owned by a different program than expected"
-    );
+    super("3007: The given account is owned by a different program than expected");
   }
 }
 
@@ -767,13 +761,10 @@ export class AccountReallocExceedsLimit extends Error {
 
   readonly name = "AccountReallocExceedsLimit";
 
-  readonly msg =
-    "The account reallocation exceeds the MAX_PERMITTED_DATA_INCREASE limit";
+  readonly msg = "The account reallocation exceeds the MAX_PERMITTED_DATA_INCREASE limit";
 
   constructor(readonly logs?: string[]) {
-    super(
-      "3016: The account reallocation exceeds the MAX_PERMITTED_DATA_INCREASE limit"
-    );
+    super("3016: The account reallocation exceeds the MAX_PERMITTED_DATA_INCREASE limit");
   }
 }
 
@@ -812,13 +803,10 @@ export class Deprecated extends Error {
 
   readonly name = "Deprecated";
 
-  readonly msg =
-    "The API being used is deprecated and should no longer be used";
+  readonly msg = "The API being used is deprecated and should no longer be used";
 
   constructor(readonly logs?: string[]) {
-    super(
-      "5000: The API being used is deprecated and should no longer be used"
-    );
+    super("5000: The API being used is deprecated and should no longer be used");
   }
 }
 

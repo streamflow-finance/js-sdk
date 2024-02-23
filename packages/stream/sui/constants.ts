@@ -25,7 +25,9 @@ export const SUI_FEE_TABLE_IDS: Record<ICluster, string> = {
 export const SUI_ERROR_MATCH_REGEX =
   /MoveAbort\(MoveLocation \{ module: ModuleId \{ address: (\w+), name: Identifier\("([\w_]+)"\) }, function: \d+, instruction: \d+, function_name: Some\("([\w_]+)"\) }, (\d+)\) in command (\d+)/;
 
-export const SUI_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } = {
+export const SUI_MODULE_ERROR_MAP: {
+  [key: string]: { [key: number]: string };
+} = {
   protocol: {
     1: ContractErrorCode.ECONTRACT_NOT_INIT,
     2: ContractErrorCode.EBAD_AMOUNT,

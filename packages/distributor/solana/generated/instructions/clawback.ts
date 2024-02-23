@@ -1,8 +1,4 @@
-import {
-  TransactionInstruction,
-  PublicKey,
-  AccountMeta,
-} from "@solana/web3.js";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
 
 import { PROGRAM_ID } from "../programId";
 
@@ -25,10 +21,7 @@ export interface ClawbackAccounts {
   tokenProgram: PublicKey;
 }
 
-export function clawback(
-  accounts: ClawbackAccounts,
-  programId: PublicKey = PROGRAM_ID
-): TransactionInstruction {
+export function clawback(accounts: ClawbackAccounts, programId: PublicKey = PROGRAM_ID): TransactionInstruction {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.from, isSigner: false, isWritable: true },

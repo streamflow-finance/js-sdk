@@ -112,8 +112,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     super();
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
-    this.programId =
-      programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+    this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
   }
 
   public getConnection(): Connection {
@@ -173,7 +172,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey);
 
     if (isNative) {
-      const totalFee = await this.getTotalFee({ address: partner ?? sender.publicKey.toBase58() });
+      const totalFee = await this.getTotalFee({
+        address: partner ?? sender.publicKey.toBase58(),
+      });
       const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
@@ -220,8 +221,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       )
     );
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
 
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
@@ -335,8 +335,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         systemProgram: SystemProgram.programId,
       }
     );
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const ixs: TransactionInstruction[] = [createMetadataInstruction, createInstruction];
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
@@ -382,23 +381,22 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
-      const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(
-        recipientData,
-        data,
-        {
-          sender,
-          metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-        }
-      );
+      const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(recipientData, data, {
+        sender,
+        metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
+      });
 
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
       metadatas.push(metadataPubKey.toBase58());
-      instructionsBatch.push({ ixs, metadata, recipient: recipientData.recipient });
+      instructionsBatch.push({
+        ixs,
+        metadata,
+        recipient: recipientData.recipient,
+      });
     }
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
@@ -414,15 +412,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
     }
 
     if (isNative) {
-      const totalDepositedAmount = recipients.reduce(
-        (acc, recipient) => recipient.amount.add(acc),
-        new BN(0)
-      );
-      const nativeInstructions = await prepareWrappedAccount(
-        this.connection,
-        sender.publicKey,
-        totalDepositedAmount
-      );
+      const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
+      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
 
       const prepareTransaction = new Transaction({
         feePayer: sender.publicKey,
@@ -430,7 +421,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
         lastValidBlockHeight: hash.lastValidBlockHeight,
       }).add(...nativeInstructions);
 
-      batch.push({ tx: prepareTransaction, recipient: sender.publicKey.toBase58() });
+      batch.push({
+        tx: prepareTransaction,
+        recipient: sender.publicKey.toBase58(),
+      });
     }
 
     const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
@@ -448,19 +442,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
       //if metadata pub keys were passed we should execute transaction sequentially
       //ephemeral signer need to be used first before proceeding with the next
       for (const batchTx of signedBatch) {
-        responses.push(
-          ...(await Promise.allSettled([
-            sendAndConfirmStreamRawTransaction(this.connection, batchTx),
-          ]))
-        );
+        responses.push(...(await Promise.allSettled([sendAndConfirmStreamRawTransaction(this.connection, batchTx)])));
       }
     } else {
       //send all transactions in parallel and wait for them to settle.
       //it allows to speed up the process of sending transactions
       //we then filter all promise responses and handle failed transactions
-      const batchTransactionsCalls = signedBatch.map((el) =>
-        sendAndConfirmStreamRawTransaction(this.connection, el)
-      );
+      const batchTransactionsCalls = signedBatch.map((el) => sendAndConfirmStreamRawTransaction(this.connection, el));
       responses.push(...(await Promise.allSettled(batchTransactionsCalls)));
     }
 
@@ -521,8 +509,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       })
     );
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
       feePayer: invoker.publicKey,
@@ -578,8 +565,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       })
     );
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
 
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
@@ -631,8 +617,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       })
     );
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
 
     const tx = new Transaction({
@@ -689,8 +674,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       })
     );
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
       feePayer: invoker.publicKey,
@@ -742,8 +726,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       );
       accounts = [...outgoingAccounts, ...incomingAccounts];
     } else {
-      const offset =
-        direction === "outgoing" ? STREAM_STRUCT_OFFSET_SENDER : STREAM_STRUCT_OFFSET_RECIPIENT;
+      const offset = direction === "outgoing" ? STREAM_STRUCT_OFFSET_SENDER : STREAM_STRUCT_OFFSET_RECIPIENT;
       accounts = await getProgramAccounts(this.connection, publicKey, offset, this.programId);
     }
 
@@ -754,9 +737,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       streams = { ...streams, [account.pubkey.toBase58()]: decoded };
     });
 
-    const sortedStreams = Object.entries(streams).sort(
-      ([, stream1], [, stream2]) => stream2.start - stream1.start
-    );
+    const sortedStreams = Object.entries(streams).sort(([, stream1], [, stream2]) => stream2.start - stream1.start);
 
     if (type === "all") return sortedStreams;
 
@@ -766,10 +747,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts updating the stream auto withdrawal params and amount per period
    */
-  public async update(
-    data: IUpdateData,
-    { invoker }: IInteractStreamSolanaExt
-  ): Promise<ITransactionResult> {
+  public async update(data: IUpdateData, { invoker }: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -787,8 +765,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawor: WITHDRAWOR_PUBLIC_KEY,
       systemProgram: SystemProgram.programId,
     });
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
 
     const tx = new Transaction({
@@ -815,9 +792,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       return null;
     }
     const partners = borsh.deserialize(PARTNERS_SCHEMA, data!.data) as unknown as IPartnerLayout[];
-    const filteredPartners = partners.filter(
-      (item) => new PublicKey(item.pubkey).toString() === address
-    );
+    const filteredPartners = partners.filter((item) => new PublicKey(item.pubkey).toString() === address);
     if (filteredPartners.length === 0) {
       return null;
     }

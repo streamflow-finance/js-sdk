@@ -26,9 +26,7 @@ export const getBN = (value: number, decimals: number): BN => {
  * @param {number} decimals - Number of decimals the token has.
  */
 export const getNumberFromBN = (value: BN, decimals: number): number =>
-  value.gt(new BN(2 ** 53 - 1))
-    ? value.div(new BN(10 ** decimals)).toNumber()
-    : value.toNumber() / 10 ** decimals;
+  value.gt(new BN(2 ** 53 - 1)) ? value.div(new BN(10 ** decimals)).toNumber() : value.toNumber() / 10 ** decimals;
 
 /**
  * Used to make on chain calls to the contract and wrap raised errors if any

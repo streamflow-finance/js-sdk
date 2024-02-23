@@ -4,19 +4,11 @@ import { PROGRAM_ID } from "../programId";
 import * as anchor from "./anchor";
 import * as custom from "./custom";
 
-export function fromCode(
-  code: number,
-  logs?: string[]
-): custom.CustomError | anchor.AnchorError | null {
-  return code >= 6000
-    ? custom.fromCode(code, logs)
-    : anchor.fromCode(code, logs);
+export function fromCode(code: number, logs?: string[]): custom.CustomError | anchor.AnchorError | null {
+  return code >= 6000 ? custom.fromCode(code, logs) : anchor.fromCode(code, logs);
 }
 
-function hasOwnProperty<X extends object, Y extends PropertyKey>(
-  obj: X,
-  prop: Y
-): obj is X & Record<Y, unknown> {
+function hasOwnProperty<X extends object, Y extends PropertyKey>(obj: X, prop: Y): obj is X & Record<Y, unknown> {
   return Object.hasOwnProperty.call(obj, prop);
 }
 
@@ -26,12 +18,7 @@ export function fromTxError(
   err: unknown,
   programId: PublicKey = PROGRAM_ID
 ): custom.CustomError | anchor.AnchorError | null {
-  if (
-    typeof err !== "object" ||
-    err === null ||
-    !hasOwnProperty(err, "logs") ||
-    !Array.isArray(err.logs)
-  ) {
+  if (typeof err !== "object" || err === null || !hasOwnProperty(err, "logs") || !Array.isArray(err.logs)) {
     return null;
   }
 

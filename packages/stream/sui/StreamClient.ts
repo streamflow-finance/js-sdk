@@ -60,12 +60,11 @@ export default class SuiStreamClient extends BaseStreamClient {
   /**
    * Creates a new stream/vesting contract.
    */
-  public async create(
-    streamData: ICreateStreamData,
-    { senderWallet }: ICreateStreamSuiExt
-  ): Promise<ICreateResult> {
+  public async create(streamData: ICreateStreamData, { senderWallet }: ICreateStreamSuiExt): Promise<ICreateResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const totalFee = await this.getTotalFee({ address: streamData.partner ?? wallet.address });
+    const totalFee = await this.getTotalFee({
+      address: streamData.partner ?? wallet.address,
+    });
     const [txb] = await this.generateCreateBlock(
       wallet.address,
       {
@@ -99,11 +98,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     const totalFee = await this.getTotalFee({
       address: multipleStreamData.partner ?? wallet.address,
     });
-    const [txb, firstIndex] = await this.generateCreateBlock(
-      wallet.address,
-      multipleStreamData,
-      totalFee
-    );
+    const [txb, firstIndex] = await this.generateCreateBlock(wallet.address, multipleStreamData, totalFee);
 
     const txs: string[] = [];
     const metadatas: string[] = [];
@@ -199,11 +194,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     txb.moveCall({
       target: `${this.programId}::protocol::cancel`,
       typeArguments: [tokenId],
-      arguments: [
-        txb.object(cancelData.id),
-        txb.object(this.configId),
-        txb.object(SUI_CLOCK_OBJECT_ID),
-      ],
+      arguments: [txb.object(cancelData.id), txb.object(this.configId), txb.object(SUI_CLOCK_OBJECT_ID)],
     });
 
     const { digest } = await wallet.signAndExecuteTransactionBlock({
@@ -253,13 +244,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     const coins = await this.getAllCoins(wallet.address, tokenId);
     const stream = await this.getOne({ id: topupData.id });
     const totalFee = (stream.partnerFeePercent + stream.streamflowFeePercent) / 100;
-    const coinObject = this.splitCoinObjectForAmount(
-      txb,
-      topupData.amount,
-      tokenId,
-      coins,
-      totalFee
-    );
+    const coinObject = this.splitCoinObjectForAmount(txb, topupData.amount, tokenId, coins, totalFee);
     txb.moveCall({
       target: `${this.programId}::protocol::topup`,
       typeArguments: [tokenId],
@@ -330,15 +315,11 @@ export default class SuiStreamClient extends BaseStreamClient {
         txb.object(SUI_CLOCK_OBJECT_ID),
         txb.gas,
         txb.pure(
-          updateData.enableAutomaticWithdrawal !== undefined
-            ? [updateData.enableAutomaticWithdrawal]
-            : [],
+          updateData.enableAutomaticWithdrawal !== undefined ? [updateData.enableAutomaticWithdrawal] : [],
           "vector<bool>"
         ),
         txb.pure(
-          updateData.withdrawFrequency !== undefined
-            ? [updateData.withdrawFrequency.toString()]
-            : [],
+          updateData.withdrawFrequency !== undefined ? [updateData.withdrawFrequency.toString()] : [],
           "vector<u64>"
         ),
         txb.pure(
@@ -380,9 +361,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     const fieldsResponse = await this.client.getDynamicFields({
       parentId: fields.values.fields.id.id,
     });
-    const partnerDynamicField = fieldsResponse.data.filter(
-      (item) => item.name.value === address
-    )[0];
+    const partnerDynamicField = fieldsResponse.data.filter((item) => item.name.value === address)[0];
 
     if (!partnerDynamicField) {
       return null;
@@ -442,13 +421,7 @@ export default class SuiStreamClient extends BaseStreamClient {
       .map((recipiient) => recipiient.amount)
       .reduce((prev, current) => current.add(prev));
     const txb = new TransactionBlock();
-    const coinObject = this.splitCoinObjectForAmount(
-      txb,
-      totalAmount,
-      multipleStreamData.tokenId,
-      coins,
-      totalFee
-    );
+    const coinObject = this.splitCoinObjectForAmount(txb, totalAmount, multipleStreamData.tokenId, coins, totalFee);
     coins = [coins[0]];
     let firstIndex: number | null = null;
 

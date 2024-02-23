@@ -1,8 +1,4 @@
-import {
-  TransactionInstruction,
-  PublicKey,
-  AccountMeta,
-} from "@solana/web3.js";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
 
 import { PROGRAM_ID } from "../programId";
 
@@ -26,10 +22,7 @@ export interface ClaimLockedAccounts {
   tokenProgram: PublicKey;
 }
 
-export function claimLocked(
-  accounts: ClaimLockedAccounts,
-  programId: PublicKey = PROGRAM_ID
-): TransactionInstruction {
+export function claimLocked(accounts: ClaimLockedAccounts, programId: PublicKey = PROGRAM_ID): TransactionInstruction {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.claimStatus, isSigner: false, isWritable: true },

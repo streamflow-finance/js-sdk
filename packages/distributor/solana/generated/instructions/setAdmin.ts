@@ -1,8 +1,4 @@
-import {
-  TransactionInstruction,
-  PublicKey,
-  AccountMeta,
-} from "@solana/web3.js";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
 
 import { PROGRAM_ID } from "../programId";
 
@@ -15,10 +11,7 @@ export interface SetAdminAccounts {
   newAdmin: PublicKey;
 }
 
-export function setAdmin(
-  accounts: SetAdminAccounts,
-  programId: PublicKey = PROGRAM_ID
-): TransactionInstruction {
+export function setAdmin(accounts: SetAdminAccounts, programId: PublicKey = PROGRAM_ID): TransactionInstruction {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.admin, isSigner: true, isWritable: true },

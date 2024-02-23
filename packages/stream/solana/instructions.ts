@@ -85,11 +85,7 @@ export const createStreamInstruction = (
   let bufferData = Buffer.alloc(Layout.createStreamLayout.span);
 
   const encodedUIntArray = new TextEncoder().encode(data.name);
-  const streamNameBuffer = Buffer.alloc(64).fill(
-    encodedUIntArray,
-    0,
-    encodedUIntArray.byteLength
-  );
+  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
 
   const decodedData = {
     start_time: data.start.toArrayLike(Buffer, "le", 8),
@@ -107,16 +103,9 @@ export const createStreamInstruction = (
     stream_name: streamNameBuffer,
     withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
   };
-  const encodeLength = Layout.createStreamLayout.encode(
-    decodedData,
-    bufferData
-  );
+  const encodeLength = Layout.createStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
-  bufferData = Buffer.concat([
-    Buffer.from(sha256.digest("global:create")).slice(0, 8),
-    bufferData,
-    Buffer.alloc(10),
-  ]);
+  bufferData = Buffer.concat([Buffer.from(sha256.digest("global:create")).slice(0, 8), bufferData, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -189,11 +178,7 @@ export const createUncheckedStreamInstruction = (
   let bufferData = Buffer.alloc(Layout.createUncheckedStreamLayout.span);
 
   const encodedUIntArray = new TextEncoder().encode(data.name);
-  const streamNameBuffer = Buffer.alloc(64).fill(
-    encodedUIntArray,
-    0,
-    encodedUIntArray.byteLength
-  );
+  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
 
   const decodedData = {
     start_time: data.start.toArrayLike(Buffer, "le", 8),
@@ -215,19 +200,12 @@ export const createUncheckedStreamInstruction = (
     pausable: 1,
     can_update_rate: 1,
   };
-  const encodeLength = Layout.createUncheckedStreamLayout.encode(
-    decodedData,
-    bufferData
-  );
+  const encodeLength = Layout.createUncheckedStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
   const digest = accounts.payer
     ? sha256.digest("global:create_unchecked_with_payer")
     : sha256.digest("global:create_unchecked");
-  bufferData = Buffer.concat([
-    Buffer.from(digest).slice(0, 8),
-    bufferData,
-    Buffer.alloc(10),
-  ]);
+  bufferData = Buffer.concat([Buffer.from(digest).slice(0, 8), bufferData, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -289,11 +267,7 @@ export const withdrawStreamInstruction = (
   const decodedData = { amount: amount.toArrayLike(Buffer, "le", 8) };
   const encodeLength = Layout.withdrawStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([
-    Buffer.from(sha256.digest("global:withdraw")).slice(0, 8),
-    data,
-    Buffer.alloc(10),
-  ]);
+  data = Buffer.concat([Buffer.from(sha256.digest("global:withdraw")).slice(0, 8), data, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -323,20 +297,12 @@ export const updateStreamInstruction = (
   let data = Buffer.alloc(100);
   const decodedData = {
     enable_automatic_withdrawal: Number(params.enableAutomaticWithdrawal),
-    withdraw_frequency: params.withdrawFrequency
-      ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8)
-      : undefined,
-    amount_per_period: params.amountPerPeriod
-      ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8)
-      : undefined,
+    withdraw_frequency: params.withdrawFrequency ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8) : undefined,
+    amount_per_period: params.amountPerPeriod ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8) : undefined,
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([
-    Buffer.from(sha256.digest("global:update")).slice(0, 8),
-    data,
-    Buffer.alloc(20),
-  ]);
+  data = Buffer.concat([Buffer.from(sha256.digest("global:update")).slice(0, 8), data, Buffer.alloc(20)]);
   return new TransactionInstruction({
     keys: keys,
     programId: programId,
@@ -398,10 +364,7 @@ export const cancelStreamInstruction = (
     { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.concat([
-    Buffer.from(sha256.digest("global:cancel")).slice(0, 8),
-    Buffer.alloc(10),
-  ]);
+  const data = Buffer.concat([Buffer.from(sha256.digest("global:cancel")).slice(0, 8), Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -448,10 +411,7 @@ export const transferStreamInstruction = (
     { pubkey: systemProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.concat([
-    Buffer.from(sha256.digest("global:transfer_recipient")).slice(0, 8),
-    Buffer.alloc(10),
-  ]);
+  const data = Buffer.concat([Buffer.from(sha256.digest("global:transfer_recipient")).slice(0, 8), Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -517,11 +477,7 @@ export const topupStreamInstruction = (
 
   const encodeLength = Layout.topupStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([
-    Buffer.from(sha256.digest("global:topup")).slice(0, 8),
-    data,
-    Buffer.alloc(10),
-  ]);
+  data = Buffer.concat([Buffer.from(sha256.digest("global:topup")).slice(0, 8), data, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,

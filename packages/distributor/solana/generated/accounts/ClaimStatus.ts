@@ -75,9 +75,7 @@ export class ClaimStatus {
   /** Buffer for additional fields */
   readonly buffer2: Array<number>;
 
-  static readonly discriminator = Buffer.from([
-    22, 183, 249, 157, 247, 95, 150, 96,
-  ]);
+  static readonly discriminator = Buffer.from([22, 183, 249, 157, 247, 95, 150, 96]);
 
   static readonly layout = borsh.struct([
     borsh.publicKey("claimant"),

@@ -2,10 +2,7 @@ import { AptosAccount } from "aptos";
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 
-import {
-  buildStreamType,
-  calculateUnlockedAmount,
-} from "../common/contractUtils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
 import { Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 import { normalizeAptosAddress } from "./utils";
@@ -177,8 +174,7 @@ export class Contract implements Stream {
     this.streamflowTreasuryTokens = "";
     this.streamflowFeeTotal = new BN(0);
     this.streamflowFeeWithdrawn = new BN(0);
-    this.streamflowFeePercent =
-      parseInt(stream.fees.streamflow_fee_percentage) / 10000;
+    this.streamflowFeePercent = parseInt(stream.fees.streamflow_fee_percentage) / 10000;
     this.partnerFeeTotal = new BN(0);
     this.partnerFeeWithdrawn = new BN(0);
     this.partnerFeePercent = 0;
@@ -203,9 +199,7 @@ export class Contract implements Stream {
     this.currentPauseStart = parseInt(stream.current_pause_start);
     this.pauseCumulative = new BN(stream.pause_cumulative);
     this.lastRateChangeTime = parseInt(stream.last_rate_change_time);
-    this.fundsUnlockedAtLastRateChange = new BN(
-      stream.funds_unlocked_at_last_rate_change
-    );
+    this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change);
     this.type = buildStreamType(this);
   }
 
@@ -217,9 +211,6 @@ export class Contract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return getNumberFromBN(
-      this.depositedAmount.sub(this.withdrawnAmount),
-      decimals
-    );
+    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
   }
 }

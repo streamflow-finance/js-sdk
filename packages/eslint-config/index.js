@@ -16,7 +16,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: "module",
-    project: "../../tsconfig.json",
+    project: ["./tsconfig.json"],
   },
   ignorePatterns: ["**/dist/**/*"],
   rules: {
@@ -24,6 +24,10 @@ module.exports = {
       "error",
       {
         endOfLine: "auto",
+        printWidth: 120,
+        tabWidth: 2,
+        arrowParens: "always",
+        bracketSpacing: true,
       },
     ],
     "react/jsx-filename-extension": "off",

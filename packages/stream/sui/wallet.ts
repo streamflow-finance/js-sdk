@@ -9,9 +9,7 @@ import { SuiSignAndExecuteTransactionBlockInput } from "./types";
  * @param {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
  * @return {boolean} - Returns true if parameter is a Wallet.
  */
-export function isSignerKeypair(
-  walletOrKeypair: Keypair | WalletContextState
-): walletOrKeypair is Keypair {
+export function isSignerKeypair(walletOrKeypair: Keypair | WalletContextState): walletOrKeypair is Keypair {
   return (
     walletOrKeypair instanceof Keypair ||
     walletOrKeypair.constructor === Keypair ||

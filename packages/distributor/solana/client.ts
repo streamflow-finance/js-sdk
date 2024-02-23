@@ -16,11 +16,7 @@ import {
   ConnectionConfig,
 } from "@solana/web3.js";
 import { ICluster, ITransactionResult } from "@streamflow/common";
-import {
-  ata,
-  checkOrCreateAtaBatch,
-  prepareWrappedAccount,
-} from "@streamflow/common/solana";
+import { ata, checkOrCreateAtaBatch, prepareWrappedAccount } from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
 import {
@@ -46,11 +42,7 @@ import {
   newDistributor,
 } from "./generated/instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
-import {
-  getClaimantStatusPda,
-  getDistributorPda,
-  wrappedSignAndExecuteTransaction,
-} from "./utils";
+import { getClaimantStatusPda, getDistributorPda, wrappedSignAndExecuteTransaction } from "./utils";
 
 interface IInitOptions {
   clusterUrl: string;
@@ -69,18 +61,10 @@ export default class SolanaDistributorClient {
   /**
    * Create Stream instance
    */
-  constructor({
-    clusterUrl,
-    cluster = ICluster.Mainnet,
-    commitment = "confirmed",
-    programId = "",
-  }: IInitOptions) {
+  constructor({ clusterUrl, cluster = ICluster.Mainnet, commitment = "confirmed", programId = "" }: IInitOptions) {
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
-    this.programId =
-      programId !== ""
-        ? new PublicKey(programId)
-        : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
+    this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
   }
 
   public async create(
@@ -88,19 +72,13 @@ export default class SolanaDistributorClient {
     { invoker, isNative = false }: ICreateSolanaExt
   ): Promise<ICreateDistributorResult> {
     if (!invoker.publicKey) {
-      throw new Error(
-        "Invoker's PublicKey is not available, check passed wallet adapter!"
-      );
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
     const ixs: TransactionInstruction[] = [];
     const mint = isNative ? NATIVE_MINT : new PublicKey(data.mint);
     const mintAccount = await getMint(this.connection, mint);
-    const distributorPublicKey = getDistributorPda(
-      this.programId,
-      mint,
-      data.version
-    );
+    const distributorPublicKey = getDistributorPda(this.programId, mint, data.version);
     const tokenVault = await ata(mint, distributorPublicKey);
     const senderTokens = await ata(mint, invoker.publicKey);
 
@@ -127,13 +105,7 @@ export default class SolanaDistributorClient {
     };
 
     if (isNative) {
-      ixs.push(
-        ...(await prepareWrappedAccount(
-          this.connection,
-          invoker.publicKey,
-          data.maxTotalClaim
-        ))
-      );
+      ixs.push(...(await prepareWrappedAccount(this.connection, invoker.publicKey, data.maxTotalClaim)));
     }
 
     ixs.push(newDistributor(args, accounts, this.programId));
@@ -148,10 +120,7 @@ export default class SolanaDistributorClient {
       )
     );
 
-    const commitment =
-      typeof this.commitment == "string"
-        ? this.commitment
-        : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
 
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
@@ -160,12 +129,7 @@ export default class SolanaDistributorClient {
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
 
-    const signature = await wrappedSignAndExecuteTransaction(
-      this.connection,
-      invoker,
-      tx,
-      hash
-    );
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return {
       ixs,
@@ -174,42 +138,22 @@ export default class SolanaDistributorClient {
     };
   }
 
-  public async claim(
-    data: IClaimData,
-    { invoker }: IInteractSolanaExt
-  ): Promise<ITransactionResult> {
+  public async claim(data: IClaimData, { invoker }: IInteractSolanaExt): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
-      throw new Error(
-        "Invoker's PublicKey is not available, check passed wallet adapter!"
-      );
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
     const distributorPublicKey = new PublicKey(data.id);
-    const distributor = await MerkleDistributor.fetch(
-      this.connection,
-      distributorPublicKey
-    );
+    const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
 
     if (!distributor) {
       throw new Error("Couldn't get account info");
     }
 
-    const ixs = await checkOrCreateAtaBatch(
-      this.connection,
-      [invoker.publicKey],
-      distributor.mint,
-      invoker
-    );
+    const ixs = await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker);
     const invokerTokens = await ata(distributor.mint, invoker.publicKey);
-    const claimStatusPublicKey = getClaimantStatusPda(
-      this.programId,
-      distributorPublicKey,
-      invoker.publicKey
-    );
-    const claimStatus = await ClaimStatus.fetch(
-      this.connection,
-      claimStatusPublicKey
-    );
+    const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, invoker.publicKey);
+    const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
 
     const accounts: ClaimLockedAccounts | NewClaimAccounts = {
       distributor: distributorPublicKey,
@@ -233,52 +177,31 @@ export default class SolanaDistributorClient {
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    const commitment =
-      typeof this.commitment == "string"
-        ? this.commitment
-        : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
       feePayer: invoker.publicKey,
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
-    const signature = await wrappedSignAndExecuteTransaction(
-      this.connection,
-      invoker,
-      tx,
-      hash
-    );
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
 
-  public async clawback(
-    data: IClawbackData,
-    { invoker }: IInteractSolanaExt
-  ): Promise<ITransactionResult> {
+  public async clawback(data: IClawbackData, { invoker }: IInteractSolanaExt): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
-      throw new Error(
-        "Invoker's PublicKey is not available, check passed wallet adapter!"
-      );
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
     const distributorPublicKey = new PublicKey(data.id);
-    const distributor = await MerkleDistributor.fetch(
-      this.connection,
-      distributorPublicKey
-    );
+    const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
 
     if (!distributor) {
       throw new Error("Couldn't get account info");
     }
 
-    const ixs = await checkOrCreateAtaBatch(
-      this.connection,
-      [invoker.publicKey],
-      distributor.mint,
-      invoker
-    );
+    const ixs = await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker);
     const accounts: ClawbackAccounts = {
       distributor: distributorPublicKey,
       from: distributor.tokenVault,
@@ -291,54 +214,28 @@ export default class SolanaDistributorClient {
 
     ixs.push(clawback(accounts, this.programId));
 
-    const commitment =
-      typeof this.commitment == "string"
-        ? this.commitment
-        : this.commitment.commitment;
+    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const hash = await this.connection.getLatestBlockhash(commitment);
     const tx = new Transaction({
       feePayer: invoker.publicKey,
       blockhash: hash.blockhash,
       lastValidBlockHeight: hash.lastValidBlockHeight,
     }).add(...ixs);
-    const signature = await wrappedSignAndExecuteTransaction(
-      this.connection,
-      invoker,
-      tx,
-      hash
-    );
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
 
-  public async getClaims(
-    data: IGetClaimsData
-  ): Promise<(ClaimStatus | null)[]> {
+  public async getClaims(data: IGetClaimsData): Promise<(ClaimStatus | null)[]> {
     const distributorPublicKey = new PublicKey(data.id);
     const claimStatusPublicKeys = data.recipients.map((recipient) => {
-      return getClaimantStatusPda(
-        this.programId,
-        distributorPublicKey,
-        new PublicKey(recipient)
-      );
+      return getClaimantStatusPda(this.programId, distributorPublicKey, new PublicKey(recipient));
     });
-    return ClaimStatus.fetchMultiple(
-      this.connection,
-      claimStatusPublicKeys,
-      this.programId
-    );
+    return ClaimStatus.fetchMultiple(this.connection, claimStatusPublicKeys, this.programId);
   }
 
-  public async getDistributors(
-    data: IGetDistributors
-  ): Promise<(MerkleDistributor | null)[]> {
-    const distributorPublicKeys = data.ids.map(
-      (distributorId) => new PublicKey(distributorId)
-    );
-    return MerkleDistributor.fetchMultiple(
-      this.connection,
-      distributorPublicKeys,
-      this.programId
-    );
+  public async getDistributors(data: IGetDistributors): Promise<(MerkleDistributor | null)[]> {
+    const distributorPublicKeys = data.ids.map((distributorId) => new PublicKey(distributorId));
+    return MerkleDistributor.fetchMultiple(this.connection, distributorPublicKeys, this.programId);
   }
 }

@@ -30,9 +30,7 @@ export const getBN = (value: number, decimals: number): BN => {
  * @param {number} decimals - Number of decimals the token has.
  */
 export const getNumberFromBN = (value: BN, decimals: number): number =>
-  value.gt(new BN(2 ** 53 - 1))
-    ? value.div(new BN(10 ** decimals)).toNumber()
-    : value.toNumber() / 10 ** decimals;
+  value.gt(new BN(2 ** 53 - 1)) ? value.div(new BN(10 ** decimals)).toNumber() : value.toNumber() / 10 ** decimals;
 
 /**
  * Calculate total amount of a Contract including all fees.
@@ -43,14 +41,9 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
  * @param totalFee sum of all fees in percentage as floating number, e.g. 0.99% should be supplied as 0.99
  * @returns total tokens amount that Contract will retrieve from the Sender
  */
-export const calculateTotalAmountToDeposit = (
-  depositedAmount: BN,
-  totalFee: number
-): BN => {
+export const calculateTotalAmountToDeposit = (depositedAmount: BN, totalFee: number): BN => {
   const totalFeeNormalized = new BN(totalFee * FEE_NORMALIZER);
-  return depositedAmount
-    .mul(totalFeeNormalized.add(FEE_MULTIPLIER))
-    .div(FEE_MULTIPLIER);
+  return depositedAmount.mul(totalFeeNormalized.add(FEE_MULTIPLIER)).div(FEE_MULTIPLIER);
 };
 
 /**

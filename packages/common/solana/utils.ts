@@ -1,7 +1,4 @@
-import {
-  createAssociatedTokenAccountInstruction,
-  getAssociatedTokenAddress,
-} from "@solana/spl-token";
+import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import {
   BlockheightBasedTransactionConfirmationStrategy,
@@ -48,9 +45,7 @@ export async function getProgramAccounts(
  * @param {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
  * @return {boolean} - Returns true if parameter is a Wallet.
  */
-export function isSignerWallet(
-  walletOrKeypair: Keypair | SignerWalletAdapter
-): walletOrKeypair is SignerWalletAdapter {
+export function isSignerWallet(walletOrKeypair: Keypair | SignerWalletAdapter): walletOrKeypair is SignerWalletAdapter {
   return (<SignerWalletAdapter>walletOrKeypair).signTransaction !== undefined;
 }
 
@@ -59,9 +54,7 @@ export function isSignerWallet(
  * @param walletOrKeypair {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
  * @returns {boolean} - Returns true if parameter is a Keypair.
  */
-export function isSignerKeypair(
-  walletOrKeypair: Keypair | SignerWalletAdapter
-): walletOrKeypair is Keypair {
+export function isSignerKeypair(walletOrKeypair: Keypair | SignerWalletAdapter): walletOrKeypair is Keypair {
   return (
     walletOrKeypair instanceof Keypair ||
     walletOrKeypair.constructor === Keypair ||
@@ -69,10 +62,7 @@ export function isSignerKeypair(
   );
 }
 
-export async function signTransaction(
-  invoker: Keypair | SignerWalletAdapter,
-  tx: Transaction
-): Promise<Transaction> {
+export async function signTransaction(invoker: Keypair | SignerWalletAdapter, tx: Transaction): Promise<Transaction> {
   let signedTx: Transaction;
   if (isSignerWallet(invoker)) {
     signedTx = await invoker.signTransaction(tx);
@@ -103,17 +93,12 @@ export async function signAndExecuteTransaction(
   if (!hash.lastValidBlockHeight || !signedTx.signature || !hash.blockhash)
     throw Error("Error with transaction parameters.");
 
-  const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy =
-    {
-      lastValidBlockHeight: hash.lastValidBlockHeight,
-      signature: bs58.encode(signedTx.signature),
-      blockhash: hash.blockhash,
-    };
-  const signature = await sendAndConfirmRawTransaction(
-    connection,
-    rawTx,
-    confirmationStrategy
-  );
+  const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
+    lastValidBlockHeight: hash.lastValidBlockHeight,
+    signature: bs58.encode(signedTx.signature),
+    blockhash: hash.blockhash,
+  };
+  const signature = await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
   return signature;
 }
 
@@ -133,10 +118,7 @@ export function ata(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
  * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
  * @returns Array of boolean where each members corresponds to owners member
  */
-export async function ataBatchExist(
-  connection: Connection,
-  paramsBatch: AtaParams[]
-): Promise<boolean[]> {
+export async function ataBatchExist(connection: Connection, paramsBatch: AtaParams[]): Promise<boolean[]> {
   const tokenAccounts = await Promise.all(
     paramsBatch.map(async ({ mint, owner }) => {
       const pubkey = await ata(mint, owner);
@@ -164,12 +146,7 @@ export async function generateCreateAtaBatchTx(
 }> {
   const ixs: TransactionInstruction[] = await Promise.all(
     paramsBatch.map(async ({ mint, owner }) => {
-      return createAssociatedTokenAccountInstruction(
-        payer,
-        await ata(mint, owner),
-        owner,
-        mint
-      );
+      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
     })
   );
   const hash = await connection.getLatestBlockhash();
@@ -193,17 +170,8 @@ export async function createAtaBatch(
   invoker: Keypair | SignerWalletAdapter,
   paramsBatch: AtaParams[]
 ): Promise<string> {
-  const { tx, hash } = await generateCreateAtaBatchTx(
-    connection,
-    invoker.publicKey!,
-    paramsBatch
-  );
-  const signature = await signAndExecuteTransaction(
-    connection,
-    invoker,
-    tx,
-    hash
-  );
+  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
+  const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
   return signature;
 }
 
@@ -230,14 +198,7 @@ export async function checkOrCreateAtaBatch(
   const response = await connection.getMultipleAccountsInfo(atas);
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
-      ixs.push(
-        createAssociatedTokenAccountInstruction(
-          invoker.publicKey!,
-          atas[i],
-          owners[i],
-          mint
-        )
-      );
+      ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint));
     }
   }
   return ixs;

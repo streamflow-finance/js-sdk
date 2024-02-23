@@ -1,21 +1,11 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import {
-  BlockhashWithExpiryBlockHeight,
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-} from "@solana/web3.js";
+import { BlockhashWithExpiryBlockHeight, Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { ContractError } from "@streamflow/common";
 import { signAndExecuteTransaction } from "@streamflow/common/solana";
 
 import { fromTxError } from "./generated/errors";
 
-export function getDistributorPda(
-  programId: PublicKey,
-  mint: PublicKey,
-  version: number
-): PublicKey {
+export function getDistributorPda(programId: PublicKey, mint: PublicKey, version: number): PublicKey {
   // Constructing the seed for the PDA
   const seeds = [
     Buffer.from("MerkleDistributor"),
@@ -27,17 +17,9 @@ export function getDistributorPda(
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
 }
 
-export function getClaimantStatusPda(
-  programId: PublicKey,
-  distributor: PublicKey,
-  claimant: PublicKey
-): PublicKey {
+export function getClaimantStatusPda(programId: PublicKey, distributor: PublicKey, claimant: PublicKey): PublicKey {
   // Constructing the seed for the PDA
-  const seeds = [
-    Buffer.from("ClaimStatus"),
-    claimant.toBuffer(),
-    distributor.toBuffer(),
-  ];
+  const seeds = [Buffer.from("ClaimStatus"), claimant.toBuffer(), distributor.toBuffer()];
 
   // Finding the PDA
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
@@ -50,12 +32,7 @@ export async function wrappedSignAndExecuteTransaction(
   hash: BlockhashWithExpiryBlockHeight
 ): Promise<string> {
   try {
-    const signature = await signAndExecuteTransaction(
-      connection,
-      invoker,
-      tx,
-      hash
-    );
+    const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
     return signature;
   } catch (err: any) {
     if (err instanceof Error) {

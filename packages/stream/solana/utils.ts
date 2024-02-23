@@ -62,10 +62,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     currentPauseStart: new BN(raw.current_pause_start, LE),
     pauseCumulative: new BN(raw.pause_cumulative, LE),
     lastRateChangeTime: new BN(raw.last_rate_change_time, LE),
-    fundsUnlockedAtLastRateChange: new BN(
-      raw.funds_unlocked_at_last_rate_change,
-      LE
-    ),
+    fundsUnlockedAtLastRateChange: new BN(raw.funds_unlocked_at_last_rate_change, LE),
   };
 };
 
@@ -115,17 +112,12 @@ export async function sendAndConfirmStreamRawTransaction(
     if (!lastValidBlockHeight || !signature || !recentBlockhash)
       throw { recipient: batchItem.recipient, error: "no recent blockhash" };
 
-    const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy =
-      {
-        lastValidBlockHeight,
-        signature: bs58.encode(signature),
-        blockhash: recentBlockhash,
-      };
-    const completedTxSignature = await sendAndConfirmRawTransaction(
-      connection,
-      rawTx,
-      confirmationStrategy
-    );
+    const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
+      lastValidBlockHeight,
+      signature: bs58.encode(signature),
+      blockhash: recentBlockhash,
+    };
+    const completedTxSignature = await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
     return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
     throw {

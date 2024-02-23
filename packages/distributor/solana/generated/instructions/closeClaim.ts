@@ -1,8 +1,4 @@
-import {
-  TransactionInstruction,
-  PublicKey,
-  AccountMeta,
-} from "@solana/web3.js";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
 
 import { PROGRAM_ID } from "../programId";
 
@@ -18,10 +14,7 @@ export interface CloseClaimAccounts {
   systemProgram: PublicKey;
 }
 
-export function closeClaim(
-  accounts: CloseClaimAccounts,
-  programId: PublicKey = PROGRAM_ID
-): TransactionInstruction {
+export function closeClaim(accounts: CloseClaimAccounts, programId: PublicKey = PROGRAM_ID): TransactionInstruction {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.admin, isSigner: true, isWritable: true },

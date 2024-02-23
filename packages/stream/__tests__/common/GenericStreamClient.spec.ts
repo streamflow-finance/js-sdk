@@ -1,11 +1,6 @@
 import { Wallet } from "ethers";
 
-import {
-  StreamflowAptos,
-  StreamflowEVM,
-  StreamflowSolana,
-  StreamflowSui,
-} from "../../index";
+import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../index";
 import {
   default as GenericStreamClient,
   SolanaStreamClientOptions,

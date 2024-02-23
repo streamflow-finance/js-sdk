@@ -66,9 +66,6 @@ importers:
       '@streamflow/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@streamflow/prettier-config':
-        specifier: workspace:*
-        version: link:../prettier-config
       '@types/bn.js':
         specifier: 5.1.1
         version: 5.1.1
@@ -121,9 +118,6 @@ importers:
       '@streamflow/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@streamflow/prettier-config':
-        specifier: workspace:*
-        version: link:../prettier-config
       '@types/bn.js':
         specifier: 5.1.1
         version: 5.1.1
@@ -156,16 +150,10 @@ importers:
         version: 8.5.0(eslint@8.29.0)
       eslint-plugin-jest:
         specifier: 27.1.6
-        version: 27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.7.0)(typescript@4.9.5)
+        version: 27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.7.0)(typescript@5.3.3)
       eslint-plugin-prettier:
         specifier: 4.2.1
         version: 4.2.1(eslint-config-prettier@8.5.0)(eslint@8.29.0)(prettier@2.8.1)
-      prettier:
-        specifier: 2.8.1
-        version: 2.8.1
-
-  packages/prettier-config:
-    devDependencies:
       prettier:
         specifier: 2.8.1
         version: 2.8.1
@@ -179,8 +167,8 @@ importers:
         specifier: 1.0.6
         version: 1.0.6(@solana/web3.js@1.70.1)(aptos@1.4.0)(react-dom@18.2.0)(react@18.2.0)
       '@mysten/sui.js':
-        specifier: ^0.40.0
-        version: 0.40.0
+        specifier: ^0.45.1
+        version: 0.45.1
       '@solana/buffer-layout':
         specifier: '4.0.1 '
         version: 4.0.1
@@ -197,8 +185,8 @@ importers:
         specifier: workspace:*
         version: link:../common
       '@suiet/wallet-kit':
-        specifier: 0.2.18
-        version: 0.2.18(@mysten/sui.js@0.40.0)(@mysten/wallet-standard@0.6.0)(react-dom@18.2.0)(react@18.2.0)
+        specifier: 0.2.22
+        version: 0.2.22(@mysten/sui.js@0.45.1)(react-dom@18.2.0)(react@18.2.0)
       aptos:
         specifier: 1.4.0
         version: 1.4.0
@@ -224,9 +212,6 @@ importers:
       '@streamflow/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@streamflow/prettier-config':
-        specifier: workspace:*
-        version: link:../prettier-config
       '@types/bn.js':
         specifier: 5.1.1
         version: 5.1.1
@@ -244,10 +229,10 @@ importers:
         version: 29.3.1
       ts-jest:
         specifier: 29.0.3
-        version: 29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@4.9.5)
+        version: 29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@5.3.3)
       typescript:
-        specifier: ^4.9.5
-        version: 4.9.5
+        specifier: ^5.3.3
+        version: 5.3.3
 
 packages:
 
@@ -2318,6 +2303,12 @@ packages:
       bs58: 5.0.0
     dev: false
 
+  /@mysten/bcs@0.8.1:
+    resolution: {integrity: sha512-wSEdP7QEfGQdb34g+7R0f3OdRqrv88iIABfJVDVJ6IsGLYVILreh8dZfNpZNUUyzctiyhX7zB9e/lR5qkddFPA==}
+    dependencies:
+      bs58: 5.0.0
+    dev: false
+
   /@mysten/sui.js@0.32.2:
     resolution: {integrity: sha512-/Hm4xkGolJhqj8FvQr7QSHDTlxIvL52mtbOao9f75YjrBh7y1Uh9kbJSY7xiTF1NY9sv6p5hUVlYRJuM0Hvn9A==}
     engines: {node: '>=16'}
@@ -2357,11 +2348,11 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@mysten/sui.js@0.40.0:
-    resolution: {integrity: sha512-PEGdMe+QgpIdDIpyO4/yb+CK4x3Hki+kYPbQ5n3DVsWyb2ztFwB+5oYdc7qG3QkniO1lnCrlSHqZ5mN+x3RzrQ==}
+  /@mysten/sui.js@0.45.1:
+    resolution: {integrity: sha512-B6RKfBAR1yr3EvHyQzXgkyOGOXE7jUbgblyitK/25CGp4Uba4VHEZ/N5DCbiuTJdt2k1H42sSXqIGfYqHN+6Cw==}
     engines: {node: '>=16'}
     dependencies:
-      '@mysten/bcs': 0.7.3
+      '@mysten/bcs': 0.8.1
       '@noble/curves': 1.3.0
       '@noble/hashes': 1.3.3
       '@open-rpc/client-js': 1.8.1
@@ -2388,10 +2379,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@mysten/wallet-standard@0.6.0:
-    resolution: {integrity: sha512-xE/OijN9zIPoTjTWuxlYMHtp7kXPcAR8dDAbxOIH5h7EZCTk+G6p+SzDp8jV5magf50VcYP0cVjS4CQLx1wQuQ==}
+  /@mysten/wallet-standard@0.8.7:
+    resolution: {integrity: sha512-kY/gc8WHeqcWPgnQ69l9jbyXSsnVJqddspX1rvLF5bZV1Ud7ZrVO1V+pL4LNTxeQq02EHz4n5DLOWGHDd3mrTg==}
     dependencies:
-      '@mysten/sui.js': 0.40.0
+      '@mysten/sui.js': 0.45.1
       '@wallet-standard/core': 1.0.3
     transitivePeerDependencies:
       - bufferutil
@@ -3287,42 +3278,51 @@ packages:
     resolution: {integrity: sha512-bprE8+K5V+DPX7q2e2K57ImqNBdfGHDIWaGI5xHxZoxbKOuQZn4wzPiUxOAHnsUr3w3xHrWXwN7gnG/iIuEMIg==}
     dev: false
 
-  /@suiet/wallet-kit@0.2.18(@mysten/sui.js@0.40.0)(@mysten/wallet-standard@0.6.0)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-vXvqPttium0NGr13iZBSrw/NME2JzHB9yBCIzB4/Wyaukpzznv5mRO7hfWGac5N/NuDUoQ4iFEFhna8K+0cScA==}
+  /@suiet/wallet-kit@0.2.22(@mysten/sui.js@0.45.1)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-vJ+t3l95SwZ0VU8xwDCbccgSQzgtY/srON4IEKI2K4UUV/Epy+EhqXIo5XceH1gJGy4O3kM5kvIZj0SJsp+Owg==}
     peerDependencies:
-      '@mysten/sui.js': 0.41.0
-      '@mysten/wallet-standard': 0.6.0
+      '@mysten/sui.js': 0.45.1
+      react: '*'
+      react-dom: '*'
     dependencies:
-      '@mysten/sui.js': 0.40.0
-      '@mysten/wallet-standard': 0.6.0
+      '@mysten/sui.js': 0.45.1
+      '@mysten/wallet-standard': 0.8.7
       '@radix-ui/react-dialog': 1.0.5(react-dom@18.2.0)(react@18.2.0)
-      '@suiet/wallet-sdk': 0.2.16(@mysten/sui.js@0.40.0)(@mysten/wallet-standard@0.6.0)
+      '@suiet/wallet-sdk': 0.2.19(@mysten/sui.js@0.45.1)
       '@svgr/rollup': 6.5.1
       '@wallet-standard/core': 1.0.3
       buffer: 6.0.3
       classnames: 2.5.1
       lodash-es: 4.17.21
       mitt: 3.0.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
       react-query: 3.39.3(react-dom@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
-      - react
-      - react-dom
+      - bufferutil
+      - encoding
       - react-native
       - supports-color
+      - utf-8-validate
     dev: false
 
-  /@suiet/wallet-sdk@0.2.16(@mysten/sui.js@0.40.0)(@mysten/wallet-standard@0.6.0):
-    resolution: {integrity: sha512-Xi30dA1tjD4SZNL47bZsVwk035cCJ1N0qeHL5afk8CmeLItwekJPnAF23Sg4rBP+bKpSFSLNjZii6PeqjrZQgA==}
+  /@suiet/wallet-sdk@0.2.19(@mysten/sui.js@0.45.1):
+    resolution: {integrity: sha512-i4iGdDkEuO5/TLDfWDj1fhJ3yttaGsEY6hQ/FwLwxrsuuTbjqlVDXqScURz/aGHbWlVfW5x+kcOiE44mGDSMsg==}
     peerDependencies:
-      '@mysten/sui.js': 0.41.0
-      '@mysten/wallet-standard': 0.6.0
+      '@mysten/sui.js': 0.45.1
     dependencies:
-      '@mysten/sui.js': 0.40.0
-      '@mysten/wallet-standard': 0.6.0
+      '@mysten/sui.js': 0.45.1
+      '@mysten/wallet-standard': 0.8.7
       '@noble/hashes': 1.3.3
+      buffer: 6.0.3
+      superstruct: 1.0.3
       tweetnacl: 1.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
     dev: false
 
   /@svgr/babel-plugin-add-jsx-attribute@6.5.1(@babel/core@7.23.9):
@@ -3639,7 +3639,7 @@ packages:
       '@types/yargs-parser': 21.0.3
     dev: true
 
-  /@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@4.9.5):
+  /@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@5.3.3):
     resolution: {integrity: sha512-TiZzBSJja/LbhNPvk6yc0JrX9XqhQ0hdh6M2svYfsHGejaKFIAGd9MQ+ERIMzLGlN/kZoYIgdxFV0PuljTKXag==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -3651,23 +3651,23 @@ packages:
         optional: true
     dependencies:
       '@eslint-community/regexpp': 4.10.0
-      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       '@typescript-eslint/scope-manager': 5.62.0
-      '@typescript-eslint/type-utils': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/type-utils': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       debug: 4.3.4
       eslint: 8.29.0
       graphemer: 1.4.0
       ignore: 5.3.1
       natural-compare-lite: 1.4.0
       semver: 7.6.0
-      tsutils: 3.21.0(typescript@4.9.5)
-      typescript: 4.9.5
+      tsutils: 3.21.0(typescript@5.3.3)
+      typescript: 5.3.3
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@typescript-eslint/parser@5.62.0(eslint@8.29.0)(typescript@4.9.5):
+  /@typescript-eslint/parser@5.62.0(eslint@8.29.0)(typescript@5.3.3):
     resolution: {integrity: sha512-VlJEV0fOQ7BExOsHYAGrgbEiZoi8D+Bl2+f6V2RrXerRSylnp+ZBHmPvaIa8cz0Ajx7WO7Z5RqfgYg7ED1nRhA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -3679,10 +3679,10 @@ packages:
     dependencies:
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.3.3)
       debug: 4.3.4
       eslint: 8.29.0
-      typescript: 4.9.5
+      typescript: 5.3.3
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3695,7 +3695,7 @@ packages:
       '@typescript-eslint/visitor-keys': 5.62.0
     dev: true
 
-  /@typescript-eslint/type-utils@5.62.0(eslint@8.29.0)(typescript@4.9.5):
+  /@typescript-eslint/type-utils@5.62.0(eslint@8.29.0)(typescript@5.3.3):
     resolution: {integrity: sha512-xsSQreu+VnfbqQpW5vnCJdq1Z3Q0U31qiWmRhr98ONQmcp/yhiPJFPq8MXiJVLiksmOKSjIldZzkebzHuCGzew==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -3705,12 +3705,12 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.3.3)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       debug: 4.3.4
       eslint: 8.29.0
-      tsutils: 3.21.0(typescript@4.9.5)
-      typescript: 4.9.5
+      tsutils: 3.21.0(typescript@5.3.3)
+      typescript: 5.3.3
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3720,7 +3720,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@typescript-eslint/typescript-estree@5.62.0(typescript@4.9.5):
+  /@typescript-eslint/typescript-estree@5.62.0(typescript@5.3.3):
     resolution: {integrity: sha512-CmcQ6uY7b9y694lKdRB8FEel7JbU/40iSAPomu++SjLMntB+2Leay2LO6i8VnJk58MtE9/nQSFIH6jpyRWyYzA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -3735,13 +3735,13 @@ packages:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.6.0
-      tsutils: 3.21.0(typescript@4.9.5)
-      typescript: 4.9.5
+      tsutils: 3.21.0(typescript@5.3.3)
+      typescript: 5.3.3
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@typescript-eslint/utils@5.62.0(eslint@8.29.0)(typescript@4.9.5):
+  /@typescript-eslint/utils@5.62.0(eslint@8.29.0)(typescript@5.3.3):
     resolution: {integrity: sha512-n8oxjeb5aIbPFEtmQxQYOLI0i9n5ySBEY/ZEHHZqKQSFnxio1rv6dthascc9dLuwrL0RC5mPCxB7vnAVGAYWAQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -3752,7 +3752,7 @@ packages:
       '@types/semver': 7.5.7
       '@typescript-eslint/scope-manager': 5.62.0
       '@typescript-eslint/types': 5.62.0
-      '@typescript-eslint/typescript-estree': 5.62.0(typescript@4.9.5)
+      '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.3.3)
       eslint: 8.29.0
       eslint-scope: 5.1.1
       semver: 7.6.0
@@ -5398,8 +5398,8 @@ packages:
       eslint: ^7.32.0 || ^8.2.0
       eslint-plugin-import: ^2.25.3
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@4.9.5)
-      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@5.3.3)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       eslint: 8.29.0
       eslint-config-airbnb-base: 15.0.0(eslint-plugin-import@2.29.1)(eslint@8.29.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)
@@ -5445,7 +5445,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       debug: 3.2.7
       eslint: 8.29.0
       eslint-import-resolver-node: 0.3.9
@@ -5463,7 +5463,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/parser': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       array-includes: 3.1.7
       array.prototype.findlastindex: 1.2.4
       array.prototype.flat: 1.3.2
@@ -5488,7 +5488,7 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-plugin-jest@27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.7.0)(typescript@4.9.5):
+  /eslint-plugin-jest@27.1.6(@typescript-eslint/eslint-plugin@5.62.0)(eslint@8.29.0)(jest@29.7.0)(typescript@5.3.3):
     resolution: {integrity: sha512-XA7RFLSrlQF9IGtAmhddkUkBuICCTuryfOTfCSWcZHiHb69OilIH05oozH2XA6CEOtztnOd0vgXyvxZodkxGjg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     peerDependencies:
@@ -5501,8 +5501,8 @@ packages:
       jest:
         optional: true
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@4.9.5)
-      '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@4.9.5)
+      '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0)(eslint@8.29.0)(typescript@5.3.3)
+      '@typescript-eslint/utils': 5.62.0(eslint@8.29.0)(typescript@5.3.3)
       eslint: 8.29.0
       jest: 29.7.0
     transitivePeerDependencies:
@@ -9959,6 +9959,40 @@ packages:
       yargs-parser: 21.1.1
     dev: true
 
+  /ts-jest@29.0.3(@babel/core@7.23.9)(jest@29.3.1)(typescript@5.3.3):
+    resolution: {integrity: sha512-Ibygvmuyq1qp/z3yTh9QTwVVAbFdDy/+4BtIQR2sp6baF2SJU/8CKK/hhnGIDY2L90Az2jIqTwZPnN2p+BweiQ==}
+    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+    hasBin: true
+    peerDependencies:
+      '@babel/core': '>=7.0.0-beta.0 <8'
+      '@jest/types': ^29.0.0
+      babel-jest: ^29.0.0
+      esbuild: '*'
+      jest: ^29.0.0
+      typescript: '>=4.3'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      '@jest/types':
+        optional: true
+      babel-jest:
+        optional: true
+      esbuild:
+        optional: true
+    dependencies:
+      '@babel/core': 7.23.9
+      bs-logger: 0.2.6
+      fast-json-stable-stringify: 2.1.0
+      jest: 29.3.1
+      jest-util: 29.7.0
+      json5: 2.2.3
+      lodash.memoize: 4.1.2
+      make-error: 1.3.6
+      semver: 7.6.0
+      typescript: 5.3.3
+      yargs-parser: 21.1.1
+    dev: true
+
   /ts-jest@29.1.2(@babel/core@7.23.9)(jest@29.7.0)(typescript@4.9.5):
     resolution: {integrity: sha512-br6GJoH/WUX4pu7FbZXuWGKGNDuU7b8Uj77g/Sp7puZV6EXzuByl6JrECvm0MzVzSTkSHWTihsXt+5XYER5b+g==}
     engines: {node: ^16.10.0 || ^18.0.0 || >=20.0.0}
@@ -10022,14 +10056,14 @@ packages:
   /tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
 
-  /tsutils@3.21.0(typescript@4.9.5):
+  /tsutils@3.21.0(typescript@5.3.3):
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
     engines: {node: '>= 6'}
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
     dependencies:
       tslib: 1.14.1
-      typescript: 4.9.5
+      typescript: 5.3.3
     dev: true
 
   /tuf-js@1.1.7:
@@ -10153,6 +10187,12 @@ packages:
   /typescript@4.9.5:
     resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript@5.3.3:
+    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+    engines: {node: '>=14.17'}
     hasBin: true
     dev: true
 

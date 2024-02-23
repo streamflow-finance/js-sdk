@@ -38,7 +38,6 @@
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
     "@streamflow/eslint-config": "workspace:*",
-    "@streamflow/prettier-config": "workspace:*",
     "@types/bn.js": "5.1.1",
     "@types/ethereum-checksum-address": "^0.0.0",
     "@types/jest": "29.2.4",
