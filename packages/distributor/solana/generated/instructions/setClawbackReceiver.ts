@@ -13,7 +13,7 @@ export interface SetClawbackReceiverAccounts {
 
 export function setClawbackReceiver(
   accounts: SetClawbackReceiverAccounts,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): TransactionInstruction {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },

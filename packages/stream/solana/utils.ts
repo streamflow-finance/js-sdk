@@ -74,7 +74,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
  */
 export async function signAllTransactionWithRecipients(
   sender: Keypair | SignerWalletAdapter,
-  items: BatchItem[]
+  items: BatchItem[],
 ): Promise<BatchItem[]> {
   const isKeypair = isSignerKeypair(sender);
   const isWallet = isSignerWallet(sender);
@@ -104,7 +104,7 @@ export async function signAllTransactionWithRecipients(
  */
 export async function sendAndConfirmStreamRawTransaction(
   connection: Connection,
-  batchItem: BatchItem
+  batchItem: BatchItem,
 ): Promise<BatchItemResult> {
   try {
     const rawTx = batchItem.tx.serialize();

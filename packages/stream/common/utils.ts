@@ -54,7 +54,7 @@ export const calculateTotalAmountToDeposit = (depositedAmount: BN, totalFee: num
  */
 export async function handleContractError<T>(
   func: () => Promise<T>,
-  callback?: (err: Error) => string | null
+  callback?: (err: Error) => string | null,
 ): Promise<T> {
   try {
     return await func();

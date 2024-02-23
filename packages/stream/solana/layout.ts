@@ -156,7 +156,7 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
       amount_per_period_exists: values.amount_per_period ? 1 : 0,
       amount_per_period: values.amount_per_period ?? 0,
     },
-    data
+    data,
   );
 };
 

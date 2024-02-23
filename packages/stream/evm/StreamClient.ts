@@ -47,7 +47,7 @@ export default class EvmStreamClient extends BaseStreamClient {
     chain: IChain,
     signer: ethers.Signer,
     cluster: ICluster = ICluster.Mainnet,
-    programId?: string
+    programId?: string,
   ) {
     super();
 
@@ -100,7 +100,7 @@ export default class EvmStreamClient extends BaseStreamClient {
     const confirmedTx = await result.wait();
 
     const metadataId = this.formatMetadataId(
-      confirmedTx.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0]
+      confirmedTx.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0],
     );
 
     return {
@@ -135,17 +135,20 @@ export default class EvmStreamClient extends BaseStreamClient {
     const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
       result.status === "fulfilled"
         ? this.formatMetadataId(
-            result.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0]
+            result.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0],
           )
-        : null
+        : null,
     );
-    const metadataToRecipient = metadatas.reduce((acc, value, index) => {
-      if (value) {
-        acc[value] = multipleStreamData.recipients[index];
-      }
+    const metadataToRecipient = metadatas.reduce(
+      (acc, value, index) => {
+        if (value) {
+          acc[value] = multipleStreamData.recipients[index];
+        }
 
-      return acc;
-    }, {} as Record<string, IRecipient>);
+        return acc;
+      },
+      {} as Record<string, IRecipient>,
+    );
 
     const failures = confirmations
       .filter((el): el is PromiseRejectedResult => el.status === "rejected")
@@ -206,7 +209,7 @@ export default class EvmStreamClient extends BaseStreamClient {
       updateData.id,
       updateData.enableAutomaticWithdrawal ? [true] : [],
       updateData.withdrawFrequency ? [updateData.withdrawFrequency.toString()] : [],
-      updateData.amountPerPeriod ? [updateData.amountPerPeriod.toString()] : []
+      updateData.amountPerPeriod ? [updateData.amountPerPeriod.toString()] : [],
     );
     return {
       ixs: [],

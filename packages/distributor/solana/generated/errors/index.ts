@@ -16,7 +16,7 @@ const errorRe = /Program (\w+) failed: custom program error: (\w+)/;
 
 export function fromTxError(
   err: unknown,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): custom.CustomError | anchor.AnchorError | null {
   if (typeof err !== "object" || err === null || !hasOwnProperty(err, "logs") || !Array.isArray(err.logs)) {
     return null;

@@ -71,7 +71,7 @@ export default class SuiStreamClient extends BaseStreamClient {
         ...streamData,
         recipients: [{ ...streamData }],
       },
-      totalFee
+      totalFee,
     );
 
     const { digest, events } = await wallet.signAndExecuteTransactionBlock({
@@ -92,7 +92,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
-    { senderWallet }: ICreateStreamSuiExt
+    { senderWallet }: ICreateStreamSuiExt,
   ): Promise<IMultiTransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const totalFee = await this.getTotalFee({
@@ -157,7 +157,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     withdrawData: IWithdrawData,
-    { senderWallet, tokenId }: ITransactionSuiExt
+    { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
@@ -187,7 +187,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async cancel(
     cancelData: ICancelData,
-    { senderWallet, tokenId }: ITransactionSuiExt
+    { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
@@ -212,7 +212,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async transfer(
     transferData: ITransferData,
-    { senderWallet, tokenId }: ITransactionSuiExt
+    { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
@@ -237,7 +237,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async topup(
     topupData: ITopUpData,
-    { senderWallet, tokenId }: ITransactionSuiExt
+    { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
@@ -289,7 +289,7 @@ export default class SuiStreamClient extends BaseStreamClient {
 
     return new Contract(
       content.fields! as unknown as StreamResource,
-      "0x97e9a9fb1392e9785319f5512d0bfde6ecf7757b09c6de41cec89e798dd361f2::strmt::STRMT"
+      "0x97e9a9fb1392e9785319f5512d0bfde6ecf7757b09c6de41cec89e798dd361f2::strmt::STRMT",
     );
   }
 
@@ -302,7 +302,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async update(
     updateData: IUpdateData,
-    { senderWallet, tokenId }: ITransactionSuiExt
+    { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
@@ -316,15 +316,15 @@ export default class SuiStreamClient extends BaseStreamClient {
         txb.gas,
         txb.pure(
           updateData.enableAutomaticWithdrawal !== undefined ? [updateData.enableAutomaticWithdrawal] : [],
-          "vector<bool>"
+          "vector<bool>",
         ),
         txb.pure(
           updateData.withdrawFrequency !== undefined ? [updateData.withdrawFrequency.toString()] : [],
-          "vector<u64>"
+          "vector<u64>",
         ),
         txb.pure(
           updateData.amountPerPeriod !== undefined ? [updateData.amountPerPeriod.toString()] : [],
-          "vector<u64>"
+          "vector<u64>",
         ),
       ],
     });
@@ -414,7 +414,7 @@ export default class SuiStreamClient extends BaseStreamClient {
   private async generateCreateBlock(
     walletAddress: string,
     multipleStreamData: ICreateMultipleStreamData,
-    totalFee: number
+    totalFee: number,
   ): Promise<[TransactionBlock, number]> {
     let coins = await this.getAllCoins(walletAddress, multipleStreamData.tokenId);
     const totalAmount = multipleStreamData.recipients
@@ -500,14 +500,14 @@ export default class SuiStreamClient extends BaseStreamClient {
     amount: BN,
     coinType: string,
     coins: CoinStruct[],
-    totalFee: number
+    totalFee: number,
   ): TransactionObjectArgument {
     const coinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
 
     if (coins.length > 1) {
       txb.mergeCoins(
         coinObject,
-        coins.slice(1).map((item) => txb.object(item.coinObjectId))
+        coins.slice(1).map((item) => txb.object(item.coinObjectId)),
       );
     }
     const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
@@ -525,7 +525,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     txb: TransactionBlock,
     coinType: string,
     coins: CoinStruct[],
-    coinObject: TransactionObjectArgument
+    coinObject: TransactionObjectArgument,
   ): void {
     const firstCoinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
     txb.mergeCoins(firstCoinObject, [coinObject]);

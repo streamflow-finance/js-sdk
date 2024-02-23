@@ -104,7 +104,7 @@ export class ClaimStatus {
   static async fetch(
     c: Connection,
     address: PublicKey,
-    programId: PublicKey = PROGRAM_ID
+    programId: PublicKey = PROGRAM_ID,
   ): Promise<ClaimStatus | null> {
     const info = await c.getAccountInfo(address);
 
@@ -121,7 +121,7 @@ export class ClaimStatus {
   static async fetchMultiple(
     c: Connection,
     addresses: PublicKey[],
-    programId: PublicKey = PROGRAM_ID
+    programId: PublicKey = PROGRAM_ID,
   ): Promise<Array<ClaimStatus | null>> {
     const infos = await c.getMultipleAccountsInfo(addresses);
 

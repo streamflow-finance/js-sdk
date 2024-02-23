@@ -59,7 +59,7 @@ export default class AptosStreamClient extends BaseStreamClient {
         ...streamData,
         recipients: [{ ...streamData }],
       },
-      wallet
+      wallet,
     )[0];
 
     const hash = await wallet.signAndSubmitTransaction(payload);
@@ -72,7 +72,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
-    { senderWallet }: ICreateStreamAptosExt
+    { senderWallet }: ICreateStreamAptosExt,
   ): Promise<IMultiTransactionResult> {
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
@@ -113,7 +113,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     withdrawData: IWithdrawData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "withdraw",
@@ -133,7 +133,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async cancel(
     cancelData: ICancelData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "cancel",
@@ -153,7 +153,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async transfer(
     transferData: ITransferData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "transfer",
@@ -173,7 +173,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async topup(
     topupData: ITopUpData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "topup",
@@ -217,7 +217,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async update(
     updateData: IUpdateData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
@@ -275,7 +275,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   // Utility function to prepare transaction payloads for multiple recipients.
   private generateMultiPayloads(
     multipleStreamData: ICreateMultipleStreamData,
-    wallet: AptosWalletWrapper<any>
+    wallet: AptosWalletWrapper<any>,
   ): [string, Types.TransactionPayload_EntryFunctionPayload][] {
     return multipleStreamData.recipients.map((recipient) => {
       const acc = new AptosAccount(); // Generate random address as seeds for deriving "escrow" account

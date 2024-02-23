@@ -23,11 +23,15 @@ module.exports = {
     "prettier/prettier": [
       "error",
       {
+        parser: "typescript",
         endOfLine: "auto",
         printWidth: 120,
         tabWidth: 2,
         arrowParens: "always",
         bracketSpacing: true,
+        importOrder: ["<THIRD_PARTY_MODULES>", "^[./]"],
+        importOrderSeparation: true,
+        importOrderSortSpecifiers: true,
       },
     ],
     "react/jsx-filename-extension": "off",

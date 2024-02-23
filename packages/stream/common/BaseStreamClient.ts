@@ -21,7 +21,7 @@ export abstract class BaseStreamClient {
 
   abstract createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
-    chainSpecificParams: any
+    chainSpecificParams: any,
   ): Promise<IMultiTransactionResult>;
 
   abstract withdraw(withdrawData: IWithdrawData, chainSpecificParams: any): Promise<ITransactionResult>;

@@ -29,7 +29,7 @@ export async function wrappedSignAndExecuteTransaction(
   connection: Connection,
   invoker: Keypair | SignerWalletAdapter,
   tx: Transaction,
-  hash: BlockhashWithExpiryBlockHeight
+  hash: BlockhashWithExpiryBlockHeight,
 ): Promise<string> {
   try {
     const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);

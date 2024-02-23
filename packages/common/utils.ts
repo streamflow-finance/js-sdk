@@ -36,7 +36,7 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
  */
 export async function handleContractError<T>(
   func: () => Promise<T>,
-  callback?: (err: Error) => string | null
+  callback?: (err: Error) => string | null,
 ): Promise<T> {
   try {
     return await func();

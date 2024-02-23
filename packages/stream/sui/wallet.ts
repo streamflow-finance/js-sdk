@@ -35,7 +35,7 @@ export class SuiWalletWrapper<T extends WalletContextState | Keypair> {
   }
 
   public async signAndExecuteTransactionBlock(
-    input: SuiSignAndExecuteTransactionBlockInput
+    input: SuiSignAndExecuteTransactionBlockInput,
   ): Promise<SuiTransactionBlockResponse> {
     if (isSignerKeypair(this.wallet)) {
       return this.client.signAndExecuteTransactionBlock({

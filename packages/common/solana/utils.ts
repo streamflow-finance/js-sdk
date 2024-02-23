@@ -26,7 +26,7 @@ export async function getProgramAccounts(
   connection: Connection,
   wallet: PublicKey,
   offset: number,
-  programId: PublicKey
+  programId: PublicKey,
 ): Promise<Account[]> {
   return connection?.getProgramAccounts(programId, {
     filters: [
@@ -85,7 +85,7 @@ export async function signAndExecuteTransaction(
   connection: Connection,
   invoker: Keypair | SignerWalletAdapter,
   tx: Transaction,
-  hash: BlockhashWithExpiryBlockHeight
+  hash: BlockhashWithExpiryBlockHeight,
 ): Promise<string> {
   const signedTx = await signTransaction(invoker, tx);
   const rawTx = signedTx.serialize();
@@ -123,7 +123,7 @@ export async function ataBatchExist(connection: Connection, paramsBatch: AtaPara
     paramsBatch.map(async ({ mint, owner }) => {
       const pubkey = await ata(mint, owner);
       return pubkey;
-    })
+    }),
   );
   const response = await connection.getMultipleAccountsInfo(tokenAccounts);
   return response.map((accInfo) => !!accInfo);
@@ -139,7 +139,7 @@ export async function ataBatchExist(connection: Connection, paramsBatch: AtaPara
 export async function generateCreateAtaBatchTx(
   connection: Connection,
   payer: PublicKey,
-  paramsBatch: AtaParams[]
+  paramsBatch: AtaParams[],
 ): Promise<{
   tx: Transaction;
   hash: BlockhashWithExpiryBlockHeight;
@@ -147,7 +147,7 @@ export async function generateCreateAtaBatchTx(
   const ixs: TransactionInstruction[] = await Promise.all(
     paramsBatch.map(async ({ mint, owner }) => {
       return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
-    })
+    }),
   );
   const hash = await connection.getLatestBlockhash();
   const tx = new Transaction({
@@ -168,7 +168,7 @@ export async function generateCreateAtaBatchTx(
 export async function createAtaBatch(
   connection: Connection,
   invoker: Keypair | SignerWalletAdapter,
-  paramsBatch: AtaParams[]
+  paramsBatch: AtaParams[],
 ): Promise<string> {
   const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
   const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
@@ -187,7 +187,7 @@ export async function checkOrCreateAtaBatch(
   connection: Connection,
   owners: PublicKey[],
   mint: PublicKey,
-  invoker: SignerWalletAdapter | Keypair
+  invoker: SignerWalletAdapter | Keypair,
 ): Promise<TransactionInstruction[]> {
   const ixs: TransactionInstruction[] = [];
   // TODO: optimize fetching and maps/arrays

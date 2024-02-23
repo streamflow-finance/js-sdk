@@ -203,7 +203,7 @@ export class MerkleDistributor {
   static async fetch(
     c: Connection,
     address: PublicKey,
-    programId: PublicKey = PROGRAM_ID
+    programId: PublicKey = PROGRAM_ID,
   ): Promise<MerkleDistributor | null> {
     const info = await c.getAccountInfo(address);
 
@@ -220,7 +220,7 @@ export class MerkleDistributor {
   static async fetchMultiple(
     c: Connection,
     addresses: PublicKey[],
-    programId: PublicKey = PROGRAM_ID
+    programId: PublicKey = PROGRAM_ID,
   ): Promise<Array<MerkleDistributor | null>> {
     const infos = await c.getMultipleAccountsInfo(addresses);
 

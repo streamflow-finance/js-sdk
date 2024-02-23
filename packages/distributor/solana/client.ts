@@ -69,7 +69,7 @@ export default class SolanaDistributorClient {
 
   public async create(
     data: ICreateDistributorData,
-    { invoker, isNative = false }: ICreateSolanaExt
+    { invoker, isNative = false }: ICreateSolanaExt,
   ): Promise<ICreateDistributorResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -116,8 +116,8 @@ export default class SolanaDistributorClient {
         tokenVault,
         invoker.publicKey,
         BigInt(data.maxTotalClaim.toString()),
-        mintAccount.decimals
-      )
+        mintAccount.decimals,
+      ),
     );
 
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;

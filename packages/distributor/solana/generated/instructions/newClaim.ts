@@ -38,7 +38,7 @@ export const layout = borsh.struct([
 export function newClaim(
   args: NewClaimArgs,
   accounts: NewClaimAccounts,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): TransactionInstruction {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
@@ -58,7 +58,7 @@ export function newClaim(
       amountLocked: args.amountLocked,
       proof: args.proof,
     },
-    buffer
+    buffer,
   );
   const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
   const ix = new TransactionInstruction({ keys, programId, data });

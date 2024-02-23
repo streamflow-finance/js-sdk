@@ -47,7 +47,7 @@ interface CreateStreamAccounts {
 export const createStreamInstruction = (
   data: CreateStreamData,
   programId: PublicKey,
-  accounts: CreateStreamAccounts
+  accounts: CreateStreamAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: accounts.sender, isSigner: true, isWritable: true },
@@ -151,7 +151,7 @@ interface CreateUncheckedStreamAccounts {
 export const createUncheckedStreamInstruction = (
   data: CreateUncheckedStreamData,
   programId: PublicKey,
-  accounts: CreateUncheckedStreamAccounts
+  accounts: CreateUncheckedStreamAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: accounts.sender, isSigner: true, isWritable: true },
@@ -243,7 +243,7 @@ export const withdrawStreamInstruction = (
     partnerTokens,
     mint,
     tokenProgram,
-  }: WithdrawAccounts
+  }: WithdrawAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
@@ -285,7 +285,7 @@ interface UpdateAccounts {
 export const updateStreamInstruction = (
   params: IUpdateData,
   programId: PublicKey,
-  { authority, metadata, withdrawor, systemProgram }: UpdateAccounts
+  { authority, metadata, withdrawor, systemProgram }: UpdateAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
@@ -342,7 +342,7 @@ export const cancelStreamInstruction = (
     partnerTokens,
     mint,
     tokenProgram,
-  }: CancelAccounts
+  }: CancelAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: false },
@@ -397,7 +397,7 @@ export const transferStreamInstruction = (
     tokenProgram,
     associatedTokenProgram,
     systemProgram,
-  }: TransferAccounts
+  }: TransferAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
@@ -451,7 +451,7 @@ export const topupStreamInstruction = (
     tokenProgram,
     withdrawor,
     systemProgram,
-  }: TopupAccounts
+  }: TopupAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: sender, isSigner: true, isWritable: true },

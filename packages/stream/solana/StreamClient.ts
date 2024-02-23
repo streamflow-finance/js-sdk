@@ -107,7 +107,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     clusterUrl: string,
     cluster: ICluster = ICluster.Mainnet,
     commitment: Commitment | ConnectionConfig = "confirmed",
-    programId = ""
+    programId = "",
   ) {
     super();
     this.commitment = commitment;
@@ -147,7 +147,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawalFrequency = 0,
       partner,
     }: ICreateStreamData,
-    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt
+    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt,
   ): Promise<ICreateResult> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
@@ -160,7 +160,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
-      this.programId
+      this.programId,
     );
 
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
@@ -217,8 +217,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           withdrawor: WITHDRAWOR_PUBLIC_KEY,
           systemProgram: SystemProgram.programId,
-        }
-      )
+        },
+      ),
     );
 
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
@@ -269,7 +269,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawalFrequency = 0,
       partner,
     }: ICreateStreamData,
-    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt
+    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt,
   ): Promise<ICreateResult> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
@@ -290,7 +290,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
-      this.programId
+      this.programId,
     );
 
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
@@ -333,7 +333,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         tokenProgram: TOKEN_PROGRAM_ID,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: SystemProgram.programId,
-      }
+      },
     );
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
     const ixs: TransactionInstruction[] = [createMetadataInstruction, createInstruction];
@@ -359,7 +359,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
-    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt
+    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt,
   ): Promise<IMultiTransactionResult> {
     const { recipients } = data;
 
@@ -473,7 +473,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     { id, amount }: IWithdrawData,
-    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt
+    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -506,7 +506,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         partnerTokens,
         mint: data.mint,
         tokenProgram: TOKEN_PROGRAM_ID,
-      })
+      }),
     );
 
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
@@ -527,7 +527,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async cancel(
     { id }: ICancelData,
-    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt
+    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -562,7 +562,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         partnerTokens,
         mint: data.mint,
         tokenProgram: TOKEN_PROGRAM_ID,
-      })
+      }),
     );
 
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
@@ -585,7 +585,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async transfer(
     { id, newRecipient: newRecipientString }: ITransferData,
-    { invoker }: IInteractStreamSolanaExt
+    { invoker }: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -614,7 +614,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-      })
+      }),
     );
 
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
@@ -636,7 +636,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async topup(
     { id, amount }: ITopUpData,
-    { invoker, isNative }: ITopUpStreamSolanaExt
+    { invoker, isNative }: ITopUpStreamSolanaExt,
   ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -671,7 +671,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         tokenProgram: TOKEN_PROGRAM_ID,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: SystemProgram.programId,
-      })
+      }),
     );
 
     const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
@@ -716,13 +716,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
         this.connection,
         publicKey,
         STREAM_STRUCT_OFFSET_SENDER,
-        this.programId
+        this.programId,
       );
       const incomingAccounts = await getProgramAccounts(
         this.connection,
         publicKey,
         STREAM_STRUCT_OFFSET_RECIPIENT,
-        this.programId
+        this.programId,
       );
       accounts = [...outgoingAccounts, ...incomingAccounts];
     } else {
@@ -785,7 +785,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
     const [metadataPubKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(FEES_METADATA_SEED)],
-      new PublicKey(PARTNER_ORACLE_PROGRAM_ID)
+      new PublicKey(PARTNER_ORACLE_PROGRAM_ID),
     );
     const data = await this.connection.getAccountInfo(metadataPubKey);
     if (!data) {
@@ -816,7 +816,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   private async prepareStreamInstructions(
     recipient: IRecipient,
     streamParams: IStreamConfig,
-    solanaExtendedConfig: ICreateStreamSolanaExt
+    solanaExtendedConfig: ICreateStreamSolanaExt,
   ) {
     const {
       tokenId: mint,
@@ -845,7 +845,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
-      this.programId
+      this.programId,
     );
 
     const senderTokens = await ata(mintPublicKey, sender.publicKey);
@@ -894,8 +894,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           withdrawor: WITHDRAWOR_PUBLIC_KEY,
           systemProgram: SystemProgram.programId,
-        }
-      )
+        },
+      ),
     );
     return { ixs, metadata, metadataPubKey };
   }
@@ -906,7 +906,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   private async checkAssociatedTokenAccounts(
     data: CheckAssociatedTokenAccountsData,
     { invoker, checkTokenAccounts }: IInteractStreamSolanaExt,
-    ixs: TransactionInstruction[]
+    ixs: TransactionInstruction[],
   ) {
     if (!checkTokenAccounts) {
       return;
@@ -918,7 +918,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         data.partner.toBase58(),
         data.streamflowTreasury.toBase58(),
       ]),
-      (address) => new PublicKey(address)
+      (address) => new PublicKey(address),
     );
     ixs.push(...(await checkOrCreateAtaBatch(this.connection, owners, data.mint, invoker)));
   }
