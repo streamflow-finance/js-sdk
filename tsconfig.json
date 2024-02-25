@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    // "baseUrl": ".",
     "target": "es5",
     "module": "commonjs",
     "declaration": true,
@@ -14,7 +15,12 @@
     "downlevelIteration": true,
     "types": [
       "jest"
-    ]
+    ],
+    // "paths": {
+    //   "@streamflow/*": [
+    //     "packages/*"
+    //   ]
+    // }
   },
   "exclude": [
     "node_modules",
