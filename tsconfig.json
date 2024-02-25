@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    // "baseUrl": ".",
+    "baseUrl": ".",
     "target": "es5",
     "module": "commonjs",
     "declaration": true,
@@ -25,7 +25,7 @@
   "exclude": [
     "node_modules",
     "__tests__",
-    "packages/stream/dist",
-    "local"
+    "packages/*/dist/**/*",
+    "local",
   ]
 }
