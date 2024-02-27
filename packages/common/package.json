@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "rm -rf dist; tsc -p tsconfig.json",
-    "pack": "npm pack",
+    "pack": "pnpm build && pnpm pack",
     "lint": "eslint --fix .",
     "lint-config": "eslint --print-config",
     "prepublishOnly": "npm run lint && npm run build"

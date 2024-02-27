@@ -30,7 +30,7 @@
   },
   "scripts": {
     "build": "rm -rf dist; tsc -p tsconfig.json",
-    "pack": "npm pack",
+    "pack": "pnpm build && pnpm pack",
     "test": "jest .",
     "lint": "eslint --fix .",
     "prepublishOnly": "npm run lint && npm test && npm run build"
