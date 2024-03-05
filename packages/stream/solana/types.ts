@@ -1,13 +1,6 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import {
-  AccountInfo,
-  Connection,
-  PublicKey,
-  Keypair,
-  TransactionSignature,
-  TransactionInstruction,
-  Transaction,
-} from "@solana/web3.js";
+import { AccountInfo, Connection, PublicKey, Keypair, TransactionSignature, Transaction } from "@solana/web3.js";
+import { TransactionResponse, TxResponse } from "@streamflow/common/solana";
 import BN from "bn.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
@@ -21,12 +14,15 @@ export interface Account {
   account: AccountInfo<Buffer>;
 }
 
-export interface ICreateStreamSolanaExt {
+export interface ICreateSolanaExt {
   sender: SignerWalletAdapter | Keypair;
+  isNative?: boolean;
+}
+
+export interface ICreateStreamSolanaExt extends ICreateSolanaExt {
   // allow custom Metadata Account to be passed, ephemeral signer is most cases, accepts array to be compatible in createMultiple
   metadataPubKeys?: PublicKey[];
   partner?: string | null;
-  isNative?: boolean;
 }
 
 export interface IInteractStreamSolanaExt {
@@ -363,17 +359,8 @@ export interface DecodedStream {
   fundsUnlockedAtLastRateChange: BN;
 }
 
-export interface TransactionResponse {
-  tx: TransactionSignature;
-}
-
 export interface CreateStreamResponse extends TransactionResponse {
   id: string;
-}
-
-export interface TxResponse {
-  ixs: TransactionInstruction[];
-  tx: TransactionSignature;
 }
 
 export interface CreateResponse extends TxResponse {
@@ -427,18 +414,6 @@ export interface CreateMultipleStreamsValues {
   recipients: Recipient[];
 }
 
-export interface CheckAssociatedTokenAccountsData {
-  sender: PublicKey;
-  senderTokens: PublicKey;
-  recipient: PublicKey;
-  recipientTokens: PublicKey;
-  partner: PublicKey;
-  partnerTokens: PublicKey;
-  streamflowTreasury: PublicKey;
-  streamflowTreasuryTokens: PublicKey;
-  mint: PublicKey;
-}
-
 export interface BatchItem {
   recipient: string;
   tx: Transaction;
@@ -450,11 +425,6 @@ export interface BatchItemSuccess extends BatchItem {
 
 export interface BatchItemError extends BatchItem {
   error: string;
-}
-
-export interface AtaParams {
-  mint: PublicKey;
-  owner: PublicKey;
 }
 
 export type BatchItemResult = BatchItemSuccess | BatchItemError;

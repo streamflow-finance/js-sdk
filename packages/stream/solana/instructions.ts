@@ -1,13 +1,7 @@
 import { Buffer } from "buffer";
-import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 import { sha256 } from "js-sha256";
-import {
-  createAssociatedTokenAccountInstruction,
-  createSyncNativeInstruction,
-  getAssociatedTokenAddress,
-  NATIVE_MINT,
-} from "@solana/spl-token";
 
 import * as Layout from "./layout";
 import { IUpdateData } from "../common/types";
@@ -53,7 +47,7 @@ interface CreateStreamAccounts {
 export const createStreamInstruction = (
   data: CreateStreamData,
   programId: PublicKey,
-  accounts: CreateStreamAccounts
+  accounts: CreateStreamAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: accounts.sender, isSigner: true, isWritable: true },
@@ -111,11 +105,7 @@ export const createStreamInstruction = (
   };
   const encodeLength = Layout.createStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
-  bufferData = Buffer.concat([
-    Buffer.from(sha256.digest("global:create")).slice(0, 8),
-    bufferData,
-    Buffer.alloc(10),
-  ]);
+  bufferData = Buffer.concat([Buffer.from(sha256.digest("global:create")).slice(0, 8), bufferData, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -161,7 +151,7 @@ interface CreateUncheckedStreamAccounts {
 export const createUncheckedStreamInstruction = (
   data: CreateUncheckedStreamData,
   programId: PublicKey,
-  accounts: CreateUncheckedStreamAccounts
+  accounts: CreateUncheckedStreamAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: accounts.sender, isSigner: true, isWritable: true },
@@ -253,7 +243,7 @@ export const withdrawStreamInstruction = (
     partnerTokens,
     mint,
     tokenProgram,
-  }: WithdrawAccounts
+  }: WithdrawAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
@@ -277,11 +267,7 @@ export const withdrawStreamInstruction = (
   const decodedData = { amount: amount.toArrayLike(Buffer, "le", 8) };
   const encodeLength = Layout.withdrawStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([
-    Buffer.from(sha256.digest("global:withdraw")).slice(0, 8),
-    data,
-    Buffer.alloc(10),
-  ]);
+  data = Buffer.concat([Buffer.from(sha256.digest("global:withdraw")).slice(0, 8), data, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -299,7 +285,7 @@ interface UpdateAccounts {
 export const updateStreamInstruction = (
   params: IUpdateData,
   programId: PublicKey,
-  { authority, metadata, withdrawor, systemProgram }: UpdateAccounts
+  { authority, metadata, withdrawor, systemProgram }: UpdateAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
@@ -311,20 +297,12 @@ export const updateStreamInstruction = (
   let data = Buffer.alloc(100);
   const decodedData = {
     enable_automatic_withdrawal: Number(params.enableAutomaticWithdrawal),
-    withdraw_frequency: params.withdrawFrequency
-      ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8)
-      : undefined,
-    amount_per_period: params.amountPerPeriod
-      ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8)
-      : undefined,
+    withdraw_frequency: params.withdrawFrequency ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8) : undefined,
+    amount_per_period: params.amountPerPeriod ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8) : undefined,
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([
-    Buffer.from(sha256.digest("global:update")).slice(0, 8),
-    data,
-    Buffer.alloc(20),
-  ]);
+  data = Buffer.concat([Buffer.from(sha256.digest("global:update")).slice(0, 8), data, Buffer.alloc(20)]);
   return new TransactionInstruction({
     keys: keys,
     programId: programId,
@@ -364,7 +342,7 @@ export const cancelStreamInstruction = (
     partnerTokens,
     mint,
     tokenProgram,
-  }: CancelAccounts
+  }: CancelAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: false },
@@ -386,10 +364,7 @@ export const cancelStreamInstruction = (
     { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.concat([
-    Buffer.from(sha256.digest("global:cancel")).slice(0, 8),
-    Buffer.alloc(10),
-  ]);
+  const data = Buffer.concat([Buffer.from(sha256.digest("global:cancel")).slice(0, 8), Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -422,7 +397,7 @@ export const transferStreamInstruction = (
     tokenProgram,
     associatedTokenProgram,
     systemProgram,
-  }: TransferAccounts
+  }: TransferAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
@@ -436,10 +411,7 @@ export const transferStreamInstruction = (
     { pubkey: systemProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.concat([
-    Buffer.from(sha256.digest("global:transfer_recipient")).slice(0, 8),
-    Buffer.alloc(10),
-  ]);
+  const data = Buffer.concat([Buffer.from(sha256.digest("global:transfer_recipient")).slice(0, 8), Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -479,7 +451,7 @@ export const topupStreamInstruction = (
     tokenProgram,
     withdrawor,
     systemProgram,
-  }: TopupAccounts
+  }: TopupAccounts,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: sender, isSigner: true, isWritable: true },
@@ -505,47 +477,11 @@ export const topupStreamInstruction = (
 
   const encodeLength = Layout.topupStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([
-    Buffer.from(sha256.digest("global:topup")).slice(0, 8),
-    data,
-    Buffer.alloc(10),
-  ]);
+  data = Buffer.concat([Buffer.from(sha256.digest("global:topup")).slice(0, 8), data, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
     programId,
     data,
   });
-};
-
-export const prepareWrappedAccount = async (
-  connection: Connection,
-  senderAddress: PublicKey,
-  amount: BN
-): Promise<TransactionInstruction[]> => {
-  const tokenAccount = await getAssociatedTokenAddress(NATIVE_MINT, senderAddress, true);
-
-  const accInfo = await connection.getParsedAccountInfo(tokenAccount);
-
-  const instructions =
-    (accInfo.value?.lamports ?? 0) > 0
-      ? []
-      : [
-          createAssociatedTokenAccountInstruction(
-            senderAddress,
-            tokenAccount,
-            senderAddress,
-            NATIVE_MINT
-          ),
-        ];
-
-  return [
-    ...instructions,
-    SystemProgram.transfer({
-      fromPubkey: senderAddress,
-      toPubkey: tokenAccount,
-      lamports: amount.toNumber(),
-    }),
-    createSyncNativeInstruction(tokenAccount),
-  ];
 };

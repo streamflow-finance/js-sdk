@@ -68,7 +68,7 @@ describe("AptosStreamClient", () => {
           ...mockData,
           ...mockRecipient,
         },
-        { senderWallet: mockWallet }
+        { senderWallet: mockWallet },
       );
 
       // Assert

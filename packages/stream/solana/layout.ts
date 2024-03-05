@@ -96,33 +96,33 @@ export const createStreamLayout: BufferLayout.Structure<ICreateStreamLayout> = B
 /**
  * Create unchecked stream instruction layout
  */
-export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUncheckedStreamLayout> =
-  BufferLayout.struct([
-    BufferLayout.blob(8, "start_time"),
-    BufferLayout.blob(8, "net_amount_deposited"),
-    BufferLayout.blob(8, "period"),
-    BufferLayout.blob(8, "amount_per_period"),
-    BufferLayout.blob(8, "cliff"),
-    BufferLayout.blob(8, "cliff_amount"),
-    BufferLayout.u8("cancelable_by_sender"),
-    BufferLayout.u8("cancelable_by_recipient"),
-    BufferLayout.u8("automatic_withdrawal"),
-    BufferLayout.u8("transferable_by_sender"),
-    BufferLayout.u8("transferable_by_recipient"),
-    BufferLayout.u8("can_topup"),
-    BufferLayout.blob(64, "stream_name"),
-    BufferLayout.blob(8, "withdraw_frequency"),
-    BufferLayout.blob(32, "recipient"),
-    BufferLayout.blob(32, "partner"),
-    BufferLayout.u8("pausable"),
-    BufferLayout.u8("can_update_rate"),
-  ]);
+export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUncheckedStreamLayout> = BufferLayout.struct([
+  BufferLayout.blob(8, "start_time"),
+  BufferLayout.blob(8, "net_amount_deposited"),
+  BufferLayout.blob(8, "period"),
+  BufferLayout.blob(8, "amount_per_period"),
+  BufferLayout.blob(8, "cliff"),
+  BufferLayout.blob(8, "cliff_amount"),
+  BufferLayout.u8("cancelable_by_sender"),
+  BufferLayout.u8("cancelable_by_recipient"),
+  BufferLayout.u8("automatic_withdrawal"),
+  BufferLayout.u8("transferable_by_sender"),
+  BufferLayout.u8("transferable_by_recipient"),
+  BufferLayout.u8("can_topup"),
+  BufferLayout.blob(64, "stream_name"),
+  BufferLayout.blob(8, "withdraw_frequency"),
+  BufferLayout.blob(32, "recipient"),
+  BufferLayout.blob(32, "partner"),
+  BufferLayout.u8("pausable"),
+  BufferLayout.u8("can_update_rate"),
+]);
 
 /**
  * Withdraw stream instruction layout
  */
-export const withdrawStreamLayout: BufferLayout.Structure<IWithdrawStreamLayout> =
-  BufferLayout.struct([BufferLayout.blob(8, "amount")]);
+export const withdrawStreamLayout: BufferLayout.Structure<IWithdrawStreamLayout> = BufferLayout.struct([
+  BufferLayout.blob(8, "amount"),
+]);
 
 /**
  * Encode stream instruction layout
@@ -156,7 +156,7 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
       amount_per_period_exists: values.amount_per_period ? 1 : 0,
       amount_per_period: values.amount_per_period ?? 0,
     },
-    data
+    data,
   );
 };
 
