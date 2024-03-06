@@ -25,6 +25,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: pnpm install
+      - name: Build dependencies
+        run: pnpm build
       # Generate your TypeDoc documentation
       - run: npx typedoc
       # https://github.com/actions/upload-pages-artifact
