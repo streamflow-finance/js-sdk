@@ -1,0 +1,8 @@
+{
+    "entryPoints": [
+        "packages/*"
+    ],
+    "name": "Streamflow SDK",
+    "entryPointStrategy": "packages",
+    "includeVersion": false
+}

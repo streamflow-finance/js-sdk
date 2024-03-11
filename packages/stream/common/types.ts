@@ -2,6 +2,8 @@ import { TransactionInstruction } from "@solana/web3.js";
 import { Types } from "aptos";
 import BN from "bn.js";
 
+export { IChain, ICluster, ContractError } from "@streamflow/common";
+
 // Stream Client Types
 export interface IRecipient {
   recipient: string;
@@ -99,13 +101,6 @@ export interface IMultiTransactionResult {
   errors: ICreateMultiError[];
 }
 
-// Utility types
-export enum ICluster {
-  Mainnet = "mainnet",
-  Devnet = "devnet",
-  Testnet = "testnet",
-  Local = "local",
-}
 export enum StreamDirection {
   Outgoing = "outgoing",
   Incoming = "incoming",
@@ -117,15 +112,6 @@ export enum StreamType {
   Payment = "payment",
   Vesting = "vesting",
   Lock = "lock",
-}
-
-export enum IChain {
-  Solana = "Solana",
-  Aptos = "Aptos",
-  Ethereum = "Ethereum",
-  BNB = "BNB",
-  Polygon = "Polygon",
-  Sui = "Sui",
 }
 
 /**
@@ -270,25 +256,4 @@ export interface Stream {
   unlocked(currentTimestamp: number): BN;
 
   remaining(decimals: number): number;
-}
-
-/**
- * Error wrapper for calls made to the contract on chain
- */
-export class ContractError extends Error {
-  public contractErrorCode: string | null;
-
-  /**
-   * Constructs the Error Wrapper
-   * @param error Original error raised probably by the chain SDK
-   * @param code extracted code from the error if managed to parse it
-   */
-  constructor(error: Error, code?: string | null) {
-    super(error.message); // Call the base class constructor with the error message
-    this.contractErrorCode = code ?? null;
-    // Copy properties from the original error
-    Object.setPrototypeOf(this, ContractError.prototype);
-    this.name = "ContractError"; // Set the name property
-    this.stack = error.stack;
-  }
 }

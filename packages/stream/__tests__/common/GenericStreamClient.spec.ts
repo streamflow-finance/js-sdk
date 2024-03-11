@@ -1,6 +1,6 @@
 import { Wallet } from "ethers";
 
-import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../";
+import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../index";
 import {
   default as GenericStreamClient,
   SolanaStreamClientOptions,
@@ -51,7 +51,7 @@ describe("GenericStreamClient", () => {
       expected: StreamflowSui.SuiStreamClient,
     },
   ])(".init($chain)", (config) => {
-    it("should successfully create GenericStreamInstance", () => {
+    it("should successfully create GenericStreamClient instance", () => {
       const instance = new GenericStreamClient(config);
 
       expect(instance).toBeInstanceOf(GenericStreamClient);

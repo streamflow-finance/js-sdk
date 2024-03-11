@@ -10,7 +10,9 @@ export const APTOS_PROGRAM_IDS: Record<ICluster, string> = {
 
 export const APTOS_ERROR_MATCH_REGEX = /Move abort in [a-z0-9]+::([^:]+): ([A-Z_]+)/;
 
-export const APTOS_MODULE_ERROR_MAP: { [key: string]: { [key: number]: string } } = {
+export const APTOS_MODULE_ERROR_MAP: {
+  [key: string]: { [key: number]: string };
+} = {
   protocol: {
     1: ContractErrorCode.ECONTRACT_NOT_INIT,
     2: ContractErrorCode.EBAD_AMOUNT,
