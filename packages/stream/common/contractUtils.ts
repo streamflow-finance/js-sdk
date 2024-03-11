@@ -40,10 +40,7 @@ export const calculateUnlockedAmount = ({
   return streamed.lt(deposited) ? streamed : deposited;
 };
 
-export const isCliffCloseToDepositedAmount = (streamData: {
-  depositedAmount: BN;
-  cliffAmount: BN;
-}): boolean => {
+export const isCliffCloseToDepositedAmount = (streamData: { depositedAmount: BN; cliffAmount: BN }): boolean => {
   return streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN("1")));
 };
 
@@ -51,11 +48,7 @@ export const isPayment = (streamData: { canTopup: boolean }): boolean => {
   return streamData.canTopup;
 };
 
-export const isVesting = (streamData: {
-  canTopup: boolean;
-  depositedAmount: BN;
-  cliffAmount: BN;
-}): boolean => {
+export const isVesting = (streamData: { canTopup: boolean; depositedAmount: BN; cliffAmount: BN }): boolean => {
   return !streamData.canTopup && !isCliffCloseToDepositedAmount(streamData);
 };
 
