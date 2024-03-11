@@ -1,10 +1,7 @@
 import { Keypair } from "@mysten/sui.js/cryptography";
 import { WalletContextState } from "@suiet/wallet-kit";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-import {
-  ExecuteTransactionRequestType,
-  SuiTransactionBlockResponseOptions,
-} from "@mysten/sui.js/client";
+import { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui.js/client";
 import BN from "bn.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";

@@ -39,12 +39,7 @@ export default class AptosStreamClient extends BaseStreamClient {
 
   private client: AptosClient;
 
-  constructor(
-    clusterUrl: string,
-    cluster: ICluster = ICluster.Mainnet,
-    maxGas = "10000",
-    programId?: string
-  ) {
+  constructor(clusterUrl: string, cluster: ICluster = ICluster.Mainnet, maxGas = "10000", programId?: string) {
     super();
 
     this.programId = programId ? programId : APTOS_PROGRAM_IDS[cluster];
@@ -57,10 +52,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   /**
    * Creates a new stream/vesting contract.
    */
-  public async create(
-    streamData: ICreateStreamData,
-    { senderWallet }: ICreateStreamAptosExt
-  ): Promise<ICreateResult> {
+  public async create(streamData: ICreateStreamData, { senderWallet }: ICreateStreamAptosExt): Promise<ICreateResult> {
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
     const [metadataId, payload] = this.generateMultiPayloads(
@@ -68,7 +60,7 @@ export default class AptosStreamClient extends BaseStreamClient {
         ...streamData,
         recipients: [{ ...streamData }],
       },
-      wallet
+      wallet,
     )[0];
 
     const hash = await wallet.signAndSubmitTransaction(payload);
@@ -81,7 +73,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
-    { senderWallet }: ICreateStreamAptosExt
+    { senderWallet }: ICreateStreamAptosExt,
   ): Promise<IMultiTransactionResult> {
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
@@ -122,7 +114,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "withdraw",
@@ -142,7 +134,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async cancel(
     cancelData: ICancelData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "cancel",
@@ -162,7 +154,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async transfer(
     transferData: ITransferData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "transfer",
@@ -182,7 +174,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async topup(
     topupData: ITopUpData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const payload = {
       type: "topup",
@@ -226,7 +218,7 @@ export default class AptosStreamClient extends BaseStreamClient {
    */
   public async update(
     updateData: IUpdateData,
-    { senderWallet, tokenId }: ITransactionAptosExt
+    { senderWallet, tokenId }: ITransactionAptosExt,
   ): Promise<ITransactionResult> {
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
@@ -248,10 +240,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   }
 
   public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
-    const resource = await this.client.getAccountResource(
-      this.programId,
-      `${this.programId}::fees::FeeTable`
-    );
+    const resource = await this.client.getAccountResource(this.programId, `${this.programId}::fees::FeeTable`);
     const data = resource.data as unknown as FeeTableResource;
     const value = await this.client.getTableItem(data.values.handle, {
       key_type: "address",
@@ -265,10 +254,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   }
 
   public async getDefaultStreamflowFee(): Promise<number> {
-    const resource = await this.client.getAccountResource(
-      this.programId,
-      `${this.programId}::admin::ConfigV2`
-    );
+    const resource = await this.client.getAccountResource(this.programId, `${this.programId}::admin::ConfigV2`);
     return Number((resource.data as unknown as ConfigResource).streamflow_fees) / 100;
   }
 
@@ -290,7 +276,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   // Utility function to prepare transaction payloads for multiple recipients.
   private generateMultiPayloads(
     multipleStreamData: ICreateMultipleStreamData,
-    wallet: AptosWalletWrapper<any>
+    wallet: AptosWalletWrapper<any>,
   ): [string, Types.TransactionPayload_EntryFunctionPayload][] {
     return multipleStreamData.recipients.map((recipient) => {
       const acc = new AptosAccount(); // Generate random address as seeds for deriving "escrow" account

@@ -1,6 +1,12 @@
 {
+    "prettier.requireConfig": true,
+    "eslint.enable": true,
+    "eslint.debug": false,
     "eslint.workingDirectories": [
-        "./packages/stream/"
+        // Monorepo directories
+        {
+            "pattern": "./packages/*/"
+        }
     ],
     "cSpell.words": [
         "Streamflow"

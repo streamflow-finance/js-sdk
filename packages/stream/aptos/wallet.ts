@@ -1,10 +1,4 @@
-import {
-  AptosAccount,
-  AptosClient,
-  Types,
-  TransactionBuilderRemoteABI,
-  MaybeHexString,
-} from "aptos";
+import { AptosAccount, AptosClient, Types, TransactionBuilderRemoteABI, MaybeHexString } from "aptos";
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 
 export class AptosWalletWrapper<T extends WalletContextState | AptosAccount> {
@@ -24,9 +18,7 @@ export class AptosWalletWrapper<T extends WalletContextState | AptosAccount> {
     }
   }
 
-  public async signAndSubmitTransaction(
-    input: Types.TransactionPayload_EntryFunctionPayload
-  ): Promise<string> {
+  public async signAndSubmitTransaction(input: Types.TransactionPayload_EntryFunctionPayload): Promise<string> {
     if (this.wallet instanceof AptosAccount) {
       const builder = new TransactionBuilderRemoteABI(this.client, {
         sender: this.address,
