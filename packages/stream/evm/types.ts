@@ -183,9 +183,7 @@ export class EvmContract implements Stream {
     this.currentPauseStart = stream.current_pause_start.toNumber();
     this.pauseCumulative = new BN(stream.pause_cumulative.toString());
     this.lastRateChangeTime = stream.last_rate_change_time.toNumber();
-    this.fundsUnlockedAtLastRateChange = new BN(
-      stream.funds_unlocked_at_last_rate_change.toString()
-    );
+    this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change.toString());
     this.type = buildStreamType(this);
   }
 

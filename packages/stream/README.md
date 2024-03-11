@@ -465,5 +465,3 @@ E.g, if the amount is 1 SOL than this amount in lamports is `1000 \* 10^9 = 1_00
 And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
-
-WAGMI.

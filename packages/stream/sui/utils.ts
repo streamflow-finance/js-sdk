@@ -11,9 +11,7 @@ export function extractSuiErrorInfo(errorText: string): SuiErrorInfo {
 
   const moduleName = match[2] as "protocol" | "admin" | "fee_manager";
   const errorCode = Number(match[4]);
-  const errorName = SUI_MODULE_ERROR_MAP[moduleName]
-    ? SUI_MODULE_ERROR_MAP[moduleName][errorCode]
-    : undefined;
+  const errorName = SUI_MODULE_ERROR_MAP[moduleName] ? SUI_MODULE_ERROR_MAP[moduleName][errorCode] : undefined;
   const index = Number(match[5]);
 
   if (index) {

@@ -21,20 +21,14 @@ export abstract class BaseStreamClient {
 
   abstract createMultiple(
     multipleStreamData: ICreateMultipleStreamData,
-    chainSpecificParams: any
+    chainSpecificParams: any,
   ): Promise<IMultiTransactionResult>;
 
-  abstract withdraw(
-    withdrawData: IWithdrawData,
-    chainSpecificParams: any
-  ): Promise<ITransactionResult>;
+  abstract withdraw(withdrawData: IWithdrawData, chainSpecificParams: any): Promise<ITransactionResult>;
 
   abstract cancel(cancelData: ICancelData, chainSpecificParams: any): Promise<ITransactionResult>;
 
-  abstract transfer(
-    transferData: ITransferData,
-    chainSpecificParams: any
-  ): Promise<ITransactionResult>;
+  abstract transfer(transferData: ITransferData, chainSpecificParams: any): Promise<ITransactionResult>;
 
   abstract topup(topupData: ITopUpData, chainSpecificParams: any): Promise<ITransactionResult>;
 
