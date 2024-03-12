@@ -34,35 +34,31 @@ export type ICreateMultipleStreamData = IStreamConfig & {
   recipients: IRecipient[];
 };
 
-export interface IWithdrawData {
+export interface IInteractData {
   id: string;
-  amount: BN;
 }
 
-export interface IUpdateData {
-  id: string;
+export interface IWithdrawData extends IInteractData {
+  amount?: BN;
+}
+
+export interface IUpdateData extends IInteractData {
   enableAutomaticWithdrawal?: boolean;
   withdrawFrequency?: BN;
   amountPerPeriod?: BN;
 }
 
-export interface ICancelData {
-  id: string;
-}
+export type ICancelData = IInteractData;
 
-export interface ITransferData {
-  id: string;
+export interface ITransferData extends IInteractData {
   newRecipient: string;
 }
 
-export interface ITopUpData {
-  id: string;
+export interface ITopUpData extends IInteractData {
   amount: BN;
 }
 
-export interface IGetOneData {
-  id: string;
-}
+export type IGetOneData = IInteractData;
 
 export interface IGetFeesData {
   address: string;

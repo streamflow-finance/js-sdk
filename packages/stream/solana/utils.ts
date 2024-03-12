@@ -12,6 +12,7 @@ import {
   Transaction,
   sendAndConfirmRawTransaction,
   BlockhashWithExpiryBlockHeight,
+  Commitment,
 } from "@solana/web3.js";
 import BN from "bn.js";
 import bs58 from "bs58";
@@ -122,6 +123,41 @@ export function isSignerKeypair(
     walletOrKeypair.constructor === Keypair ||
     walletOrKeypair.constructor.name === Keypair.prototype.constructor.name
   );
+}
+
+/**
+ * Creates a Transaction with given instructions and optionally signs it
+ * @param connection - Solana client connection
+ * @param ixs - Instructions to add to the Transaction
+ * @param payer - PublicKey of payer
+ * @param commitment - optional Commitment that will be used to fetch latest blockhash
+ * @param partialSigners - optional signers that will be used to partially sign a Transaction
+ * @returns Transaction and Blockhash
+ */
+export async function prepareTransaction(
+  connection: Connection,
+  ixs: TransactionInstruction[],
+  payer: PublicKey | undefined | null,
+  commitment?: Commitment,
+  ...partialSigners: (Keypair | undefined)[]
+): Promise<{
+  tx: Transaction;
+  hash: BlockhashWithExpiryBlockHeight;
+}> {
+  const hash = await connection.getLatestBlockhash(commitment);
+  const tx = new Transaction({
+    feePayer: payer,
+    blockhash: hash.blockhash,
+    lastValidBlockHeight: hash.lastValidBlockHeight,
+  }).add(...ixs);
+
+  for (const signer of partialSigners) {
+    if (signer) {
+      tx.partialSign(signer);
+    }
+  }
+
+  return { tx, hash };
 }
 
 export async function signTransaction(
@@ -282,12 +318,7 @@ export async function generateCreateAtaBatchTx(
       return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
     })
   );
-  const hash = await connection.getLatestBlockhash();
-  const tx = new Transaction({
-    feePayer: payer,
-    blockhash: hash.blockhash,
-    lastValidBlockHeight: hash.lastValidBlockHeight,
-  }).add(...ixs);
+  const { tx, hash } = await prepareTransaction(connection, ixs, payer);
   return { tx, hash };
 }
 

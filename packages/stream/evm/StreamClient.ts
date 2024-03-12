@@ -27,7 +27,7 @@ import {
 import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
-import { BASE_FEE } from "../common/constants";
+import { BASE_FEE, WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
 import { EvmContract, FeesAbiResult, StreamAbiResult } from "./types";
 import { extractEvmErrorCode } from "./utils";
 
@@ -164,11 +164,11 @@ export default class EvmStreamClient extends BaseStreamClient {
     };
   }
 
-  public async withdraw(withdrawData: IWithdrawData): Promise<ITransactionResult> {
-    const result = await this.writeContract.withdraw(
-      withdrawData.id,
-      withdrawData.amount.toString()
-    );
+  public async withdraw({
+    id,
+    amount = WITHDRAW_AVAILABLE_AMOUNT,
+  }: IWithdrawData): Promise<ITransactionResult> {
+    const result = await this.writeContract.withdraw(id, amount.toString());
     return {
       ixs: [],
       txId: result.hash,

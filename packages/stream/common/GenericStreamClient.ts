@@ -31,6 +31,7 @@ import {
   ITopUpStreamSolanaExt,
 } from "../solana";
 import { ICreateStreamSuiExt, ITransactionSuiExt, ISuiIdParameters, SuiStreamClient } from "../sui";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "./constants";
 
 export interface SolanaStreamClientOptions {
   chain: IChain.Solana;
@@ -190,11 +191,11 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
    * Attempts withdrawing from the specified stream.
    */
   public withdraw(
-    withdrawData: IWithdrawData,
+    { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     chainSpecificParams?: InteractSpecificParams<T>
   ): Promise<ITransactionResult> {
     return handleContractError(
-      () => this.nativeStreamClient.withdraw(withdrawData, chainSpecificParams as any),
+      () => this.nativeStreamClient.withdraw({ id, amount }, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode
     );
   }
