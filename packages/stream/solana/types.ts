@@ -28,18 +28,21 @@ export interface ICreateStreamSolanaExt {
   partner?: string | null;
   isNative?: boolean;
   computePrice?: number;
+  computeLimit?: number;
 }
 
 export interface IInteractStreamSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
   checkTokenAccounts?: boolean;
   computePrice?: number;
+  computeLimit?: number;
 }
 
 export interface ITopUpStreamSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
   isNative?: boolean;
   computePrice?: number;
+  computeLimit?: number;
 }
 
 export interface ITransactionSolanaExt {
