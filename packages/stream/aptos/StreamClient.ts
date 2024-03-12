@@ -30,6 +30,7 @@ import {
 } from "./types";
 import { AptosWalletWrapper } from "./wallet";
 import { extractAptosErrorCode } from "./utils";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
 
 export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;
@@ -120,14 +121,14 @@ export default class AptosStreamClient extends BaseStreamClient {
    * Attempts withdrawing from the specified stream.
    */
   public async withdraw(
-    withdrawData: IWithdrawData,
+    { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     { senderWallet, tokenId }: ITransactionAptosExt
   ): Promise<ITransactionResult> {
     const payload = {
       type: "withdraw",
       function: `${this.programId}::protocol::withdraw`,
       type_arguments: [tokenId],
-      arguments: [withdrawData.id, withdrawData.amount.toString()],
+      arguments: [id, amount.toString()],
     };
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 

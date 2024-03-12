@@ -37,6 +37,7 @@ import {
 import { extractSuiErrorInfo } from "./utils";
 import { SuiWalletWrapper } from "./wallet";
 import { calculateTotalAmountToDeposit } from "../common/utils";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
 
 export default class SuiStreamClient extends BaseStreamClient {
   private programId: string;
@@ -161,7 +162,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    * Attempts withdrawing from the specified stream.
    */
   public async withdraw(
-    withdrawData: IWithdrawData,
+    { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     { senderWallet, tokenId }: ITransactionSuiExt
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
@@ -170,10 +171,10 @@ export default class SuiStreamClient extends BaseStreamClient {
       target: `${this.programId}::protocol::withdraw`,
       typeArguments: [tokenId],
       arguments: [
-        txb.object(withdrawData.id),
+        txb.object(id),
         txb.object(this.configId),
         txb.object(SUI_CLOCK_OBJECT_ID),
-        txb.pure(withdrawData.amount.toString()),
+        txb.pure(amount.toString()),
       ],
     });
 
