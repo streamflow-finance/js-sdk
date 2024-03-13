@@ -547,7 +547,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     extParams: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
-    const ixs: TransactionInstruction[] = await this.prepareWithdawInstructions(
+    const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions(
       { id, amount },
       extParams
     );
@@ -565,7 +565,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates Transaction Instructions for withdrawal
    */
-  public async prepareWithdawInstructions(
+  public async prepareWithdrawInstructions(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt
   ): Promise<TransactionInstruction[]> {
