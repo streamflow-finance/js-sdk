@@ -11,12 +11,17 @@ import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
-  Transaction,
   Commitment,
   ConnectionConfig,
 } from "@solana/web3.js";
 import { ICluster, ITransactionResult } from "@streamflow/common";
-import { ata, checkOrCreateAtaBatch, prepareWrappedAccount, prepareBaseInstructions } from "@streamflow/common/solana";
+import {
+  ata,
+  checkOrCreateAtaBatch,
+  prepareWrappedAccount,
+  prepareBaseInstructions,
+  prepareTransaction,
+} from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
 import {
@@ -65,6 +70,10 @@ export default class SolanaDistributorClient {
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
+  }
+
+  public getCommitment(): Commitment | undefined {
+    return typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
   }
 
   public async create(
@@ -120,15 +129,7 @@ export default class SolanaDistributorClient {
       ),
     );
 
-    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
-
-    const hash = await this.connection.getLatestBlockhash(commitment);
-    const tx = new Transaction({
-      feePayer: invoker.publicKey,
-      blockhash: hash.blockhash,
-      lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
-
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey, this.getCommitment());
     const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return {
@@ -181,13 +182,7 @@ export default class SolanaDistributorClient {
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
-    const hash = await this.connection.getLatestBlockhash(commitment);
-    const tx = new Transaction({
-      feePayer: invoker.publicKey,
-      blockhash: hash.blockhash,
-      lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey, this.getCommitment());
     const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };
@@ -222,13 +217,7 @@ export default class SolanaDistributorClient {
 
     ixs.push(clawback(accounts, this.programId));
 
-    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
-    const hash = await this.connection.getLatestBlockhash(commitment);
-    const tx = new Transaction({
-      feePayer: invoker.publicKey,
-      blockhash: hash.blockhash,
-      lastValidBlockHeight: hash.lastValidBlockHeight,
-    }).add(...ixs);
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey, this.getCommitment());
     const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
 
     return { ixs, txId: signature };

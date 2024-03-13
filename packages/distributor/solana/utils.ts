@@ -32,8 +32,7 @@ export async function wrappedSignAndExecuteTransaction(
   hash: BlockhashWithExpiryBlockHeight,
 ): Promise<string> {
   try {
-    const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
-    return signature;
+    return await signAndExecuteTransaction(connection, invoker, tx, hash);
   } catch (err: any) {
     if (err instanceof Error) {
       const parsed = fromTxError(err);

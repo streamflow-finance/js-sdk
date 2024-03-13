@@ -389,13 +389,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
-    {
-      sender,
-      metadataPubKeys,
-      isNative = false,
-      computePrice,
-      computeLimit,
-    }: ICreateStreamSolanaExt,
+    { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
   ): Promise<IMultiTransactionResult> {
     const { recipients } = data;
 
@@ -420,8 +414,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(recipientData, data, {
         sender,
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-      computePrice,
-          computeLimit,});
+        computePrice,
+        computeLimit,
+      });
 
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
@@ -452,14 +447,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
       const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
 
-      const prepareTransaction = new Transaction({
+      const tx = new Transaction({
         feePayer: sender.publicKey,
         blockhash: hash.blockhash,
         lastValidBlockHeight: hash.lastValidBlockHeight,
       }).add(...nativeInstructions);
 
       batch.push({
-        tx: prepareTransaction,
+        tx,
         recipient: sender.publicKey.toBase58(),
       });
     }
@@ -512,11 +507,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     extParams: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
-    const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions(
-      { id, amount },
-      extParams
+    const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, extParams);
+    const { tx, hash } = await prepareTransaction(
+      this.connection,
+      ixs,
+      extParams.invoker.publicKey,
+      this.getCommitment(),
     );
-    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey, this.getCommitment());
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
