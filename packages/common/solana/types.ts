@@ -1,24 +1,13 @@
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { AccountInfo, Keypair, PublicKey, TransactionInstruction, TransactionSignature } from "@solana/web3.js";
+import { AccountInfo, PublicKey } from "@solana/web3.js";
 
-export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
+export interface ITransactionSolanaExt {
+  computePrice?: number;
+  computeLimit?: number;
+}
 
 export interface Account {
   pubkey: PublicKey;
   account: AccountInfo<Buffer>;
-}
-
-export interface IInteractStreamSolanaExt {
-  invoker: SignerWalletAdapter | Keypair;
-}
-
-export interface TransactionResponse {
-  tx: TransactionSignature;
-}
-
-export interface TxResponse {
-  ixs: TransactionInstruction[];
-  tx: TransactionSignature;
 }
 
 export interface CheckAssociatedTokenAccountsData {
