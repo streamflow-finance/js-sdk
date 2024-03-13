@@ -16,7 +16,7 @@ import {
   ConnectionConfig,
 } from "@solana/web3.js";
 import { ICluster, ITransactionResult } from "@streamflow/common";
-import { ata, checkOrCreateAtaBatch, prepareWrappedAccount } from "@streamflow/common/solana";
+import { ata, checkOrCreateAtaBatch, prepareWrappedAccount, prepareBaseInstructions } from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
 import {
@@ -69,13 +69,13 @@ export default class SolanaDistributorClient {
 
   public async create(
     data: ICreateDistributorData,
-    { invoker, isNative = false }: ICreateSolanaExt,
+    { invoker, isNative = false, computePrice, computeLimit }: ICreateSolanaExt,
   ): Promise<ICreateDistributorResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, { computePrice, computeLimit });
     const mint = isNative ? NATIVE_MINT : new PublicKey(data.mint);
     const mintAccount = await getMint(this.connection, mint);
     const distributorPublicKey = getDistributorPda(this.programId, mint, data.version);
@@ -138,7 +138,10 @@ export default class SolanaDistributorClient {
     };
   }
 
-  public async claim(data: IClaimData, { invoker }: IInteractSolanaExt): Promise<ITransactionResult> {
+  public async claim(
+    data: IClaimData,
+    { invoker, computePrice, computeLimit }: IInteractSolanaExt,
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -150,7 +153,8 @@ export default class SolanaDistributorClient {
       throw new Error("Couldn't get account info");
     }
 
-    const ixs = await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker);
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, { computePrice, computeLimit });
+    ixs.push(...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker)));
     const invokerTokens = await ata(distributor.mint, invoker.publicKey);
     const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, invoker.publicKey);
     const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
@@ -189,7 +193,10 @@ export default class SolanaDistributorClient {
     return { ixs, txId: signature };
   }
 
-  public async clawback(data: IClawbackData, { invoker }: IInteractSolanaExt): Promise<ITransactionResult> {
+  public async clawback(
+    data: IClawbackData,
+    { invoker, computePrice, computeLimit }: IInteractSolanaExt,
+  ): Promise<ITransactionResult> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -201,7 +208,8 @@ export default class SolanaDistributorClient {
       throw new Error("Couldn't get account info");
     }
 
-    const ixs = await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker);
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, { computePrice, computeLimit });
+    ixs.push(...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker)));
     const accounts: ClawbackAccounts = {
       distributor: distributorPublicKey,
       from: distributor.tokenVault,

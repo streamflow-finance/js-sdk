@@ -1,18 +1,20 @@
 import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import {
+  BlockhashWithExpiryBlockHeight,
   BlockheightBasedTransactionConfirmationStrategy,
+  Commitment,
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
-  TransactionInstruction,
-  Transaction,
   sendAndConfirmRawTransaction,
-  BlockhashWithExpiryBlockHeight,
+  Transaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
 
-import { AtaParams, Account } from "./types";
+import { Account, AtaParams, ITransactionSolanaExt } from "./types";
 
 /**
  * Wrapper function for Solana web3 getProgramAccounts with slightly better call interface
@@ -60,6 +62,41 @@ export function isSignerKeypair(walletOrKeypair: Keypair | SignerWalletAdapter):
     walletOrKeypair.constructor === Keypair ||
     walletOrKeypair.constructor.name === Keypair.prototype.constructor.name
   );
+}
+
+/**
+ * Creates a Transaction with given instructions and optionally signs it
+ * @param connection - Solana client connection
+ * @param ixs - Instructions to add to the Transaction
+ * @param payer - PublicKey of payer
+ * @param commitment - optional Commitment that will be used to fetch latest blockhash
+ * @param partialSigners - optional signers that will be used to partially sign a Transaction
+ * @returns Transaction and Blockhash
+ */
+export async function prepareTransaction(
+  connection: Connection,
+  ixs: TransactionInstruction[],
+  payer: PublicKey | undefined | null,
+  commitment?: Commitment,
+  ...partialSigners: (Keypair | undefined)[]
+): Promise<{
+  tx: Transaction;
+  hash: BlockhashWithExpiryBlockHeight;
+}> {
+  const hash = await connection.getLatestBlockhash(commitment);
+  const tx = new Transaction({
+    feePayer: payer,
+    blockhash: hash.blockhash,
+    lastValidBlockHeight: hash.lastValidBlockHeight,
+  }).add(...ixs);
+
+  for (const signer of partialSigners) {
+    if (signer) {
+      tx.partialSign(signer);
+    }
+  }
+
+  return { tx, hash };
 }
 
 export async function signTransaction(invoker: Keypair | SignerWalletAdapter, tx: Transaction): Promise<Transaction> {
@@ -171,8 +208,7 @@ export async function createAtaBatch(
   paramsBatch: AtaParams[],
 ): Promise<string> {
   const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
-  const signature = await signAndExecuteTransaction(connection, invoker, tx, hash);
-  return signature;
+  return signAndExecuteTransaction(connection, invoker, tx, hash);
 }
 
 /**
@@ -201,5 +237,26 @@ export async function checkOrCreateAtaBatch(
       ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint));
     }
   }
+  return ixs;
+}
+
+/**
+ * Create Base instructions for Solana
+ * - sets compute price if `computePrice` is provided
+ * - sets compute limit if `computeLimit` is provided
+ */
+export function prepareBaseInstructions(
+  connection: Connection,
+  { computePrice, computeLimit }: ITransactionSolanaExt,
+): TransactionInstruction[] {
+  const ixs: TransactionInstruction[] = [];
+
+  if (computePrice) {
+    ixs.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: computePrice }));
+  }
+  if (computeLimit) {
+    ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit }));
+  }
+
   return ixs;
 }

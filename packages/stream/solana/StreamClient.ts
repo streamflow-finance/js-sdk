@@ -9,7 +9,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  ComputeBudgetProgram,
   TransactionInstruction,
   Transaction,
   Commitment,
@@ -22,6 +21,8 @@ import {
   signAndExecuteTransaction,
   getProgramAccounts,
   prepareWrappedAccount,
+  prepareTransaction,
+  prepareBaseInstructions,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
@@ -35,12 +36,10 @@ import {
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
-  ITransactionSolanaExt,
 } from "./types";
 import {
   decodeStream,
   extractSolanaErrorCode,
-  prepareTransaction,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
 } from "./utils";
@@ -134,17 +133,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    */
-  public async create(
-    data: ICreateStreamData,
-    extParams: ICreateStreamSolanaExt
-  ): Promise<ICreateResult> {
+  public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
       extParams.sender.publicKey,
       this.getCommitment(),
-      metadata
+      metadata,
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
 
@@ -175,13 +171,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawalFrequency = 0,
       partner,
     }: ICreateStreamData,
-    {
-      sender,
-      metadataPubKeys,
-      isNative = false,
-      computePrice,
-      computeLimit,
-    }: ICreateStreamSolanaExt,
+    { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
   ): Promise<{
     ixs: TransactionInstruction[];
     metadata: Keypair | undefined;
@@ -191,7 +181,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -275,20 +265,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
    *
    * If you are not sure if you should use create or create_unchecked, go for create to be safer.
    */
-  public async createUnchecked(
-    data: ICreateStreamData,
-    extParams: ICreateStreamSolanaExt
-  ): Promise<ICreateResult> {
-    const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(
-      data,
-      extParams
-    );
+  public async createUnchecked(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
+    const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
       extParams.sender.publicKey,
       this.getCommitment(),
-      metadata
+      metadata,
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
 
@@ -318,13 +302,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       withdrawalFrequency = 0,
       partner,
     }: ICreateStreamData,
-    {
-      sender,
-      metadataPubKeys,
-      isNative = false,
-      computePrice,
-      computeLimit,
-    }: ICreateStreamSolanaExt,
+    { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
   ): Promise<{
     ixs: TransactionInstruction[];
     metadata: Keypair | undefined;
@@ -356,7 +334,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const partnerPublicKey = partner ? new PublicKey(partner) : STREAMFLOW_TREASURY_PUBLIC_KEY;
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -538,12 +516,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       { id, amount },
       extParams
     );
-    const { tx, hash } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment()
-    );
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey, this.getCommitment());
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
@@ -554,13 +527,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async prepareWithdrawInstructions(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
-    { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt
+    { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -598,16 +571,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts canceling the specified stream.
    */
-  public async cancel(
-    { id }: ICancelData,
-    extParams: IInteractStreamSolanaExt,
-  ): Promise<ITransactionResult> {
+  public async cancel({ id }: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareCancelInstructions({ id }, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
       extParams.invoker.publicKey,
-      this.getCommitment()
+      this.getCommitment(),
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -619,7 +589,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async prepareCancelInstructions(
     { id }: ICancelData,
-    { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt
+    { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -636,7 +606,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY);
     const partnerTokens = await ata(data.mint, data.partner);
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -671,15 +641,12 @@ export default class SolanaStreamClient extends BaseStreamClient {
     { id, newRecipient }: ITransferData,
     extParams: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
-    const ixs: TransactionInstruction[] = await this.prepareTransferInstructions(
-      { id, newRecipient },
-      extParams
-    );
+    const ixs: TransactionInstruction[] = await this.prepareTransferInstructions({ id, newRecipient }, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
       extParams.invoker.publicKey,
-      this.getCommitment()
+      this.getCommitment(),
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -692,13 +659,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async prepareTransferInstructions(
     { id, newRecipient }: ITransferData,
-    { invoker, computePrice, computeLimit = 100001 }: IInteractStreamSolanaExt
+    { invoker, computePrice, computeLimit = 100001 }: IInteractStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -732,19 +699,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Tops up stream account with specified amount.
    */
-  public async topup(
-    { id, amount }: ITopUpData,
-    extParams: ITopUpStreamSolanaExt,
-  ): Promise<ITransactionResult> {
-    const ixs: TransactionInstruction[] = await this.prepareTopupInstructions(
-      { id, amount },
-      extParams
-    );
+  public async topup({ id, amount }: ITopUpData, extParams: ITopUpStreamSolanaExt): Promise<ITransactionResult> {
+    const ixs: TransactionInstruction[] = await this.prepareTopupInstructions({ id, amount }, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
       extParams.invoker.publicKey,
-      this.getCommitment()
+      this.getCommitment(),
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -756,13 +717,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async prepareTopupInstructions(
     { id, amount }: ITopUpData,
-    { invoker, isNative, computePrice, computeLimit }: ITopUpStreamSolanaExt
+    { invoker, isNative, computePrice, computeLimit }: ITopUpStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -860,14 +821,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts updating the stream auto withdrawal params and amount per period
    */
-  public async update(data: IUpdateData, extParams: IInteractStreamSolanaExt
-  ): Promise<ITransactionResult> {
+  public async update(data: IUpdateData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareUpdateInstructions(data, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
       extParams.invoker.publicKey,
-      this.getCommitment()
+      this.getCommitment(),
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -882,7 +842,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async prepareUpdateInstructions(
     data: IUpdateData,
-    { invoker, computePrice, computeLimit }: IInteractStreamSolanaExt): Promise<TransactionInstruction[]> {
+    { invoker, computePrice, computeLimit }: IInteractStreamSolanaExt,
+  ): Promise<TransactionInstruction[]> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -893,7 +854,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     if (!escrow) {
       throw new Error("Couldn't get account info");
     }
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
@@ -903,7 +864,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         metadata: streamPublicKey,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: SystemProgram.programId,
-      })
+      }),
     );
 
     return ixs;
@@ -1029,27 +990,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
       ),
     );
     return { ixs, metadata, metadataPubKey };
-  }
-
-  /**
-   * Create Base instructions for Solana
-   * - sets compute price if `computePrice` is provided
-   * - sets compute limit if `computeLimit` is provided
-   */
-  public prepareBaseInstructions({
-    computePrice,
-    computeLimit,
-  }: ITransactionSolanaExt): TransactionInstruction[] {
-    const ixs: TransactionInstruction[] = [];
-
-    if (computePrice) {
-      ixs.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: computePrice }));
-    }
-    if (computeLimit) {
-      ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit }));
-    }
-
-    return ixs;
   }
 
   /**

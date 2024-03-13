@@ -162,10 +162,7 @@ export default class EvmStreamClient extends BaseStreamClient {
     };
   }
 
-  public async withdraw({
-    id,
-    amount = WITHDRAW_AVAILABLE_AMOUNT,
-  }: IWithdrawData): Promise<ITransactionResult> {
+  public async withdraw({ id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData): Promise<ITransactionResult> {
     const result = await this.writeContract.withdraw(id, amount.toString());
     return {
       ixs: [],
