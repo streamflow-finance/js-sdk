@@ -29,14 +29,17 @@ export enum IChain {
 export class ContractError extends Error {
   public contractErrorCode: string | null;
 
+  public description: string | null;
+
   /**
    * Constructs the Error Wrapper
    * @param error Original error raised probably by the chain SDK
    * @param code extracted code from the error if managed to parse it
    */
-  constructor(error: Error, code?: string | null) {
+  constructor(error: Error, code?: string | null, description?: string | null) {
     super(error.message); // Call the base class constructor with the error message
     this.contractErrorCode = code ?? null;
+    this.description = description ?? null;
     // Copy properties from the original error
     Object.setPrototypeOf(this, ContractError.prototype);
     this.name = "ContractError"; // Set the name property
