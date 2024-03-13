@@ -139,20 +139,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async create(
     data: ICreateStreamData,
-    extensions: ICreateStreamSolanaExt
+    extParams: ICreateStreamSolanaExt
   ): Promise<ICreateResult> {
-    const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
-      data,
-      extensions
-    );
+    const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extensions.sender.publicKey,
+      extParams.sender.publicKey,
       this.getCommitment(),
       metadata
     );
-    const signature = await signAndExecuteTransaction(this.connection, extensions.sender, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
@@ -281,20 +278,20 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async createUnchecked(
     data: ICreateStreamData,
-    extensions: ICreateStreamSolanaExt
+    extParams: ICreateStreamSolanaExt
   ): Promise<ICreateResult> {
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(
       data,
-      extensions
+      extParams
     );
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extensions.sender.publicKey,
+      extParams.sender.publicKey,
       this.getCommitment(),
       metadata
     );
-    const signature = await signAndExecuteTransaction(this.connection, extensions.sender, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
@@ -415,7 +412,13 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
-    { sender, metadataPubKeys, isNative = false }: ICreateStreamSolanaExt
+    {
+      sender,
+      metadataPubKeys,
+      isNative = false,
+      computePrice,
+      computeLimit,
+    }: ICreateStreamSolanaExt
   ): Promise<IMultiTransactionResult> {
     const { recipients } = data;
 
@@ -443,6 +446,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
         {
           sender,
           metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
+          computePrice,
+          computeLimit,
         }
       );
 
@@ -540,19 +545,19 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
-    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt
+    extParams: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareWithdawInstructions(
       { id, amount },
-      { invoker, checkTokenAccounts }
+      extParams
     );
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      invoker.publicKey,
+      extParams.invoker.publicKey,
       this.getCommitment()
     );
-    const signature = await signAndExecuteTransaction(this.connection, invoker, tx, hash);
+    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -608,21 +613,16 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async cancel(
     { id }: ICancelData,
-    extensions: IInteractStreamSolanaExt
+    extParams: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
-    const ixs = await this.prepareCancelInstructions({ id }, extensions);
+    const ixs = await this.prepareCancelInstructions({ id }, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extensions.invoker.publicKey,
+      extParams.invoker.publicKey,
       this.getCommitment()
     );
-    const signature = await signAndExecuteTransaction(
-      this.connection,
-      extensions.invoker,
-      tx,
-      hash
-    );
+    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -682,24 +682,19 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async transfer(
     { id, newRecipient }: ITransferData,
-    extensions: IInteractStreamSolanaExt
+    extParams: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTransferInstructions(
       { id, newRecipient },
-      extensions
+      extParams
     );
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extensions.invoker.publicKey,
+      extParams.invoker.publicKey,
       this.getCommitment()
     );
-    const signature = await signAndExecuteTransaction(
-      this.connection,
-      extensions.invoker,
-      tx,
-      hash
-    );
+    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -752,24 +747,19 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async topup(
     { id, amount }: ITopUpData,
-    extensions: ITopUpStreamSolanaExt
+    extParams: ITopUpStreamSolanaExt
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTopupInstructions(
       { id, amount },
-      extensions
+      extParams
     );
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extensions.invoker.publicKey,
+      extParams.invoker.publicKey,
       this.getCommitment()
     );
-    const signature = await signAndExecuteTransaction(
-      this.connection,
-      extensions.invoker,
-      tx,
-      hash
-    );
+    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
   }
@@ -888,21 +878,16 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async update(
     data: IUpdateData,
-    extensions: IInteractStreamSolanaExt
+    extParams: IInteractStreamSolanaExt
   ): Promise<ITransactionResult> {
-    const ixs = await this.prepareUpdateInstructions(data, extensions);
+    const ixs = await this.prepareUpdateInstructions(data, extParams);
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extensions.invoker.publicKey,
+      extParams.invoker.publicKey,
       this.getCommitment()
     );
-    const signature = await signAndExecuteTransaction(
-      this.connection,
-      extensions.invoker,
-      tx,
-      hash
-    );
+    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return {
       ixs,
@@ -979,7 +964,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
   private async prepareStreamInstructions(
     recipient: IRecipient,
     streamParams: IStreamConfig,
-    solanaExtendedConfig: ICreateStreamSolanaExt
+    extParams: ICreateStreamSolanaExt
   ): Promise<{
     ixs: TransactionInstruction[];
     metadata: Keypair | undefined;
@@ -1000,7 +985,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       partner,
     } = streamParams;
 
-    const { sender, metadataPubKeys } = solanaExtendedConfig;
+    const { sender, metadataPubKeys } = extParams;
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
