@@ -37,7 +37,7 @@ export async function wrappedSignAndExecuteTransaction(
     if (err instanceof Error) {
       const parsed = fromTxError(err);
       if (parsed) {
-        throw new ContractError(err, parsed.name);
+        throw new ContractError(err, parsed.name, parsed.msg);
       }
     }
     throw err;
