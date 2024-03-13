@@ -2,8 +2,9 @@ import BN from "bn.js";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Keypair } from "@solana/web3.js";
 import { ITransactionResult } from "@streamflow/common";
+import { ITransactionSolanaExt } from "@streamflow/common/solana";
 
-export interface IInteractSolanaExt {
+export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
 }
 

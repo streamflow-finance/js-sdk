@@ -158,7 +158,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   public async withdraw(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
-    { senderWallet, tokenId }: ITransactionSuiExt
+    { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
     const txb = new TransactionBlock();
