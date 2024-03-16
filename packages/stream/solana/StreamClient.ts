@@ -985,13 +985,16 @@ export default class SolanaStreamClient extends BaseStreamClient {
       partner,
     } = streamParams;
 
-    const { sender, metadataPubKeys } = extParams;
+    const { sender, metadataPubKeys, computeLimit, computePrice } = extParams;
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = [];
+    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+      computePrice,
+      computeLimit,
+    });
     const recipientPublicKey = new PublicKey(recipient.recipient);
     const mintPublicKey = new PublicKey(mint);
     const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
