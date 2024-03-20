@@ -29,7 +29,7 @@ import {
   IClawbackData,
   ICreateDistributorData,
   ICreateDistributorResult,
-  IGetClaimsData,
+  IGetClaimData,
   IGetDistributors,
   ICreateSolanaExt,
   IInteractSolanaExt,
@@ -223,10 +223,9 @@ export default class SolanaDistributorClient {
     return { ixs, txId: signature };
   }
 
-  public async getClaims(data: IGetClaimsData): Promise<(ClaimStatus | null)[]> {
-    const distributorPublicKey = new PublicKey(data.id);
-    const claimStatusPublicKeys = data.recipients.map((recipient) => {
-      return getClaimantStatusPda(this.programId, distributorPublicKey, new PublicKey(recipient));
+  public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | null)[]> {
+    const claimStatusPublicKeys = data.map(({ id, recipient }) => {
+      return getClaimantStatusPda(this.programId, new PublicKey(id), new PublicKey(recipient));
     });
     return ClaimStatus.fetchMultiple(this.connection, claimStatusPublicKeys, this.programId);
   }
