@@ -38,10 +38,10 @@ export interface IClawbackData {
   id: string;
 }
 
-export interface IGetClaimsData {
+export interface IGetClaimData {
   id: string;
 
-  recipients: string[];
+  recipient: string;
 }
 
 export interface IGetDistributors {
