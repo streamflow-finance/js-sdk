@@ -171,9 +171,7 @@ export default class SolanaDistributorClient {
       systemProgram: SystemProgram.programId,
     };
 
-    if (claimStatus) {
-      ixs.push(claimLocked(accounts, this.programId));
-    } else {
+    if (!claimStatus) {
       const args: NewClaimArgs = {
         amountLocked: data.amountLocked,
         amountUnlocked: data.amountUnlocked,
@@ -181,6 +179,8 @@ export default class SolanaDistributorClient {
       };
       ixs.push(newClaim(args, accounts, this.programId));
     }
+
+    ixs.push(claimLocked(accounts, this.programId));
 
     const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey, this.getCommitment());
     const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
