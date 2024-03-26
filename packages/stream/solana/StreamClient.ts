@@ -139,7 +139,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.connection,
       ixs,
       extParams.sender.publicKey,
-      this.getCommitment(),
+      undefined,
       metadata,
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
@@ -271,7 +271,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.connection,
       ixs,
       extParams.sender.publicKey,
-      this.getCommitment(),
+      undefined,
       metadata,
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
@@ -428,8 +428,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       });
     }
 
-    const commitment = typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
-    const hash = await this.connection.getLatestBlockhash(commitment);
+    const hash = await this.connection.getLatestBlockhash();
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
       const tx = new Transaction({
@@ -508,12 +507,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     extParams: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, extParams);
-    const { tx, hash } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment(),
-    );
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
@@ -570,12 +564,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async cancel({ id }: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareCancelInstructions({ id }, extParams);
-    const { tx, hash } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment(),
-    );
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
@@ -639,12 +628,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     extParams: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTransferInstructions({ id, newRecipient }, extParams);
-    const { tx, hash } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment(),
-    );
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
@@ -698,12 +682,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async topup({ id, amount }: ITopUpData, extParams: ITopUpStreamSolanaExt): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTopupInstructions({ id, amount }, extParams);
-    const { tx, hash } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment(),
-    );
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return { ixs, txId: signature };
@@ -820,12 +799,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async update(data: IUpdateData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareUpdateInstructions(data, extParams);
-    const { tx, hash } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment(),
-    );
+    const { tx, hash } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
     return {
