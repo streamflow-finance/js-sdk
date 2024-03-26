@@ -146,7 +146,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.connection,
       ixs,
       extParams.sender.publicKey,
-      this.getCommitment(),
+      undefined,
+
       metadata
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
@@ -288,7 +289,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.connection,
       ixs,
       extParams.sender.publicKey,
-      this.getCommitment(),
+      undefined,
       metadata
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, hash);
@@ -457,9 +458,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       instructionsBatch.push({ ixs, metadata, recipient: recipientData.recipient });
     }
 
-    const commitment =
-      typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
-    const hash = await this.connection.getLatestBlockhash(commitment);
+    const hash = await this.connection.getLatestBlockhash();
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
       const tx = new Transaction({
@@ -554,8 +553,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment()
+      extParams.invoker.publicKey
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -619,8 +617,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment()
+      extParams.invoker.publicKey
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -691,8 +688,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment()
+      extParams.invoker.publicKey
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -756,8 +752,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment()
+      extParams.invoker.publicKey
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
@@ -884,8 +879,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { tx, hash } = await prepareTransaction(
       this.connection,
       ixs,
-      extParams.invoker.publicKey,
-      this.getCommitment()
+      extParams.invoker.publicKey
     );
     const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, hash);
 
