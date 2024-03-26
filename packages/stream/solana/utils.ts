@@ -126,7 +126,13 @@ export function isSignerKeypair(
 }
 
 /**
- * Creates a Transaction with given instructions and optionally signs it
+ * Creates a Transaction with given instructions and optionally signs it.
+ * Be careful when passing `commitment` as for `confirmed` blockhash it always returns blockheight + 300 in `lastValidBlockHeight`
+ * And if you use this blockheight to confirm the transaction it could happen so that transaction is successfully executed
+ * But because `confirmTransaction` waits for only a minute it considers tx as expired as it could be that 300 blocks won't pass in a minute
+ * https://solana.stackexchange.com/questions/6238/why-is-lastvalidblockheight-300-blocks-ahead-than-current-blockheight-if-hashes
+ * https://solana.com/docs/core/transactions/retry
+ * It might be better to rely on `commitment` level that you pass to `Connection` instance of Solana client as it will be used when fetching blockheight on transaction confirmation
  * @param connection - Solana client connection
  * @param ixs - Instructions to add to the Transaction
  * @param payer - PublicKey of payer
