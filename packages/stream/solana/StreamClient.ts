@@ -902,7 +902,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs: TransactionInstruction[] = this.prepareBaseInstructions({
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });

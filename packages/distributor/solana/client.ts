@@ -211,7 +211,7 @@ export default class SolanaDistributorClient {
       distributor: distributorPublicKey,
       from: distributor.tokenVault,
       to: distributor.clawbackReceiver,
-      claimant: invoker.publicKey,
+      admin: invoker.publicKey,
       mint: distributor.mint,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,

@@ -1,4 +1,6 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 import { PROGRAM_ID } from "../programId";
 
@@ -9,11 +11,8 @@ export interface ClawbackAccounts {
   from: PublicKey;
   /** The Clawback token account. */
   to: PublicKey;
-  /**
-   * Claimant account
-   * Anyone can claw back the funds if clawback is done at least a day after vesting has ended
-   */
-  claimant: PublicKey;
+  /** Only Admin can trigger the clawback of funds */
+  admin: PublicKey;
   mint: PublicKey;
   /** The [System] program. */
   systemProgram: PublicKey;
@@ -21,12 +20,12 @@ export interface ClawbackAccounts {
   tokenProgram: PublicKey;
 }
 
-export function clawback(accounts: ClawbackAccounts, programId: PublicKey = PROGRAM_ID): TransactionInstruction {
+export function clawback(accounts: ClawbackAccounts, programId: PublicKey = PROGRAM_ID) {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.from, isSigner: false, isWritable: true },
     { pubkey: accounts.to, isSigner: false, isWritable: true },
-    { pubkey: accounts.claimant, isSigner: true, isWritable: false },
+    { pubkey: accounts.admin, isSigner: true, isWritable: true },
     { pubkey: accounts.mint, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
