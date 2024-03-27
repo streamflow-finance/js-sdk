@@ -180,7 +180,7 @@ export default class SolanaDistributorClient {
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    if (data.amountLocked.gt(new BN("0"))) {
+    if (data.amountLocked.gtn(0)) {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
