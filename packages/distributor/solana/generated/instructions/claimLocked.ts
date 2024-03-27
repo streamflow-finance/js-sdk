@@ -1,4 +1,6 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 import { PROGRAM_ID } from "../programId";
 
@@ -22,7 +24,7 @@ export interface ClaimLockedAccounts {
   tokenProgram: PublicKey;
 }
 
-export function claimLocked(accounts: ClaimLockedAccounts, programId: PublicKey = PROGRAM_ID): TransactionInstruction {
+export function claimLocked(accounts: ClaimLockedAccounts, programId: PublicKey = PROGRAM_ID) {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.claimStatus, isSigner: false, isWritable: true },

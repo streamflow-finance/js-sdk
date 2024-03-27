@@ -1,6 +1,6 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js";
-import BN from "bn.js";
-import * as borsh from "@coral-xyz/borsh";
+import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 import { PROGRAM_ID } from "../programId";
 
@@ -35,11 +35,7 @@ export const layout = borsh.struct([
   borsh.vec(borsh.array(borsh.u8(), 32), "proof"),
 ]);
 
-export function newClaim(
-  args: NewClaimArgs,
-  accounts: NewClaimAccounts,
-  programId: PublicKey = PROGRAM_ID,
-): TransactionInstruction {
+export function newClaim(args: NewClaimArgs, accounts: NewClaimAccounts, programId: PublicKey = PROGRAM_ID) {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.claimStatus, isSigner: false, isWritable: true },

@@ -1,6 +1,5 @@
 export type CustomError =
   | InsufficientUnlockedTokens
-  | StartTooFarInFuture
   | InvalidProof
   | ExceededMaxClaim
   | MaxNodesExceeded
@@ -8,17 +7,17 @@ export type CustomError =
   | OwnerMismatch
   | ClawbackBeforeStart
   | ClawbackAlreadyClaimed
-  | InsufficientClawbackDelay
   | SameClawbackReceiver
+  | ClawbackReceiverIsTokenVault
   | SameAdmin
   | ClaimExpired
   | ArithmeticError
   | StartTimestampAfterEnd
   | TimestampsNotInFuture
-  | InvalidVersion
   | InvalidMint
   | ClaimIsClosed
-  | ClaimsAreNotClosable;
+  | ClaimsAreNotClosable
+  | InvalidUnlockPeriod;
 
 export class InsufficientUnlockedTokens extends Error {
   static readonly code = 6000;
@@ -34,269 +33,255 @@ export class InsufficientUnlockedTokens extends Error {
   }
 }
 
-export class StartTooFarInFuture extends Error {
+export class InvalidProof extends Error {
   static readonly code = 6001;
 
   readonly code = 6001;
-
-  readonly name = "StartTooFarInFuture";
-
-  readonly msg = "Deposit Start too far in future";
-
-  constructor(readonly logs?: string[]) {
-    super("6001: Deposit Start too far in future");
-  }
-}
-
-export class InvalidProof extends Error {
-  static readonly code = 6002;
-
-  readonly code = 6002;
 
   readonly name = "InvalidProof";
 
   readonly msg = "Invalid Merkle proof";
 
   constructor(readonly logs?: string[]) {
-    super("6002: Invalid Merkle proof");
+    super("6001: Invalid Merkle proof");
   }
 }
 
 export class ExceededMaxClaim extends Error {
-  static readonly code = 6003;
+  static readonly code = 6002;
 
-  readonly code = 6003;
+  readonly code = 6002;
 
   readonly name = "ExceededMaxClaim";
 
   readonly msg = "Exceeded maximum claim amount";
 
   constructor(readonly logs?: string[]) {
-    super("6003: Exceeded maximum claim amount");
+    super("6002: Exceeded maximum claim amount");
   }
 }
 
 export class MaxNodesExceeded extends Error {
-  static readonly code = 6004;
+  static readonly code = 6003;
 
-  readonly code = 6004;
+  readonly code = 6003;
 
   readonly name = "MaxNodesExceeded";
 
   readonly msg = "Exceeded maximum node count";
 
   constructor(readonly logs?: string[]) {
-    super("6004: Exceeded maximum node count");
+    super("6003: Exceeded maximum node count");
   }
 }
 
 export class Unauthorized extends Error {
-  static readonly code = 6005;
+  static readonly code = 6004;
 
-  readonly code = 6005;
+  readonly code = 6004;
 
   readonly name = "Unauthorized";
 
   readonly msg = "Account is not authorized to execute this instruction";
 
   constructor(readonly logs?: string[]) {
-    super("6005: Account is not authorized to execute this instruction");
+    super("6004: Account is not authorized to execute this instruction");
   }
 }
 
 export class OwnerMismatch extends Error {
-  static readonly code = 6006;
+  static readonly code = 6005;
 
-  readonly code = 6006;
+  readonly code = 6005;
 
   readonly name = "OwnerMismatch";
 
   readonly msg = "Token account owner did not match intended owner";
 
   constructor(readonly logs?: string[]) {
-    super("6006: Token account owner did not match intended owner");
+    super("6005: Token account owner did not match intended owner");
   }
 }
 
 export class ClawbackBeforeStart extends Error {
-  static readonly code = 6007;
+  static readonly code = 6006;
 
-  readonly code = 6007;
+  readonly code = 6006;
 
   readonly name = "ClawbackBeforeStart";
 
   readonly msg = "Attempted clawback before start";
 
   constructor(readonly logs?: string[]) {
-    super("6007: Attempted clawback before start");
+    super("6006: Attempted clawback before start");
   }
 }
 
 export class ClawbackAlreadyClaimed extends Error {
-  static readonly code = 6008;
+  static readonly code = 6007;
 
-  readonly code = 6008;
+  readonly code = 6007;
 
   readonly name = "ClawbackAlreadyClaimed";
 
   readonly msg = "Clawback already claimed";
 
   constructor(readonly logs?: string[]) {
-    super("6008: Clawback already claimed");
-  }
-}
-
-export class InsufficientClawbackDelay extends Error {
-  static readonly code = 6009;
-
-  readonly code = 6009;
-
-  readonly name = "InsufficientClawbackDelay";
-
-  readonly msg = "Clawback start must be at least one day after vesting end";
-
-  constructor(readonly logs?: string[]) {
-    super("6009: Clawback start must be at least one day after vesting end");
+    super("6007: Clawback already claimed");
   }
 }
 
 export class SameClawbackReceiver extends Error {
-  static readonly code = 6010;
+  static readonly code = 6008;
 
-  readonly code = 6010;
+  readonly code = 6008;
 
   readonly name = "SameClawbackReceiver";
 
   readonly msg = "New and old Clawback receivers are identical";
 
   constructor(readonly logs?: string[]) {
-    super("6010: New and old Clawback receivers are identical");
+    super("6008: New and old Clawback receivers are identical");
+  }
+}
+
+export class ClawbackReceiverIsTokenVault extends Error {
+  static readonly code = 6009;
+
+  readonly code = 6009;
+
+  readonly name = "ClawbackReceiverIsTokenVault";
+
+  readonly msg = "Clawback receiver can not be the Token Vault";
+
+  constructor(readonly logs?: string[]) {
+    super("6009: Clawback receiver can not be the Token Vault");
   }
 }
 
 export class SameAdmin extends Error {
-  static readonly code = 6011;
+  static readonly code = 6010;
 
-  readonly code = 6011;
+  readonly code = 6010;
 
   readonly name = "SameAdmin";
 
   readonly msg = "New and old admin are identical";
 
   constructor(readonly logs?: string[]) {
-    super("6011: New and old admin are identical");
+    super("6010: New and old admin are identical");
   }
 }
 
 export class ClaimExpired extends Error {
-  static readonly code = 6012;
+  static readonly code = 6011;
 
-  readonly code = 6012;
+  readonly code = 6011;
 
   readonly name = "ClaimExpired";
 
   readonly msg = "Claim window expired";
 
   constructor(readonly logs?: string[]) {
-    super("6012: Claim window expired");
+    super("6011: Claim window expired");
   }
 }
 
 export class ArithmeticError extends Error {
-  static readonly code = 6013;
+  static readonly code = 6012;
 
-  readonly code = 6013;
+  readonly code = 6012;
 
   readonly name = "ArithmeticError";
 
   readonly msg = "Arithmetic Error (overflow/underflow)";
 
   constructor(readonly logs?: string[]) {
-    super("6013: Arithmetic Error (overflow/underflow)");
+    super("6012: Arithmetic Error (overflow/underflow)");
   }
 }
 
 export class StartTimestampAfterEnd extends Error {
-  static readonly code = 6014;
+  static readonly code = 6013;
 
-  readonly code = 6014;
+  readonly code = 6013;
 
   readonly name = "StartTimestampAfterEnd";
 
   readonly msg = "Start Timestamp cannot be after end Timestamp";
 
   constructor(readonly logs?: string[]) {
-    super("6014: Start Timestamp cannot be after end Timestamp");
+    super("6013: Start Timestamp cannot be after end Timestamp");
   }
 }
 
 export class TimestampsNotInFuture extends Error {
-  static readonly code = 6015;
+  static readonly code = 6014;
 
-  readonly code = 6015;
+  readonly code = 6014;
 
   readonly name = "TimestampsNotInFuture";
 
   readonly msg = "Timestamps cannot be in the past";
 
   constructor(readonly logs?: string[]) {
-    super("6015: Timestamps cannot be in the past");
-  }
-}
-
-export class InvalidVersion extends Error {
-  static readonly code = 6016;
-
-  readonly code = 6016;
-
-  readonly name = "InvalidVersion";
-
-  readonly msg = "Airdrop Version Mismatch";
-
-  constructor(readonly logs?: string[]) {
-    super("6016: Airdrop Version Mismatch");
+    super("6014: Timestamps cannot be in the past");
   }
 }
 
 export class InvalidMint extends Error {
-  static readonly code = 6017;
+  static readonly code = 6015;
 
-  readonly code = 6017;
+  readonly code = 6015;
 
   readonly name = "InvalidMint";
 
   readonly msg = "Invalid Mint";
 
   constructor(readonly logs?: string[]) {
-    super("6017: Invalid Mint");
+    super("6015: Invalid Mint");
   }
 }
 
 export class ClaimIsClosed extends Error {
-  static readonly code = 6018;
+  static readonly code = 6016;
 
-  readonly code = 6018;
+  readonly code = 6016;
 
   readonly name = "ClaimIsClosed";
 
   readonly msg = "Claim is closed";
 
   constructor(readonly logs?: string[]) {
-    super("6018: Claim is closed");
+    super("6016: Claim is closed");
   }
 }
 
 export class ClaimsAreNotClosable extends Error {
-  static readonly code = 6019;
+  static readonly code = 6017;
 
-  readonly code = 6019;
+  readonly code = 6017;
 
   readonly name = "ClaimsAreNotClosable";
 
   readonly msg = "Claims are not closable";
 
   constructor(readonly logs?: string[]) {
-    super("6019: Claims are not closable");
+    super("6017: Claims are not closable");
+  }
+}
+
+export class InvalidUnlockPeriod extends Error {
+  static readonly code = 6018;
+
+  readonly code = 6018;
+
+  readonly name = "InvalidUnlockPeriod";
+
+  readonly msg = "Invalid unlock period";
+
+  constructor(readonly logs?: string[]) {
+    super("6018: Invalid unlock period");
   }
 }
 
@@ -305,43 +290,41 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
     case 6000:
       return new InsufficientUnlockedTokens(logs);
     case 6001:
-      return new StartTooFarInFuture(logs);
-    case 6002:
       return new InvalidProof(logs);
-    case 6003:
+    case 6002:
       return new ExceededMaxClaim(logs);
-    case 6004:
+    case 6003:
       return new MaxNodesExceeded(logs);
-    case 6005:
+    case 6004:
       return new Unauthorized(logs);
-    case 6006:
+    case 6005:
       return new OwnerMismatch(logs);
-    case 6007:
+    case 6006:
       return new ClawbackBeforeStart(logs);
-    case 6008:
+    case 6007:
       return new ClawbackAlreadyClaimed(logs);
-    case 6009:
-      return new InsufficientClawbackDelay(logs);
-    case 6010:
+    case 6008:
       return new SameClawbackReceiver(logs);
-    case 6011:
+    case 6009:
+      return new ClawbackReceiverIsTokenVault(logs);
+    case 6010:
       return new SameAdmin(logs);
-    case 6012:
+    case 6011:
       return new ClaimExpired(logs);
-    case 6013:
+    case 6012:
       return new ArithmeticError(logs);
-    case 6014:
+    case 6013:
       return new StartTimestampAfterEnd(logs);
-    case 6015:
+    case 6014:
       return new TimestampsNotInFuture(logs);
-    case 6016:
-      return new InvalidVersion(logs);
-    case 6017:
+    case 6015:
       return new InvalidMint(logs);
-    case 6018:
+    case 6016:
       return new ClaimIsClosed(logs);
-    case 6019:
+    case 6017:
       return new ClaimsAreNotClosable(logs);
+    case 6018:
+      return new InvalidUnlockPeriod(logs);
   }
 
   return null;
