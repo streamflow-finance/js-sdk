@@ -180,7 +180,9 @@ export default class SolanaDistributorClient {
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    ixs.push(claimLocked(accounts, this.programId));
+    if (data.amountLocked.gt(new BN("0"))) {
+      ixs.push(claimLocked(accounts, this.programId));
+    }
 
     const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
     const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
