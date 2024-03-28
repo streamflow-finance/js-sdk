@@ -17,15 +17,9 @@ export const PROGRAM_ID = {
   [ICluster.Local]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
 };
 
-export const STREAMFLOW_PROGRAM_ID = "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m";
-
-export const STREAMFLOW_DEVNET_PROGRAM_ID = "FGjLaVo5zLGdzCxMo9gu9tXr1kzTToKd8C8K7YS5hNM1";
-
 export const PARTNER_ORACLE_PROGRAM_ID = "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa";
 
-export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey(
-  "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
-);
+export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 
 export const WITHDRAWOR_PUBLIC_KEY = new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u");
 
@@ -40,7 +34,11 @@ export const DEFAULT_STREAMFLOW_FEE = 0.99;
 export const AIRDROP_AMOUNT = 1; // 1 SOL is the cap on the testnet
 
 export const PARTNER_SCHEMA = {
-  struct: { pubkey: { array: { type: "u8", len: 32 } }, partner_fee: "f32", strm_fee: "f32" },
+  struct: {
+    pubkey: { array: { type: "u8", len: 32 } },
+    partner_fee: "f32",
+    strm_fee: "f32",
+  },
 };
 export const PARTNERS_SCHEMA = { array: { type: PARTNER_SCHEMA } };
 

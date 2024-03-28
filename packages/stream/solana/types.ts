@@ -1,187 +1,36 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import {
-  AccountInfo,
-  Connection,
-  PublicKey,
-  Keypair,
-  TransactionSignature,
-  TransactionInstruction,
-  Transaction,
-} from "@solana/web3.js";
+import { AccountInfo, PublicKey, Keypair, Transaction } from "@solana/web3.js";
+import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { IRecipient, Stream, StreamDirection, StreamType } from "../common/types";
+import { IRecipient, Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
-
-export { WalletAdapterNetwork as Cluster } from "@solana/wallet-adapter-base";
 
 export interface Account {
   pubkey: PublicKey;
   account: AccountInfo<Buffer>;
 }
 
-export interface ICreateStreamSolanaExt {
+export interface ICreateSolanaExt {
   sender: SignerWalletAdapter | Keypair;
+  isNative?: boolean;
+}
+
+export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSolanaExt {
   // allow custom Metadata Account to be passed, ephemeral signer is most cases, accepts array to be compatible in createMultiple
   metadataPubKeys?: PublicKey[];
   partner?: string | null;
-  isNative?: boolean;
-  computePrice?: number;
-  computeLimit?: number;
 }
 
-export interface IInteractStreamSolanaExt {
+export interface IInteractStreamSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
   checkTokenAccounts?: boolean;
-  computePrice?: number;
-  computeLimit?: number;
 }
 
-export interface ITopUpStreamSolanaExt {
+export interface ITopUpStreamSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
   isNative?: boolean;
-  computePrice?: number;
-  computeLimit?: number;
-}
-
-export interface ITransactionSolanaExt {
-  computePrice?: number;
-  computeLimit?: number;
-}
-
-export interface CreateStreamData {
-  recipient: string;
-  mint: string;
-  start: number;
-  depositedAmount: BN;
-  period: number;
-  cliff: number;
-  cliffAmount: BN;
-  amountPerPeriod: BN;
-  name: string;
-  canTopup: boolean;
-  cancelableBySender: boolean;
-  cancelableByRecipient: boolean;
-  transferableBySender: boolean;
-  transferableByRecipient: boolean;
-  automaticWithdrawal?: boolean;
-  withdrawalFrequency?: number;
-}
-
-export interface MultiRecipient {
-  recipient: string;
-  depositedAmount: BN;
-  name: string;
-  cliffAmount: BN;
-  amountPerPeriod: BN;
-}
-
-export interface CreateMultiData {
-  recipientsData: MultiRecipient[];
-  mint: string;
-  start: number;
-  period: number;
-  cliff: number;
-  canTopup: boolean;
-  cancelableBySender: boolean;
-  cancelableByRecipient: boolean;
-  transferableBySender: boolean;
-  transferableByRecipient: boolean;
-  automaticWithdrawal?: boolean;
-  withdrawalFrequency?: number;
-}
-
-export interface CreateStreamParams extends CreateStreamData {
-  connection: Connection;
-  sender: SignerWalletAdapter;
-  partner?: string;
-}
-
-export interface CreateParams extends CreateStreamData {
-  sender: SignerWalletAdapter | Keypair;
-  partner?: string | null;
-  isNative?: boolean;
-}
-
-export interface CreateMultiParams extends CreateMultiData {
-  sender: SignerWalletAdapter | Keypair;
-  partner?: string | null;
-  isNative?: boolean;
-}
-
-export interface WithdrawStreamData {
-  id: string;
-  amount: BN;
-}
-
-export interface WithdrawStreamParams extends WithdrawStreamData {
-  connection: Connection;
-  invoker: SignerWalletAdapter;
-}
-
-export interface WithdrawParams extends WithdrawStreamData {
-  invoker: SignerWalletAdapter | Keypair;
-}
-
-export interface TopupStreamData {
-  id: string;
-  amount: BN;
-}
-
-export interface TopupStreamParams extends TopupStreamData {
-  connection: Connection;
-  invoker: SignerWalletAdapter;
-}
-
-export interface TopupParams extends TopupStreamData {
-  invoker: SignerWalletAdapter | Keypair;
-  isNative?: boolean;
-}
-
-export interface CancelStreamData {
-  id: string;
-}
-
-export interface CancelStreamParams extends CancelStreamData {
-  connection: Connection;
-  invoker: SignerWalletAdapter;
-}
-
-export interface CancelParams extends CancelStreamData {
-  invoker: SignerWalletAdapter | Keypair;
-}
-
-export interface TransferStreamData {
-  id: string;
-  recipientId: string;
-}
-
-export interface TransferStreamParams extends TransferStreamData {
-  connection: Connection;
-  invoker: SignerWalletAdapter;
-}
-
-export interface TransferParams extends TransferStreamData {
-  invoker: SignerWalletAdapter | Keypair;
-}
-
-export interface GetStreamParams {
-  connection: Connection;
-  id: string;
-}
-
-export interface GetStreamsParams {
-  connection: Connection;
-  wallet: PublicKey;
-  type?: StreamType;
-  direction?: StreamDirection;
-}
-
-export interface GetAllParams {
-  wallet: PublicKey;
-  type?: StreamType;
-  direction?: StreamDirection;
 }
 
 export class Contract implements Stream {
@@ -374,80 +223,8 @@ export interface DecodedStream {
   fundsUnlockedAtLastRateChange: BN;
 }
 
-export interface TransactionResponse {
-  tx: TransactionSignature;
-}
-
-export interface CreateStreamResponse extends TransactionResponse {
-  id: string;
-}
-
-export interface TxResponse {
-  ixs: TransactionInstruction[];
-  tx: TransactionSignature;
-}
-
-export interface CreateResponse extends TxResponse {
-  metadata: Keypair;
-}
-
 export interface MetadataRecipientHashMap {
   [metadataPubKey: string]: IRecipient;
-}
-
-export interface CreateMultiError {
-  recipient: string;
-  error: string;
-}
-
-export interface CreateMultiResponse {
-  txs: TransactionSignature[];
-  metadatas: Keypair[];
-  metadataToRecipient: MetadataRecipientHashMap;
-  errors: CreateMultiError[];
-}
-
-export enum TransferCancelOptions {
-  Recipient = "recipient",
-  Sender = "sender",
-  Both = "both",
-  Neither = "neither",
-}
-
-export interface Recipient {
-  recipient: string;
-  recipientEmail: string;
-  name: string;
-  depositedAmount: number;
-}
-
-export interface CreateMultipleStreamsValues {
-  releaseAmount: number;
-  email: string;
-  tokenSymbol: string;
-  startDate: string;
-  startTime: string;
-  releaseFrequencyCounter: number;
-  whoCanTransfer: TransferCancelOptions;
-  whoCanCancel: TransferCancelOptions;
-  releaseFrequencyPeriod: number;
-  automaticWithdrawal: boolean;
-  withdrawalFrequencyCounter: number;
-  withdrawalFrequencyPeriod: number;
-  referral: string;
-  recipients: Recipient[];
-}
-
-export interface CheckAssociatedTokenAccountsData {
-  sender: PublicKey;
-  senderTokens: PublicKey;
-  recipient: PublicKey;
-  recipientTokens: PublicKey;
-  partner: PublicKey;
-  partnerTokens: PublicKey;
-  streamflowTreasury: PublicKey;
-  streamflowTreasuryTokens: PublicKey;
-  mint: PublicKey;
 }
 
 export interface BatchItem {
@@ -461,11 +238,6 @@ export interface BatchItemSuccess extends BatchItem {
 
 export interface BatchItemError extends BatchItem {
   error: string;
-}
-
-export interface AtaParams {
-  mint: PublicKey;
-  owner: PublicKey;
 }
 
 export type BatchItemResult = BatchItemSuccess | BatchItemError;

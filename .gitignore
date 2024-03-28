@@ -19,3 +19,4 @@ dist/
 .DS_Store
 packages/.DS_Store
 *.tgz
+docs/
