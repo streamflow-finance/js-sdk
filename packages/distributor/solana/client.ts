@@ -121,7 +121,7 @@ export default class SolanaDistributorClient {
     const endVestingTs = args.endVestingTs.eqn(0) ? nowTs : args.endVestingTs;
     const startVestingTs = args.startVestingTs.eqn(0) ? nowTs : args.startVestingTs;
     if (endVestingTs.gt(startVestingTs) && endVestingTs.sub(startVestingTs).lt(args.unlockPeriod)) {
-      throw new Error("Unlock Period can not be less than total Vesting duration!");
+      throw new Error("The unlock period cannot be longer than the total vesting duration!");
     }
 
     ixs.push(newDistributor(args, accounts, this.programId));
