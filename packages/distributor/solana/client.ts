@@ -117,6 +117,13 @@ export default class SolanaDistributorClient {
       ixs.push(...(await prepareWrappedAccount(this.connection, invoker.publicKey, data.maxTotalClaim)));
     }
 
+    const nowTs = new BN(Math.floor(Date.now() / 1000));
+    const endVestingTs = args.endVestingTs.eqn(0) ? nowTs : args.endVestingTs;
+    const startVestingTs = args.startVestingTs.eqn(0) ? nowTs : args.startVestingTs;
+    if (endVestingTs.gt(startVestingTs) && endVestingTs.sub(startVestingTs).lt(args.unlockPeriod)) {
+      throw new Error("The unlock period cannot be longer than the total vesting duration!");
+    }
+
     ixs.push(newDistributor(args, accounts, this.programId));
     ixs.push(
       createTransferCheckedInstruction(
@@ -180,7 +187,8 @@ export default class SolanaDistributorClient {
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    if (data.amountLocked.gtn(0)) {
+    const nowTs = new BN(Math.floor(Date.now() / 1000));
+    if (claimStatus || (data.amountLocked.gtn(0) && nowTs.sub(distributor.startTs).gte(distributor.unlockPeriod))) {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
