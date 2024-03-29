@@ -21,4 +21,5 @@ export interface CheckAssociatedTokenAccountsData {
 export interface AtaParams {
   mint: PublicKey;
   owner: PublicKey;
+  programId?: PublicKey;
 }

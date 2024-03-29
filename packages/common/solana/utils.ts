@@ -1,4 +1,11 @@
-import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+  unpackMint,
+  Mint,
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import {
   BlockhashWithExpiryBlockHeight,
@@ -146,27 +153,45 @@ export async function signAndExecuteTransaction(
  * Shorthand call signature for getAssociatedTokenAddress, with allowance for address to be offCurve
  * @param {PublicKey} mint - SPL token Mint address.
  * @param {PublicKey} owner - Owner of the Associated Token Address
+ * @param {PublicKey} programId - Program ID of the mint
  * @return {Promise<PublicKey>} - Associated Token Address
  */
-export function ata(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
-  return getAssociatedTokenAddress(mint, owner, true);
+export function ata(mint: PublicKey, owner: PublicKey, programId?: PublicKey): Promise<PublicKey> {
+  return getAssociatedTokenAddress(mint, owner, true, programId);
 }
 
 /**
  * Function that checks whether ATA exists for each provided owner
  * @param connection - Solana client connection
- * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
- * @returns Array of boolean where each members corresponds to owners member
+ * @param paramsBatch - Array of Params for each ATA account: {mint, owner}
+ * @returns Array of boolean where each member corresponds to an owner
  */
 export async function ataBatchExist(connection: Connection, paramsBatch: AtaParams[]): Promise<boolean[]> {
   const tokenAccounts = await Promise.all(
-    paramsBatch.map(async ({ mint, owner }) => {
-      const pubkey = await ata(mint, owner);
-      return pubkey;
+    paramsBatch.map(async ({ mint, owner, programId }) => {
+      return ata(mint, owner, programId);
     }),
   );
   const response = await connection.getMultipleAccountsInfo(tokenAccounts);
   return response.map((accInfo) => !!accInfo);
+}
+
+export async function enrichAtaParams(connection: Connection, paramsBatch: AtaParams[]): Promise<AtaParams[]> {
+  const programIdByMint: { [key: string]: PublicKey } = {};
+  return Promise.all(
+    paramsBatch.map(async (params) => {
+      if (params.programId) {
+        return params;
+      }
+      const mintStr = params.mint.toString();
+      if (!(mintStr in programIdByMint)) {
+        const { programId } = await getMintAndProgram(connection, params.mint);
+        programIdByMint[mintStr] = programId;
+      }
+      params.programId = programIdByMint[mintStr];
+      return params;
+    }),
+  );
 }
 
 /**
@@ -184,9 +209,10 @@ export async function generateCreateAtaBatchTx(
   tx: Transaction;
   hash: BlockhashWithExpiryBlockHeight;
 }> {
+  paramsBatch = await enrichAtaParams(connection, paramsBatch);
   const ixs: TransactionInstruction[] = await Promise.all(
-    paramsBatch.map(async ({ mint, owner }) => {
-      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
+    paramsBatch.map(async ({ mint, owner, programId }) => {
+      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint, programId);
     }),
   );
   const hash = await connection.getLatestBlockhash();
@@ -210,7 +236,11 @@ export async function createAtaBatch(
   invoker: Keypair | SignerWalletAdapter,
   paramsBatch: AtaParams[],
 ): Promise<string> {
-  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
+  const { tx, hash } = await generateCreateAtaBatchTx(
+    connection,
+    invoker.publicKey!,
+    await enrichAtaParams(connection, paramsBatch),
+  );
   return signAndExecuteTransaction(connection, invoker, tx, hash);
 }
 
@@ -220,6 +250,7 @@ export async function createAtaBatch(
  * @param owners - Array of ATA owners
  * @param mint - Mint for which ATA will be checked
  * @param invoker - Transaction invoker and payer
+ * @param programId - Program ID of the Mint
  * @returns Array of Transaction Instructions that should be added to a transaction
  */
 export async function checkOrCreateAtaBatch(
@@ -227,17 +258,18 @@ export async function checkOrCreateAtaBatch(
   owners: PublicKey[],
   mint: PublicKey,
   invoker: SignerWalletAdapter | Keypair,
+  programId?: PublicKey,
 ): Promise<TransactionInstruction[]> {
   const ixs: TransactionInstruction[] = [];
   // TODO: optimize fetching and maps/arrays
   const atas: PublicKey[] = [];
   for (const owner of owners) {
-    atas.push(await ata(mint, owner));
+    atas.push(await ata(mint, owner, programId));
   }
   const response = await connection.getMultipleAccountsInfo(atas);
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
-      ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint));
+      ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint, programId));
     }
   }
   return ixs;
@@ -262,4 +294,29 @@ export function prepareBaseInstructions(
   }
 
   return ixs;
+}
+
+/**
+ * Retrieve information about a mint and its program ID, support all Token Programs.
+ *
+ * @param connection Connection to use
+ * @param address    Mint account
+ * @param commitment Desired level of commitment for querying the state
+ *
+ * @return Mint information
+ */
+export async function getMintAndProgram(
+  connection: Connection,
+  address: PublicKey,
+  commitment?: Commitment,
+): Promise<{ mint: Mint; programId: PublicKey }> {
+  const accountInfo = await connection.getAccountInfo(address, commitment);
+  let programId = accountInfo?.owner;
+  if (!programId?.equals(TOKEN_PROGRAM_ID) && !programId?.equals(TOKEN_2022_PROGRAM_ID)) {
+    programId = TOKEN_PROGRAM_ID;
+  }
+  return {
+    mint: unpackMint(address, accountInfo, programId),
+    programId: programId!,
+  };
 }
