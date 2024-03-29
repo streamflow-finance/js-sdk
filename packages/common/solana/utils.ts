@@ -66,12 +66,6 @@ export function isSignerKeypair(walletOrKeypair: Keypair | SignerWalletAdapter):
 
 /**
  * Creates a Transaction with given instructions and optionally signs it.
- * Be careful when passing `commitment` as for `confirmed` blockhash it always returns blockheight + 300 in `lastValidBlockHeight`
- * And if you use this blockheight to confirm the transaction it could happen so that transaction is successfully executed
- * But because `confirmTransaction` waits for only a minute it considers tx as expired as it could be that 300 blocks won't pass in a minute
- * https://solana.stackexchange.com/questions/6238/why-is-lastvalidblockheight-300-blocks-ahead-than-current-blockheight-if-hashes
- * https://solana.com/docs/core/transactions/retry
- * It might be better to rely on `commitment` level that you pass to `Connection` instance of Solana client as it will be used when fetching blockheight on transaction confirmation
  * @param connection - Solana client connection
  * @param ixs - Instructions to add to the Transaction
  * @param payer - PublicKey of payer
@@ -118,6 +112,10 @@ export async function signTransaction(invoker: Keypair | SignerWalletAdapter, tx
 
 /**
  * Signs, sends and confirms Transaction
+ * Confirmation strategy is not 100% reliable here as in times of congestion there can be a case that tx is executed,
+ * but is not in `commitment` state and so it's not considered executed by the `sendAndConfirmRawTransaction` method,
+ * and it raises an expiry error even though transaction may be executed soon.
+ * So we add additional 50 blocks for checks to account for such issues.
  * @param connection - Solana client connection
  * @param invoker - Keypair used as signer
  * @param tx - Transaction instance
@@ -137,12 +135,11 @@ export async function signAndExecuteTransaction(
     throw Error("Error with transaction parameters.");
 
   const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
-    lastValidBlockHeight: hash.lastValidBlockHeight,
+    lastValidBlockHeight: hash.lastValidBlockHeight + 50,
     signature: bs58.encode(signedTx.signature),
     blockhash: hash.blockhash,
   };
-  const signature = await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
-  return signature;
+  return sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
 }
 
 /**
@@ -176,7 +173,7 @@ export async function ataBatchExist(connection: Connection, paramsBatch: AtaPara
  * Generates a Transaction to create ATA for an array of owners
  * @param connection - Solana client connection
  * @param payer - Transaction invoker, should be a signer
- * @param coparamsBatchnfigs - Array of Params for an each ATA account: {mint, owner}
+ * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
  * @returns Unsigned Transaction with create ATA instructions
  */
 export async function generateCreateAtaBatchTx(
