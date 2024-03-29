@@ -115,7 +115,7 @@ export async function signTransaction(invoker: Keypair | SignerWalletAdapter, tx
  * Confirmation strategy is not 100% reliable here as in times of congestion there can be a case that tx is executed,
  * but is not in `commitment` state and so it's not considered executed by the `sendAndConfirmRawTransaction` method,
  * and it raises an expiry error even though transaction may be executed soon.
- * So we add additional 150 blocks for checks to account for such issues.
+ * So we add additional 30 blocks for checks to account for such issues.
  * @param connection - Solana client connection
  * @param invoker - Keypair used as signer
  * @param tx - Transaction instance
@@ -135,7 +135,7 @@ export async function signAndExecuteTransaction(
     throw Error("Error with transaction parameters.");
 
   const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
-    lastValidBlockHeight: hash.lastValidBlockHeight + 150,
+    lastValidBlockHeight: hash.lastValidBlockHeight + 50,
     signature: bs58.encode(signedTx.signature),
     blockhash: hash.blockhash,
   };
