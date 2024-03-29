@@ -176,6 +176,24 @@ export async function ataBatchExist(connection: Connection, paramsBatch: AtaPara
   return response.map((accInfo) => !!accInfo);
 }
 
+export async function enrichAtaParams(connection: Connection, paramsBatch: AtaParams[]): Promise<AtaParams[]> {
+  const programIdByMint: { [key: string]: PublicKey } = {};
+  return Promise.all(
+    paramsBatch.map(async (params) => {
+      if (params.programId) {
+        return params;
+      }
+      const mintStr = params.mint.toString();
+      if (!(mintStr in programIdByMint)) {
+        const { programId } = await getMintAndProgram(connection, params.mint);
+        programIdByMint[mintStr] = programId;
+      }
+      params.programId = programIdByMint[mintStr];
+      return params;
+    }),
+  );
+}
+
 /**
  * Generates a Transaction to create ATA for an array of owners
  * @param connection - Solana client connection
@@ -191,9 +209,10 @@ export async function generateCreateAtaBatchTx(
   tx: Transaction;
   hash: BlockhashWithExpiryBlockHeight;
 }> {
+  paramsBatch = await enrichAtaParams(connection, paramsBatch);
   const ixs: TransactionInstruction[] = await Promise.all(
-    paramsBatch.map(async ({ mint, owner }) => {
-      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint);
+    paramsBatch.map(async ({ mint, owner, programId }) => {
+      return createAssociatedTokenAccountInstruction(payer, await ata(mint, owner), owner, mint, programId);
     }),
   );
   const hash = await connection.getLatestBlockhash();
@@ -217,7 +236,11 @@ export async function createAtaBatch(
   invoker: Keypair | SignerWalletAdapter,
   paramsBatch: AtaParams[],
 ): Promise<string> {
-  const { tx, hash } = await generateCreateAtaBatchTx(connection, invoker.publicKey!, paramsBatch);
+  const { tx, hash } = await generateCreateAtaBatchTx(
+    connection,
+    invoker.publicKey!,
+    await enrichAtaParams(connection, paramsBatch),
+  );
   return signAndExecuteTransaction(connection, invoker, tx, hash);
 }
 
