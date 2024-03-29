@@ -1,11 +1,5 @@
 import BN from "bn.js";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  NATIVE_MINT,
-  TOKEN_PROGRAM_ID,
-  createTransferCheckedInstruction,
-  getMint,
-} from "@solana/spl-token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, createTransferCheckedInstruction } from "@solana/spl-token";
 import {
   Connection,
   PublicKey,
@@ -21,6 +15,7 @@ import {
   prepareWrappedAccount,
   prepareBaseInstructions,
   prepareTransaction,
+  getMintAndProgram,
 } from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
@@ -86,10 +81,10 @@ export default class SolanaDistributorClient {
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, { computePrice, computeLimit });
     const mint = isNative ? NATIVE_MINT : new PublicKey(data.mint);
-    const mintAccount = await getMint(this.connection, mint);
+    const { mint: mintAccount, programId } = await getMintAndProgram(this.connection, mint);
     const distributorPublicKey = getDistributorPda(this.programId, mint, data.version);
-    const tokenVault = await ata(mint, distributorPublicKey);
-    const senderTokens = await ata(mint, invoker.publicKey);
+    const tokenVault = await ata(mint, distributorPublicKey, programId);
+    const senderTokens = await ata(mint, invoker.publicKey, programId);
 
     const args: NewDistributorArgs = {
       version: new BN(data.version, 10),
@@ -110,7 +105,7 @@ export default class SolanaDistributorClient {
       admin: invoker.publicKey,
       systemProgram: SystemProgram.programId,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: programId,
     };
 
     if (isNative) {
@@ -133,6 +128,8 @@ export default class SolanaDistributorClient {
         invoker.publicKey,
         BigInt(data.maxTotalClaim.toString()),
         mintAccount.decimals,
+        undefined,
+        programId,
       ),
     );
 
@@ -161,9 +158,12 @@ export default class SolanaDistributorClient {
       throw new Error("Couldn't get account info");
     }
 
+    const { programId } = await getMintAndProgram(this.connection, distributor.mint);
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, { computePrice, computeLimit });
-    ixs.push(...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker)));
-    const invokerTokens = await ata(distributor.mint, invoker.publicKey);
+    ixs.push(
+      ...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker, programId)),
+    );
+    const invokerTokens = await ata(distributor.mint, invoker.publicKey, programId);
     const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, invoker.publicKey);
     const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
 
@@ -174,7 +174,7 @@ export default class SolanaDistributorClient {
       to: invokerTokens,
       claimant: invoker.publicKey,
       mint: distributor.mint,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: programId,
       systemProgram: SystemProgram.programId,
     };
 
@@ -213,8 +213,11 @@ export default class SolanaDistributorClient {
       throw new Error("Couldn't get account info");
     }
 
+    const { programId } = await getMintAndProgram(this.connection, distributor.mint);
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, { computePrice, computeLimit });
-    ixs.push(...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker)));
+    ixs.push(
+      ...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker, programId)),
+    );
     const accounts: ClawbackAccounts = {
       distributor: distributorPublicKey,
       from: distributor.tokenVault,
@@ -222,7 +225,7 @@ export default class SolanaDistributorClient {
       admin: invoker.publicKey,
       mint: distributor.mint,
       systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: programId,
     };
 
     ixs.push(clawback(accounts, this.programId));
