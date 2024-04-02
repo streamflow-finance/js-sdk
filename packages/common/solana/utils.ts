@@ -18,10 +18,13 @@ import {
   sendAndConfirmRawTransaction,
   Transaction,
   TransactionInstruction,
+  TransactionExpiredBlockheightExceededError,
+  SignatureStatus,
 } from "@solana/web3.js";
 import bs58 from "bs58";
 
 import { Account, AtaParams, ITransactionSolanaExt } from "./types";
+import { sleep } from "../utils";
 
 /**
  * Wrapper function for Solana web3 getProgramAccounts with slightly better call interface
@@ -119,10 +122,6 @@ export async function signTransaction(invoker: Keypair | SignerWalletAdapter, tx
 
 /**
  * Signs, sends and confirms Transaction
- * Confirmation strategy is not 100% reliable here as in times of congestion there can be a case that tx is executed,
- * but is not in `commitment` state and so it's not considered executed by the `sendAndConfirmRawTransaction` method,
- * and it raises an expiry error even though transaction may be executed soon.
- * So we add additional 50 blocks for checks to account for such issues.
  * @param connection - Solana client connection
  * @param invoker - Keypair used as signer
  * @param tx - Transaction instance
@@ -136,17 +135,97 @@ export async function signAndExecuteTransaction(
   hash: BlockhashWithExpiryBlockHeight,
 ): Promise<string> {
   const signedTx = await signTransaction(invoker, tx);
-  const rawTx = signedTx.serialize();
 
-  if (!hash.lastValidBlockHeight || !signedTx.signature || !hash.blockhash)
-    throw Error("Error with transaction parameters.");
+  return executeTransaction(connection, signedTx, hash);
+}
 
+/**
+ * Sends and confirms Transaction
+ * Confirmation strategy is not 100% reliable here as in times of congestion there can be a case that tx is executed,
+ * but is not in `commitment` state and so it's not considered executed by the `sendAndConfirmRawTransaction` method,
+ * and it raises an expiry error even though transaction may be executed soon.
+ * - so we add additional 50 blocks for checks to account for such issues;
+ * - also, we check for SignatureStatus one last time as it could be that websocket was slow to respond.
+ * @param connection - Solana client connection
+ * @param tx - Transaction instance
+ * @param hash - blockhash information, the same hash should be used in the Transaction
+ * @returns Transaction signature
+ */
+export async function executeTransaction(
+  connection: Connection,
+  tx: Transaction,
+  hash: BlockhashWithExpiryBlockHeight,
+): Promise<string> {
+  const rawTx = tx.serialize();
+
+  if (!hash.lastValidBlockHeight || !tx.signature || !hash.blockhash) throw Error("Error with transaction parameters.");
+
+  const signature = bs58.encode(tx.signature);
   const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
     lastValidBlockHeight: hash.lastValidBlockHeight + 50,
-    signature: bs58.encode(signedTx.signature),
+    signature,
     blockhash: hash.blockhash,
   };
-  return sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
+  try {
+    return await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
+  } catch (e) {
+    // If BlockHeight expired, we will check tx status one last time to make sure
+    if (e instanceof TransactionExpiredBlockheightExceededError) {
+      await sleep(1000);
+      const value = await confirmAndEnsureTransaction(connection, signature);
+      if (!value) {
+        throw e;
+      }
+      return signature;
+    }
+    throw e;
+  }
+}
+
+/**
+ * Confirms and validates transaction success once
+ * @param connection - Solana client connection
+ * @param signature - Transaction signature
+ * @returns Transaction Status
+ */
+export async function confirmAndEnsureTransaction(
+  connection: Connection,
+  signature: string,
+): Promise<SignatureStatus | null> {
+  const response = await connection.getSignatureStatus(signature);
+  if (!response) {
+    return null;
+  }
+  const { value } = response;
+  if (!value) {
+    return null;
+  }
+  if (value.err) {
+    // That's how solana-web3js does it, `err` here is an object that won't really be handled
+    throw new Error(`Raw transaction ${signature} failed (${JSON.stringify({ err: value.err })})`);
+  }
+  switch (connection.commitment) {
+    case "confirmed":
+    case "single":
+    case "singleGossip": {
+      if (value.confirmationStatus === "processed") {
+        return null;
+      }
+      break;
+    }
+    case "finalized":
+    case "max":
+    case "root": {
+      if (value.confirmationStatus === "processed" || value.confirmationStatus === "confirmed") {
+        return null;
+      }
+      break;
+    }
+    // exhaust enums to ensure full coverage
+    case "processed":
+    case "recent":
+  }
+  return value;
 }
 
 /**

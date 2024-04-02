@@ -50,3 +50,11 @@ export async function handleContractError<T>(
     throw err;
   }
 }
+
+/**
+ * Pause async function execution for given amount of milliseconds
+ * @param ms millisecond to sleep for
+ */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
