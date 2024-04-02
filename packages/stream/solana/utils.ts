@@ -1,12 +1,6 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import {
-  BlockheightBasedTransactionConfirmationStrategy,
-  Connection,
-  Keypair,
-  PublicKey,
-  sendAndConfirmRawTransaction,
-} from "@solana/web3.js";
-import { isSignerKeypair, isSignerWallet } from "@streamflow/common/solana";
+import { BlockheightBasedTransactionConfirmationStrategy, Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { executeTransaction, isSignerKeypair, isSignerWallet } from "@streamflow/common/solana";
 import BN from "bn.js";
 import bs58 from "bs58";
 
@@ -107,7 +101,6 @@ export async function sendAndConfirmStreamRawTransaction(
   batchItem: BatchItem,
 ): Promise<BatchItemResult> {
   try {
-    const rawTx = batchItem.tx.serialize();
     const { lastValidBlockHeight, signature, recentBlockhash } = batchItem.tx;
     if (!lastValidBlockHeight || !signature || !recentBlockhash)
       throw { recipient: batchItem.recipient, error: "no recent blockhash" };
@@ -117,7 +110,7 @@ export async function sendAndConfirmStreamRawTransaction(
       signature: bs58.encode(signature),
       blockhash: recentBlockhash,
     };
-    const completedTxSignature = await sendAndConfirmRawTransaction(connection, rawTx, confirmationStrategy);
+    const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationStrategy);
     return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
     throw {
