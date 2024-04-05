@@ -1,4 +1,4 @@
-import { AccountInfo, PublicKey } from "@solana/web3.js";
+import { AccountInfo, BlockhashWithExpiryBlockHeight, Commitment, Context, PublicKey } from "@solana/web3.js";
 
 export interface ITransactionSolanaExt {
   computePrice?: number;
@@ -23,3 +23,11 @@ export interface AtaParams {
   owner: PublicKey;
   programId?: PublicKey;
 }
+
+export interface ConfirmationParams {
+  hash: BlockhashWithExpiryBlockHeight;
+  context: Context;
+  commitment?: Commitment;
+}
+
+export class TransactionFailedError extends Error {}

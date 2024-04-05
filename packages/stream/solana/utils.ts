@@ -1,8 +1,7 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { BlockheightBasedTransactionConfirmationStrategy, Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { executeTransaction, isSignerKeypair, isSignerWallet } from "@streamflow/common/solana";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { ConfirmationParams, executeTransaction, isSignerKeypair, isSignerWallet } from "@streamflow/common/solana";
 import BN from "bn.js";
-import bs58 from "bs58";
 
 import { streamLayout } from "./layout";
 import { DecodedStream, BatchItem, BatchItemResult } from "./types";
@@ -75,7 +74,7 @@ export async function signAllTransactionWithRecipients(
 
   if (isKeypair) {
     return items.map((t) => {
-      t.tx.partialSign(sender);
+      t.tx.sign([sender]);
       return { tx: t.tx, recipient: t.recipient };
     });
   } else if (isWallet) {
@@ -94,34 +93,36 @@ export async function signAllTransactionWithRecipients(
  * Sign passed BatchItems with wallet request or KeyPair
  * @param {Connection} connection - Solana web3 connection object.
  * @param {BatchItem} batchItem - Signed transaction ready to be send.
+ * @param {ConfirmationParams} confirmationParams - Confirmation Params that will be used for execution
  * @return {Promise<BatchItemResult>} - Returns settled transaction item
  */
 export async function sendAndConfirmStreamRawTransaction(
   connection: Connection,
   batchItem: BatchItem,
+  confirmationParams: ConfirmationParams,
 ): Promise<BatchItemResult> {
   try {
-    const { lastValidBlockHeight, signature, recentBlockhash } = batchItem.tx;
-    if (!lastValidBlockHeight || !signature || !recentBlockhash)
-      throw { recipient: batchItem.recipient, error: "no recent blockhash" };
-
-    const confirmationStrategy: BlockheightBasedTransactionConfirmationStrategy = {
-      lastValidBlockHeight,
-      signature: bs58.encode(signature),
-      blockhash: recentBlockhash,
-    };
-    const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationStrategy);
+    const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationParams);
     return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
     throw {
       recipient: batchItem.recipient,
-      error: error?.error ?? error?.message ?? error.toString(),
+      error,
     };
   }
 }
 
-export function extractSolanaErrorCode(errorText: string): string | null {
-  const match = SOLANA_ERROR_MATCH_REGEX.exec(errorText);
+export function extractSolanaErrorCode(errorText: string, logs?: string[]): string | null {
+  let match = SOLANA_ERROR_MATCH_REGEX.exec(errorText);
+
+  if (!match && logs) {
+    for (const logLine of logs) {
+      match = SOLANA_ERROR_MATCH_REGEX.exec(logLine);
+      if (match !== null) {
+        break;
+      }
+    }
+  }
 
   if (!match) {
     return null;

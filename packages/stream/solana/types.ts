@@ -1,5 +1,5 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { AccountInfo, PublicKey, Keypair, Transaction } from "@solana/web3.js";
+import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
 
@@ -229,7 +229,7 @@ export interface MetadataRecipientHashMap {
 
 export interface BatchItem {
   recipient: string;
-  tx: Transaction;
+  tx: VersionedTransaction;
 }
 
 export interface BatchItemSuccess extends BatchItem {

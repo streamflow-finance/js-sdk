@@ -1,7 +1,7 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { BlockhashWithExpiryBlockHeight, Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { ContractError } from "@streamflow/common";
-import { signAndExecuteTransaction } from "@streamflow/common/solana";
+import { ConfirmationParams, signAndExecuteTransaction } from "@streamflow/common/solana";
 
 import { fromTxError } from "./generated/errors";
 
@@ -28,11 +28,11 @@ export function getClaimantStatusPda(programId: PublicKey, distributor: PublicKe
 export async function wrappedSignAndExecuteTransaction(
   connection: Connection,
   invoker: Keypair | SignerWalletAdapter,
-  tx: Transaction,
-  hash: BlockhashWithExpiryBlockHeight,
+  tx: Transaction | VersionedTransaction,
+  confirmationParams: ConfirmationParams,
 ): Promise<string> {
   try {
-    return await signAndExecuteTransaction(connection, invoker, tx, hash);
+    return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams);
   } catch (err: any) {
     if (err instanceof Error) {
       const parsed = fromTxError(err);
