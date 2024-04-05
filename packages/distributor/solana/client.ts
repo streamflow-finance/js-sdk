@@ -133,8 +133,12 @@ export default class SolanaDistributorClient {
       ),
     );
 
-    const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
-    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, {
+      hash,
+      context,
+      commitment: this.getCommitment(),
+    });
 
     return {
       ixs,
@@ -192,8 +196,12 @@ export default class SolanaDistributorClient {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
-    const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
-    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, {
+      hash,
+      context,
+      commitment: this.getCommitment(),
+    });
 
     return { ixs, txId: signature };
   }
@@ -230,8 +238,12 @@ export default class SolanaDistributorClient {
 
     ixs.push(clawback(accounts, this.programId));
 
-    const { tx, hash } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
-    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, hash);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
+    const signature = await wrappedSignAndExecuteTransaction(this.connection, invoker, tx, {
+      hash,
+      context,
+      commitment: this.getCommitment(),
+    });
 
     return { ixs, txId: signature };
   }
