@@ -107,13 +107,22 @@ export async function sendAndConfirmStreamRawTransaction(
   } catch (error: any) {
     throw {
       recipient: batchItem.recipient,
-      error: error?.error ?? error?.message ?? error.toString(),
+      error,
     };
   }
 }
 
-export function extractSolanaErrorCode(errorText: string): string | null {
-  const match = SOLANA_ERROR_MATCH_REGEX.exec(errorText);
+export function extractSolanaErrorCode(errorText: string, logs?: string[]): string | null {
+  let match = SOLANA_ERROR_MATCH_REGEX.exec(errorText);
+
+  if (!match && logs) {
+    for (const logLine of logs) {
+      match = SOLANA_ERROR_MATCH_REGEX.exec(logLine);
+      if (match !== null) {
+        break;
+      }
+    }
+  }
 
   if (!match) {
     return null;

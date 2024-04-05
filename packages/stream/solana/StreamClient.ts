@@ -900,7 +900,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
   }
 
   public extractErrorCode(err: Error): string | null {
-    return extractSolanaErrorCode(err.toString() ?? "Unknown error!");
+    const logs = "logs" in err && Array.isArray(err.logs) ? err.logs : undefined;
+    return extractSolanaErrorCode(err.toString() ?? "Unknown error!", logs);
   }
 
   /**

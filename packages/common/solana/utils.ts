@@ -22,6 +22,7 @@ import {
   Context,
   RpcResponseAndContext,
   SimulatedTransactionResponse,
+  SendTransactionError,
 } from "@solana/web3.js";
 import bs58 from "bs58";
 
@@ -186,9 +187,9 @@ export async function executeTransaction(
       res = await connection.simulateTransaction(tx);
     }
     if (res.value.err) {
-      const errMessage = res.value.err.toString();
+      const errMessage = JSON.stringify(res.value.err);
       if (!errMessage.includes("BlockhashNotFound") || i === 2) {
-        throw new Error(errMessage);
+        throw new SendTransactionError("failed to simulate transaction: " + errMessage, res.value.logs || undefined);
       }
     }
     break;
