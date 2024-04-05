@@ -219,7 +219,10 @@ export async function executeTransaction(
       });
       transactionSent = true;
     } catch (e) {
-      if (transactionSent || e instanceof SendTransactionError && e.message.includes("Minimum context slot has not been reached")) {
+      if (
+        transactionSent ||
+        (e instanceof SendTransactionError && e.message.includes("Minimum context slot has not been reached"))
+      ) {
         continue;
       }
       throw e;
