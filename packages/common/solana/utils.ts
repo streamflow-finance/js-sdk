@@ -158,11 +158,13 @@ export async function signAndExecuteTransaction(
 
 /**
  * Sends and confirms Transaction
- * Confirmation strategy is not 100% reliable here as in times of congestion there can be a case that tx is executed,
- * but is not in `commitment` state and so it's not considered executed by the `sendAndConfirmRawTransaction` method,
- * and it raises an expiry error even though transaction may be executed soon.
- * - so we add additional 50 blocks for checks to account for such issues;
- * - also, we check for SignatureStatus one last time as it could be that websocket was slow to respond.
+ * Uses custom confirmation logic that:
+ * - simulates tx before sending separatel
+ * - sends transaction without preFlight checks but with some valuable flags https://twitter.com/jordaaash/status/1774892862049800524?s=46&t=bhZ10V0r7IX5Lk5kKzxfGw
+ * - rebroadcasts a tx every 500 ms
+ * - after broadcasting check whether tx has executed once
+ * - if any error happens in the loop, we will wait until blockHeight expires and confirm tx one last time
+ *   (there is a chance of tx landing until blockheight has expired)
  * @param connection - Solana client connection
  * @param tx - Transaction instance
  * @param hash - blockhash information, the same hash should be used in the Transaction
@@ -225,12 +227,14 @@ export async function executeTransaction(
     await sleep(3000);
   }
 
-  while (blockheight < hash.lastValidBlockHeight + 50) {
+  while (blockheight < hash.lastValidBlockHeight) {
     blockheight = await connection.getBlockHeight(commitment);
-    const value = await confirmAndEnsureTransaction(connection, signature);
-    if (value) {
-      return signature;
-    }
+    await sleep(500);
+  }
+
+  const value = await confirmAndEnsureTransaction(connection, signature);
+  if (value) {
+    return signature;
   }
 
   throw new Error(`Transaction ${signature} expired.`);
