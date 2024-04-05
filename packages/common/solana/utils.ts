@@ -159,7 +159,7 @@ export async function signAndExecuteTransaction(
 /**
  * Sends and confirms Transaction
  * Uses custom confirmation logic that:
- * - simulates tx before sending separatel
+ * - simulates tx before sending separately
  * - sends transaction without preFlight checks but with some valuable flags https://twitter.com/jordaaash/status/1774892862049800524?s=46&t=bhZ10V0r7IX5Lk5kKzxfGw
  * - rebroadcasts a tx every 500 ms
  * - after broadcasting check whether tx has executed once
