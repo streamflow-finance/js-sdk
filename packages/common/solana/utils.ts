@@ -270,7 +270,7 @@ export async function simulateTransaction(
     }
     if (res.value.err) {
       const errMessage = JSON.stringify(res.value.err);
-      if (!errMessage.includes("BlockhashNotFound") || i === 2) {
+      if (!errMessage.includes("BlockhashNotFound") || i === SIMULATE_TRIES - 1) {
         throw new SendTransactionError("failed to simulate transaction: " + errMessage, res.value.logs || undefined);
       }
     }
