@@ -29,3 +29,5 @@ export interface ConfirmationParams {
   context: Context;
   commitment?: Commitment;
 }
+
+export class TransactionFailedError extends Error {}

@@ -26,7 +26,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 
-import { Account, AtaParams, ConfirmationParams, ITransactionSolanaExt } from "./types";
+import { Account, AtaParams, ConfirmationParams, ITransactionSolanaExt, TransactionFailedError } from "./types";
 import { sleep } from "../utils";
 
 /**
@@ -163,8 +163,8 @@ export async function signAndExecuteTransaction(
  * - sends transaction without preFlight checks but with some valuable flags https://twitter.com/jordaaash/status/1774892862049800524?s=46&t=bhZ10V0r7IX5Lk5kKzxfGw
  * - rebroadcasts a tx every 500 ms
  * - after broadcasting check whether tx has executed once
- * - if any error happens in the loop, we will wait until blockHeight expires and confirm tx one last time
- *   (there is a chance of tx landing until blockheight has expired)
+ * - catch errors for every actionable item, throw only the ones that signal that tx has failed
+ * - otherwise there is a chance of marking a landed tx as failed if it was broadcasted at least once
  * @param connection - Solana client connection
  * @param tx - Transaction instance
  * @param hash - blockhash information, the same hash should be used in the Transaction
@@ -207,34 +207,41 @@ export async function executeTransaction(
   }
 
   let blockheight = await connection.getBlockHeight(commitment);
+  let transactionSent = false;
   const rawTransaction = tx.serialize();
-  try {
-    while (blockheight < hash.lastValidBlockHeight) {
+  while (blockheight < hash.lastValidBlockHeight) {
+    try {
       await connection.sendRawTransaction(rawTransaction, {
         maxRetries: 0,
         minContextSlot: context.slot,
         preflightCommitment: commitment,
         skipPreflight: true,
       });
-      await sleep(500);
+      transactionSent = true;
+    } catch (e) {
+      if (transactionSent || e instanceof SendTransactionError && e.message.includes("Minimum context slot has not been reached")) {
+        continue;
+      }
+      throw e;
+    }
+    await sleep(500);
+    try {
       const value = await confirmAndEnsureTransaction(connection, signature);
       if (value) {
         return signature;
       }
-      blockheight = await connection.getBlockHeight(commitment);
+    } catch (e) {
+      if (e instanceof TransactionFailedError) {
+        throw e;
+      }
+      await sleep(500);
     }
-  } catch (e) {
-    await sleep(3000);
-  }
 
-  while (blockheight < hash.lastValidBlockHeight) {
-    blockheight = await connection.getBlockHeight(commitment);
-    await sleep(500);
-  }
-
-  const value = await confirmAndEnsureTransaction(connection, signature);
-  if (value) {
-    return signature;
+    try {
+      blockheight = await connection.getBlockHeight(commitment);
+    } catch (_e) {
+      await sleep(500);
+    }
   }
 
   throw new Error(`Transaction ${signature} expired.`);
@@ -262,7 +269,7 @@ export async function confirmAndEnsureTransaction(
   }
   if (!passError && value.err) {
     // That's how solana-web3js does it, `err` here is an object that won't really be handled
-    throw new Error(`Raw transaction ${signature} failed (${JSON.stringify({ err: value.err })})`);
+    throw new TransactionFailedError(`Raw transaction ${signature} failed (${JSON.stringify({ err: value.err })})`);
   }
   switch (connection.commitment) {
     case "confirmed":
