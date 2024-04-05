@@ -29,6 +29,8 @@ import bs58 from "bs58";
 import { Account, AtaParams, ConfirmationParams, ITransactionSolanaExt, TransactionFailedError } from "./types";
 import { sleep } from "../utils";
 
+const SIMULATE_TRIES = 3;
+
 /**
  * Wrapper function for Solana web3 getProgramAccounts with slightly better call interface
  * @param {Connection} connection - Solana web3 connection object.
@@ -106,9 +108,13 @@ export async function prepareTransaction(
   hash: BlockhashWithExpiryBlockHeight;
   context: Context;
 }> {
+  if (!payer) {
+    throw new Error("Payer public key is not provided!");
+  }
+
   const { value: hash, context } = await connection.getLatestBlockhashAndContext(commitment);
   const messageV0 = new TransactionMessage({
-    payerKey: payer!,
+    payerKey: payer,
     recentBlockhash: hash.blockhash,
     instructions: ixs,
   }).compileToV0Message();
@@ -167,36 +173,36 @@ export async function signAndExecuteTransaction(
  * - otherwise there is a chance of marking a landed tx as failed if it was broadcasted at least once
  * @param connection - Solana client connection
  * @param tx - Transaction instance
- * @param hash - blockhash information, the same hash should be used in the Transaction
- * @param context - context at which blockhash has been retrieve
- * @param commitment - optional commitment that will be used for simulation and confirmation
+ * @param {ConfirmationParams} confirmationParams - Confirmation Params that will be used for execution
  * @returns Transaction signature
  */
 export async function executeTransaction(
   connection: Connection,
   tx: Transaction | VersionedTransaction,
-  { hash, context, commitment }: ConfirmationParams,
+  confirmationParams: ConfirmationParams,
 ): Promise<string> {
-  if (!hash.lastValidBlockHeight || tx.signatures.length === 0 || !hash.blockhash) {
+  if (tx.signatures.length === 0) {
     throw Error("Error with transaction parameters.");
   }
+  await simulateTransaction(connection, tx);
 
-  for (let i = 0; i < 3; i++) {
-    let res: RpcResponseAndContext<SimulatedTransactionResponse>;
-    if (isTransactionVersioned(tx)) {
-      res = await connection.simulateTransaction(tx);
-    } else {
-      res = await connection.simulateTransaction(tx);
-    }
-    if (res.value.err) {
-      const errMessage = JSON.stringify(res.value.err);
-      if (!errMessage.includes("BlockhashNotFound") || i === 2) {
-        throw new SendTransactionError("failed to simulate transaction: " + errMessage, res.value.logs || undefined);
-      }
-    }
-    break;
-  }
+  return sendAndConfirmTransaction(connection, tx, confirmationParams);
+}
 
+/**
+ * Sends and confirm transaction in a loop, constantly re-broadcsting the tx until Blockheight expires.
+ * - we add additional 30 bocks to account for validators in an PRC pool divergence
+ * @param connection - Solana client connection
+ * @param tx - Transaction instance
+ * @param hash - blockhash information, the same hash should be used in the Transaction
+ * @param context - context at which blockhash has been retrieve
+ * @param commitment - optional commitment that will be used for simulation and confirmation
+ */
+export async function sendAndConfirmTransaction(
+  connection: Connection,
+  tx: Transaction | VersionedTransaction,
+  { hash, context, commitment }: ConfirmationParams,
+): Promise<string> {
   const isVersioned = isTransactionVersioned(tx);
 
   let signature: string;
@@ -209,20 +215,23 @@ export async function executeTransaction(
   let blockheight = await connection.getBlockHeight(commitment);
   let transactionSent = false;
   const rawTransaction = tx.serialize();
-  while (blockheight < hash.lastValidBlockHeight) {
+  while (blockheight < hash.lastValidBlockHeight + 15) {
     try {
-      await connection.sendRawTransaction(rawTransaction, {
-        maxRetries: 0,
-        minContextSlot: context.slot,
-        preflightCommitment: commitment,
-        skipPreflight: true,
-      });
-      transactionSent = true;
+      if (blockheight < hash.lastValidBlockHeight || !transactionSent) {
+        await connection.sendRawTransaction(rawTransaction, {
+          maxRetries: 0,
+          minContextSlot: context.slot,
+          preflightCommitment: commitment,
+          skipPreflight: true,
+        });
+        transactionSent = true;
+      }
     } catch (e) {
       if (
         transactionSent ||
         (e instanceof SendTransactionError && e.message.includes("Minimum context slot has not been reached"))
       ) {
+        await sleep(500);
         continue;
       }
       throw e;
@@ -239,28 +248,47 @@ export async function executeTransaction(
       }
       await sleep(500);
     }
-
     try {
       blockheight = await connection.getBlockHeight(commitment);
     } catch (_e) {
       await sleep(500);
     }
   }
-
   throw new Error(`Transaction ${signature} expired.`);
+}
+
+export async function simulateTransaction(
+  connection: Connection,
+  tx: Transaction | VersionedTransaction,
+): Promise<void> {
+  for (let i = 0; i < SIMULATE_TRIES; i++) {
+    let res: RpcResponseAndContext<SimulatedTransactionResponse>;
+    if (isTransactionVersioned(tx)) {
+      res = await connection.simulateTransaction(tx);
+    } else {
+      res = await connection.simulateTransaction(tx);
+    }
+    if (res.value.err) {
+      const errMessage = JSON.stringify(res.value.err);
+      if (!errMessage.includes("BlockhashNotFound") || i === SIMULATE_TRIES - 1) {
+        throw new SendTransactionError("failed to simulate transaction: " + errMessage, res.value.logs || undefined);
+      }
+    }
+    break;
+  }
 }
 
 /**
  * Confirms and validates transaction success once
  * @param connection - Solana client connection
  * @param signature - Transaction signature
- * @param passError - return status even if tx failed
+ * @param ignoreError - return status even if tx failed
  * @returns Transaction Status
  */
 export async function confirmAndEnsureTransaction(
   connection: Connection,
   signature: string,
-  passError?: boolean,
+  ignoreError?: boolean,
 ): Promise<SignatureStatus | null> {
   const response = await connection.getSignatureStatus(signature);
   if (!response) {
@@ -270,7 +298,7 @@ export async function confirmAndEnsureTransaction(
   if (!value) {
     return null;
   }
-  if (!passError && value.err) {
+  if (!ignoreError && value.err) {
     // That's how solana-web3js does it, `err` here is an object that won't really be handled
     throw new TransactionFailedError(`Raw transaction ${signature} failed (${JSON.stringify({ err: value.err })})`);
   }
