@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "6.1.2",
+  "version": "6.2.0",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/index.js",

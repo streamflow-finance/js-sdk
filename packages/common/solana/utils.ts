@@ -362,8 +362,8 @@ export async function enrichAtaParams(connection: Connection, paramsBatch: AtaPa
       }
       const mintStr = params.mint.toString();
       if (!(mintStr in programIdByMint)) {
-        const { programId } = await getMintAndProgram(connection, params.mint);
-        programIdByMint[mintStr] = programId;
+        const { tokenProgramId } = await getMintAndProgram(connection, params.mint);
+        programIdByMint[mintStr] = tokenProgramId;
       }
       params.programId = programIdByMint[mintStr];
       return params;
@@ -445,6 +445,9 @@ export async function checkOrCreateAtaBatch(
   programId?: PublicKey,
 ): Promise<TransactionInstruction[]> {
   const ixs: TransactionInstruction[] = [];
+  if (!programId) {
+    programId = (await getMintAndProgram(connection, mint)).tokenProgramId;
+  }
   // TODO: optimize fetching and maps/arrays
   const atas: PublicKey[] = [];
   for (const owner of owners) {
@@ -493,7 +496,7 @@ export async function getMintAndProgram(
   connection: Connection,
   address: PublicKey,
   commitment?: Commitment,
-): Promise<{ mint: Mint; programId: PublicKey }> {
+): Promise<{ mint: Mint; tokenProgramId: PublicKey }> {
   const accountInfo = await connection.getAccountInfo(address, commitment);
   let programId = accountInfo?.owner;
   if (!programId?.equals(TOKEN_PROGRAM_ID) && !programId?.equals(TOKEN_2022_PROGRAM_ID)) {
@@ -501,6 +504,6 @@ export async function getMintAndProgram(
   }
   return {
     mint: unpackMint(address, accountInfo, programId),
-    programId: programId!,
+    tokenProgramId: programId!,
   };
 }
