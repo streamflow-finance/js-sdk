@@ -200,14 +200,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.programId,
     );
 
-    const { programId } = await getMintAndProgram(this.connection, mintPublicKey);
-    const senderTokens = await ata(mintPublicKey, sender.publicKey, programId);
-    const recipientTokens = await ata(mintPublicKey, recipientPublicKey, programId);
-    const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, programId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
+    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
+    const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
+    const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
 
     const partnerPublicKey = partner ? new PublicKey(partner) : STREAMFLOW_TREASURY_PUBLIC_KEY;
 
-    const partnerTokens = await ata(mintPublicKey, partnerPublicKey, programId);
+    const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
 
     if (isNative) {
       const totalFee = await this.getTotalFee({
@@ -251,7 +251,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
           feeOracle: FEE_ORACLE_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: this.programId,
-          tokenProgram: programId,
+          tokenProgram: tokenProgramId,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           withdrawor: WITHDRAWOR_PUBLIC_KEY,
           systemProgram: SystemProgram.programId,
@@ -341,8 +341,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.programId,
     );
 
-    const { programId } = await getMintAndProgram(this.connection, mintPublicKey);
-    const senderTokens = await ata(mintPublicKey, sender.publicKey, programId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
+    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
 
     const partnerPublicKey = partner ? new PublicKey(partner) : STREAMFLOW_TREASURY_PUBLIC_KEY;
 
@@ -385,7 +385,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         feeOracle: FEE_ORACLE_PUBLIC_KEY,
         rent: SYSVAR_RENT_PUBKEY,
         timelockProgram: this.programId,
-        tokenProgram: programId,
+        tokenProgram: tokenProgramId,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: SystemProgram.programId,
       },
@@ -557,10 +557,10 @@ export default class SolanaStreamClient extends BaseStreamClient {
     }
 
     const data = decodeStream(escrow.data);
-    const { programId } = await getMintAndProgram(this.connection, data.mint);
-    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY, programId);
-    const partnerTokens = await ata(data.mint, data.partner, programId);
-    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs, programId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, data.mint);
+    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const partnerTokens = await ata(data.mint, data.partner, tokenProgramId);
+    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
 
     ixs.push(
       withdrawStreamInstruction(amount, this.programId, {
@@ -574,7 +574,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         partner: data.partner,
         partnerTokens,
         mint: data.mint,
-        tokenProgram: programId,
+        tokenProgram: tokenProgramId,
       }),
     );
 
@@ -615,15 +615,15 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     const data = decodeStream(escrowAcc?.data);
 
-    const { programId } = await getMintAndProgram(this.connection, data.mint);
-    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY, programId);
-    const partnerTokens = await ata(data.mint, data.partner, programId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, data.mint);
+    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const partnerTokens = await ata(data.mint, data.partner, tokenProgramId);
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
-    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs, programId);
+    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
 
     ixs.push(
       cancelStreamInstruction(this.programId, {
@@ -639,7 +639,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         partner: data.partner,
         partnerTokens,
         mint: data.mint,
-        tokenProgram: programId,
+        tokenProgram: tokenProgramId,
       }),
     );
 
@@ -688,9 +688,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Couldn't get account info");
     }
     const { mint } = decodeStream(escrow?.data);
-    const { programId } = await getMintAndProgram(this.connection, mint);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mint);
 
-    const newRecipientTokens = await ata(mint, newRecipientPublicKey, programId);
+    const newRecipientTokens = await ata(mint, newRecipientPublicKey, tokenProgramId);
 
     ixs.push(
       transferStreamInstruction(this.programId, {
@@ -700,7 +700,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         metadata: stream,
         mint,
         rent: SYSVAR_RENT_PUBKEY,
-        tokenProgram: programId,
+        tokenProgram: tokenProgramId,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       }),
@@ -746,9 +746,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
     }
     const { mint, partner, senderTokens, escrowTokens } = decodeStream(escrow?.data);
 
-    const { programId } = await getMintAndProgram(this.connection, mint);
-    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, programId);
-    const partnerTokens = await ata(mint, partner, programId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const partnerTokens = await ata(mint, partner, tokenProgramId);
 
     if (isNative) {
       ixs.push(...(await prepareWrappedAccount(this.connection, invoker.publicKey, amount)));
@@ -765,7 +765,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         partner: partner,
         partnerTokens: partnerTokens,
         mint,
-        tokenProgram: programId,
+        tokenProgram: tokenProgramId,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: SystemProgram.programId,
       }),
@@ -956,12 +956,12 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.programId,
     );
 
-    const { programId } = await getMintAndProgram(this.connection, mintPublicKey);
-    const senderTokens = await ata(mintPublicKey, sender.publicKey, programId);
-    const recipientTokens = await ata(mintPublicKey, recipientPublicKey, programId);
-    const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, programId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
+    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
+    const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
+    const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
-    const partnerTokens = await ata(mintPublicKey, partnerPublicKey, programId);
+    const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
 
     ixs.push(
       createStreamInstruction(
@@ -997,7 +997,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
           feeOracle: FEE_ORACLE_PUBLIC_KEY,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: this.programId,
-          tokenProgram: programId,
+          tokenProgram: tokenProgramId,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           withdrawor: WITHDRAWOR_PUBLIC_KEY,
           systemProgram: SystemProgram.programId,
