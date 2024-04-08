@@ -445,6 +445,9 @@ export async function checkOrCreateAtaBatch(
   programId?: PublicKey,
 ): Promise<TransactionInstruction[]> {
   const ixs: TransactionInstruction[] = [];
+  if (!programId) {
+    programId = (await getMintAndProgram(connection, mint)).programId;
+  }
   // TODO: optimize fetching and maps/arrays
   const atas: PublicKey[] = [];
   for (const owner of owners) {
