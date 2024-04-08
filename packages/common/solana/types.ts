@@ -30,4 +30,10 @@ export interface ConfirmationParams {
   commitment?: Commitment;
 }
 
-export class TransactionFailedError extends Error {}
+export class TransactionFailedError extends Error {
+  constructor(m: string) {
+    super(m);
+    Object.setPrototypeOf(this, TransactionFailedError.prototype);
+    this.name = "TransactionFailedError";
+  }
+}
