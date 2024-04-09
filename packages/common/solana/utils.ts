@@ -260,9 +260,9 @@ export async function sendAndConfirmTransaction(
 export async function simulateTransaction(
   connection: Connection,
   tx: Transaction | VersionedTransaction,
-): Promise<void> {
+): Promise<RpcResponseAndContext<SimulatedTransactionResponse>> {
+  let res: RpcResponseAndContext<SimulatedTransactionResponse>;
   for (let i = 0; i < SIMULATE_TRIES; i++) {
-    let res: RpcResponseAndContext<SimulatedTransactionResponse>;
     if (isTransactionVersioned(tx)) {
       res = await connection.simulateTransaction(tx);
     } else {
@@ -273,9 +273,11 @@ export async function simulateTransaction(
       if (!errMessage.includes("BlockhashNotFound") || i === SIMULATE_TRIES - 1) {
         throw new SendTransactionError("failed to simulate transaction: " + errMessage, res.value.logs || undefined);
       }
+      continue;
     }
-    break;
+    return res;
   }
+  throw new SendTransactionError("failed to simulate transaction");
 }
 
 /**
