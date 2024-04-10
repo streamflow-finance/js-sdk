@@ -25,6 +25,14 @@ export function getClaimantStatusPda(programId: PublicKey, distributor: PublicKe
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
 }
 
+export function getEventAuthorityPda(programId: PublicKey): PublicKey {
+  // Constructing the seed for the PDA
+  const seeds = [Buffer.from("__event_authority")];
+
+  // Finding the PDA
+  return PublicKey.findProgramAddressSync(seeds, programId)[0];
+}
+
 export async function wrappedSignAndExecuteTransaction(
   connection: Connection,
   invoker: Keypair | SignerWalletAdapter,

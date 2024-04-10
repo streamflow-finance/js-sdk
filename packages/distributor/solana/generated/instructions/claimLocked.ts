@@ -22,6 +22,8 @@ export interface ClaimLockedAccounts {
   mint: PublicKey;
   /** SPL [Token] program. */
   tokenProgram: PublicKey;
+  eventAuthority: PublicKey;
+  program: PublicKey;
 }
 
 export function claimLocked(accounts: ClaimLockedAccounts, programId: PublicKey = PROGRAM_ID) {
@@ -33,6 +35,8 @@ export function claimLocked(accounts: ClaimLockedAccounts, programId: PublicKey 
     { pubkey: accounts.claimant, isSigner: true, isWritable: true },
     { pubkey: accounts.mint, isSigner: false, isWritable: false },
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
+    { pubkey: accounts.eventAuthority, isSigner: false, isWritable: false },
+    { pubkey: accounts.program, isSigner: false, isWritable: false },
   ];
   const identifier = Buffer.from([34, 206, 181, 23, 11, 207, 147, 90]);
   const data = identifier;
