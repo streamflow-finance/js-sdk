@@ -27,6 +27,8 @@ export interface NewClaimAccounts {
   tokenProgram: PublicKey;
   /** The [System] program. */
   systemProgram: PublicKey;
+  eventAuthority: PublicKey;
+  program: PublicKey;
 }
 
 export const layout = borsh.struct([
@@ -45,6 +47,8 @@ export function newClaim(args: NewClaimArgs, accounts: NewClaimAccounts, program
     { pubkey: accounts.mint, isSigner: false, isWritable: false },
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
+    { pubkey: accounts.eventAuthority, isSigner: false, isWritable: false },
+    { pubkey: accounts.program, isSigner: false, isWritable: false },
   ];
   const identifier = Buffer.from([78, 177, 98, 123, 210, 21, 187, 83]);
   const buffer = Buffer.alloc(1000);

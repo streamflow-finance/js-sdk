@@ -42,7 +42,12 @@ import {
   newDistributor,
 } from "./generated/instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
-import { getClaimantStatusPda, getDistributorPda, wrappedSignAndExecuteTransaction } from "./utils";
+import {
+  getClaimantStatusPda,
+  getDistributorPda,
+  getEventAuthorityPda,
+  wrappedSignAndExecuteTransaction,
+} from "./utils";
 
 interface IInitOptions {
   clusterUrl: string;
@@ -169,6 +174,7 @@ export default class SolanaDistributorClient {
     );
     const invokerTokens = await ata(distributor.mint, invoker.publicKey, tokenProgramId);
     const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, invoker.publicKey);
+    const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
     const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
 
     const accounts: ClaimLockedAccounts | NewClaimAccounts = {
@@ -180,6 +186,8 @@ export default class SolanaDistributorClient {
       mint: distributor.mint,
       tokenProgram: tokenProgramId,
       systemProgram: SystemProgram.programId,
+      eventAuthority: eventAuthorityPublicKey,
+      program: this.programId,
     };
 
     if (!claimStatus) {

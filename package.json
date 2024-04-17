@@ -25,6 +25,7 @@
     "pack": "lerna run pack",
     "test": "lerna run test",
     "lint": "lerna run lint",
+    "version-all": "lerna version --force-publish",
     "publish": "lerna publish from-package --yes",
     "local-publish": "lerna publish --no-git-tag-version --no-push --registry=\"http://localhost:4873/\" from-package --yes",
     "local-unpublish": "lerna exec -- npm unpublish --registry=\"http://localhost:4873/\" \"\\${LERNA_PACKAGE_NAME}@\\$(npm view \\$LERNA_PACKAGE_NAME version)\"",

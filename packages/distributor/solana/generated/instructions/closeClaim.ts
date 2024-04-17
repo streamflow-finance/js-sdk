@@ -14,6 +14,8 @@ export interface CloseClaimAccounts {
   claimStatus: PublicKey;
   /** The [System] program. */
   systemProgram: PublicKey;
+  eventAuthority: PublicKey;
+  program: PublicKey;
 }
 
 export function closeClaim(accounts: CloseClaimAccounts, programId: PublicKey = PROGRAM_ID) {
@@ -23,6 +25,8 @@ export function closeClaim(accounts: CloseClaimAccounts, programId: PublicKey = 
     { pubkey: accounts.claimant, isSigner: false, isWritable: false },
     { pubkey: accounts.claimStatus, isSigner: false, isWritable: true },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
+    { pubkey: accounts.eventAuthority, isSigner: false, isWritable: false },
+    { pubkey: accounts.program, isSigner: false, isWritable: false },
   ];
   const identifier = Buffer.from([42, 177, 165, 35, 213, 179, 211, 19]);
   const data = identifier;
