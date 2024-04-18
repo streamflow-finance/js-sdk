@@ -32,6 +32,7 @@ export interface IClaimData {
   amountUnlocked: BN;
   amountLocked: BN;
   proof: Array<Array<number>>;
+  tokenAccount?: string;
 }
 
 export interface IClawbackData {
