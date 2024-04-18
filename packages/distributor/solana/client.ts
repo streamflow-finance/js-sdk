@@ -172,7 +172,9 @@ export default class SolanaDistributorClient {
     ixs.push(
       ...(await checkOrCreateAtaBatch(this.connection, [invoker.publicKey], distributor.mint, invoker, tokenProgramId)),
     );
-    const invokerTokens = await ata(distributor.mint, invoker.publicKey, tokenProgramId);
+    const invokerTokens = data.tokenAccount
+      ? new PublicKey(data.tokenAccount)
+      : await ata(distributor.mint, invoker.publicKey, tokenProgramId);
     const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, invoker.publicKey);
     const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
     const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
