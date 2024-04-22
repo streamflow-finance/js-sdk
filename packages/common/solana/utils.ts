@@ -39,6 +39,10 @@ import { sleep } from "../utils";
 
 const SIMULATE_TRIES = 3;
 
+const buildSendThrottler = (sendRate: number) => {
+  return new PQueue({ concurrency: sendRate, intervalCap: 1, interval: 1000 });
+};
+
 /**
  * Wrapper function for Solana web3 getProgramAccounts with slightly better call interface
  * @param {Connection} connection - Solana web3 connection object.
@@ -216,7 +220,7 @@ export async function executeMultipleTransactions(
   { sendRate = 1, sendThrottler }: ThrottleParams,
 ): Promise<PromiseSettledResult<string>[]> {
   if (!sendThrottler) {
-    sendThrottler = new PQueue({ concurrency: sendRate, intervalCap: 1, interval: 1000 });
+    sendThrottler = buildSendThrottler(sendRate);
   }
   return Promise.allSettled(
     txs.map((tx) =>
@@ -252,7 +256,7 @@ export async function sendAndConfirmTransaction(
   }
 
   if (!sendThrottler) {
-    sendThrottler = new PQueue({ concurrency: sendRate, intervalCap: 1, interval: 1000 });
+    sendThrottler = buildSendThrottler(sendRate);
   }
 
   let blockheight = await connection.getBlockHeight(commitment);
