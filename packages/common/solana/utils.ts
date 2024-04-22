@@ -210,7 +210,9 @@ export async function executeTransaction(
  * @param connection - Solana client connection
  * @param txs - Transactions
  * @param confirmationParams - Confirmation Params that will be used for execution
- * @param { sendRate, sendThrottler } ThrottleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param throttleParams.sendRate - rate
+ * @param throttleParams.sendThrottler -  throttler instance
  * @returns Raw Promise Results - should be handled by the consumer and unwrapped accordingly
  */
 export async function executeMultipleTransactions(
@@ -234,11 +236,13 @@ export async function executeMultipleTransactions(
  * - we add additional 30 bocks to account for validators in an PRC pool divergence
  * @param connection - Solana client connection
  * @param tx - Transaction instance
- * @param hash - blockhash information, the same hash should be used in the Transaction
- * @param context - context at which blockhash has been retrieve
- * @param commitment - optional commitment that will be used for simulation and confirmation
- * @param rate - throttle rate for tx sending
- * @param throttler - optional throttler instance in case custom throttling logic is required
+ * @param confirmationParams - Confirmation Params that will be used for execution
+ * @param confirmationParams.hash - blockhash information, the same hash should be used in the Transaction
+ * @param confirmationParams.context - context at which blockhash has been retrieve
+ * @param confirmationParams.commitment - optional commitment that will be used for simulation and confirmation
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param throttleParams.sendRate - rate
+ * @param throttleParams.sendThrottler -  throttler instance
  */
 export async function sendAndConfirmTransaction(
   connection: Connection,
