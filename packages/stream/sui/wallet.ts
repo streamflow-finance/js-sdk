@@ -6,14 +6,15 @@ import { SuiSignAndExecuteTransactionBlockInput } from "./types";
 
 /**
  * Utility function to check if the transaction initiator is a Wallet object
- * @param {Keypair | SignerWalletAdapter} walletOrKeypair - Wallet or Keypair in question
+ * @param {Keypair | WalletContextState} walletOrKeypair - Wallet or Keypair in question
  * @return {boolean} - Returns true if parameter is a Wallet.
  */
 export function isSignerKeypair(walletOrKeypair: Keypair | WalletContextState): walletOrKeypair is Keypair {
   return (
     walletOrKeypair instanceof Keypair ||
     walletOrKeypair.constructor === Keypair ||
-    walletOrKeypair.constructor.name === Keypair.prototype.constructor.name
+    walletOrKeypair.constructor.name === Keypair.prototype.constructor.name ||
+    "export" in walletOrKeypair
   );
 }
 
