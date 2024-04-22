@@ -4,7 +4,6 @@ import PQueue from "p-queue";
 export interface ITransactionSolanaExt {
   computePrice?: number;
   computeLimit?: number;
-  sendRate?: number;
 }
 
 export interface Account {

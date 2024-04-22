@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, createTransferCheckedInstruction } from "@solana/spl-token";
 import {
   Connection,
@@ -16,6 +17,7 @@ import {
   prepareBaseInstructions,
   prepareTransaction,
   getMintAndProgram,
+  buildSendThrottler,
 } from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
@@ -54,6 +56,8 @@ interface IInitOptions {
   cluster?: ICluster;
   commitment?: Commitment | ConnectionConfig;
   programId?: string;
+  sendRate?: number;
+  sendThrottler?: PQueue;
 }
 
 export default class SolanaDistributorClient {
@@ -63,13 +67,23 @@ export default class SolanaDistributorClient {
 
   private commitment: Commitment | ConnectionConfig;
 
+  private sendThrottler: PQueue;
+
   /**
    * Create Stream instance
    */
-  constructor({ clusterUrl, cluster = ICluster.Mainnet, commitment = "confirmed", programId = "" }: IInitOptions) {
+  constructor({
+    clusterUrl,
+    cluster = ICluster.Mainnet,
+    commitment = "confirmed",
+    programId = "",
+    sendRate = 1,
+    sendThrottler,
+  }: IInitOptions) {
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
+    this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
   }
 
   public getCommitment(): Commitment | undefined {
@@ -145,7 +159,7 @@ export default class SolanaDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return {
@@ -224,7 +238,7 @@ export default class SolanaDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature };
@@ -275,7 +289,7 @@ export default class SolanaDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature };

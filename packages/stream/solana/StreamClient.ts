@@ -2,6 +2,7 @@
 
 import BN from "bn.js";
 import { Buffer } from "buffer";
+import PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
 import {
   Connection,
@@ -27,6 +28,7 @@ import {
   getMintAndProgram,
   executeTransaction,
   executeMultipleTransactions,
+  buildSendThrottler,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
@@ -104,6 +106,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
   private commitment: Commitment | ConnectionConfig;
 
+  private sendThrottler: PQueue;
+
   /**
    * Create Stream instance
    */
@@ -112,11 +116,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
     cluster: ICluster = ICluster.Mainnet,
     commitment: Commitment | ConnectionConfig = "confirmed",
     programId = "",
+    sendRate = 1,
+    sendThrottler?: PQueue,
   ) {
     super();
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+    this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
   }
 
   public getConnection(): Connection {
@@ -153,7 +160,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
@@ -296,7 +303,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
@@ -413,7 +420,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
-    { sender, metadataPubKeys, isNative = false, computePrice, computeLimit, sendRate }: ICreateStreamSolanaExt,
+    { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
   ): Promise<IMultiTransactionResult> {
     const { recipients } = data;
 
@@ -438,7 +445,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
       const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(recipientData, data, {
         sender,
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-        sendRate,
         computePrice,
         computeLimit,
       });
@@ -489,7 +495,12 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     if (isNative) {
       const prepareTx = signedBatch.pop();
-      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, { sendRate });
+      await sendAndConfirmStreamRawTransaction(
+        this.connection,
+        prepareTx!,
+        { hash, context },
+        { sendThrottler: this.sendThrottler },
+      );
     }
 
     const responses: PromiseSettledResult<string>[] = [];
@@ -499,7 +510,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
       for (const batchTx of signedBatch) {
         responses.push(
           ...(await Promise.allSettled([
-            executeTransaction(this.connection, batchTx.tx, { hash, context }, { sendRate }),
+            executeTransaction(this.connection, batchTx.tx, { hash, context }, { sendThrottler: this.sendThrottler }),
           ])),
         );
       }
@@ -512,7 +523,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
           this.connection,
           signedBatch.map((item) => item.tx),
           { hash, context },
-          { sendRate },
+          { sendThrottler: this.sendThrottler },
         )),
       );
     }
@@ -550,7 +561,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature };
@@ -618,7 +629,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature };
@@ -693,7 +704,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature };
@@ -758,7 +769,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return { ixs, txId: signature };
@@ -886,7 +897,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendRate: extParams.sendRate },
+      { sendThrottler: this.sendThrottler },
     );
 
     return {

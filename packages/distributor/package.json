@@ -41,6 +41,7 @@
     "@streamflow/common": "workspace:*",
     "bn.js": "5.2.1",
     "borsh": "^2.0.0",
-    "bs58": "5.0.0"
+    "bs58": "5.0.0",
+    "p-queue": "^6.6.2"
   }
 }

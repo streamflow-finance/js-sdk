@@ -123,6 +123,9 @@ importers:
       bs58:
         specifier: 5.0.0
         version: 5.0.0
+      p-queue:
+        specifier: ^6.6.2
+        version: 6.6.2
     devDependencies:
       '@streamflow/eslint-config':
         specifier: workspace:*
@@ -220,6 +223,9 @@ importers:
       js-sha256:
         specifier: 0.9.0
         version: 0.9.0
+      p-queue:
+        specifier: ^6.6.2
+        version: 6.6.2
     devDependencies:
       '@streamflow/eslint-config':
         specifier: workspace:*

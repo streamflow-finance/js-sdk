@@ -39,7 +39,7 @@ import { sleep } from "../utils";
 
 const SIMULATE_TRIES = 3;
 
-const buildSendThrottler = (sendRate: number) => {
+export const buildSendThrottler = (sendRate: number): PQueue => {
   return new PQueue({ concurrency: sendRate, intervalCap: 1, interval: 1000 });
 };
 

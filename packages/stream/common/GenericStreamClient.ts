@@ -1,5 +1,6 @@
 import { Commitment, ConnectionConfig } from "@solana/web3.js";
 import { Signer } from "ethers";
+import PQueue from "p-queue";
 
 import { BaseStreamClient } from "./BaseStreamClient";
 import {
@@ -34,6 +35,8 @@ export interface SolanaStreamClientOptions {
   cluster?: ICluster;
   programId?: string;
   commitment?: Commitment | ConnectionConfig;
+  sendRate?: number;
+  sendThrottler?: PQueue;
 }
 
 export interface AptosStreamClientOptions {
@@ -126,6 +129,8 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
           options.cluster,
           options.commitment,
           options.programId,
+          options.sendRate,
+          options.sendThrottler,
         ) as StreamClientType<T>;
         break;
       case IChain.Aptos:
