@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "6.3.1",
+  "version": "6.3.2",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/index.js",
@@ -62,6 +62,7 @@
     "bs58": "5.0.0",
     "ethereum-checksum-address": "0.0.8",
     "ethers": "5.7.2",
-    "js-sha256": "0.9.0"
+    "js-sha256": "0.9.0",
+    "p-queue": "^6.6.2"
   }
 }

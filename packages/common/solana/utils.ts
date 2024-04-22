@@ -25,11 +25,23 @@ import {
   SendTransactionError,
 } from "@solana/web3.js";
 import bs58 from "bs58";
+import PQueue from "p-queue";
 
-import { Account, AtaParams, ConfirmationParams, ITransactionSolanaExt, TransactionFailedError } from "./types";
+import {
+  Account,
+  AtaParams,
+  ConfirmationParams,
+  ITransactionSolanaExt,
+  ThrottleParams,
+  TransactionFailedError,
+} from "./types";
 import { sleep } from "../utils";
 
 const SIMULATE_TRIES = 3;
+
+export const buildSendThrottler = (sendRate: number): PQueue => {
+  return new PQueue({ concurrency: sendRate, intervalCap: 1, interval: 1000 });
+};
 
 /**
  * Wrapper function for Solana web3 getProgramAccounts with slightly better call interface
@@ -148,7 +160,8 @@ export async function signTransaction<T extends Transaction | VersionedTransacti
  * @param connection - Solana client connection
  * @param invoker - Keypair used as signer
  * @param tx - Transaction instance
- * @param {ConfirmationParams} confirmationParams - Confirmation Params that will be used for execution
+ * @param confirmationParams - Confirmation Params that will be used for execution
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
  * @returns Transaction signature
  */
 export async function signAndExecuteTransaction(
@@ -156,10 +169,11 @@ export async function signAndExecuteTransaction(
   invoker: Keypair | SignerWalletAdapter,
   tx: Transaction | VersionedTransaction,
   confirmationParams: ConfirmationParams,
+  throttleParams: ThrottleParams,
 ): Promise<string> {
   const signedTx = await signTransaction(invoker, tx);
 
-  return executeTransaction(connection, signedTx, confirmationParams);
+  return executeTransaction(connection, signedTx, confirmationParams, throttleParams);
 }
 
 /**
@@ -173,20 +187,48 @@ export async function signAndExecuteTransaction(
  * - otherwise there is a chance of marking a landed tx as failed if it was broadcasted at least once
  * @param connection - Solana client connection
  * @param tx - Transaction instance
- * @param {ConfirmationParams} confirmationParams - Confirmation Params that will be used for execution
+ * @param confirmationParams - Confirmation Params that will be used for execution
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
  * @returns Transaction signature
  */
 export async function executeTransaction(
   connection: Connection,
   tx: Transaction | VersionedTransaction,
   confirmationParams: ConfirmationParams,
+  throttleParams: ThrottleParams,
 ): Promise<string> {
   if (tx.signatures.length === 0) {
     throw Error("Error with transaction parameters.");
   }
   await simulateTransaction(connection, tx);
 
-  return sendAndConfirmTransaction(connection, tx, confirmationParams);
+  return sendAndConfirmTransaction(connection, tx, confirmationParams, throttleParams);
+}
+
+/**
+ * Launches a PromisePool with all transaction being executed at the same time, allows to throttle all TXs through one Queue
+ * @param connection - Solana client connection
+ * @param txs - Transactions
+ * @param confirmationParams - Confirmation Params that will be used for execution
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param throttleParams.sendRate - rate
+ * @param throttleParams.sendThrottler -  throttler instance
+ * @returns Raw Promise Results - should be handled by the consumer and unwrapped accordingly
+ */
+export async function executeMultipleTransactions(
+  connection: Connection,
+  txs: (Transaction | VersionedTransaction)[],
+  confirmationParams: ConfirmationParams,
+  { sendRate = 1, sendThrottler }: ThrottleParams,
+): Promise<PromiseSettledResult<string>[]> {
+  if (!sendThrottler) {
+    sendThrottler = buildSendThrottler(sendRate);
+  }
+  return Promise.allSettled(
+    txs.map((tx) =>
+      executeTransaction(connection, tx, confirmationParams, { sendRate: sendRate, sendThrottler: sendThrottler }),
+    ),
+  );
 }
 
 /**
@@ -194,14 +236,19 @@ export async function executeTransaction(
  * - we add additional 30 bocks to account for validators in an PRC pool divergence
  * @param connection - Solana client connection
  * @param tx - Transaction instance
- * @param hash - blockhash information, the same hash should be used in the Transaction
- * @param context - context at which blockhash has been retrieve
- * @param commitment - optional commitment that will be used for simulation and confirmation
+ * @param confirmationParams - Confirmation Params that will be used for execution
+ * @param confirmationParams.hash - blockhash information, the same hash should be used in the Transaction
+ * @param confirmationParams.context - context at which blockhash has been retrieve
+ * @param confirmationParams.commitment - optional commitment that will be used for simulation and confirmation
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param throttleParams.sendRate - rate
+ * @param throttleParams.sendThrottler -  throttler instance
  */
 export async function sendAndConfirmTransaction(
   connection: Connection,
   tx: Transaction | VersionedTransaction,
   { hash, context, commitment }: ConfirmationParams,
+  { sendRate = 1, sendThrottler }: ThrottleParams,
 ): Promise<string> {
   const isVersioned = isTransactionVersioned(tx);
 
@@ -212,18 +259,24 @@ export async function sendAndConfirmTransaction(
     signature = bs58.encode(tx.signature!);
   }
 
+  if (!sendThrottler) {
+    sendThrottler = buildSendThrottler(sendRate);
+  }
+
   let blockheight = await connection.getBlockHeight(commitment);
   let transactionSent = false;
   const rawTransaction = tx.serialize();
   while (blockheight < hash.lastValidBlockHeight + 15) {
     try {
       if (blockheight < hash.lastValidBlockHeight || !transactionSent) {
-        await connection.sendRawTransaction(rawTransaction, {
-          maxRetries: 0,
-          minContextSlot: context.slot,
-          preflightCommitment: commitment,
-          skipPreflight: true,
-        });
+        await sendThrottler.add(async () =>
+          connection.sendRawTransaction(rawTransaction, {
+            maxRetries: 0,
+            minContextSlot: context.slot,
+            preflightCommitment: commitment,
+            skipPreflight: true,
+          }),
+        );
         transactionSent = true;
       }
     } catch (e) {
@@ -413,6 +466,7 @@ export async function generateCreateAtaBatchTx(
  * @param invoker - Transaction invoker and payer
  * @param paramsBatch - Array of Params for an each ATA account: {mint, owner}
  * @param commitment - optional commitment that will be used to fetch Blockhash
+ * @param rate - throttle rate for tx sending
  * @returns Transaction signature
  */
 export async function createAtaBatch(
@@ -420,6 +474,7 @@ export async function createAtaBatch(
   invoker: Keypair | SignerWalletAdapter,
   paramsBatch: AtaParams[],
   commitment?: Commitment,
+  rate?: number,
 ): Promise<string> {
   const { tx, hash, context } = await generateCreateAtaBatchTx(
     connection,
@@ -427,7 +482,7 @@ export async function createAtaBatch(
     await enrichAtaParams(connection, paramsBatch),
     commitment,
   );
-  return signAndExecuteTransaction(connection, invoker, tx, { hash, context, commitment });
+  return signAndExecuteTransaction(connection, invoker, tx, { hash, context, commitment }, { sendRate: rate });
 }
 
 /**

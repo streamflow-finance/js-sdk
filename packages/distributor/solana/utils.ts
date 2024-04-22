@@ -1,7 +1,7 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { ContractError } from "@streamflow/common";
-import { ConfirmationParams, signAndExecuteTransaction } from "@streamflow/common/solana";
+import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@streamflow/common/solana";
 
 import { fromTxError } from "./generated/errors";
 
@@ -38,9 +38,10 @@ export async function wrappedSignAndExecuteTransaction(
   invoker: Keypair | SignerWalletAdapter,
   tx: Transaction | VersionedTransaction,
   confirmationParams: ConfirmationParams,
+  throttleParams: ThrottleParams,
 ): Promise<string> {
   try {
-    return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams);
+    return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams, throttleParams);
   } catch (err: any) {
     if (err instanceof Error) {
       const parsed = fromTxError(err);

@@ -1,6 +1,12 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { ConfirmationParams, executeTransaction, isSignerKeypair, isSignerWallet } from "@streamflow/common/solana";
+import {
+  ConfirmationParams,
+  executeTransaction,
+  isSignerKeypair,
+  isSignerWallet,
+  ThrottleParams,
+} from "@streamflow/common/solana";
 import BN from "bn.js";
 
 import { streamLayout } from "./layout";
@@ -93,16 +99,18 @@ export async function signAllTransactionWithRecipients(
  * Sign passed BatchItems with wallet request or KeyPair
  * @param {Connection} connection - Solana web3 connection object.
  * @param {BatchItem} batchItem - Signed transaction ready to be send.
- * @param {ConfirmationParams} confirmationParams - Confirmation Params that will be used for execution
+ * @param confirmationParams - Confirmation Params that will be used for execution
+ * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
  * @return {Promise<BatchItemResult>} - Returns settled transaction item
  */
 export async function sendAndConfirmStreamRawTransaction(
   connection: Connection,
   batchItem: BatchItem,
   confirmationParams: ConfirmationParams,
+  throttleParams: ThrottleParams,
 ): Promise<BatchItemResult> {
   try {
-    const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationParams);
+    const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationParams, throttleParams);
     return { ...batchItem, signature: completedTxSignature };
   } catch (error: any) {
     throw {

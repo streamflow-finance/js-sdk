@@ -2,6 +2,7 @@
 
 import BN from "bn.js";
 import { Buffer } from "buffer";
+import PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
 import {
   Connection,
@@ -25,6 +26,9 @@ import {
   prepareTransaction,
   prepareBaseInstructions,
   getMintAndProgram,
+  executeTransaction,
+  executeMultipleTransactions,
+  buildSendThrottler,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
@@ -33,8 +37,6 @@ import {
   MetadataRecipientHashMap,
   Contract,
   BatchItem,
-  BatchItemSuccess,
-  BatchItemError,
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
@@ -104,6 +106,8 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
   private commitment: Commitment | ConnectionConfig;
 
+  private sendThrottler: PQueue;
+
   /**
    * Create Stream instance
    */
@@ -112,11 +116,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
     cluster: ICluster = ICluster.Mainnet,
     commitment: Commitment | ConnectionConfig = "confirmed",
     programId = "",
+    sendRate = 1,
+    sendThrottler?: PQueue,
   ) {
     super();
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+    this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
   }
 
   public getConnection(): Connection {
@@ -144,11 +151,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
       undefined,
       metadata,
     );
-    const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.sender,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
@@ -281,11 +294,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
       undefined,
       metadata,
     );
-    const signature = await signAndExecuteTransaction(this.connection, extParams.sender, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.sender,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
@@ -476,17 +495,22 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
     if (isNative) {
       const prepareTx = signedBatch.pop();
-      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context });
+      await sendAndConfirmStreamRawTransaction(
+        this.connection,
+        prepareTx!,
+        { hash, context },
+        { sendThrottler: this.sendThrottler },
+      );
     }
 
-    const responses: PromiseSettledResult<BatchItem>[] = [];
+    const responses: PromiseSettledResult<string>[] = [];
     if (metadataPubKeys.length > 0) {
       //if metadata pub keys were passed we should execute transaction sequentially
       //ephemeral signer need to be used first before proceeding with the next
       for (const batchTx of signedBatch) {
         responses.push(
           ...(await Promise.allSettled([
-            sendAndConfirmStreamRawTransaction(this.connection, batchTx, { hash, context }),
+            executeTransaction(this.connection, batchTx.tx, { hash, context }, { sendThrottler: this.sendThrottler }),
           ])),
         );
       }
@@ -494,24 +518,27 @@ export default class SolanaStreamClient extends BaseStreamClient {
       //send all transactions in parallel and wait for them to settle.
       //it allows to speed up the process of sending transactions
       //we then filter all promise responses and handle failed transactions
-      const batchTransactionsCalls = signedBatch.map((el) =>
-        sendAndConfirmStreamRawTransaction(this.connection, el, { hash, context }),
+      responses.push(
+        ...(await executeMultipleTransactions(
+          this.connection,
+          signedBatch.map((item) => item.tx),
+          { hash, context },
+          { sendThrottler: this.sendThrottler },
+        )),
       );
-      responses.push(...(await Promise.allSettled(batchTransactionsCalls)));
     }
 
-    const successes = responses
-      .filter((el): el is PromiseFulfilledResult<BatchItemSuccess> => el.status === "fulfilled")
-      .map((el) => el.value);
-    signatures.push(...successes.map((el) => el.signature));
-
-    const failures = responses
-      .filter((el): el is PromiseRejectedResult => el.status === "rejected")
-      .map((el) => ({
-        ...(el.reason as BatchItemError),
-        contractErrorCode: this.extractErrorCode(el.reason.error) || undefined,
-      }));
-    errors.push(...failures);
+    responses.forEach((item, index) => {
+      if (item.status === "fulfilled") {
+        signatures.push(item.value);
+      } else {
+        errors.push({
+          recipient: signedBatch[index].recipient,
+          error: item.reason,
+          contractErrorCode: this.extractErrorCode(item.reason) || undefined,
+        });
+      }
+    });
 
     return { txs: signatures, metadatas, metadataToRecipient, errors };
   }
@@ -525,11 +552,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return { ixs, txId: signature };
   }
@@ -587,11 +620,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async cancel({ id }: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareCancelInstructions({ id }, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return { ixs, txId: signature };
   }
@@ -656,11 +695,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
   ): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTransferInstructions({ id, newRecipient }, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return { ixs, txId: signature };
   }
@@ -715,11 +760,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async topup({ id, amount }: ITopUpData, extParams: ITopUpStreamSolanaExt): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTopupInstructions({ id, amount }, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return { ixs, txId: signature };
   }
@@ -837,11 +888,17 @@ export default class SolanaStreamClient extends BaseStreamClient {
   public async update(data: IUpdateData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareUpdateInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await signAndExecuteTransaction(this.connection, extParams.invoker, tx, {
-      hash,
-      context,
-      commitment: this.getCommitment(),
-    });
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
 
     return {
       ixs,
