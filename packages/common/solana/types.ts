@@ -1,8 +1,10 @@
 import { AccountInfo, BlockhashWithExpiryBlockHeight, Commitment, Context, PublicKey } from "@solana/web3.js";
+import PQueue from "p-queue";
 
 export interface ITransactionSolanaExt {
   computePrice?: number;
   computeLimit?: number;
+  sendRate?: number;
 }
 
 export interface Account {
@@ -28,6 +30,11 @@ export interface ConfirmationParams {
   hash: BlockhashWithExpiryBlockHeight;
   context: Context;
   commitment?: Commitment;
+}
+
+export interface ThrottleParams {
+  sendRate?: number;
+  sendThrottler?: PQueue;
 }
 
 export class TransactionFailedError extends Error {
