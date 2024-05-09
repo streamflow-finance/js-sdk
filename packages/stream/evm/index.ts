@@ -6,4 +6,4 @@ export * from "./types";
 
 export * as constants from "./constants";
 
-export { default as ercAbi } from "./abi";
+export { default as ercAbi } from "./ercAbi";

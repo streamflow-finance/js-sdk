@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/distributor",
-  "version": "6.3.4",
+  "version": "6.3.5",
   "description": "JavaScript SDK to interact with Streamflow Airdrop protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/index.js",
