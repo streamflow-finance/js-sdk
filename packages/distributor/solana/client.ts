@@ -91,6 +91,31 @@ export default class SolanaDistributorClient {
   }
 
   public async create(data: ICreateDistributorData, extParams: ICreateSolanaExt): Promise<ICreateDistributorResult> {
+    const { ixs, distributorPublicKey } = await this.prepareCreateInstructions(data, extParams);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
+
+    return {
+      ixs,
+      txId: signature,
+      metadataId: distributorPublicKey.toBase58(),
+    };
+  }
+
+  public async prepareCreateInstructions(
+    data: ICreateDistributorData,
+    extParams: ICreateSolanaExt,
+  ): Promise<{ distributorPublicKey: PublicKey; ixs: TransactionInstruction[] }> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -149,6 +174,11 @@ export default class SolanaDistributorClient {
       ),
     );
 
+    return { distributorPublicKey, ixs };
+  }
+
+  public async claim(data: IClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+    const ixs = await this.prepareClaimInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await wrappedSignAndExecuteTransaction(
       this.connection,
@@ -162,14 +192,13 @@ export default class SolanaDistributorClient {
       { sendThrottler: this.sendThrottler },
     );
 
-    return {
-      ixs,
-      txId: signature,
-      metadataId: distributorPublicKey.toBase58(),
-    };
+    return { ixs, txId: signature };
   }
 
-  public async claim(data: IClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  public async prepareClaimInstructions(
+    data: IClaimData,
+    extParams: IInteractSolanaExt,
+  ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -228,6 +257,11 @@ export default class SolanaDistributorClient {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
+    return ixs;
+  }
+
+  public async clawback(data: IClawbackData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+    const ixs = await this.prepareClawbackInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await wrappedSignAndExecuteTransaction(
       this.connection,
@@ -244,7 +278,10 @@ export default class SolanaDistributorClient {
     return { ixs, txId: signature };
   }
 
-  public async clawback(data: IClawbackData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  public async prepareClawbackInstructions(
+    data: IClawbackData,
+    extParams: IInteractSolanaExt,
+  ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
@@ -279,20 +316,7 @@ export default class SolanaDistributorClient {
 
     ixs.push(clawback(accounts, this.programId));
 
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await wrappedSignAndExecuteTransaction(
-      this.connection,
-      extParams.invoker,
-      tx,
-      {
-        hash,
-        context,
-        commitment: this.getCommitment(),
-      },
-      { sendThrottler: this.sendThrottler },
-    );
-
-    return { ixs, txId: signature };
+    return ixs;
   }
 
   public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | null)[]> {
