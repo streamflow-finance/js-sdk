@@ -14,6 +14,8 @@ or
 
 `yarn add @streamflow/stream`
 
+## Documentation
+API Documentation available here: [docs site →](https://streamflow-finance.github.io/js-sdk/)
 
 ## Import SDK
 

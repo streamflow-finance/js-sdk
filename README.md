@@ -13,6 +13,9 @@ There are several ways to use **Streamflow**:
 Protocol audits available [here](https://www.notion.so/streamflow/Streamflow-Security-Audits-3250070c0b3a4a0690385d96316d645c).  
 Partner oracle audit available here [here](https://github.com/streamflow-finance/rust-sdk/blob/main/partner_oracle_audit.pdf).
 
+## Documentation
+API Documentation available here: [docs site →](https://streamflow-finance.github.io/js-sdk/)
+
 ## JS SDK to interact with Streamflow protocols
 
 This repo consists of js-sdk to interact with several protocol exposed by streamflow:
