@@ -440,6 +440,9 @@ export default class SolanaStreamClient extends BaseStreamClient {
     }[] = [];
     metadataPubKeys = metadataPubKeys || [];
 
+    const { tokenProgramId } = await getMintAndProgram(this.connection, data.tokenId);
+
+
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
       const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(recipientData, data, {
@@ -447,7 +450,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
         computePrice,
         computeLimit,
-      });
+      }, tokenProgramId);
 
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
@@ -975,6 +978,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     recipient: IRecipient,
     streamParams: IStreamConfig,
     extParams: ICreateStreamSolanaExt,
+    tokenProgramId: PublicKey
   ): Promise<{
     ixs: TransactionInstruction[];
     metadata: Keypair | undefined;
@@ -1013,7 +1017,6 @@ export default class SolanaStreamClient extends BaseStreamClient {
       this.programId,
     );
 
-    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
     const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
     const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
