@@ -10,10 +10,10 @@ import {
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
-  IGetFeesData,
-  IGetAllData,
-  IGetOneData,
   IFees,
+  IGetAllData,
+  IGetFeesData,
+  IGetOneData,
   IMultiTransactionResult,
   IRecipient,
   ITopUpData,
@@ -24,7 +24,7 @@ import {
   Stream,
   StreamDirection,
 } from "../common/types";
-import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
+import { BASE_PROGRAM_IDS, BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE, WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
@@ -51,10 +51,6 @@ export default class EvmStreamClient extends BaseStreamClient {
   ) {
     super();
 
-    if (chain !== IChain.Ethereum && chain !== IChain.BNB && chain !== IChain.Polygon) {
-      throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
-    }
-
     if (programId) {
       this.programId = programId;
     } else {
@@ -68,6 +64,11 @@ export default class EvmStreamClient extends BaseStreamClient {
         case IChain.Polygon:
           this.programId = POLYGON_PROGRAM_IDS[cluster];
           break;
+        case IChain.Base:
+          this.programId = BASE_PROGRAM_IDS[cluster];
+          break;
+        default:
+          throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
       }
     }
 
