@@ -7,6 +7,7 @@ import {
   ICancelData,
   IChain,
   ICluster,
+  ICreateMultiError,
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
@@ -124,42 +125,31 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const creationPromises = args.map((item) => this.writeContract.create(...item, { value: fees.value }));
 
-    const signatures: string[] = [];
     const results = await Promise.all(creationPromises);
+    const errors: ICreateMultiError[] = [];
+    const signatures: string[] = [];
+    const metadatas: string[] = [];
+    const metadataToRecipient: { [key: string]: IRecipient } = {};
 
     const confirmations = await Promise.allSettled(results.map((result) => result.wait()));
-    const successes = confirmations
-      .filter((el): el is PromiseFulfilledResult<any> => el.status === "fulfilled")
-      .map((el) => el.value);
-    signatures.push(...successes.map((el) => el.hash));
-
-    const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
-      result.status === "fulfilled"
-        ? this.formatMetadataId(
-            result.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0],
-          )
-        : null,
-    );
-    const metadataToRecipient = metadatas.reduce(
-      (acc, value, index) => {
-        if (value) {
-          acc[value] = multipleStreamData.recipients[index];
-        }
-
-        return acc;
-      },
-      {} as Record<string, IRecipient>,
-    );
-
-    const failures = confirmations
-      .filter((el): el is PromiseRejectedResult => el.status === "rejected")
-      .map((el) => el.reason);
+    confirmations.forEach((res: PromiseSettledResult<any>, index: number) => {
+      if (res.status === "rejected") {
+        errors.push(res.reason);
+        return;
+      }
+      signatures.push(res.value.transactionHash);
+      const metadataId = this.formatMetadataId(
+        res.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0],
+      );
+      metadatas.push(metadataId);
+      metadataToRecipient[metadataId] = multipleStreamData.recipients[index];
+    });
 
     return {
       txs: signatures,
-      metadatas: metadatas.filter(Boolean) as string[],
+      metadatas,
       metadataToRecipient,
-      errors: failures,
+      errors,
     };
   }
 
