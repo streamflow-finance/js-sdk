@@ -7,13 +7,14 @@ import {
   ICancelData,
   IChain,
   ICluster,
+  ICreateMultiError,
   ICreateMultipleStreamData,
   ICreateResult,
   ICreateStreamData,
-  IGetFeesData,
-  IGetAllData,
-  IGetOneData,
   IFees,
+  IGetAllData,
+  IGetFeesData,
+  IGetOneData,
   IMultiTransactionResult,
   IRecipient,
   ITopUpData,
@@ -24,7 +25,7 @@ import {
   Stream,
   StreamDirection,
 } from "../common/types";
-import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
+import { BASE_PROGRAM_IDS, BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
 import abi from "./abi";
 import ercAbi from "./ercAbi";
 import { BASE_FEE, WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
@@ -51,10 +52,6 @@ export default class EvmStreamClient extends BaseStreamClient {
   ) {
     super();
 
-    if (chain !== IChain.Ethereum && chain !== IChain.BNB && chain !== IChain.Polygon) {
-      throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
-    }
-
     if (programId) {
       this.programId = programId;
     } else {
@@ -68,6 +65,11 @@ export default class EvmStreamClient extends BaseStreamClient {
         case IChain.Polygon:
           this.programId = POLYGON_PROGRAM_IDS[cluster];
           break;
+        case IChain.Base:
+          this.programId = BASE_PROGRAM_IDS[cluster];
+          break;
+        default:
+          throw new Error("Wrong chain. Supported chains are Ethereum , BNB, Base and Polygon!");
       }
     }
 
@@ -123,42 +125,31 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const creationPromises = args.map((item) => this.writeContract.create(...item, { value: fees.value }));
 
-    const signatures: string[] = [];
     const results = await Promise.all(creationPromises);
+    const errors: ICreateMultiError[] = [];
+    const signatures: string[] = [];
+    const metadatas: string[] = [];
+    const metadataToRecipient: { [key: string]: IRecipient } = {};
 
     const confirmations = await Promise.allSettled(results.map((result) => result.wait()));
-    const successes = confirmations
-      .filter((el): el is PromiseFulfilledResult<any> => el.status === "fulfilled")
-      .map((el) => el.value);
-    signatures.push(...successes.map((el) => el.hash));
-
-    const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
-      result.status === "fulfilled"
-        ? this.formatMetadataId(
-            result.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0],
-          )
-        : null,
-    );
-    const metadataToRecipient = metadatas.reduce(
-      (acc, value, index) => {
-        if (value) {
-          acc[value] = multipleStreamData.recipients[index];
-        }
-
-        return acc;
-      },
-      {} as Record<string, IRecipient>,
-    );
-
-    const failures = confirmations
-      .filter((el): el is PromiseRejectedResult => el.status === "rejected")
-      .map((el) => el.reason);
+    confirmations.forEach((res: PromiseSettledResult<any>, index: number) => {
+      if (res.status === "rejected") {
+        errors.push(res.reason);
+        return;
+      }
+      signatures.push(res.value.transactionHash);
+      const metadataId = this.formatMetadataId(
+        res.value.events!.find((item: ethers.Event) => item.event === "ContractCreated")!.args![0],
+      );
+      metadatas.push(metadataId);
+      metadataToRecipient[metadataId] = multipleStreamData.recipients[index];
+    });
 
     return {
       txs: signatures,
-      metadatas: metadatas.filter(Boolean) as string[],
+      metadatas,
       metadataToRecipient,
-      errors: failures,
+      errors,
     };
   }
 

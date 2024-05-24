@@ -48,7 +48,7 @@ export interface AptosStreamClientOptions {
 }
 
 export interface EvmStreamClientOptions {
-  chain: IChain.Ethereum | IChain.BNB | IChain.Polygon;
+  chain: IChain.Ethereum | IChain.BNB | IChain.Polygon | IChain.Base;
   clusterUrl: string;
   signer: Signer;
   cluster?: ICluster;
@@ -141,6 +141,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
           options.programId,
         ) as StreamClientType<T>;
         break;
+      case IChain.Base:
       case IChain.BNB:
       case IChain.Ethereum:
       case IChain.Polygon:

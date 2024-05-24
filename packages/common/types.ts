@@ -21,6 +21,7 @@ export enum IChain {
   BNB = "BNB",
   Polygon = "Polygon",
   Sui = "Sui",
+  Base = "Base",
 }
 
 /**
