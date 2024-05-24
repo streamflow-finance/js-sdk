@@ -5,6 +5,8 @@ import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@
 
 import { fromTxError } from "./generated/errors";
 
+export const ceilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigInt(1) : BigInt(0));
+
 export function getDistributorPda(programId: PublicKey, mint: PublicKey, version: number): PublicKey {
   // Constructing the seed for the PDA
   const seeds = [

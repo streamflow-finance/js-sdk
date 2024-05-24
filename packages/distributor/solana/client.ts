@@ -1,6 +1,12 @@
 import BN from "bn.js";
 import PQueue from "p-queue";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, createTransferCheckedInstruction } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  createTransferCheckedInstruction,
+  createTransferCheckedWithFeeInstruction,
+  getTransferFeeConfig,
+} from "@solana/spl-token";
 import {
   Connection,
   PublicKey,
@@ -20,7 +26,7 @@ import {
   buildSendThrottler,
 } from "@streamflow/common/solana";
 
-import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
+import { DISTRIBUTOR_PROGRAM_ID, ONE_IN_BASIS_POINTS } from "./constants";
 import {
   IClaimData,
   IClawbackData,
@@ -45,10 +51,11 @@ import {
 } from "./generated/instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
 import {
+  ceilN,
   getClaimantStatusPda,
   getDistributorPda,
   getEventAuthorityPda,
-  wrappedSignAndExecuteTransaction,
+  wrappedSignAndExecuteTransaction
 } from "./utils";
 
 interface IInitOptions {
@@ -123,6 +130,7 @@ export default class SolanaDistributorClient {
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
     const mint = extParams.isNative ? NATIVE_MINT : new PublicKey(data.mint);
     const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const transferFeeConfig = getTransferFeeConfig(mintAccount);
     const distributorPublicKey = getDistributorPda(this.programId, mint, data.version);
     const tokenVault = await ata(mint, distributorPublicKey, tokenProgramId);
     const senderTokens = await ata(mint, extParams.invoker.publicKey, tokenProgramId);
@@ -161,18 +169,53 @@ export default class SolanaDistributorClient {
     }
 
     ixs.push(newDistributor(args, accounts, this.programId));
-    ixs.push(
-      createTransferCheckedInstruction(
-        senderTokens,
-        mint,
-        tokenVault,
-        extParams.invoker.publicKey,
-        BigInt(data.maxTotalClaim.toString()),
-        mintAccount.decimals,
-        undefined,
-        tokenProgramId,
-      ),
-    );
+
+    if (transferFeeConfig) {
+      const epoch = await this.connection.getEpochInfo();
+      const transferFee =
+        epoch.epoch >= transferFeeConfig.newerTransferFee.epoch
+          ? transferFeeConfig.newerTransferFee
+          : transferFeeConfig.olderTransferFee;
+      const transferFeeBasisPoints = BigInt(transferFee.transferFeeBasisPoints);
+      let transferAmount = BigInt(data.maxTotalClaim.toString());
+      let feeCharged = BigInt(0);
+
+      if (transferFeeBasisPoints !== BigInt(0)) {
+        const numerator = transferAmount * ONE_IN_BASIS_POINTS;
+        const denominator = ONE_IN_BASIS_POINTS - transferFeeBasisPoints;
+        const rawPreFeeAmount = ceilN(numerator, denominator);
+        const fee = rawPreFeeAmount - transferAmount;
+        transferAmount = rawPreFeeAmount;
+        feeCharged = fee > transferFee.maximumFee ? transferFee.maximumFee : fee;
+      }
+
+      ixs.push(
+        createTransferCheckedWithFeeInstruction(
+          senderTokens,
+          mint,
+          tokenVault,
+          extParams.invoker.publicKey,
+          transferAmount,
+          mintAccount.decimals,
+          feeCharged,
+          undefined,
+          tokenProgramId,
+        ),
+      );
+    } else {
+      ixs.push(
+        createTransferCheckedInstruction(
+          senderTokens,
+          mint,
+          tokenVault,
+          extParams.invoker.publicKey,
+          BigInt(data.maxTotalClaim.toString()),
+          mintAccount.decimals,
+          undefined,
+          tokenProgramId,
+        ),
+      );
+    }
 
     return { distributorPublicKey, ixs };
   }
