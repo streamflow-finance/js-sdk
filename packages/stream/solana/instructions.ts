@@ -259,7 +259,7 @@ export const withdrawStreamInstruction = (
     { pubkey: streamflowTreasuryTokens, isSigner: false, isWritable: true },
     { pubkey: partner, isSigner: false, isWritable: true },
     { pubkey: partnerTokens, isSigner: false, isWritable: true },
-    { pubkey: mint, isSigner: false, isWritable: false },
+    { pubkey: mint, isSigner: false, isWritable: true },
     { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
@@ -360,7 +360,7 @@ export const cancelStreamInstruction = (
     { pubkey: streamflowTreasuryTokens, isSigner: false, isWritable: true },
     { pubkey: partner, isSigner: false, isWritable: true },
     { pubkey: partnerTokens, isSigner: false, isWritable: true },
-    { pubkey: mint, isSigner: false, isWritable: false },
+    { pubkey: mint, isSigner: false, isWritable: true },
     { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
