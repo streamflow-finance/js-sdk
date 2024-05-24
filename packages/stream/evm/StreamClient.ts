@@ -69,7 +69,7 @@ export default class EvmStreamClient extends BaseStreamClient {
           this.programId = BASE_PROGRAM_IDS[cluster];
           break;
         default:
-          throw new Error("Wrong chain. Supported chains are Ethereum , BNB and Polygon!");
+          throw new Error("Wrong chain. Supported chains are Ethereum , BNB, Base and Polygon!");
       }
     }
 
