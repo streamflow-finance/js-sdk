@@ -55,7 +55,7 @@ import {
   getClaimantStatusPda,
   getDistributorPda,
   getEventAuthorityPda,
-  wrappedSignAndExecuteTransaction
+  wrappedSignAndExecuteTransaction,
 } from "./utils";
 
 interface IInitOptions {
