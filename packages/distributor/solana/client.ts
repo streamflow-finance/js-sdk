@@ -1,6 +1,12 @@
 import BN from "bn.js";
 import PQueue from "p-queue";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, createTransferCheckedInstruction } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  createTransferCheckedInstruction,
+  createTransferCheckedWithFeeInstruction,
+  getTransferFeeConfig,
+} from "@solana/spl-token";
 import {
   Connection,
   PublicKey,
@@ -45,6 +51,7 @@ import {
 } from "./generated/instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
 import {
+  calculateAmountWithTransferFees,
   getClaimantStatusPda,
   getDistributorPda,
   getEventAuthorityPda,
@@ -123,6 +130,7 @@ export default class SolanaDistributorClient {
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
     const mint = extParams.isNative ? NATIVE_MINT : new PublicKey(data.mint);
     const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const transferFeeConfig = getTransferFeeConfig(mintAccount);
     const distributorPublicKey = getDistributorPda(this.programId, mint, data.version);
     const tokenVault = await ata(mint, distributorPublicKey, tokenProgramId);
     const senderTokens = await ata(mint, extParams.invoker.publicKey, tokenProgramId);
@@ -161,18 +169,41 @@ export default class SolanaDistributorClient {
     }
 
     ixs.push(newDistributor(args, accounts, this.programId));
-    ixs.push(
-      createTransferCheckedInstruction(
-        senderTokens,
-        mint,
-        tokenVault,
-        extParams.invoker.publicKey,
+
+    if (transferFeeConfig) {
+      const { transferAmount, feeCharged } = await calculateAmountWithTransferFees(
+        this.connection,
+        transferFeeConfig,
         BigInt(data.maxTotalClaim.toString()),
-        mintAccount.decimals,
-        undefined,
-        tokenProgramId,
-      ),
-    );
+      );
+
+      ixs.push(
+        createTransferCheckedWithFeeInstruction(
+          senderTokens,
+          mint,
+          tokenVault,
+          extParams.invoker.publicKey,
+          transferAmount,
+          mintAccount.decimals,
+          feeCharged,
+          undefined,
+          tokenProgramId,
+        ),
+      );
+    } else {
+      ixs.push(
+        createTransferCheckedInstruction(
+          senderTokens,
+          mint,
+          tokenVault,
+          extParams.invoker.publicKey,
+          BigInt(data.maxTotalClaim.toString()),
+          mintAccount.decimals,
+          undefined,
+          tokenProgramId,
+        ),
+      );
+    }
 
     return { distributorPublicKey, ixs };
   }
