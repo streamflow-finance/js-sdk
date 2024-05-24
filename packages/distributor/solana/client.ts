@@ -26,7 +26,7 @@ import {
   buildSendThrottler,
 } from "@streamflow/common/solana";
 
-import { DISTRIBUTOR_PROGRAM_ID, ONE_IN_BASIS_POINTS } from "./constants";
+import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
 import {
   IClaimData,
   IClawbackData,
@@ -51,7 +51,7 @@ import {
 } from "./generated/instructions";
 import { ClaimStatus, MerkleDistributor } from "./generated/accounts";
 import {
-  ceilN,
+  calculateAmountWithTransferFees,
   getClaimantStatusPda,
   getDistributorPda,
   getEventAuthorityPda,
@@ -171,23 +171,11 @@ export default class SolanaDistributorClient {
     ixs.push(newDistributor(args, accounts, this.programId));
 
     if (transferFeeConfig) {
-      const epoch = await this.connection.getEpochInfo();
-      const transferFee =
-        epoch.epoch >= transferFeeConfig.newerTransferFee.epoch
-          ? transferFeeConfig.newerTransferFee
-          : transferFeeConfig.olderTransferFee;
-      const transferFeeBasisPoints = BigInt(transferFee.transferFeeBasisPoints);
-      let transferAmount = BigInt(data.maxTotalClaim.toString());
-      let feeCharged = BigInt(0);
-
-      if (transferFeeBasisPoints !== BigInt(0)) {
-        const numerator = transferAmount * ONE_IN_BASIS_POINTS;
-        const denominator = ONE_IN_BASIS_POINTS - transferFeeBasisPoints;
-        const rawPreFeeAmount = ceilN(numerator, denominator);
-        const fee = rawPreFeeAmount - transferAmount;
-        transferAmount = rawPreFeeAmount;
-        feeCharged = fee > transferFee.maximumFee ? transferFee.maximumFee : fee;
-      }
+      const { transferAmount, feeCharged } = await calculateAmountWithTransferFees(
+        this.connection,
+        transferFeeConfig,
+        BigInt(data.maxTotalClaim.toString()),
+      );
 
       ixs.push(
         createTransferCheckedWithFeeInstruction(
