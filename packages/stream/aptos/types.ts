@@ -1,6 +1,7 @@
 import { AptosAccount } from "aptos";
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
+import { Buffer } from "buffer";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
 import { Stream, StreamType } from "../common/types";
