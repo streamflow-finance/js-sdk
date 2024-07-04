@@ -1,10 +1,15 @@
 import { Buffer } from "buffer";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
-import { sha256 } from "js-sha256";
+import { createHash } from "node:crypto";
 
-import * as Layout from "./layout";
-import { IUpdateData } from "../common/types";
+import * as Layout from "./layout.js";
+import { IUpdateData } from "../common/types.js";
+
+const hasher = () => createHash("sha256");
+const sha256 = {
+  digest: (data: string): Uint8Array => new Uint8Array(hasher().update(data).digest()),
+};
 
 interface CreateStreamData {
   start: BN;

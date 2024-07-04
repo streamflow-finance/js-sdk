@@ -1,4 +1,4 @@
-import { ContractErrorCode, ICluster } from "../common/types";
+import { ContractErrorCode, ICluster } from "../common/types.js";
 
 export const ETHEREUM_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Mainnet]: "0x94d4646Bd307Bf91CB1893BC64d976BF9E60D9B2",

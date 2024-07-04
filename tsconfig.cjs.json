@@ -1,10 +1,8 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "es5",
     "module": "commonjs",
-    "declaration": true,
-    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "lib": [
@@ -16,16 +14,5 @@
     "types": [
       "jest"
     ],
-    // "paths": {
-    //   "@streamflow/*": [
-    //     "packages/*"
-    //   ]
-    // }
   },
-  "exclude": [
-    "node_modules",
-    "__tests__",
-    "packages/*/dist/**/*",
-    "local",
-  ]
 }
