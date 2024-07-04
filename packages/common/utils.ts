@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-import { ContractError } from "./types";
+import { ContractError } from "./types.js";
 
 /**
  * Used for conversion of token amounts to their Big Number representation.

@@ -1,9 +1,9 @@
-export { default, default as EvmStreamClient } from "./StreamClient";
+export { default, default as EvmStreamClient } from "./StreamClient.js";
 
-export * from "./utils";
+export * from "./utils.js";
 
-export * from "./types";
+export * from "./types.js";
 
-export * as constants from "./constants";
+export * as constants from "./constants.js";
 
-export { default as ercAbi } from "./ercAbi";
+export { default as ercAbi } from "./ercAbi.js";

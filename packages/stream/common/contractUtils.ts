@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-import { StreamType } from "./types";
+import { StreamType } from "./types.js";
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;

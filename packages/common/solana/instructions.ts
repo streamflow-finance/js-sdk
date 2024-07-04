@@ -1,8 +1,8 @@
 import {
+  getAssociatedTokenAddress,
   NATIVE_MINT,
   createAssociatedTokenAccountInstruction,
   createSyncNativeInstruction,
-  getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
