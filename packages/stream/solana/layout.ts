@@ -1,6 +1,6 @@
 import * as BufferLayout from "@solana/buffer-layout";
 
-import { CREATE_PARAMS_PADDING } from "./constants";
+import { CREATE_PARAMS_PADDING } from "./constants.js";
 import {
   ICreateStreamLayout,
   ICreateUncheckedStreamLayout,
@@ -9,7 +9,7 @@ import {
   ITopupStreamLayout,
   IUpdateStreamLayout,
   IWithdrawStreamLayout,
-} from "./instructionTypes";
+} from "./instructionTypes.js";
 
 /**
  * Stream layout

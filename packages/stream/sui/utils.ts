@@ -1,5 +1,5 @@
-import { SUI_ERROR_MATCH_REGEX, SUI_MODULE_ERROR_MAP } from "./constants";
-import { SuiErrorInfo } from "./types";
+import { SUI_ERROR_MATCH_REGEX, SUI_MODULE_ERROR_MAP } from "./constants.js";
+import { SuiErrorInfo } from "./types.js";
 
 export function extractSuiErrorInfo(errorText: string): SuiErrorInfo {
   const error: SuiErrorInfo = { text: errorText };

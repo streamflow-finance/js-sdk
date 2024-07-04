@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - v6
+      - prerelease/v*
     types: [closed]
 
 permissions:

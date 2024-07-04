@@ -1,5 +1,5 @@
 {
-    "prettier.requireConfig": true,
+    "prettier.requireConfig": false,
     "eslint.enable": true,
     "eslint.debug": false,
     "eslint.workingDirectories": [
@@ -10,5 +10,8 @@
     ],
     "cSpell.words": [
         "Streamflow"
-    ]
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.preferences.importModuleSpecifierEnding": "js",
+    "javascript.preferences.importModuleSpecifierEnding": "js",
 }

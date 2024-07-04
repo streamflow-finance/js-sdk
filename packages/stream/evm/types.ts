@@ -1,9 +1,9 @@
 import BN from "bn.js";
 import { BigNumber } from "ethers";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream, StreamType } from "../common/types";
-import { getNumberFromBN } from "../common/utils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { Stream, StreamType } from "../common/types.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface StreamAbiResult {
   amount: BigNumber;

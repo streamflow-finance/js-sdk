@@ -1,4 +1,4 @@
-export { default, default as AptosStreamClient } from "./StreamClient";
+export { default, default as AptosStreamClient } from "./StreamClient.js";
 
 export * from "./utils";
 

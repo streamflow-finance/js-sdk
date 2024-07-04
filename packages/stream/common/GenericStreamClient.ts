@@ -2,7 +2,7 @@ import { Commitment, ConnectionConfig } from "@solana/web3.js";
 import { Signer } from "ethers";
 import PQueue from "p-queue";
 
-import { BaseStreamClient } from "./BaseStreamClient";
+import { BaseStreamClient } from "./BaseStreamClient.js";
 import {
   ICancelData,
   IChain,
@@ -21,13 +21,13 @@ import {
   Stream,
   IFees,
   IGetFeesData,
-} from "./types";
-import { handleContractError } from "./utils";
+} from "./types.js";
+import { handleContractError } from "./utils.js";
 import { AptosStreamClient, ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos";
 import { EvmStreamClient } from "../evm";
 import { SolanaStreamClient, ICreateStreamSolanaExt, IInteractStreamSolanaExt, ITopUpStreamSolanaExt } from "../solana";
 import { ICreateStreamSuiExt, ITransactionSuiExt, ISuiIdParameters, SuiStreamClient } from "../sui";
-import { WITHDRAW_AVAILABLE_AMOUNT } from "./constants";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "./constants.js";
 
 export interface SolanaStreamClientOptions {
   chain: IChain.Solana;
