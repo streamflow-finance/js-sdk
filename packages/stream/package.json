@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "7.0.0-alpha.0",
+  "version": "7.0.0-alpha.1",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/esm/index.js",
@@ -33,7 +33,6 @@
       "types": "./dist/esm/sui/index.d.ts"
     }
   },
-  
   "scripts": {
     "build:cjs": "rm -rf dist/cjs; tsc -p tsconfig.cjs.json",
     "build:esm": "rm -rf dist/esm; tsc -p tsconfig.esm.json",
