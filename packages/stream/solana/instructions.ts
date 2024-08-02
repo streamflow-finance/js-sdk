@@ -133,6 +133,8 @@ interface CreateUncheckedStreamData {
   transferableBySender: boolean;
   transferableByRecipient: boolean;
   canTopup: boolean;
+  canUpdateRate: boolean;
+  canPause: boolean;
   name: string;
   withdrawFrequency: BN;
   recipient: PublicKey;
@@ -203,8 +205,8 @@ export const createUncheckedStreamInstruction = (
     withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
     recipient: data.recipient.toBuffer(),
     partner: data.partner.toBuffer(),
-    pausable: 1,
-    can_update_rate: 1,
+    pausable: Number(data.canPause),
+    can_update_rate: Number(data.canUpdateRate),
   };
   const encodeLength = Layout.createUncheckedStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
