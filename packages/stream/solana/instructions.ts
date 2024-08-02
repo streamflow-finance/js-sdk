@@ -19,6 +19,8 @@ interface CreateStreamData {
   transferableBySender: boolean;
   transferableByRecipient: boolean;
   canTopup: boolean;
+  canUpdateRate: boolean;
+  canPause: boolean;
   name: string;
   withdrawFrequency: BN;
 }
@@ -100,6 +102,10 @@ export const createStreamInstruction = (
     transferable_by_sender: Number(data.transferableBySender),
     transferable_by_recipient: Number(data.transferableByRecipient),
     can_topup: Number(data.canTopup),
+    _pausable_discriminator: 1,
+    can_update_rate: Number(data.canUpdateRate),
+    _can_update_rate_discriminator: 1,
+    pausable: Number(data.canPause),
     stream_name: streamNameBuffer,
     withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
   };
@@ -127,6 +133,8 @@ interface CreateUncheckedStreamData {
   transferableBySender: boolean;
   transferableByRecipient: boolean;
   canTopup: boolean;
+  canUpdateRate: boolean;
+  canPause: boolean;
   name: string;
   withdrawFrequency: BN;
   recipient: PublicKey;
@@ -197,8 +205,8 @@ export const createUncheckedStreamInstruction = (
     withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
     recipient: data.recipient.toBuffer(),
     partner: data.partner.toBuffer(),
-    pausable: 1,
-    can_update_rate: 1,
+    pausable: Number(data.canPause),
+    can_update_rate: Number(data.canUpdateRate),
   };
   const encodeLength = Layout.createUncheckedStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
