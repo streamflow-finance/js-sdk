@@ -91,6 +91,12 @@ export const createStreamLayout: BufferLayout.Structure<ICreateStreamLayout> = B
   BufferLayout.u8("can_topup"),
   BufferLayout.blob(64, "stream_name"),
   BufferLayout.blob(8, "withdraw_frequency"),
+  // discriminator for optional field
+  BufferLayout.u8("_pausable_discriminator"),
+  BufferLayout.u8("pausable"),
+  // discriminator for optional field
+  BufferLayout.u8("_can_update_rate_discriminator"),
+  BufferLayout.u8("can_update_rate"),
 ]);
 
 /**

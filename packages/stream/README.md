@@ -150,6 +150,7 @@ const createStreamParams: Types.ICreateStreamData = {
   amountPerPeriod: getBN(5, 9), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name or subject.
   canTopup: false, // setting to FALSE will effectively create a vesting contract.
+  canUpdateRate: false, // settings to TRUE allows sender to update amountPerPeriod
   cancelableBySender: true, // Whether or not sender can cancel the stream.
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
   transferableBySender: true, // Whether or not sender can transfer the stream.
@@ -161,7 +162,7 @@ const createStreamParams: Types.ICreateStreamData = {
 
 const solanaParams = {
     sender: wallet, // SignerWalletAdapter or Keypair of Sender account
-    isNative: // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
+    isNative: false // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
 };
 
 const aptosParams = {
@@ -366,6 +367,37 @@ const ethereumParams = undefined;
 
 try {
   const { ixs, tx } = await client.cancel(cancelStreamParams, solanaParams);
+} catch (exception) {
+  // handle exception
+}
+```
+
+## Update a stream
+
+```javascript
+const updateStreamParams: Types.IUpdateData = {
+  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to update.
+  enableAutomaticWithdrawal: true,  // [optional], allows to enable AW if it wasn't, disable is not possible
+  withdrawFrequency: 60,  // [optional], allows to update withdrawal frequency, may result in additional AW fees
+  amountPerPeriod: getBN(10, 9),  // [optional], allows to update release amount effective on next unlock
+}
+
+const solanaParams = {
+  invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction
+};
+
+const aptosParams = {
+  senderWallet: wallet, // AptosWalletAdapter Wallet of wallet signing the transaction
+};
+
+const suiParams = {
+  senderWallet: wallet, // WalletContextState | Keypair
+};
+
+const ethereumParams = undefined;
+
+try {
+  const { ixs, tx } = await client.update(updateStreamParams, solanaParams);
 } catch (exception) {
   // handle exception
 }
