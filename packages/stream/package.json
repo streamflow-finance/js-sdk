@@ -61,6 +61,7 @@
     "@streamflow/common": "workspace:*",
     "@suiet/wallet-kit": "0.2.22",
     "aptos": "1.4.0",
+    "bignumber.js": "^9.1.2",
     "bn.js": "5.2.1",
     "borsh": "^2.0.0",
     "bs58": "5.0.0",

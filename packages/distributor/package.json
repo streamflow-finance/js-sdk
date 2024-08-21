@@ -40,6 +40,7 @@
     "@solana/wallet-adapter-base": "0.9.19",
     "@solana/web3.js": "1.70.1",
     "@streamflow/common": "workspace:*",
+    "bignumber.js": "^9.1.2",
     "bn.js": "5.2.1",
     "borsh": "^2.0.0",
     "bs58": "5.0.0",

@@ -1,5 +1,5 @@
 import { PublicKey, Connection } from "@solana/web3.js";
-import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BigNumber from "bignumber.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 import { PROGRAM_ID } from "../programId";
@@ -8,15 +8,15 @@ export interface ClaimStatusFields {
   /** Authority that claimed the tokens. */
   claimant: PublicKey;
   /** Locked amount */
-  lockedAmount: BN;
+  lockedAmount: BigNumber;
   /** Locked amount withdrawn */
-  lockedAmountWithdrawn: BN;
+  lockedAmountWithdrawn: BigNumber;
   /** Unlocked amount */
-  unlockedAmount: BN;
+  unlockedAmount: BigNumber;
   /** Last claim time */
-  lastClaimTs: BN;
+  lastClaimTs: BigNumber;
   /** Track amount per unlock, can be useful for non-linear vesting */
-  lastAmountPerUnlock: BN;
+  lastAmountPerUnlock: BigNumber;
   /** Whether claim is closed */
   closed: boolean;
   /** Buffer for additional fields */
@@ -52,19 +52,19 @@ export class ClaimStatus {
   readonly claimant: PublicKey;
 
   /** Locked amount */
-  readonly lockedAmount: BN;
+  readonly lockedAmount: BigNumber;
 
   /** Locked amount withdrawn */
-  readonly lockedAmountWithdrawn: BN;
+  readonly lockedAmountWithdrawn: BigNumber;
 
   /** Unlocked amount */
-  readonly unlockedAmount: BN;
+  readonly unlockedAmount: BigNumber;
 
   /** Last claim time */
-  readonly lastClaimTs: BN;
+  readonly lastClaimTs: BigNumber;
 
   /** Track amount per unlock, can be useful for non-linear vesting */
-  readonly lastAmountPerUnlock: BN;
+  readonly lastAmountPerUnlock: BigNumber;
 
   /** Whether claim is closed */
   readonly closed: boolean;
@@ -174,11 +174,11 @@ export class ClaimStatus {
   static fromJSON(obj: ClaimStatusJSON): ClaimStatus {
     return new ClaimStatus({
       claimant: new PublicKey(obj.claimant),
-      lockedAmount: new BN(obj.lockedAmount),
-      lockedAmountWithdrawn: new BN(obj.lockedAmountWithdrawn),
-      unlockedAmount: new BN(obj.unlockedAmount),
-      lastClaimTs: new BN(obj.lastClaimTs),
-      lastAmountPerUnlock: new BN(obj.lastAmountPerUnlock),
+      lockedAmount: BigNumber(obj.lockedAmount),
+      lockedAmountWithdrawn: BigNumber(obj.lockedAmountWithdrawn),
+      unlockedAmount: BigNumber(obj.unlockedAmount),
+      lastClaimTs: BigNumber(obj.lastClaimTs),
+      lastAmountPerUnlock: BigNumber(obj.lastAmountPerUnlock),
       closed: obj.closed,
       buffer1: obj.buffer1,
       buffer2: obj.buffer2,
