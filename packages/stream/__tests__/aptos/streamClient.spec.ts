@@ -1,4 +1,4 @@
-import { BN } from "bn.js";
+import { BigNumber } from "bignumber.js";
 
 import AptosStreamClient from "../../aptos/StreamClient";
 import { ICluster } from "../../common/types";
@@ -39,10 +39,10 @@ describe("AptosStreamClient", () => {
       };
       const mockRecipient = {
         recipient: "0xtest",
-        amount: new BN(1000),
+        amount: BigNumber(1000),
         name: "test name",
-        cliffAmount: new BN(1),
-        amountPerPeriod: new BN(1),
+        cliffAmount: BigNumber(1),
+        amountPerPeriod: BigNumber(1),
       };
       const mockData = {
         period: 100,

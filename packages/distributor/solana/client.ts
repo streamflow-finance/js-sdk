@@ -1,4 +1,4 @@
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 import PQueue from "p-queue";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -136,14 +136,14 @@ export default class SolanaDistributorClient {
     const senderTokens = await ata(mint, extParams.invoker.publicKey, tokenProgramId);
 
     const args: NewDistributorArgs = {
-      version: new BN(data.version, 10),
+      version: BigNumber(data.version),
       root: data.root,
       maxTotalClaim: data.maxTotalClaim,
       maxNumNodes: data.maxNumNodes,
-      unlockPeriod: new BN(data.unlockPeriod, 10),
-      startVestingTs: new BN(data.startVestingTs, 10),
-      endVestingTs: new BN(data.endVestingTs, 10),
-      clawbackStartTs: new BN(data.clawbackStartTs, 10),
+      unlockPeriod: BigNumber(data.unlockPeriod),
+      startVestingTs: BigNumber(data.startVestingTs),
+      endVestingTs: BigNumber(data.endVestingTs),
+      clawbackStartTs: BigNumber(data.clawbackStartTs),
       claimsClosable: data.claimsClosable,
     };
     const accounts: NewDistributorAccounts = {
@@ -161,10 +161,10 @@ export default class SolanaDistributorClient {
       ixs.push(...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, data.maxTotalClaim)));
     }
 
-    const nowTs = new BN(Math.floor(Date.now() / 1000));
-    const endVestingTs = args.endVestingTs.eqn(0) ? nowTs : args.endVestingTs;
-    const startVestingTs = args.startVestingTs.eqn(0) ? nowTs : args.startVestingTs;
-    if (endVestingTs.gt(startVestingTs) && endVestingTs.sub(startVestingTs).lt(args.unlockPeriod)) {
+    const nowTs = BigNumber(Math.floor(Date.now() / 1000));
+    const endVestingTs = args.endVestingTs.isZero() ? nowTs : args.endVestingTs;
+    const startVestingTs = args.startVestingTs.isZero() ? nowTs : args.startVestingTs;
+    if (endVestingTs.gt(startVestingTs) && endVestingTs.minus(startVestingTs).lt(args.unlockPeriod)) {
       throw new Error("The unlock period cannot be longer than the total vesting duration!");
     }
 
@@ -283,8 +283,8 @@ export default class SolanaDistributorClient {
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    const nowTs = new BN(Math.floor(Date.now() / 1000));
-    if (claimStatus || (data.amountLocked.gtn(0) && nowTs.sub(distributor.startTs).gte(distributor.unlockPeriod))) {
+    const nowTs = BigNumber(Math.floor(Date.now() / 1000));
+    if (claimStatus || (data.amountLocked.gt(0) && nowTs.minus(distributor.startTs).gte(distributor.unlockPeriod))) {
       ixs.push(claimLocked(accounts, this.programId));
     }
 

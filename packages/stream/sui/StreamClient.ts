@@ -1,4 +1,4 @@
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 import { CoinStruct, SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock, TransactionObjectArgument } from "@mysten/sui.js/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
@@ -420,7 +420,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     let coins = await this.getAllCoins(walletAddress, multipleStreamData.tokenId);
     const totalAmount = multipleStreamData.recipients
       .map((recipiient) => recipiient.amount)
-      .reduce((prev, current) => current.add(prev));
+      .reduce((prev, current) => current.plus(prev));
     const txb = new TransactionBlock();
     const coinObject = this.splitCoinObjectForAmount(txb, totalAmount, multipleStreamData.tokenId, coins, totalFee);
     coins = [coins[0]];
@@ -498,7 +498,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    */
   private splitCoinObjectForAmount(
     txb: TransactionBlock,
-    amount: BN,
+    amount: BigNumber,
     coinType: string,
     coins: CoinStruct[],
     totalFee: number,

@@ -1,12 +1,12 @@
 import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BigNumber from "bignumber.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 import { PROGRAM_ID } from "../programId";
 
 export interface NewClaimArgs {
-  amountUnlocked: BN;
-  amountLocked: BN;
+  amountUnlocked: BigNumber;
+  amountLocked: BigNumber;
   proof: Array<Array<number>>;
 }
 

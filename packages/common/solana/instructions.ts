@@ -5,12 +5,12 @@ import {
   createSyncNativeInstruction,
 } from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 
 export const prepareWrappedAccount = async (
   connection: Connection,
   senderAddress: PublicKey,
-  amount: BN,
+  amount: BigNumber,
 ): Promise<TransactionInstruction[]> => {
   const tokenAccount = await getAssociatedTokenAddress(NATIVE_MINT, senderAddress, true);
 
@@ -26,6 +26,7 @@ export const prepareWrappedAccount = async (
     SystemProgram.transfer({
       fromPubkey: senderAddress,
       toPubkey: tokenAccount,
+      // pow 10 by decimals - probably since getNumberFromBN wasn't used
       lamports: amount.toNumber(),
     }),
     createSyncNativeInstruction(tokenAccount),
