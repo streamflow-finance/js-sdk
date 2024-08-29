@@ -44,7 +44,7 @@ export const isCliffCloseToDepositedAmount = (streamData: {
   depositedAmount: BigNumber;
   cliffAmount: BigNumber;
 }): boolean => {
-  return streamData.cliffAmount.gte(streamData.depositedAmount.minus(BigNumber("1")));
+  return streamData.cliffAmount.gte(streamData.depositedAmount.minus(BigNumber(1)));
 };
 
 export const isPayment = (streamData: { canTopup: boolean }): boolean => {
