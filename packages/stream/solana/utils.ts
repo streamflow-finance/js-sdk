@@ -16,13 +16,14 @@ import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants.js";
 const decoder = new TextDecoder("utf-8");
 
 const toUInt64String = (uintArr: Uint8Array): string =>
-  new DataView(uintArr.buffer, 0).getBigUint64(0, true).toString();
+  new DataView(uintArr.buffer, uintArr.byteOffset, uintArr.byteLength).getBigUint64(0, true).toString();
 
-const toUInt8 = (uintArr: Uint8Array): number => new DataView(uintArr.buffer, 0).getUint8(0);
+const toUInt8 = (uintArr: Uint8Array): number =>
+  new DataView(uintArr.buffer, uintArr.byteOffset, uintArr.byteLength).getUint8(0);
 
 export const toBuffer = (bigNumber: BigNumber): Buffer => {
   const dv = new DataView(new ArrayBuffer(8), 0);
-  dv.setBigUint64(0, BigInt(bigNumber.toString()), true);
+  dv.setBigUint64(0, BigInt(bigNumber.integerValue().toString()), true);
   return Buffer.from(dv.buffer);
 };
 
