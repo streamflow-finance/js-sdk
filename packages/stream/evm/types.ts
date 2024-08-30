@@ -193,7 +193,10 @@ export class EvmContract implements Stream {
     });
   }
 
-  remaining(): number {
-    return this.depositedAmount.minus(this.withdrawnAmount).toNumber();
+  remaining(decimals: number): number {
+    return this.depositedAmount
+      .minus(this.withdrawnAmount)
+      .div(10 ** decimals)
+      .toNumber();
   }
 }
