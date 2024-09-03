@@ -240,7 +240,7 @@ export class SolanaStreamClient extends BaseStreamClient {
           period: BigNumber(period),
           amountPerPeriod,
           cliff: BigNumber(cliff),
-          cliffAmount,
+          cliffAmount: BigNumber(cliffAmount),
           cancelableBySender,
           cancelableByRecipient,
           automaticWithdrawal,
@@ -388,7 +388,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         period: BigNumber(period),
         amountPerPeriod,
         cliff: BigNumber(cliff),
-        cliffAmount,
+        cliffAmount: BigNumber(cliffAmount),
         cancelableBySender,
         cancelableByRecipient,
         automaticWithdrawal,
@@ -814,6 +814,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     ixs.push(
+      // ** 10
       topupStreamInstruction(amount, this.programId, {
         sender: invoker.publicKey,
         senderTokens,
@@ -1038,7 +1039,7 @@ export class SolanaStreamClient extends BaseStreamClient {
           period: BigNumber(period),
           amountPerPeriod: recipient.amountPerPeriod,
           cliff: BigNumber(cliff),
-          cliffAmount: recipient.cliffAmount,
+          cliffAmount: BigNumber(recipient.cliffAmount),
           cancelableBySender,
           cancelableByRecipient,
           automaticWithdrawal,

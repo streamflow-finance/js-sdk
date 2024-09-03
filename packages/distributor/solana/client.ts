@@ -138,8 +138,8 @@ export default class SolanaDistributorClient {
     const args: NewDistributorArgs = {
       version: BigNumber(data.version),
       root: data.root,
-      maxTotalClaim: data.maxTotalClaim,
-      maxNumNodes: data.maxNumNodes,
+      maxTotalClaim: BigNumber(data.maxTotalClaim),
+      maxNumNodes: BigNumber(data.maxNumNodes),
       unlockPeriod: BigNumber(data.unlockPeriod),
       startVestingTs: BigNumber(data.startVestingTs),
       endVestingTs: BigNumber(data.endVestingTs),
@@ -158,7 +158,9 @@ export default class SolanaDistributorClient {
     };
 
     if (extParams.isNative) {
-      ixs.push(...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, data.maxTotalClaim)));
+      ixs.push(
+        ...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, BigNumber(data.maxTotalClaim))),
+      );
     }
 
     const nowTs = BigNumber(Math.floor(Date.now() / 1000));
@@ -276,15 +278,18 @@ export default class SolanaDistributorClient {
 
     if (!claimStatus) {
       const args: NewClaimArgs = {
-        amountLocked: data.amountLocked,
-        amountUnlocked: data.amountUnlocked,
+        amountLocked: BigNumber(data.amountLocked),
+        amountUnlocked: BigNumber(data.amountUnlocked),
         proof: data.proof,
       };
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
     const nowTs = BigNumber(Math.floor(Date.now() / 1000));
-    if (claimStatus || (data.amountLocked.gt(0) && nowTs.minus(distributor.startTs).gte(distributor.unlockPeriod))) {
+    if (
+      claimStatus ||
+      (BigNumber(data.amountLocked).gt(0) && nowTs.minus(distributor.startTs).gte(distributor.unlockPeriod))
+    ) {
       ixs.push(claimLocked(accounts, this.programId));
     }
 

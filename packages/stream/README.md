@@ -22,8 +22,7 @@ API Documentation available here: [docs site →](https://streamflow-finance.git
 Most common imports:
 
 ```javascript
-import { BN } from "bn.js";
-import { Types, GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
+import { Types, GenericStreamClient, getScaledBigNumber, getNumberFromBigNumber } from "@streamflow/stream";
 ```
 
 _Check the SDK for other types and utility functions._
@@ -143,11 +142,11 @@ const createStreamParams: Types.ICreateStreamData = {
   recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Recipient address.
   tokenId: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // Token mint address.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
-  amount: getBN(100, 9), // depositing 100 tokens with 9 decimals mint.
+  amount: getScaledBigNumber(100, 9), // depositing 100 tokens with 9 decimals mint.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
   cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-  cliffAmount: new BN(10), // Amount unlocked at the "cliff" timestamp.
-  amountPerPeriod: getBN(5, 9), // Release rate: how many tokens are unlocked per each period.
+  cliffAmount: 10, // Amount unlocked at the "cliff" timestamp.
+  amountPerPeriod: getScaledBigNumber(5, 9), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name or subject.
   canTopup: false, // setting to FALSE will effectively create a vesting contract.
   canUpdateRate: false, // settings to TRUE allows sender to update amountPerPeriod
@@ -188,10 +187,10 @@ try {
 const recipients = [
   {
     recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Solana recipient address.
-    amount: getBN(100, 9), // depositing 100 tokens with 9 decimals mint.
+    amount: getScaledBgNumber(100, 9), // depositing 100 tokens with 9 decimals mint.
     name: "January Payroll", // The stream name/subject.
-    cliffAmount: getBN(10, 9), // amount released on cliff for this recipient
-    amountPerPeriod: getBN(1, 9), //amount released every specified period epoch
+    cliffAmount: getScaledBgNumber(10, 9), // amount released on cliff for this recipient
+    amountPerPeriod: getScaledBgNumber(1, 9), //amount released every specified period epoch
   },
 ];
 const createStreamParams: Types.ICreateMultipleStreamData = {
@@ -253,7 +252,7 @@ interface ICreateResult {
 ```javascript
 const withdrawStreamParams: Types.IWithdrawData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
-  amount: getBN(100, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
+  amount: getScaledBgNumber(100, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
 };
 
 const solanaParams = {
@@ -284,7 +283,7 @@ try {
 ```javascript
 const topupStreamParams: Types.ITopUpData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be topped up.
-  amount: getBN(100, 9), // Specified amount to topup (increases deposited amount).
+  amount: getScaledBgNumber(100, 9), // Specified amount to topup (increases deposited amount).
 };
 
 const solanaParams = {
@@ -379,7 +378,7 @@ const updateStreamParams: Types.IUpdateData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to update.
   enableAutomaticWithdrawal: true,  // [optional], allows to enable AW if it wasn't, disable is not possible
   withdrawFrequency: 60,  // [optional], allows to update withdrawal frequency, may result in additional AW fees
-  amountPerPeriod: getBN(10, 9),  // [optional], allows to update release amount effective on next unlock
+  amountPerPeriod: getScaledBgNumber(10, 9),  // [optional], allows to update release amount effective on next unlock
 }
 
 const solanaParams = {
@@ -425,7 +424,7 @@ const stream = await client.getOne({
 });
 
 const unlocked = stream.unlocked(tsInSeconds); // bn amount unlocked at the tsInSeconds
-console.log(getNumberFromBN(unlocked, 9));
+console.log(getNumberFromBigNumber(unlocked, 9));
 ```
 
 - Note: unlocked amount is determined based on configuration set on creation, no dynamic data is involved.
@@ -437,7 +436,7 @@ const stream = await client.getOne({
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
 });
 const withdrawn = stream.withdrawnAmount; // bn amount withdrawn already
-console.log(getNumberFromBN(wihtdrawn, 9));
+console.log(getNumberFromBigNumber(wihtdrawn, 9));
 const remaining = stream.remaining(9); // amount of remaining funds
 console.log(remaining);
 ```
@@ -492,10 +491,10 @@ Streamflow protocol program IDs
 | Testnet | 0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a |
 | Mainnet | 0xa283fd6b45f1103176e7ae27e870c89df7c8783b15345e2b13faa81ec25c4fa6 |
 
-**All BN amounts are denominated in their smallest units.**
+**All BigNumber amounts are denominated in their smallest units.**
 
 E.g, if the amount is 1 SOL than this amount in lamports is `1000 \* 10^9 = 1_000_000_000.`
 
-And `new BN(1_000_000_000)` is used.
+And `BigNumber(1_000_000_000)` is used.
 
-Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
+Use `getscaledBigNumber` and `getNumberFromBigNumber` utility functions for conversions between `BigNumber` and `Number` types.

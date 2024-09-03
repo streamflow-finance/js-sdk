@@ -56,9 +56,6 @@ importers:
       bignumber.js:
         specifier: ^9.1.2
         version: 9.1.2
-      bn.js:
-        specifier: 5.2.1
-        version: 5.2.1
       borsh:
         specifier: ^2.0.0
         version: 2.0.0
@@ -72,9 +69,6 @@ importers:
       '@streamflow/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@types/bn.js':
-        specifier: 5.1.1
-        version: 5.1.1
       date-fns:
         specifier: 2.28.0
         version: 2.28.0
@@ -105,9 +99,6 @@ importers:
       bignumber.js:
         specifier: ^9.1.2
         version: 9.1.2
-      bn.js:
-        specifier: 5.2.1
-        version: 5.2.1
       borsh:
         specifier: ^2.0.0
         version: 2.0.0
@@ -121,9 +112,6 @@ importers:
       '@streamflow/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@types/bn.js':
-        specifier: 5.1.1
-        version: 5.1.1
       date-fns:
         specifier: 2.28.0
         version: 2.28.0
@@ -187,9 +175,6 @@ importers:
       bignumber.js:
         specifier: ^9.1.2
         version: 9.1.2
-      bn.js:
-        specifier: 5.2.1
-        version: 5.2.1
       borsh:
         specifier: ^2.0.0
         version: 2.0.0
@@ -209,9 +194,6 @@ importers:
       '@streamflow/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@types/bn.js':
-        specifier: 5.1.1
-        version: 5.1.1
       '@types/ethereum-checksum-address':
         specifier: ^0.0.0
         version: 0.0.0
@@ -1918,9 +1900,6 @@ packages:
   '@tufjs/models@1.0.4':
     resolution: {integrity: sha512-qaGV9ltJP0EO25YfFUPhxRVK0evXFIAGicsVXuRim4Ed9cjPxYhNnNJ49SFmbeLgtxpslIkX317IgpfcHPVj/A==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-
-  '@types/bn.js@5.1.1':
-    resolution: {integrity: sha512-qNrYbZqMx0uJAfKnKclPh+dTwK33KfLHYqtyODwd5HnXOjnkhc4qgn3BrK6RWyGZm5+sIFE7Q7Vz6QQtJB7w7g==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -7645,10 +7624,6 @@ snapshots:
     dependencies:
       '@tufjs/canonical-json': 1.0.0
       minimatch: 9.0.3
-
-  '@types/bn.js@5.1.1':
-    dependencies:
-      '@types/node': 20.11.19
 
   '@types/connect@3.4.38':
     dependencies:

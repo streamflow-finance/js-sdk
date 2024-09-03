@@ -9,7 +9,7 @@ export interface IRecipient {
   recipient: string;
   amount: BigNumber;
   name: string;
-  cliffAmount: BigNumber;
+  cliffAmount: string | number;
   amountPerPeriod: BigNumber;
 }
 
