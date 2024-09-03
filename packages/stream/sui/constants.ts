@@ -1,4 +1,4 @@
-import { ContractErrorCode, ICluster } from "../common/types";
+import { ContractErrorCode, ICluster } from "../common/types.js";
 
 // TODO: remove Devnet and Local addresses as they are not deployed, they are just a copy Testnet values
 export const SUI_PROGRAM_IDS: Record<ICluster, string> = {

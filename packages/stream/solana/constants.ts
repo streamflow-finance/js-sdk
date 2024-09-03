@@ -1,7 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
+import { Buffer } from "buffer";
 
-import { ICluster, SolanaContractErrorCode } from "../common/types";
-import { ISearchStreams } from "./types";
+import { ICluster, SolanaContractErrorCode } from "../common/types.js";
+import { ISearchStreams } from "./types.js";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
 

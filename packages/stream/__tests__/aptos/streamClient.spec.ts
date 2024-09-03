@@ -1,17 +1,18 @@
 import { BN } from "bn.js";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 
-import AptosStreamClient from "../../aptos/StreamClient";
-import { ICluster } from "../../common/types";
+import AptosStreamClient from "../../aptos/StreamClient.js";
+import { ICluster } from "../../common/types.js";
 
 describe("AptosStreamClient", () => {
   describe("init", () => {
-    it("should successfully create AptosStreamInstance", () => {
+    test("should successfully create AptosStreamInstance", () => {
       const instance = new AptosStreamClient(ICluster.Devnet);
 
       expect(instance).toBeInstanceOf(AptosStreamClient);
     });
 
-    it("should correctly set passed params", () => {
+    test("should correctly set passed params", () => {
       const pid = "PID";
       const gas = "30";
       const instance = new AptosStreamClient("https://cluster", ICluster.Devnet, gas, pid);
@@ -32,7 +33,7 @@ describe("AptosStreamClient", () => {
 
     test("should create a stream with passed parameters", async () => {
       // Arrange
-      const mockSigner = jest.fn();
+      const mockSigner = vi.fn();
       const mockWallet: any = {
         signAndSubmitTransaction: mockSigner,
         account: { address: "" },

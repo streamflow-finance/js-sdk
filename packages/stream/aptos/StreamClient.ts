@@ -1,6 +1,6 @@
 import { AptosAccount, Types, AptosClient } from "aptos";
 
-import { BaseStreamClient } from "../common/BaseStreamClient";
+import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
   ICancelData,
   ICluster,
@@ -18,8 +18,8 @@ import {
   ITransferData,
   IUpdateData,
   IWithdrawData,
-} from "../common/types";
-import { APTOS_PROGRAM_IDS } from "./constants";
+} from "../common/types.js";
+import { APTOS_PROGRAM_IDS } from "./constants.js";
 import {
   ConfigResource,
   Contract,
@@ -27,10 +27,10 @@ import {
   ICreateStreamAptosExt,
   ITransactionAptosExt,
   StreamResource,
-} from "./types";
-import { AptosWalletWrapper } from "./wallet";
-import { extractAptosErrorCode } from "./utils";
-import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
+} from "./types.js";
+import { AptosWalletWrapper } from "./wallet.js";
+import { extractAptosErrorCode } from "./utils.js";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 
 export default class AptosStreamClient extends BaseStreamClient {
   private programId: string;

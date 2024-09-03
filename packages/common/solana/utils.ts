@@ -34,8 +34,8 @@ import {
   ITransactionSolanaExt,
   ThrottleParams,
   TransactionFailedError,
-} from "./types";
-import { sleep } from "../utils";
+} from "./types.js";
+import { sleep } from "../utils.js";
 
 const SIMULATE_TRIES = 3;
 
@@ -256,7 +256,7 @@ export async function sendAndConfirmTransaction(
 
   let signature: string;
   if (isVersioned) {
-    signature = bs58.encode(tx.signatures[0]);
+    signature = bs58.encode(tx.signatures[0]!);
   } else {
     signature = bs58.encode(tx.signature!);
   }
@@ -515,7 +515,7 @@ export async function checkOrCreateAtaBatch(
   const response = await connection.getMultipleAccountsInfo(atas);
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
-      ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i], owners[i], mint, programId));
+      ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i]!, owners[i]!, mint, programId));
     }
   }
   return ixs;

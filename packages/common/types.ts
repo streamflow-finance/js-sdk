@@ -1,8 +1,7 @@
 import { TransactionInstruction } from "@solana/web3.js";
-import { Types } from "aptos";
 
 export interface ITransactionResult {
-  ixs: (TransactionInstruction | Types.TransactionPayload)[];
+  ixs: TransactionInstruction[];
   txId: string;
 }
 

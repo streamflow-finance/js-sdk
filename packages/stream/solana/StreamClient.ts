@@ -43,13 +43,13 @@ import {
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
   ISearchStreams,
-} from "./types";
+} from "./types.js";
 import {
   decodeStream,
   extractSolanaErrorCode,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
-} from "./utils";
+} from "./utils.js";
 import {
   PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
@@ -63,7 +63,7 @@ import {
   FEES_METADATA_SEED,
   PARTNERS_SCHEMA,
   STREAM_STRUCT_OFFSETS,
-} from "./constants";
+} from "./constants.js";
 import {
   withdrawStreamInstruction,
   cancelStreamInstruction,
@@ -72,7 +72,7 @@ import {
   createStreamInstruction,
   createUncheckedStreamInstruction,
   updateStreamInstruction,
-} from "./instructions";
+} from "./instructions.js";
 import {
   ICancelData,
   ICluster,
@@ -95,15 +95,15 @@ import {
   StreamType,
   Stream,
   ICreateMultiError,
-} from "../common/types";
-import { BaseStreamClient } from "../common/BaseStreamClient";
-import { IPartnerLayout } from "./instructionTypes";
-import { calculateTotalAmountToDeposit } from "../common/utils";
-import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
+} from "../common/types.js";
+import { BaseStreamClient } from "../common/BaseStreamClient.js";
+import { IPartnerLayout } from "./instructionTypes.js";
+import { calculateTotalAmountToDeposit } from "../common/utils.js";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 
 const METADATA_ACC_SIZE = 1104;
 
-export default class SolanaStreamClient extends BaseStreamClient {
+export class SolanaStreamClient extends BaseStreamClient {
   private connection: Connection;
 
   private programId: PublicKey;

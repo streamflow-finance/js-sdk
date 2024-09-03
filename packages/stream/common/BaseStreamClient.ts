@@ -1,20 +1,20 @@
 import {
-  ICreateStreamData,
-  ICreateMultipleStreamData,
-  IFees,
-  IWithdrawData,
   ICancelData,
-  ITransferData,
-  ITopUpData,
+  ICreateMultipleStreamData,
+  ICreateResult,
+  ICreateStreamData,
+  IFees,
+  IGetAllData,
   IGetFeesData,
   IGetOneData,
-  IUpdateData,
-  ITransactionResult,
   IMultiTransactionResult,
-  ICreateResult,
-  IGetAllData,
+  ITopUpData,
+  ITransactionResult,
+  ITransferData,
+  IUpdateData,
+  IWithdrawData,
   Stream,
-} from "./types";
+} from "./types.js";
 
 export abstract class BaseStreamClient {
   abstract create(streamData: ICreateStreamData, chainSpecificParams: any): Promise<ICreateResult>;

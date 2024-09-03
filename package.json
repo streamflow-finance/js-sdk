@@ -34,15 +34,13 @@
   },
   "devDependencies": {
     "@types/eslint": "^8.56.3",
-    "@types/jest": "29.2.4",
     "eslint": "^8.56.0",
     "husky": "^8.0.0",
-    "jest": "^29.7.0",
     "lerna": "7.4.2",
     "lint-staged": "^13.1.0",
-    "ts-jest": "^29.1.1",
     "typedoc": "0.25.11",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.0.5"
   },
   "version": "4.0.1"
 }
