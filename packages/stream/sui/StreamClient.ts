@@ -3,7 +3,7 @@ import { CoinStruct, SuiClient } from "@mysten/sui.js/client";
 import { TransactionBlock, TransactionObjectArgument } from "@mysten/sui.js/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui.js/utils";
 
-import { BaseStreamClient } from "../common/BaseStreamClient";
+import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
   ICancelData,
   ICluster,
@@ -21,8 +21,8 @@ import {
   ITransferData,
   IUpdateData,
   IWithdrawData,
-} from "../common/types";
-import { SUI_PROGRAM_IDS, SUI_FEE_TABLE_IDS, SUI_CONFIG_IDS } from "./constants";
+} from "../common/types.js";
+import { SUI_PROGRAM_IDS, SUI_FEE_TABLE_IDS, SUI_CONFIG_IDS } from "./constants.js";
 import {
   Contract,
   IContractCreated,
@@ -33,11 +33,11 @@ import {
   ClassResource,
   FeeTableResource,
   FeeValueResource,
-} from "./types";
-import { extractSuiErrorInfo } from "./utils";
-import { SuiWalletWrapper } from "./wallet";
-import { calculateTotalAmountToDeposit } from "../common/utils";
-import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
+} from "./types.js";
+import { extractSuiErrorInfo } from "./utils.js";
+import { SuiWalletWrapper } from "./wallet.js";
+import { calculateTotalAmountToDeposit } from "../common/utils.js";
+import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 
 export default class SuiStreamClient extends BaseStreamClient {
   private programId: string;

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "module": "ES2022",
+    "moduleResolution": "Node",
+    "moduleDetection": "force",
+    "isolatedModules": false,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist/esm",
+    "sourceMap": false,
+    "declaration": true,
+    "lib": ["es2022", "dom", "dom.iterable"],
+  },
+}

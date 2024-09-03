@@ -1,4 +1,4 @@
-import { ContractErrorCode, ICluster } from "../common/types";
+import { ContractErrorCode, ICluster } from "../common/types.js";
 
 export const APTOS_PROGRAM_IDS: Record<ICluster, string> = {
   [ICluster.Mainnet]: "0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0",

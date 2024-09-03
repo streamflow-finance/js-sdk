@@ -1,5 +1,6 @@
 import { TransferFeeConfig } from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import { Buffer } from "buffer";
 import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { ContractError } from "@streamflow/common";
 import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@streamflow/common/solana";

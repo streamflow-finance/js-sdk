@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": false,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "lib": ["es2022", "dom", "dom.iterable"],  
+  },
+  "exclude": ["node_modules", "__tests__", "packages/*/dist/**/*", "local"]
+}
