@@ -423,7 +423,7 @@ const stream = await client.getOne({
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
 });
 
-const unlocked = stream.unlocked(tsInSeconds); // bn amount unlocked at the tsInSeconds
+const unlocked = stream.unlocked(tsInSeconds); // bignumber amount unlocked at the tsInSeconds
 console.log(getNumberFromBigNumber(unlocked, 9));
 ```
 
@@ -435,7 +435,7 @@ console.log(getNumberFromBigNumber(unlocked, 9));
 const stream = await client.getOne({
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
 });
-const withdrawn = stream.withdrawnAmount; // bn amount withdrawn already
+const withdrawn = stream.withdrawnAmount; // big number amount withdrawn already
 console.log(getNumberFromBigNumber(wihtdrawn, 9));
 const remaining = stream.remaining(9); // amount of remaining funds
 console.log(remaining);
