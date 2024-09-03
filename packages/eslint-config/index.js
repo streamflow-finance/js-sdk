@@ -2,16 +2,14 @@
 module.exports = {
   extends: [
     "airbnb-typescript",
-    "plugin:jest/recommended",
     "plugin:import/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
   ],
-  plugins: ["@typescript-eslint", "jest", "import"],
+  plugins: ["@typescript-eslint", "import"],
   env: {
     browser: true,
     es6: true,
-    jest: true,
   },
   parser: "@typescript-eslint/parser",
   parserOptions: {

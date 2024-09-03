@@ -8,7 +8,6 @@
     "noUncheckedIndexedAccess": false,
     "noImplicitOverride": false,
     "forceConsistentCasingInFileNames": true,
-    "types": ["jest"],
     "baseUrl": ".",
     "lib": ["es2022", "dom", "dom.iterable"],  
   },

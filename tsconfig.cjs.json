@@ -11,8 +11,5 @@
     ],
     "skipLibCheck": true,
     "downlevelIteration": true,
-    "types": [
-      "jest"
-    ],
   },
 }

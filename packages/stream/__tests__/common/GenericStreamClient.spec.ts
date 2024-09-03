@@ -1,15 +1,16 @@
 import { Wallet } from "ethers";
+import { describe, expect, test } from "vitest";
 
-import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../index";
+import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../index.js";
 import {
   default as GenericStreamClient,
   SolanaStreamClientOptions,
   SuiStreamClientOptions,
   AptosStreamClientOptions,
   EvmStreamClientOptions,
-} from "../../common/GenericStreamClient";
-import { IChain, ICluster } from "../../common/types";
-import { BaseStreamClient } from "../../common/BaseStreamClient";
+} from "../../common/GenericStreamClient.js";
+import { IChain, ICluster } from "../../common/types.js";
+import { BaseStreamClient } from "../../common/BaseStreamClient.js";
 
 type StreamClientOptions =
   | SolanaStreamClientOptions
@@ -51,7 +52,7 @@ describe("GenericStreamClient", () => {
       expected: StreamflowSui.SuiStreamClient,
     },
   ])(".init($chain)", (config) => {
-    it("should successfully create GenericStreamClient instance", () => {
+    test("should successfully create GenericStreamClient instance", () => {
       const instance = new GenericStreamClient(config);
 
       expect(instance).toBeInstanceOf(GenericStreamClient);

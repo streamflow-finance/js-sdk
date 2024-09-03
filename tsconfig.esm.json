@@ -12,9 +12,6 @@
     "isolatedModules": false,
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist/esm",
-    "types": [
-      "jest"
-    ],
     "sourceMap": false,
     "declaration": true,
     "lib": ["es2022", "dom", "dom.iterable"],
