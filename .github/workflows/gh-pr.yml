@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - v6
+      - v7
       - prerelease/v*
 
 jobs:
