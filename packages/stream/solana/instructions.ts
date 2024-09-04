@@ -3,9 +3,9 @@ import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { createHash } from "node:crypto";
 
-import * as Layout from "./layout";
-import { IUpdateData } from "../common/types";
-import { toBuffer } from "./utils";
+import * as Layout from "./layout.js";
+import { IUpdateData } from "../common/types.js";
+import { toBuffer } from "./utils.js";
 
 const hasher = () => createHash("sha256");
 const sha256 = {

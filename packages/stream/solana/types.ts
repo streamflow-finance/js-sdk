@@ -5,6 +5,7 @@ import BigNumber from "bignumber.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import { IRecipient, Stream, StreamType } from "../common/types.js";
+import { getNumberFromBigNumber } from "../common/utils.js";
 
 export interface Account {
   pubkey: PublicKey;
@@ -173,10 +174,7 @@ export class Contract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return this.depositedAmount
-      .minus(this.withdrawnAmount)
-      .div(10 ** decimals)
-      .toNumber();
+    return getNumberFromBigNumber(this.depositedAmount.minus(this.withdrawnAmount), decimals);
   }
 }
 

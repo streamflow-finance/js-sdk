@@ -3,9 +3,10 @@ import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BigNumber from "bignumber.js";
 import { Buffer } from "buffer";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream, StreamType } from "../common/types";
-import { normalizeAptosAddress } from "./utils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { Stream, StreamType } from "../common/types.js";
+import { normalizeAptosAddress } from "./utils.js";
+import { getNumberFromBigNumber } from "../common/utils.js";
 
 export interface ICreateStreamAptosExt {
   senderWallet: WalletContextState | AptosAccount;
@@ -211,9 +212,6 @@ export class Contract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return this.depositedAmount
-      .minus(this.withdrawnAmount)
-      .div(10 ** decimals)
-      .toNumber();
+    return getNumberFromBigNumber(this.depositedAmount.minus(this.withdrawnAmount), decimals);
   }
 }

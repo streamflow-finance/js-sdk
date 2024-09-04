@@ -1,8 +1,9 @@
 import BigNumber from "bignumber.js";
 import { BigNumber as BigNumberEvm } from "ethers";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream, StreamType } from "../common/types";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { Stream, StreamType } from "../common/types.js";
+import { getNumberFromBigNumber } from "../common/utils.js";
 
 export interface StreamAbiResult {
   amount: BigNumberEvm;
@@ -194,9 +195,6 @@ export class EvmContract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return this.depositedAmount
-      .minus(this.withdrawnAmount)
-      .div(10 ** decimals)
-      .toNumber();
+    return getNumberFromBigNumber(this.depositedAmount.minus(this.withdrawnAmount), decimals);
   }
 }
