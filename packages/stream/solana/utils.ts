@@ -48,10 +48,10 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     streamflowTreasuryTokens: new PublicKey(raw.streamflow_treasury_tokens),
     streamflowFeeTotal: BigNumber(toUInt64String(raw.streamflow_fee_total)),
     streamflowFeeWithdrawn: BigNumber(toUInt64String(raw.streamflow_fee_withdrawn)),
-    streamflowFeePercent: BigNumber(raw.streamflow_fee_percent), //maybe not good
+    streamflowFeePercent: BigNumber(raw.streamflow_fee_percent),
     partnerFeeTotal: BigNumber(toUInt64String(raw.partner_fee_total)),
     partnerFeeWithdrawn: BigNumber(toUInt64String(raw.partner_fee_withdrawn)),
-    partnerFeePercent: BigNumber(raw.partner_fee_percent), //maybe not good
+    partnerFeePercent: BigNumber(raw.partner_fee_percent),
     partner: new PublicKey(raw.partner),
     partnerTokens: new PublicKey(raw.partner_tokens),
     start: BigNumber(toUInt64String(raw.start_time)),
