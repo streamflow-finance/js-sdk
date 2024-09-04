@@ -814,7 +814,6 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     ixs.push(
-      // ** 10
       topupStreamInstruction(amount, this.programId, {
         sender: invoker.publicKey,
         senderTokens,

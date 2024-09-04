@@ -26,7 +26,6 @@ export const prepareWrappedAccount = async (
     SystemProgram.transfer({
       fromPubkey: senderAddress,
       toPubkey: tokenAccount,
-      // pow 10 by decimals - probably since getNumberFromBN wasn't used
       lamports: amount.toNumber(),
     }),
     createSyncNativeInstruction(tokenAccount),
