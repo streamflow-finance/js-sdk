@@ -20,11 +20,11 @@ import {
 } from "@streamflow/common/solana";
 import PQueue from "p-queue";
 
-import { FeeManager as FeeManagerProgramType } from "../types/fee_manager.js";
-import RewardPoolIDL from "../types/idl/reward_pool.json";
-import StakePoolIDL from "../types/idl/stake_pool.json";
-import { RewardPool as RewardPoolProgramType } from "../types/reward_pool.js";
-import { StakePool as StakePoolProgramType } from "../types/stake_pool.js";
+import { FeeManager as FeeManagerProgramType } from "./descriptor/fee_manager.js";
+import RewardPoolIDL from "./descriptor/idl/reward_pool.json";
+import StakePoolIDL from "./descriptor/idl/stake_pool.json";
+import { RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
+import { StakePool as StakePoolProgramType } from "./descriptor/stake_pool.js";
 import { STAKE_ENTRY_OWNER_OFFSET, STAKE_ENTRY_STAKE_POOL_OFFSET, STAKE_POOL_MINT_OFFSET } from "./constants.js";
 import {
   ClaimRewardPoolArgs,

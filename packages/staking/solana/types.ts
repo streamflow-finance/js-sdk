@@ -4,8 +4,8 @@ import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
 import { type IdlTypes, Address } from "@coral-xyz/anchor";
 
-import { StakePool as StakePoolIDL } from "../types/stake_pool.js";
-import { RewardPool as RewardPoolIDL } from "../types/reward_pool.js";
+import { StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
+import { RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
 
 export type StakePool = IdlTypes<StakePoolIDL>["stakePool"];
 export type StakeEntry = IdlTypes<StakePoolIDL>["stakeEntry"];
