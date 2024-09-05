@@ -1,17 +1,17 @@
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 
 import { StreamType } from "./types.js";
 
 interface ICalculateUnlockedAmount {
-  depositedAmount: BN;
+  depositedAmount: BigNumber;
   cliff: number;
-  cliffAmount: BN;
+  cliffAmount: BigNumber;
   end: number;
   currentTimestamp: number;
   lastRateChangeTime: number;
   period: number;
-  amountPerPeriod: BN;
-  fundsUnlockedAtLastRateChange: BN;
+  amountPerPeriod: BigNumber;
+  fundsUnlockedAtLastRateChange: BigNumber;
 }
 
 export const calculateUnlockedAmount = ({
@@ -24,31 +24,38 @@ export const calculateUnlockedAmount = ({
   period,
   amountPerPeriod,
   fundsUnlockedAtLastRateChange,
-}: ICalculateUnlockedAmount): BN => {
+}: ICalculateUnlockedAmount): BigNumber => {
   const deposited = depositedAmount;
 
-  if (currentTimestamp < cliff) return new BN(0);
+  if (currentTimestamp < cliff) return BigNumber(0);
   if (currentTimestamp > end) return deposited;
 
   const savedUnlockedFunds = lastRateChangeTime === 0 ? cliffAmount : fundsUnlockedAtLastRateChange;
   const savedUnlockedFundsTime = lastRateChangeTime === 0 ? cliff : lastRateChangeTime;
 
-  const streamed = new BN(Math.floor((currentTimestamp - savedUnlockedFundsTime) / period))
-    .mul(amountPerPeriod)
-    .add(savedUnlockedFunds);
+  const streamed = BigNumber(Math.floor((currentTimestamp - savedUnlockedFundsTime) / period))
+    .times(amountPerPeriod)
+    .plus(savedUnlockedFunds);
 
   return streamed.lt(deposited) ? streamed : deposited;
 };
 
-export const isCliffCloseToDepositedAmount = (streamData: { depositedAmount: BN; cliffAmount: BN }): boolean => {
-  return streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN("1")));
+export const isCliffCloseToDepositedAmount = (streamData: {
+  depositedAmount: BigNumber;
+  cliffAmount: BigNumber;
+}): boolean => {
+  return streamData.cliffAmount.gte(streamData.depositedAmount.minus(BigNumber(1)));
 };
 
 export const isPayment = (streamData: { canTopup: boolean }): boolean => {
   return streamData.canTopup;
 };
 
-export const isVesting = (streamData: { canTopup: boolean; depositedAmount: BN; cliffAmount: BN }): boolean => {
+export const isVesting = (streamData: {
+  canTopup: boolean;
+  depositedAmount: BigNumber;
+  cliffAmount: BigNumber;
+}): boolean => {
   return !streamData.canTopup && !isCliffCloseToDepositedAmount(streamData);
 };
 
@@ -59,8 +66,8 @@ export const isTokenLock = (streamData: {
   cancelableByRecipient: boolean;
   transferableBySender: boolean;
   transferableByRecipient: boolean;
-  depositedAmount: BN;
-  cliffAmount: BN;
+  depositedAmount: BigNumber;
+  cliffAmount: BigNumber;
 }): boolean => {
   return (
     !streamData.canTopup &&
@@ -80,8 +87,8 @@ export const buildStreamType = (streamData: {
   cancelableByRecipient: boolean;
   transferableBySender: boolean;
   transferableByRecipient: boolean;
-  depositedAmount: BN;
-  cliffAmount: BN;
+  depositedAmount: BigNumber;
+  cliffAmount: BigNumber;
 }): StreamType => {
   if (isVesting(streamData)) {
     return StreamType.Vesting;

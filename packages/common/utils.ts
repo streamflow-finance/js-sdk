@@ -1,32 +1,26 @@
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 
 import { ContractError } from "./types.js";
 
 /**
- * Used for conversion of token amounts to their Big Number representation.
- * Get Big Number representation in the smallest units from the same value in the highest units.
- * @param {number} value - Number of tokens you want to convert to its BN representation.
+ * Used for token amounts conversion from their Big Number representation to number.
+ * Get value in the highest units from BigNumber representation of the same value in the smallest units.
+ * @param {BigNumber} value - Big Number representation of value in the smallest units.
  * @param {number} decimals - Number of decimals the token has.
  */
-export const getBN = (value: number, decimals: number): BN => {
-  const decimalPart = value - Math.trunc(value);
-  const integerPart = new BN(Math.trunc(value));
-
-  const decimalE = new BN(decimalPart * 1e9);
-
-  const sum = integerPart.mul(new BN(1e9)).add(decimalE);
-  const resultE = sum.mul(new BN(10).pow(new BN(decimals)));
-  return resultE.div(new BN(1e9));
+export const getNumberFromBigNumber = (bigNum: BigNumber, decimals: number): number => {
+  return bigNum.div(BigNumber(10).pow(decimals)).toNumber();
 };
 
 /**
- * Used for token amounts conversion from their Big Number representation to number.
- * Get value in the highest units from BN representation of the same value in the smallest units.
- * @param {BN} value - Big Number representation of value in the smallest units.
+ * Used for conversion of token amounts to their Big Number representation.
+ * Get Big Number representation in the smallest units from the same value in the highest units.
+ * @param {number} value - Number of tokens you want to convert to its BigNumber representation.
  * @param {number} decimals - Number of decimals the token has.
  */
-export const getNumberFromBN = (value: BN, decimals: number): number =>
-  value.gt(new BN(2 ** 53 - 1)) ? value.div(new BN(10 ** decimals)).toNumber() : value.toNumber() / 10 ** decimals;
+export const getScaledBigNumber = (value: number | string | BigNumber, decimals: number): BigNumber => {
+  return new BigNumber(value).times(new BigNumber(10).pow(decimals));
+};
 
 /**
  * Used to make on chain calls to the contract and wrap raised errors if any
