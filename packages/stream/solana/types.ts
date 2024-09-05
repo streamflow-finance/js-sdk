@@ -1,11 +1,11 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import { IRecipient, Stream, StreamType } from "../common/types.js";
-import { getNumberFromBN } from "../common/utils.js";
+import { getNumberFromBigNumber } from "../common/utils.js";
 
 export interface ISearchStreams {
   mint?: string;
@@ -46,7 +46,7 @@ export class Contract implements Stream {
 
   createdAt: number;
 
-  withdrawnAmount: BN;
+  withdrawnAmount: BigNumber;
 
   canceledAt: number;
 
@@ -70,15 +70,15 @@ export class Contract implements Stream {
 
   streamflowTreasuryTokens: string;
 
-  streamflowFeeTotal: BN;
+  streamflowFeeTotal: BigNumber;
 
-  streamflowFeeWithdrawn: BN;
+  streamflowFeeWithdrawn: BigNumber;
 
   streamflowFeePercent: number;
 
-  partnerFeeTotal: BN;
+  partnerFeeTotal: BigNumber;
 
-  partnerFeeWithdrawn: BN;
+  partnerFeeWithdrawn: BigNumber;
 
   partnerFeePercent: number;
 
@@ -88,15 +88,15 @@ export class Contract implements Stream {
 
   start: number;
 
-  depositedAmount: BN;
+  depositedAmount: BigNumber;
 
   period: number;
 
-  amountPerPeriod: BN;
+  amountPerPeriod: BigNumber;
 
   cliff: number;
 
-  cliffAmount: BN;
+  cliffAmount: BigNumber;
 
   cancelableBySender: boolean;
 
@@ -118,11 +118,11 @@ export class Contract implements Stream {
 
   currentPauseStart: number;
 
-  pauseCumulative: BN;
+  pauseCumulative: BigNumber;
 
   lastRateChangeTime: number;
 
-  fundsUnlockedAtLastRateChange: BN;
+  fundsUnlockedAtLastRateChange: BigNumber;
 
   type: StreamType;
 
@@ -172,7 +172,7 @@ export class Contract implements Stream {
     this.type = buildStreamType(this);
   }
 
-  unlocked(currentTimestamp: number): BN {
+  unlocked(currentTimestamp: number): BigNumber {
     return calculateUnlockedAmount({
       ...this,
       currentTimestamp,
@@ -180,18 +180,18 @@ export class Contract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
+    return getNumberFromBigNumber(this.depositedAmount.minus(this.withdrawnAmount), decimals);
   }
 }
 
 export interface DecodedStream {
-  magic: BN;
-  version: BN;
-  createdAt: BN;
-  withdrawnAmount: BN;
-  canceledAt: BN;
-  end: BN;
-  lastWithdrawnAt: BN;
+  magic: BigNumber;
+  version: BigNumber;
+  createdAt: BigNumber;
+  withdrawnAmount: BigNumber;
+  canceledAt: BigNumber;
+  end: BigNumber;
+  lastWithdrawnAt: BigNumber;
   sender: PublicKey;
   senderTokens: PublicKey;
   recipient: PublicKey;
@@ -200,20 +200,20 @@ export interface DecodedStream {
   escrowTokens: PublicKey;
   streamflowTreasury: PublicKey;
   streamflowTreasuryTokens: PublicKey;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: BN;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
-  partnerFeePercent: BN;
+  streamflowFeeTotal: BigNumber;
+  streamflowFeeWithdrawn: BigNumber;
+  streamflowFeePercent: BigNumber;
+  partnerFeeTotal: BigNumber;
+  partnerFeeWithdrawn: BigNumber;
+  partnerFeePercent: BigNumber;
   partner: PublicKey;
   partnerTokens: PublicKey;
-  start: BN;
-  depositedAmount: BN;
-  period: BN;
-  amountPerPeriod: BN;
-  cliff: BN;
-  cliffAmount: BN;
+  start: BigNumber;
+  depositedAmount: BigNumber;
+  period: BigNumber;
+  amountPerPeriod: BigNumber;
+  cliff: BigNumber;
+  cliffAmount: BigNumber;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -221,12 +221,12 @@ export interface DecodedStream {
   transferableByRecipient: boolean;
   canTopup: boolean;
   name: string;
-  withdrawFrequency: BN;
+  withdrawFrequency: BigNumber;
   closed: boolean;
-  currentPauseStart: BN;
-  pauseCumulative: BN;
-  lastRateChangeTime: BN;
-  fundsUnlockedAtLastRateChange: BN;
+  currentPauseStart: BigNumber;
+  pauseCumulative: BigNumber;
+  lastRateChangeTime: BigNumber;
+  fundsUnlockedAtLastRateChange: BigNumber;
 }
 
 export interface MetadataRecipientHashMap {

@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "7.0.0-alpha.1",
+  "version": "7.0.0-alpha.2",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/esm/index.js",
@@ -45,7 +45,6 @@
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
     "@streamflow/eslint-config": "workspace:*",
-    "@types/bn.js": "5.1.1",
     "@types/ethereum-checksum-address": "^0.0.0",
     "date-fns": "2.28.0",
     "typescript": "^5.3.3"
@@ -61,7 +60,7 @@
     "@streamflow/common": "workspace:*",
     "@suiet/wallet-kit": "0.2.22",
     "aptos": "1.21.0",
-    "bn.js": "5.2.1",
+    "bignumber.js": "^9.1.2",
     "borsh": "^2.0.0",
     "bs58": "5.0.0",
     "ethereum-checksum-address": "0.0.8",

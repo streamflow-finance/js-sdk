@@ -1,6 +1,6 @@
 // Latest version of the SDK that does not use Anchor. It supports raw instructions.
 
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 import { Buffer } from "buffer";
 import PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
@@ -239,12 +239,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     ixs.push(
       createStreamInstruction(
         {
-          start: new BN(start),
+          start: BigNumber(start),
           depositedAmount,
-          period: new BN(period),
+          period: BigNumber(period),
           amountPerPeriod,
-          cliff: new BN(cliff),
-          cliffAmount,
+          cliff: BigNumber(cliff),
+          cliffAmount: BigNumber(cliffAmount),
           cancelableBySender,
           cancelableByRecipient,
           automaticWithdrawal,
@@ -254,7 +254,7 @@ export class SolanaStreamClient extends BaseStreamClient {
           canUpdateRate: !!canUpdateRate,
           canPause: !!canPause,
           name,
-          withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
+          withdrawFrequency: BigNumber(automaticWithdrawal ? withdrawalFrequency : period),
         },
         this.programId,
         {
@@ -387,12 +387,12 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const createInstruction = createUncheckedStreamInstruction(
       {
-        start: new BN(start),
+        start: BigNumber(start),
         depositedAmount,
-        period: new BN(period),
+        period: BigNumber(period),
         amountPerPeriod,
-        cliff: new BN(cliff),
-        cliffAmount,
+        cliff: BigNumber(cliff),
+        cliffAmount: BigNumber(cliffAmount),
         cancelableBySender,
         cancelableByRecipient,
         automaticWithdrawal,
@@ -402,7 +402,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         canUpdateRate: !!canUpdateRate,
         canPause: !!canPause,
         name,
-        withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
+        withdrawFrequency: BigNumber(automaticWithdrawal ? withdrawalFrequency : period),
         recipient: recipientPublicKey,
         partner: partnerPublicKey,
       },
@@ -487,7 +487,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     if (isNative) {
-      const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
+      const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.plus(acc), BigNumber(0));
       const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
 
       const messageV0 = new TransactionMessage({
@@ -1055,12 +1055,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     ixs.push(
       createStreamInstruction(
         {
-          start: new BN(start),
+          start: BigNumber(start),
           depositedAmount: recipient.amount,
-          period: new BN(period),
+          period: BigNumber(period),
           amountPerPeriod: recipient.amountPerPeriod,
-          cliff: new BN(cliff),
-          cliffAmount: recipient.cliffAmount,
+          cliff: BigNumber(cliff),
+          cliffAmount: BigNumber(recipient.cliffAmount),
           cancelableBySender,
           cancelableByRecipient,
           automaticWithdrawal,
@@ -1070,7 +1070,7 @@ export class SolanaStreamClient extends BaseStreamClient {
           canUpdateRate: !!canUpdateRate,
           canPause: !!canPause,
           name: recipient.name,
-          withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
+          withdrawFrequency: BigNumber(automaticWithdrawal ? withdrawalFrequency : period),
         },
         this.programId,
         {

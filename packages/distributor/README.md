@@ -26,7 +26,6 @@ Automated Airdrop Creation: [notion doc →](https://streamflow.notion.site/Auto
 Most common imports:
 
 ```javascript
-import { BN } from "bn.js";
 import { ICluster } from "@streamflow/common";
 import { SolanaDistributorClient } from "@streamflow/distributor/solana";
 ```
@@ -62,8 +61,8 @@ const res = await client.create(
       54, 218, 49, 68, 131, 214, 250, 113, 37, 143, 167, 73, 17, 54, 233, 26, 141, 93, 28, 186, 137, 211, 251, 205,
       240, 192, 134, 208, 108, 246, 0, 191,
     ], // Merkle root
-    maxNumNodes: new BN("4"), // Number of recipients
-    maxTotalClaim: new BN("4000000000"), // Total amount to distribute
+    maxNumNodes: 4, // Number of recipients
+    maxTotalClaim: "4000000000", // Total amount to distribute
     unlockPeriod: 1, // Unlock period in seconds
     startVestingTs: 0, // Timestamp when Airdrop starts
     endVestingTs: now + 3600 * 24 * 7, // Timestamp when Airdrop ends
@@ -94,8 +93,8 @@ const claimRes = await client.claim(
         43, 104, 75, 183, 12, 38, 37, 153,
       ],
     ], // Merkle Proof used to verify claim
-    amountUnlocked: new BN("0"), // Total amount unlocked for a Recipient
-    amountLocked: new BN("1000000000"), // Total amount locked for a Recipient
+    amountUnlocked: "0", // Total amount unlocked for a Recipient
+    amountLocked: "1000000000", // Total amount locked for a Recipient
   },
   solanaParams,
 );

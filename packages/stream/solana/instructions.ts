@@ -1,10 +1,11 @@
 import { Buffer } from "buffer";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import BN from "bn.js";
+import BigNumber from "bignumber.js";
 import { createHash } from "node:crypto";
 
 import * as Layout from "./layout.js";
 import { IUpdateData } from "../common/types.js";
+import { toBuffer } from "./utils.js";
 
 const hasher = () => createHash("sha256");
 const sha256 = {
@@ -12,12 +13,12 @@ const sha256 = {
 };
 
 interface CreateStreamData {
-  start: BN;
-  depositedAmount: BN;
-  period: BN;
-  amountPerPeriod: BN;
-  cliff: BN;
-  cliffAmount: BN;
+  start: BigNumber;
+  depositedAmount: BigNumber;
+  period: BigNumber;
+  amountPerPeriod: BigNumber;
+  cliff: BigNumber;
+  cliffAmount: BigNumber;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -27,7 +28,7 @@ interface CreateStreamData {
   canUpdateRate: boolean;
   canPause: boolean;
   name: string;
-  withdrawFrequency: BN;
+  withdrawFrequency: BigNumber;
 }
 
 interface CreateStreamAccounts {
@@ -95,12 +96,12 @@ export const createStreamInstruction = (
   const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
 
   const decodedData = {
-    start_time: data.start.toArrayLike(Buffer, "le", 8),
-    net_amount_deposited: data.depositedAmount.toArrayLike(Buffer, "le", 8),
-    period: data.period.toArrayLike(Buffer, "le", 8),
-    amount_per_period: data.amountPerPeriod.toArrayLike(Buffer, "le", 8),
-    cliff: data.cliff.toArrayLike(Buffer, "le", 8),
-    cliff_amount: data.cliffAmount.toArrayLike(Buffer, "le", 8),
+    start_time: toBuffer(data.start),
+    net_amount_deposited: toBuffer(data.depositedAmount),
+    period: toBuffer(data.period),
+    amount_per_period: toBuffer(data.amountPerPeriod),
+    cliff: toBuffer(data.cliff),
+    cliff_amount: toBuffer(data.cliffAmount),
     cancelable_by_sender: Number(data.cancelableBySender),
     cancelable_by_recipient: Number(data.cancelableByRecipient),
     automatic_withdrawal: Number(data.automaticWithdrawal),
@@ -112,7 +113,7 @@ export const createStreamInstruction = (
     _can_update_rate_discriminator: 1,
     pausable: Number(data.canPause),
     stream_name: streamNameBuffer,
-    withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
+    withdraw_frequency: toBuffer(data.withdrawFrequency),
   };
   const encodeLength = Layout.createStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
@@ -126,12 +127,12 @@ export const createStreamInstruction = (
 };
 
 interface CreateUncheckedStreamData {
-  start: BN;
-  depositedAmount: BN;
-  period: BN;
-  amountPerPeriod: BN;
-  cliff: BN;
-  cliffAmount: BN;
+  start: BigNumber;
+  depositedAmount: BigNumber;
+  period: BigNumber;
+  amountPerPeriod: BigNumber;
+  cliff: BigNumber;
+  cliffAmount: BigNumber;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -141,7 +142,7 @@ interface CreateUncheckedStreamData {
   canUpdateRate: boolean;
   canPause: boolean;
   name: string;
-  withdrawFrequency: BN;
+  withdrawFrequency: BigNumber;
   recipient: PublicKey;
   partner: PublicKey;
 }
@@ -194,12 +195,12 @@ export const createUncheckedStreamInstruction = (
   const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
 
   const decodedData = {
-    start_time: data.start.toArrayLike(Buffer, "le", 8),
-    net_amount_deposited: data.depositedAmount.toArrayLike(Buffer, "le", 8),
-    period: data.period.toArrayLike(Buffer, "le", 8),
-    amount_per_period: data.amountPerPeriod.toArrayLike(Buffer, "le", 8),
-    cliff: data.cliff.toArrayLike(Buffer, "le", 8),
-    cliff_amount: data.cliffAmount.toArrayLike(Buffer, "le", 8),
+    start_time: toBuffer(data.start),
+    net_amount_deposited: toBuffer(data.depositedAmount),
+    period: toBuffer(data.period),
+    amount_per_period: toBuffer(data.amountPerPeriod),
+    cliff: toBuffer(data.cliff),
+    cliff_amount: toBuffer(data.cliffAmount),
     cancelable_by_sender: Number(data.cancelableBySender),
     cancelable_by_recipient: Number(data.cancelableByRecipient),
     automatic_withdrawal: Number(data.automaticWithdrawal),
@@ -207,7 +208,7 @@ export const createUncheckedStreamInstruction = (
     transferable_by_recipient: Number(data.transferableByRecipient),
     can_topup: Number(data.canTopup),
     stream_name: streamNameBuffer,
-    withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
+    withdraw_frequency: toBuffer(data.withdrawFrequency),
     recipient: data.recipient.toBuffer(),
     partner: data.partner.toBuffer(),
     pausable: Number(data.canPause),
@@ -242,7 +243,7 @@ interface WithdrawAccounts {
 }
 
 export const withdrawStreamInstruction = (
-  amount: BN,
+  amount: BigNumber,
   programId: PublicKey,
   {
     authority,
@@ -277,7 +278,7 @@ export const withdrawStreamInstruction = (
   ];
 
   let data = Buffer.alloc(Layout.withdrawStreamLayout.span);
-  const decodedData = { amount: amount.toArrayLike(Buffer, "le", 8) };
+  const decodedData = { amount: toBuffer(amount) };
   const encodeLength = Layout.withdrawStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
   data = Buffer.concat([Buffer.from(sha256.digest("global:withdraw")).slice(0, 8), data, Buffer.alloc(10)]);
@@ -310,8 +311,8 @@ export const updateStreamInstruction = (
   let data = Buffer.alloc(100);
   const decodedData = {
     enable_automatic_withdrawal: Number(params.enableAutomaticWithdrawal),
-    withdraw_frequency: params.withdrawFrequency ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8) : undefined,
-    amount_per_period: params.amountPerPeriod ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8) : undefined,
+    withdraw_frequency: params.withdrawFrequency ? toBuffer(params.withdrawFrequency) : undefined,
+    amount_per_period: params.amountPerPeriod ? toBuffer(params.amountPerPeriod) : undefined,
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);
@@ -449,7 +450,7 @@ interface TopupAccounts {
 }
 
 export const topupStreamInstruction = (
-  amount: BN,
+  amount: BigNumber,
   programId: PublicKey,
   {
     sender,
@@ -486,7 +487,7 @@ export const topupStreamInstruction = (
   ];
 
   let data = Buffer.alloc(Layout.topupStreamLayout.span);
-  const decodedData = { amount: amount.toArrayLike(Buffer, "le", 8) };
+  const decodedData = { amount: toBuffer(amount) };
 
   const encodeLength = Layout.topupStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
