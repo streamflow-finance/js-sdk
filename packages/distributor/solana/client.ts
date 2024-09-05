@@ -1,3 +1,4 @@
+import bs58 from "bs58";
 import BN from "bn.js";
 import PQueue from "p-queue";
 import {
@@ -14,6 +15,7 @@ import {
   TransactionInstruction,
   Commitment,
   ConnectionConfig,
+  MemcmpFilter,
 } from "@solana/web3.js";
 import { ICluster, ITransactionResult } from "@streamflow/common";
 import {
@@ -26,7 +28,7 @@ import {
   buildSendThrottler,
 } from "@streamflow/common/solana";
 
-import { DISTRIBUTOR_PROGRAM_ID } from "./constants";
+import { DISTRIBUTOR_ADMIN_OFFSET, DISTRIBUTOR_MINT_OFFSET, DISTRIBUTOR_PROGRAM_ID } from "./constants";
 import {
   IClaimData,
   IClawbackData,
@@ -36,6 +38,7 @@ import {
   IGetDistributors,
   ICreateSolanaExt,
   IInteractSolanaExt,
+  ISearchDistributors,
 } from "./types";
 import {
   ClaimLockedAccounts,
@@ -360,5 +363,30 @@ export default class SolanaDistributorClient {
   public async getDistributors(data: IGetDistributors): Promise<(MerkleDistributor | null)[]> {
     const distributorPublicKeys = data.ids.map((distributorId) => new PublicKey(distributorId));
     return MerkleDistributor.fetchMultiple(this.connection, distributorPublicKeys, this.programId);
+  }
+
+  public async searchDistributors(data: ISearchDistributors): Promise<MerkleDistributor[]> {
+    const filters: MemcmpFilter[] = [{ memcmp: { offset: 0, bytes: bs58.encode(MerkleDistributor.discriminator) } }];
+    if (data.mint) {
+      filters.push({
+        memcmp: {
+          offset: DISTRIBUTOR_MINT_OFFSET,
+          bytes: data.mint,
+        },
+      });
+    }
+    if (data.admin) {
+      filters.push({
+        memcmp: {
+          offset: DISTRIBUTOR_ADMIN_OFFSET,
+          bytes: data.admin,
+        },
+      });
+    }
+    const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
+
+    return accounts.map(({ account }) => {
+      return MerkleDistributor.decode(account.data);
+    });
   }
 }
