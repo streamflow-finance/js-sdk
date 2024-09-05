@@ -48,6 +48,11 @@ export interface IGetDistributors {
   ids: string[];
 }
 
+export interface ISearchDistributors {
+  mint?: string;
+  admin?: string;
+}
+
 export interface ISetDataAdmin {
   id: string;
   newAdmin: string;
