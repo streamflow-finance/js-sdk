@@ -60,30 +60,6 @@ interface IInitOptions {
   sendThrottler?: PQueue;
 }
 
-async function wrappedSignAndExecuteTransaction(
-  connection: Connection,
-  invoker: IInteractSolanaExt["invoker"],
-  tx: Transaction | VersionedTransaction,
-  confirmationParams: ConfirmationParams,
-  throttleParams: ThrottleParams,
-  programs: Programs,
-): Promise<string> {
-  try {
-    return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams, throttleParams);
-  } catch (err: any) {
-    if (err instanceof Error) {
-      const parsed: AnchorError | ProgramError | typeof err = translateError(
-        err,
-        parseIdlErrors(programs.stakePool.idl), // TODO how to catch an error from a specific program?
-      );
-      if (parsed) {
-        throw new ContractError(err, parsed.name, parsed.message);
-      }
-    }
-    throw err;
-  }
-}
-
 export default class SolanaStakingClient {
   private connection: Connection;
 
@@ -453,20 +429,31 @@ export default class SolanaStakingClient {
   private async execute(ixs: TransactionInstruction[], extParams: IInteractSolanaExt) {
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
 
-    const signature = await wrappedSignAndExecuteTransaction(
-      this.connection,
-      extParams.invoker,
-      tx,
-      {
-        hash,
-        context,
-        commitment: this.getCommitment(),
-      },
-      { sendThrottler: this.sendThrottler },
-      this.programs,
-    );
-
-    return { signature };
+    try {
+      const signature = await signAndExecuteTransaction(
+        this.connection,
+        extParams.invoker,
+        tx,
+        {
+          hash,
+          context,
+          commitment: this.getCommitment(),
+        },
+        { sendThrottler: this.sendThrottler },
+      );
+      return { signature };
+    } catch (err: any) {
+      if (err instanceof Error) {
+        const parsed: AnchorError | ProgramError | typeof err = translateError(
+          err,
+          parseIdlErrors(this.programs.stakePool.idl), // TODO how to catch an error from a specific program?
+        );
+        if (parsed) {
+          throw new ContractError(err, parsed.name, parsed.message);
+        }
+      }
+      throw err;
+    }
   }
 }
 
