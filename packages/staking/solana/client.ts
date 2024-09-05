@@ -1,12 +1,5 @@
-import {
-  Program,
-  parseIdlErrors,
-  IdlAccounts,
-  AnchorError,
-  ProgramError,
-  translateError,
-  ProgramAccount,
-} from "@coral-xyz/anchor";
+import { AnchorError, Program, ProgramAccount, ProgramError, parseIdlErrors, translateError } from "@coral-xyz/anchor";
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
   Commitment,
   Connection,
@@ -17,8 +10,6 @@ import {
   TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
-import PQueue from "p-queue";
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { ContractError, ICluster, ITransactionResult } from "@streamflow/common";
 import {
   ConfirmationParams,
@@ -27,12 +18,13 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
 } from "@streamflow/common/solana";
+import PQueue from "p-queue";
 
+import { FeeManager as FeeManagerProgramType } from "../types/fee_manager.js";
 import RewardPoolIDL from "../types/idl/reward_pool.json";
 import StakePoolIDL from "../types/idl/stake_pool.json";
 import { RewardPool as RewardPoolProgramType } from "../types/reward_pool.js";
 import { StakePool as StakePoolProgramType } from "../types/stake_pool.js";
-import { FeeManager as FeeManagerProgramType } from "../types/fee_manager.js";
 import { STAKE_ENTRY_OWNER_OFFSET, STAKE_ENTRY_STAKE_POOL_OFFSET, STAKE_POOL_MINT_OFFSET } from "./constants.js";
 import {
   ClaimRewardPoolArgs,
@@ -103,6 +95,7 @@ export default class SolanaStakingClient {
 
   constructor({
     clusterUrl,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     cluster = ICluster.Mainnet,
     commitment = "confirmed",
     programIds,
@@ -223,7 +216,6 @@ export default class SolanaStakingClient {
 
   async prepareCreateStakePoolInstructions(
     {
-      authority,
       maxWeight,
       maxDuration,
       minDuration,
