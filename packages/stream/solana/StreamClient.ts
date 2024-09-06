@@ -895,19 +895,15 @@ export default class SolanaStreamClient extends BaseStreamClient {
   }
 
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
-    const filters: MemcmpFilter[] = [];
-    let k: keyof ISearchStreams;
-    for (k in data) {
-      const value = data[k];
-      if (value) {
-        filters.push({
-          memcmp: {
-            offset: STREAM_STRUCT_OFFSETS[k],
-            bytes: value,
-          },
-        });
-      }
-    }
+    const filters: MemcmpFilter[] = Object.entries(data)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .filter(([_, value]) => value) // Only keep entries where the value is truthy
+      .map(([key, value]) => ({
+        memcmp: {
+          offset: STREAM_STRUCT_OFFSETS[key as keyof ISearchStreams],
+          bytes: value,
+        },
+      }));
     const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
 
     return accounts.map(({ pubkey, account }) => ({
