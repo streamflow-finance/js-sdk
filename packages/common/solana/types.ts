@@ -36,6 +36,11 @@ export interface ThrottleParams {
   sendThrottler?: PQueue;
 }
 
+export interface IProgramAccount<T> {
+  publicKey: PublicKey;
+  account: T;
+}
+
 export class TransactionFailedError extends Error {
   constructor(m: string) {
     super(m);

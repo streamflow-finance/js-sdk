@@ -458,6 +458,22 @@ try {
 }
 ```
 
+## Search Solana Streams
+
+Solana RPC is pretty rich in what data it can allow to filter by, so we expose a separate `searchStreams` method on `SolanaStreamClient`:
+
+```javascript
+// All parameters are optional, so in theory you can just fetch all Streams
+const params = {
+  mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  sender: "AKp8CxGbhsrsEsCFUtx7e3MWyW7SWi1uuSqv6N4BEohJ",
+  recipient: "9mqcpDjCHCPmttJp2t477oJ71NdAvJeSus8BcCrrvwy5",
+}
+// nativeStreamClient is exposed on a GenericStreamClient, you can also use SolanaStreamClient directly
+// Return an Array of objects {publicKey: PublicKey, account: Stream}
+const streams = await client.nativeStreamClient.searchStreams(params);
+```
+
 ## Handling errors
 
 `GenericStreamClient` wraps all errors when making on-chain calls with `ContractError` error class:

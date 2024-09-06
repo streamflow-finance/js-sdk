@@ -7,6 +7,12 @@ import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtil
 import { IRecipient, Stream, StreamType } from "../common/types";
 import { getNumberFromBN } from "../common/utils";
 
+export interface ISearchStreams {
+  mint?: string;
+  sender?: string;
+  recipient?: string;
+}
+
 export interface Account {
   pubkey: PublicKey;
   account: AccountInfo<Buffer>;

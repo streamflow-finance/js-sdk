@@ -26,6 +26,7 @@ import {
   prepareTransaction,
   getMintAndProgram,
   buildSendThrottler,
+  IProgramAccount,
 } from "@streamflow/common/solana";
 
 import { DISTRIBUTOR_ADMIN_OFFSET, DISTRIBUTOR_MINT_OFFSET, DISTRIBUTOR_PROGRAM_ID } from "./constants";
@@ -365,7 +366,7 @@ export default class SolanaDistributorClient {
     return MerkleDistributor.fetchMultiple(this.connection, distributorPublicKeys, this.programId);
   }
 
-  public async searchDistributors(data: ISearchDistributors): Promise<MerkleDistributor[]> {
+  public async searchDistributors(data: ISearchDistributors): Promise<IProgramAccount<MerkleDistributor>[]> {
     const filters: MemcmpFilter[] = [{ memcmp: { offset: 0, bytes: bs58.encode(MerkleDistributor.discriminator) } }];
     if (data.mint) {
       filters.push({
@@ -385,8 +386,9 @@ export default class SolanaDistributorClient {
     }
     const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
 
-    return accounts.map(({ account }) => {
-      return MerkleDistributor.decode(account.data);
-    });
+    return accounts.map(({ pubkey, account }) => ({
+      publicKey: pubkey,
+      account: MerkleDistributor.decode(account.data),
+    }));
   }
 }

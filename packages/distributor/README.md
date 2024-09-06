@@ -112,6 +112,20 @@ const solanaParams = {
 const clawbackRes = await client.clawback({ id: res.metadataId }, solanaParams);
 ```
 
+## Search Airdrops
+
+As all the data is stored on-chain you can also search Airdrops with `searchDistributors` method:
+
+```javascript
+// All parameters are optional, so in theory you just fetch all Distributors
+const params = {
+    mint: "BZLbGTNCSFfoth2GYDtwr7e4imWzpR5jqcUuGEwr646K", 
+    admin: "s3pWmY359mDrNRnDBZ3v5TrrqqxvxiW2t4U2WZyxRoA"
+};
+// Return an Array of objects {publicKey: PublicKey, account: Distributor}
+const disributors = await client.searchDistributors(params);
+```
+
 ## Handling errors
 
 `GenericStreamClient` wraps all errors when making on-chain calls with `ContractError` error class:
