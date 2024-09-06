@@ -896,12 +896,14 @@ export default class SolanaStreamClient extends BaseStreamClient {
 
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
     const filters: MemcmpFilter[] = [];
-    for (const [k, v] of Object.entries(data)) {
-      if (v) {
+    let k: keyof ISearchStreams;
+    for (k in data) {
+      const value = data[k];
+      if (value) {
         filters.push({
           memcmp: {
-            offset: STREAM_STRUCT_OFFSETS[k as keyof typeof STREAM_STRUCT_OFFSETS],
-            bytes: v,
+            offset: STREAM_STRUCT_OFFSETS[k],
+            bytes: value,
           },
         });
       }

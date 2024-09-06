@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 
 import { ICluster, SolanaContractErrorCode } from "../common/types";
+import { ISearchStreams } from "./types";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
 
@@ -8,7 +9,7 @@ export const STREAM_STRUCT_OFFSET_SENDER = 49;
 export const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 export const STREAM_STRUCT_OFFSET_MINT = 177;
 
-export const STREAM_STRUCT_OFFSETS = {
+export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
   mint: STREAM_STRUCT_OFFSET_MINT,
   recipient: STREAM_STRUCT_OFFSET_RECIPIENT,
   sender: STREAM_STRUCT_OFFSET_SENDER,

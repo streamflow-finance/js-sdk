@@ -471,7 +471,7 @@ const params = {
 }
 // nativeStreamClient is exposed on a GenericStreamClient, you can also use SolanaStreamClient directly
 // Return an Array of objects {publicKey: PublicKey, account: Stream}
-const disributors = await client.nativeStreamClient.searchStreams(params);
+const streams = await client.nativeStreamClient.searchStreams(params);
 ```
 
 ## Handling errors
