@@ -30,7 +30,7 @@ import {
   executeTransaction,
   executeMultipleTransactions,
   buildSendThrottler,
-  ProgramAccount,
+  IProgramAccount,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
@@ -894,7 +894,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     return sortedStreams.filter((stream) => stream[1].type === type);
   }
 
-  public async searchStreams(data: ISearchStreams): Promise<ProgramAccount<Stream>[]> {
+  public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
     const filters: MemcmpFilter[] = [];
     for (const [k, v] of Object.entries(data)) {
       if (v) {

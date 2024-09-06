@@ -36,7 +36,7 @@ export interface ThrottleParams {
   sendThrottler?: PQueue;
 }
 
-export interface ProgramAccount<T> {
+export interface IProgramAccount<T> {
   publicKey: PublicKey;
   account: T;
 }
