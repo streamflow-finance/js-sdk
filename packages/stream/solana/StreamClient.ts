@@ -15,6 +15,7 @@ import {
   ConnectionConfig,
   TransactionMessage,
   VersionedTransaction,
+  MemcmpFilter,
 } from "@solana/web3.js";
 import {
   CheckAssociatedTokenAccountsData,
@@ -29,6 +30,7 @@ import {
   executeTransaction,
   executeMultipleTransactions,
   buildSendThrottler,
+  ProgramAccount,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 
@@ -40,6 +42,7 @@ import {
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
+  ISearchStreams,
 } from "./types";
 import {
   decodeStream,
@@ -59,6 +62,7 @@ import {
   PARTNER_ORACLE_PROGRAM_ID,
   FEES_METADATA_SEED,
   PARTNERS_SCHEMA,
+  STREAM_STRUCT_OFFSETS,
 } from "./constants";
 import {
   withdrawStreamInstruction,
@@ -888,6 +892,26 @@ export default class SolanaStreamClient extends BaseStreamClient {
     if (type === "all") return sortedStreams;
 
     return sortedStreams.filter((stream) => stream[1].type === type);
+  }
+
+  public async searchStreams(data: ISearchStreams): Promise<ProgramAccount<Stream>[]> {
+    const filters: MemcmpFilter[] = [];
+    for (const [k, v] of Object.entries(data)) {
+      if (v) {
+        filters.push({
+          memcmp: {
+            offset: STREAM_STRUCT_OFFSETS[k as keyof typeof STREAM_STRUCT_OFFSETS],
+            bytes: v,
+          },
+        });
+      }
+    }
+    const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
+
+    return accounts.map(({ pubkey, account }) => ({
+      publicKey: pubkey,
+      account: new Contract(decodeStream(account.data)),
+    }));
   }
 
   /**
