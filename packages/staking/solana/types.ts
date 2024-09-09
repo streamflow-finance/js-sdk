@@ -1,11 +1,11 @@
+import { Address, type IdlTypes } from "@coral-xyz/anchor";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
-import { type IdlTypes, Address } from "@coral-xyz/anchor";
 
-import { StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
 import { RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
+import { StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
 
 export type StakePool = IdlTypes<StakePoolIDL>["stakePool"];
 export type StakeEntry = IdlTypes<StakePoolIDL>["stakeEntry"];
@@ -20,80 +20,64 @@ export interface ICreateSolanaExt extends IInteractSolanaExt {
   isNative?: boolean;
 }
 
-export interface UnstakeArgs {
-  stakePoolKey: Address;
-  stakeMint: Address;
-  amount: BN;
-  duration: BN;
-  nonce: number;
-  tokenProgramId?: PublicKey;
+export interface BaseStakePoolArgs {
+  stakePool: Address;
+  stakePoolMint: Address;
 }
 
-export interface StakeArgs {
-  stakePoolKey: Address;
-  from: Address;
-  to: Address;
+interface TokenProgram {
+  tokenProgramId?: Address;
+}
+
+interface StakeBaseArgs extends BaseStakePoolArgs, TokenProgram {
+  nonce: number;
+}
+
+export interface UnstakeArgs extends StakeBaseArgs {
+  // nothing is here
+}
+
+export interface StakeArgs extends StakeBaseArgs {
   amount: BN;
   duration: BN;
   payer?: Keypair;
-  authority?: PublicKey;
-  nonce: number;
-  tokenProgramId?: PublicKey;
+  authority?: Address;
 }
 
-export interface FundPoolArgs {
+export interface FundPoolArgs extends BaseStakePoolArgs, TokenProgram {
   amount: BN;
-  mint: PublicKey;
-  stakePool: PublicKey;
-  tokenProgramId: PublicKey;
   nonce: number;
 }
 
-export interface CreateRewardEntryArgs {
-  mint: PublicKey;
-  stakePool: PublicKey;
-  tokenProgramId: PublicKey;
-  nonce: number;
-}
-
-export interface CreateRewardPoolArgs {
+export interface CreateRewardEntryArgs extends BaseStakePoolArgs, TokenProgram {
   stakePoolNonce: number;
-  stakePoolMint: Address;
-  stakePool: Address;
+  nonce: number;
+}
+
+export interface CreateRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
+  stakePoolNonce: number;
   rewardMint: Address;
-  tokenProgramId?: PublicKey;
   nonce: number;
   rewardAmount: BN;
   rewardPeriod: BN;
   permissionless: boolean;
-  authority: Keypair;
 }
 
-export interface ClaimRewardPoolArgs {
+export interface ClaimRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
   stakePoolNonce: number;
-  stakePoolMint: Address;
-  stakePool: Address;
   rewardMint: Address;
-  tokenProgramId?: PublicKey;
   nonce: number;
   rewardAmount: BN;
   rewardPeriod: BN;
   permissionless: boolean;
-  authority: Keypair;
 }
 
-export interface CreateStakePoolArgs {
+export interface CreateStakePoolArgs extends TokenProgram {
   mint: Address;
-  tokenProgramId?: PublicKey;
   nonce: number;
   maxWeight: BN;
   minDuration: BN;
   maxDuration: BN;
   permissionless?: boolean;
   authority?: Keypair;
-}
-
-export interface GetStakeEntriesData {
-  stakePool?: string | PublicKey;
-  owner?: string | PublicKey;
 }

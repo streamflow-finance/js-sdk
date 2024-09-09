@@ -1,4 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
+import { StakeEntry, StakePool } from "./types.js";
+import { ICluster } from "@streamflow/common";
 
 export const FEE_PRECISION_FACTOR = 10_000;
 export const FEE_PRECISION_FACTOR_BN = new BN(FEE_PRECISION_FACTOR);
@@ -21,5 +23,27 @@ export const FEE_VALUE_PREFIX = Buffer.from("fee-value", "utf-8");
 export const ANCHOR_DISCRIMINATOR_OFFSET = 8;
 export const STAKE_ENTRY_STAKE_POOL_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET + 4;
 export const STAKE_ENTRY_OWNER_OFFSET = STAKE_ENTRY_STAKE_POOL_OFFSET + 32;
+export const STAKE_ENTRY_BYTE_OFFSETS: Partial<Record<keyof StakeEntry, number>> = {
+  payer: STAKE_ENTRY_OWNER_OFFSET,
+  stakePool: STAKE_ENTRY_STAKE_POOL_OFFSET,
+};
 
 export const STAKE_POOL_MINT_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET + 8;
+export const STAKE_POOL_CREATOR_OFFSET = STAKE_POOL_MINT_OFFSET + 32;
+export const STAKE_POOL_BYTE_OFFSETS: Partial<Record<keyof StakePool, number>> = {
+  mint: STAKE_POOL_MINT_OFFSET,
+  creator: STAKE_POOL_CREATOR_OFFSET,
+};
+
+export const STAKE_POOL_PROGRAM_ID: Record<ICluster, string> = {
+  [ICluster.Mainnet]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
+  [ICluster.Devnet]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
+  [ICluster.Testnet]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
+  [ICluster.Local]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
+};
+export const REWARD_POOL_PROGRAM_ID: Record<ICluster, string> = {
+  [ICluster.Mainnet]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
+  [ICluster.Devnet]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
+  [ICluster.Testnet]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
+  [ICluster.Local]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
+};

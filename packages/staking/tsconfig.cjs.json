@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig.cjs.json",
     "compilerOptions": {
-        "outDir": "./dist/cjs"
+        "outDir": "./dist/cjs",
+        "noUncheckedIndexedAccess": true,
     }
 }
