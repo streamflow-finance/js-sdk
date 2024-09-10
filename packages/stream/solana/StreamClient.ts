@@ -224,7 +224,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
     const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
 
-    const partnerPublicKey = partner ? new PublicKey(partner) : STREAMFLOW_TREASURY_PUBLIC_KEY;
+    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
 
@@ -373,7 +373,7 @@ export default class SolanaStreamClient extends BaseStreamClient {
     const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
     const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
 
-    const partnerPublicKey = partner ? new PublicKey(partner) : STREAMFLOW_TREASURY_PUBLIC_KEY;
+    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
