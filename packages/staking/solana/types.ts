@@ -33,9 +33,7 @@ interface StakeBaseArgs extends BaseStakePoolArgs, TokenProgram {
   nonce: number;
 }
 
-export interface UnstakeArgs extends StakeBaseArgs {
-  // nothing is here
-}
+export type UnstakeArgs = StakeBaseArgs;
 
 export interface StakeArgs extends StakeBaseArgs {
   amount: BN;

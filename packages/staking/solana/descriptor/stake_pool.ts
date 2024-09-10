@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/stake_pool.json`.
  */
 export type StakePool = {
-  address: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM";
+  address: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH";
   metadata: {
     name: "stakePool";
     version: "1.0.0";
@@ -68,7 +68,6 @@ export type StakePool = {
         },
         {
           name: "vault";
-          docs: ["Escrow Account that will store staked tokens"];
           writable: true;
           pda: {
             seeds: [
@@ -85,7 +84,6 @@ export type StakePool = {
         },
         {
           name: "stakeMint";
-          docs: ["Stake Mint, will be returned in exchange for stake tokens"];
           writable: true;
           pda: {
             seeds: [
@@ -108,10 +106,6 @@ export type StakePool = {
         },
         {
           name: "tokenProgram";
-        },
-        {
-          name: "rent";
-          address: "SysvarRent111111111111111111111111111111111";
         },
         {
           name: "systemProgram";

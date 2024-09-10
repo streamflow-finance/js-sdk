@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/reward_pool.json`.
  */
 export type RewardPool = {
-  address: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw";
+  address: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj";
   metadata: {
     name: "rewardPool";
     version: "1.0.0";
@@ -431,7 +431,7 @@ export type RewardPool = {
         },
         {
           name: "feeProgram";
-          address: "7Jz4TvWWJtp7GxwzjuMeUZ5gRqGo7SV1tY1jYULopEkN";
+          address: "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V";
         },
         {
           name: "tokenProgram";

@@ -76,7 +76,6 @@ export default class SolanaStakingClient {
 
   constructor({
     clusterUrl,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     cluster = ICluster.Mainnet,
     commitment = "confirmed",
     programIds,
@@ -88,11 +87,11 @@ export default class SolanaStakingClient {
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
     const stakePoolIdl = {
       ...StakePoolIDL,
-      address: programIds?.stakePool ?? STAKE_POOL_PROGRAM_ID[cluster] ?? StakePoolIDL.address, // todo pick with cluster
+      address: programIds?.stakePool ?? STAKE_POOL_PROGRAM_ID[cluster] ?? StakePoolIDL.address,
     } as StakePoolProgramType;
     const rewardPoolIdl = {
       ...RewardPoolIDL,
-      address: programIds?.rewardPool ?? REWARD_POOL_PROGRAM_ID[cluster] ?? RewardPoolIDL.address, // todo pick with cluster
+      address: programIds?.rewardPool ?? REWARD_POOL_PROGRAM_ID[cluster] ?? RewardPoolIDL.address,
     } as RewardPoolProgramType;
     this.programs = {
       stakePool: new Program(stakePoolIdl, {
@@ -339,6 +338,7 @@ export default class SolanaStakingClient {
       nonce,
       rewardAmount,
       rewardPeriod,
+      rewardMint,
       permissionless = false,
       stakePool,
       stakePoolMint,
@@ -359,7 +359,9 @@ export default class SolanaStakingClient {
       })
       .instruction();
 
-    return { ixs: [instruction] };
+    const rewardPoolKey = deriveStakePoolPDA(rewardProgram.programId, pk(rewardMint), creator, nonce);
+
+    return { publicKey: rewardPoolKey, ixs: [instruction] };
   }
 
   async claimRewards(data: ClaimRewardPoolArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {

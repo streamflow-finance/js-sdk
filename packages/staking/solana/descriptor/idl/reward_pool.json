@@ -1,5 +1,5 @@
 {
-  "address": "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
+  "address": "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
   "metadata": {
     "name": "reward_pool",
     "version": "1.0.0",
@@ -631,7 +631,7 @@
         },
         {
           "name": "fee_program",
-          "address": "7Jz4TvWWJtp7GxwzjuMeUZ5gRqGo7SV1tY1jYULopEkN"
+          "address": "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V"
         },
         {
           "name": "token_program"

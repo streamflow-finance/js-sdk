@@ -1,5 +1,5 @@
 {
-  "address": "7Jz4TvWWJtp7GxwzjuMeUZ5gRqGo7SV1tY1jYULopEkN",
+  "address": "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V",
   "metadata": {
     "name": "fee_manager",
     "version": "1.0.0",
@@ -91,7 +91,7 @@
           ],
           "writable": true,
           "signer": true,
-          "address": "7TwmB3WiHgRnVqsLXBGZRNmBhgLXTssg1BUPDM5rrE3y"
+          "address": "ACYtYsL4KYtJzD53wqyifqad2D8224kamcngYPgSy3t"
         },
         {
           "name": "rent",

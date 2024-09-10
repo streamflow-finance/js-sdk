@@ -1,6 +1,7 @@
 import { BN } from "@coral-xyz/anchor";
-import { StakeEntry, StakePool } from "./types.js";
 import { ICluster } from "@streamflow/common";
+
+import { StakeEntry, StakePool } from "./types.js";
 
 export const FEE_PRECISION_FACTOR = 10_000;
 export const FEE_PRECISION_FACTOR_BN = new BN(FEE_PRECISION_FACTOR);
@@ -36,14 +37,14 @@ export const STAKE_POOL_BYTE_OFFSETS: Partial<Record<keyof StakePool, number>> =
 };
 
 export const STAKE_POOL_PROGRAM_ID: Record<ICluster, string> = {
-  [ICluster.Mainnet]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
-  [ICluster.Devnet]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
-  [ICluster.Testnet]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
-  [ICluster.Local]: "STKmd28pHTcpod75Zqq6HY2WsKZLeM4EKibagYidhMM",
+  [ICluster.Mainnet]: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
+  [ICluster.Devnet]: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
+  [ICluster.Testnet]: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
+  [ICluster.Local]: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
 };
 export const REWARD_POOL_PROGRAM_ID: Record<ICluster, string> = {
-  [ICluster.Mainnet]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
-  [ICluster.Devnet]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
-  [ICluster.Testnet]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
-  [ICluster.Local]: "6yikBQnNbHCbNBta2J98tSdN9XXE5pX4J7K4JgqjMTXw",
+  [ICluster.Mainnet]: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
+  [ICluster.Devnet]: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
+  [ICluster.Testnet]: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
+  [ICluster.Local]: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
 };
