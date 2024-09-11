@@ -1,6 +1,10 @@
 #!/bin/sh
 
-TARGET_FOLDERS=$@
+if [ $# -eq 0 ]; then
+  TARGET_FOLDERS="packages"
+else
+  TARGET_FOLDERS=$@
+fi
 
 OS=$(uname)
 
