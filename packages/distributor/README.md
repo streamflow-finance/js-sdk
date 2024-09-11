@@ -19,6 +19,8 @@ or
 ## Documentation
 API Documentation available here: [docs site →](https://streamflow-finance.github.io/js-sdk/)
 
+Automated Airdrop Creation: [notion doc →](https://streamflow.notion.site/Automated-Airdrop-Creation-45b84bfd2dda4d7196be5dd02eed29c8)
+
 ## Import SDK
 
 Most common imports:

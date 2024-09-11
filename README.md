@@ -19,9 +19,9 @@ API Documentation available here: [docs site →](https://streamflow-finance.git
 ## JS SDK to interact with Streamflow protocols
 
 This repo consists of js-sdk to interact with several protocol exposed by streamflow:
-- `packages/stream` - core Streamflow Protocol that allows to create a vesting/payment/lock Stream to a Recipient;
-- `packages/distributor` - Distirbutor Streamflow Protocol that allows to Airdrop tokens to large amount of Recipients (thousands or even millions);
-- `packages/common` - common utilities and types used by Streamflow SDK;
+- `packages/stream` - [Core Streamflow Protocol](packages/stream/README.md) that allows to create a vesting/payment/lock Stream to a Recipient;
+- `packages/distributor` - [Distirbutor Streamflow Protocol](packages/distributor/README.md) that allows to Airdrop tokens to large amount of Recipients (thousands or even millions);
+- `packages/common` - Common utilities and types used by Streamflow SDK;
 
 ## Installation
 

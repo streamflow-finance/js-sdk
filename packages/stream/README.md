@@ -23,7 +23,7 @@ Most common imports:
 
 ```javascript
 import { BN } from "bn.js";
-import { Types, GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
+import { GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
 ```
 
 _Check the SDK for other types and utility functions._
@@ -35,10 +35,7 @@ Before creating and manipulating streams chain specific or generic StreamClient 
 ### Solana
 
 ```javascript
-import {
-  StreamflowSolana,
-  Types,
-} from "@streamflow/stream";
+import { StreamflowSolana } from "@streamflow/stream";
 
 const solanaClient = new StreamflowSolana.SolanaStreamClient(
   "https://api.mainnet-beta.solana.com"
@@ -48,10 +45,7 @@ const solanaClient = new StreamflowSolana.SolanaStreamClient(
 ### Aptos
 
 ```javascript
-import {
-  StreamflowAptos,
-  Types,
-} from "@streamflow/stream";
+import { StreamflowAptos } from "@streamflow/stream";
 
 const aptosClient = new StreamflowAptos.AptosStreamClient(
   "https://fullnode.mainnet.aptoslabs.com/v1"
@@ -61,14 +55,11 @@ const aptosClient = new StreamflowAptos.AptosStreamClient(
 ### Ethereum
 
 ```javascript
-import {
-  StreamflowEVM,
-  Types,
-} from "@streamflow/stream";
+import { StreamflowEVM } from "@streamflow/stream";
 
 const ethereumClient = new StreamflowEVM.EvmStreamClient(
   "YOUR_ETHEREUM_NODE_URL",
-  Types.IChain.Ethereum,
+  IChain.Ethereum,
   signer // will be sender in a stream and authority for all stream related transactions
 );
 ```
@@ -76,14 +67,11 @@ const ethereumClient = new StreamflowEVM.EvmStreamClient(
 ### Polygon
 
 ```javascript
-import {
-  StreamflowEVM,
-  Types,
-} from "@streamflow/stream";
+import { StreamflowEVM } from "@streamflow/stream";
 
 const polygonClient = new StreamflowEVM.EvmStreamClient(
   "YOUR_POLYGON_NODE_URL",
-  Types.IChain.Polygon,
+  IChain.Polygon,
   signer // will be sender in a stream and authority for all stream related transactions
 );
 ```
@@ -91,14 +79,11 @@ const polygonClient = new StreamflowEVM.EvmStreamClient(
 ### BNB
 
 ```javascript
-import {
-  StreamflowEVM,
-  Types,
-} from "@streamflow/stream";
+import { StreamflowEVM } from "@streamflow/stream";
 
 const bnbClient = new StreamflowEVM.EvmStreamClient(
   "https://bsc-dataseed1.binance.org/",
-  Types.IChain.BNB,
+  IChain.BNB,
   signer // will be sender in a stream and authority for all stream related transactions
 );
 ```
@@ -106,10 +91,7 @@ const bnbClient = new StreamflowEVM.EvmStreamClient(
 ### Sui
 
 ```javascript
-import {
-  StreamflowSui,
-  Types,
-} from "@streamflow/stream";
+import { StreamflowSui } from "@streamflow/stream";
 
 const suiClient = new StreamflowSui.SuiStreamClient(
   "https://fullnode.testnet.sui.io:443"
@@ -121,13 +103,13 @@ const suiClient = new StreamflowSui.SuiStreamClient(
 GenericStreamClient provides isomorphic interface to work with streams agnostic of chain.
 
 ```javascript
-import { GenericStreamClient, Types } from "@streamflow/stream";
+import { GenericStreamClient } from "@streamflow/stream";
 
 const client =
   new GenericStreamClient<Types.IChain.Solana>({
-    chain: Types.IChain.Solana, // Blockchain
+    chain: IChain.Solana, // Blockchain
     clusterUrl: "https://api.mainnet-beta.solana.com", // RPC cluster URL
-    cluster: Types.ICluster.Mainnet, // (optional) (default: Mainnet)
+    cluster: ICluster.Mainnet, // (optional) (default: Mainnet)
     // ...rest chain specific params e.g. commitment for Solana
   });
 ```
@@ -149,7 +131,7 @@ const createStreamParams: Types.ICreateStreamData = {
   cliffAmount: new BN(10), // Amount unlocked at the "cliff" timestamp.
   amountPerPeriod: getBN(5, 9), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name or subject.
-  canTopup: false, // setting to FALSE will effectively create a vesting contract.
+  canTopup: false, // Whether additional tokens can be deposited after creation, setting to FALSE will effectively create a vesting contract.
   canUpdateRate: false, // settings to TRUE allows sender to update amountPerPeriod
   cancelableBySender: true, // Whether or not sender can cancel the stream.
   cancelableByRecipient: false, // Whether or not recipient can cancel the stream.
@@ -157,12 +139,12 @@ const createStreamParams: Types.ICreateStreamData = {
   transferableByRecipient: false, // Whether or not recipient can transfer the stream.
   automaticWithdrawal: true, // Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
   withdrawalFrequency: 10, // Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-  partner: null, //  (optional) Partner's wallet address (string | null).
+  partner: undefined, //  (optional) Partner's wallet address (string | undefined).
 };
 
 const solanaParams = {
     sender: wallet, // SignerWalletAdapter or Keypair of Sender account
-    isNative: false // [optional] [WILL CREATE A wSOL STREAM] Wether Stream or Vesting should be paid with Solana native token or not
+    isNative: false // [optional] [WILL CREATE A wSOL STREAM] Whether Stream or Vesting should be paid with Solana native token or not
 };
 
 const aptosParams = {
@@ -194,7 +176,7 @@ const recipients = [
     amountPerPeriod: getBN(1, 9), //amount released every specified period epoch
   },
 ];
-const createStreamParams: Types.ICreateMultipleStreamData = {
+const createMultiStreamsParams: ICreateMultipleStreamData = {
   recipients: recipients, // Solana recipient address.
   tokenId: "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK", // SPL Token mint.
   start: 1643363040, // Timestamp (in seconds) when the stream/token vesting starts.
@@ -207,7 +189,7 @@ const createStreamParams: Types.ICreateMultipleStreamData = {
   transferableByRecipient: false, // Whether or not recipient can transfer the stream.
   automaticWithdrawal: true, // Whether or not a 3rd party (e.g. cron job, "cranker") can initiate a token withdraw/transfer.
   withdrawalFrequency: 10, // Relevant when automatic withdrawal is enabled. If greater than 0 our withdrawor will take care of withdrawals. If equal to 0 our withdrawor will skip, but everyone else can initiate withdrawals.
-  partner: null, //  (optional) Partner's wallet address (string | null).
+  partner: undefined, //  (optional) Partner's wallet address (string | undefined).
 };
 
 const solanaParams = {
@@ -236,11 +218,11 @@ Please note that transaction fees for the scheduled transfers are paid upfront b
 
 ## Identifying created contracts (streams or vesting)
 
-All Stream Clients return `Types.ICreateResult` object (`createdMultiple` returns an Array) that has the following structure
+All Stream Clients return `ICreateResult` object (`createMultiple` returns an Array) that has the following structure
 
 ```javascript
 interface ICreateResult {
-  ixs: (TransactionInstruction | Types.TransactionPayload)[];
+  ixs: (TransactionInstruction | TransactionPayload)[];
   txId: string;
   metadataId: MetadataId;
 }
@@ -252,7 +234,7 @@ interface ICreateResult {
 
 ```javascript
 const withdrawStreamParams: Types.IWithdrawData = {
-  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be withdrawn from.
+  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier (address) of a stream to be withdrawn from.
   amount: getBN(100, 9), // Requested amount to withdraw. If stream is completed, the whole amount will be withdrawn.
 };
 
@@ -282,14 +264,14 @@ try {
 ## Topup stream
 
 ```javascript
-const topupStreamParams: Types.ITopUpData = {
-  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be topped up.
+const topupStreamParams: ITopUpData = {
+  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier (address) of a stream to be topped up.
   amount: getBN(100, 9), // Specified amount to topup (increases deposited amount).
 };
 
 const solanaParams = {
     invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction
-    isNative: // [ONLY FOR wSOL STREAMS] [optional] Wether topup is with Native Solanas
+    isNative: true // [ONLY FOR wSOL STREAMS] [optional] Wether topup is with Native Solanas
 };
 
 const aptosParams = {
@@ -314,9 +296,9 @@ try {
 ## Transfer stream to another recipient
 
 ```javascript
-const data: Types.ITransferData = {
-  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
-  newRecipient: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier of a stream to be transferred.
+const data: ITransferData = {
+  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier (address) of the stream to be transferred
+  newRecipient: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier (address) of a stream to be transferred.
 };
 
 const solanaParams = {
@@ -345,7 +327,7 @@ try {
 ## Cancel stream
 
 ```javascript
-const cancelStreamParams: Types.ICancelData = {
+const cancelStreamParams: ICancelData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
 };
 
@@ -375,7 +357,7 @@ try {
 ## Update a stream
 
 ```javascript
-const updateStreamParams: Types.IUpdateData = {
+const updateStreamParams: IUpdateData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to update.
   enableAutomaticWithdrawal: true,  // [optional], allows to enable AW if it wasn't, disable is not possible
   withdrawFrequency: 60,  // [optional], allows to update withdrawal frequency, may result in additional AW fees
@@ -406,7 +388,7 @@ try {
 ## Get one stream by its ID
 
 ```javascript
-const data: Types.IGetOneData = {
+const data: IGetOneData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream
 };
 
@@ -424,8 +406,8 @@ const stream = await client.getOne({
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
 });
 
-const unlocked = stream.unlocked(tsInSeconds); // bn amount unlocked at the tsInSeconds
-console.log(getNumberFromBN(unlocked, 9));
+const unlocked = stream.unlocked(tsInSeconds); // BN amount unlocked at the tsInSeconds
+console.log(getNumberFromBN(unlocked, 9)); 
 ```
 
 - Note: unlocked amount is determined based on configuration set on creation, no dynamic data is involved.
@@ -445,10 +427,10 @@ console.log(remaining);
 ## Get multiple streams for a specific wallet address
 
 ```javascript
-const data: Types.IGetAllData = {
+const data: IGetAllData = {
   address: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99",
-  type: Types.StreamType.All,
-  direction: Types.StreamDirection.All,
+  type: StreamType.All, // StreamType.Vesting, StreamType.Lock, StreamType.Payment
+  direction: StreamDirection.All, // StreamDirection.Outgoing, StreamDirection.Incoming
 };
 
 try {
@@ -515,3 +497,7 @@ E.g, if the amount is 1 SOL than this amount in lamports is `1000 \* 10^9 = 1_00
 And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
+
+`getBN(1, 9)` is equal to `new BN(1_000_000_000)` 
+
+`getNumberFromBN(new BN(1_000_000_000), 9)` will return 1
