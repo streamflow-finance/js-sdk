@@ -2,19 +2,4 @@
 
 . "$(dirname -- "$0")/_/husky.sh"
 
-TARGET_FOLDER="packages/distributor/solana/generated" 
-
-OS=$(uname)
-
-echo "Replacing 'BN' with 'BigNumber' in $TARGET_FOLDER and its subfolders"
-if [ "$OS" = "Darwin" ]; then
-    SED_NO_BACKUP=( -i '' )
-else
-    SED_NO_BACKUP=( -i )
-fi
-
-find "$TARGET_FOLDER" -type f -name "*.ts" -exec sed "${SED_NO_BACKUP[@]}" -e 's/BN/BigNumber/g' -e 's/bn/bignumber/g' {} +
-
-git add $TARGET_FOLDER
-
 npm run lint
