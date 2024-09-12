@@ -1,1 +1,1 @@
-export * as StreamflowDistributorSolana from "./solana";
+export * as StreamflowDistributorSolana from "./solana/index.js";

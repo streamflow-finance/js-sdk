@@ -1,13 +1,13 @@
 export { default as SolanaDistributorClient } from "./client";
 
-export * from "./generated/accounts";
+export * from "./generated/accounts/index.js";
 
-export * from "./generated/errors";
+export * from "./generated/errors/index.js";
 
-export * from "./generated/instructions";
+export * from "./generated/instructions/index.js";
 
-export * from "./utils";
+export * from "./utils.js";
 
-export * from "./types";
+export * from "./types.js";
 
-export * as constants from "./constants";
+export * as constants from "./constants.js";
