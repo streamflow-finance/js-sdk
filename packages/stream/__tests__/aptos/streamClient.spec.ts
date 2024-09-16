@@ -42,7 +42,7 @@ describe("AptosStreamClient", () => {
         recipient: "0xtest",
         amount: BigNumber(1000),
         name: "test name",
-        cliffAmount: 1,
+        cliffAmount: BigNumber(1),
         amountPerPeriod: BigNumber(1),
       };
       const mockData = {
