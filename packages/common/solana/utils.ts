@@ -57,7 +57,7 @@ export async function getProgramAccounts(
   offset: number,
   programId: PublicKey,
 ): Promise<Account[]> {
-  return connection?.getProgramAccounts(programId, {
+  const programAccounts = await connection?.getProgramAccounts(programId, {
     filters: [
       {
         memcmp: {
@@ -67,6 +67,8 @@ export async function getProgramAccounts(
       },
     ],
   });
+
+  return [...programAccounts];
 }
 
 /**
