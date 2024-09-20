@@ -1,15 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2020",
     "module": "commonjs",
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "lib": [
-      "es2020",
-      "dom"
-    ],
-    "skipLibCheck": true,
-    "downlevelIteration": true,
-  },
+    "lib": ["es2020", "dom"],
+  }
 }
