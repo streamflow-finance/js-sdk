@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "7.0.0-alpha.1",
+  "version": "7.0.0-alpha.4",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/esm/index.js",
@@ -34,9 +34,9 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@coral-xyz/borsh": "^0.29.0",
     "@coral-xyz/anchor": "^0.30.0",
-    "@solana/buffer-layout": "4.0.1 ",
+    "@coral-xyz/borsh": "^0.29.0",
+    "@solana/buffer-layout": "4.0.1",
     "@solana/spl-token": "0.3.6",
     "@solana/wallet-adapter-base": "0.9.19",
     "@solana/web3.js": "1.70.1",
