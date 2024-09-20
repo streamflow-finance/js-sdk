@@ -23,7 +23,7 @@ module.exports = {
       "error",
       {
         name: "bn.js",
-        message: "We no longer use BN.js for big number calculations. Switch to using bignumber.js instead. Run npm run convert-bn to automatically switch BN to BigNumber in all folders"
+        message: "We no longer use BN.js for big number calculations. Switch to using bignumber.js instead. Run pnpm run convert-bn to automatically switch BN to BigNumber in all folders"
       }
     ],
     "prettier/prettier": [
