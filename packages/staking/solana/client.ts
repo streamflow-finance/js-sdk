@@ -62,7 +62,7 @@ import {
   deriveStakeEntryPDA,
   deriveStakeMintPDA,
   deriveStakePoolPDA,
-} from "./utils.js";
+} from "./lib/derive-accounts.js";
 
 interface Programs {
   stakePoolProgram: Program<StakePoolProgramType>;
