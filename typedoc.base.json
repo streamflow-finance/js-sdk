@@ -1,4 +1,12 @@
 {
-    "$schema": "https://typedoc.org/schema.json",
-    "includeVersion": true
+  "$schema": "https://typedoc.org/schema.json",
+  "includeVersion": true,
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "target": "ES2022"
+  }
 }

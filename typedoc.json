@@ -1,8 +1,6 @@
 {
-    "entryPoints": [
-        "packages/*"
-    ],
-    "name": "Streamflow SDK",
-    "entryPointStrategy": "packages",
-    "includeVersion": false
+  "entryPoints": ["packages/*"],
+  "name": "Streamflow SDK",
+  "entryPointStrategy": "packages",
+  "includeVersion": false
 }
