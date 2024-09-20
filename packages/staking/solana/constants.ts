@@ -1,7 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 import { ICluster } from "@streamflow/common";
-
-import { StakeEntry, StakePool } from "./types.js";
+import { PublicKey } from "@solana/web3.js";
 
 export const FEE_PRECISION_FACTOR = 10_000;
 export const FEE_PRECISION_FACTOR_BN = new BN(FEE_PRECISION_FACTOR);
@@ -20,21 +19,36 @@ export const REWARD_VAULT_PREFIX = Buffer.from("reward-vault", "utf-8");
 export const REWARD_ENTRY_PREFIX = Buffer.from("reward-entry", "utf-8");
 export const CONFIG_PREFIX = Buffer.from("config", "utf-8");
 export const FEE_VALUE_PREFIX = Buffer.from("fee-value", "utf-8");
+export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 
 export const ANCHOR_DISCRIMINATOR_OFFSET = 8;
 export const STAKE_ENTRY_STAKE_POOL_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET + 4;
 export const STAKE_ENTRY_OWNER_OFFSET = STAKE_ENTRY_STAKE_POOL_OFFSET + 32;
-export const STAKE_ENTRY_BYTE_OFFSETS: Partial<Record<keyof StakeEntry, number>> = {
+export const STAKE_ENTRY_BYTE_OFFSETS = {
   payer: STAKE_ENTRY_OWNER_OFFSET,
   stakePool: STAKE_ENTRY_STAKE_POOL_OFFSET,
-};
+} as const;
 
 export const STAKE_POOL_MINT_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET + 8;
 export const STAKE_POOL_CREATOR_OFFSET = STAKE_POOL_MINT_OFFSET + 32;
-export const STAKE_POOL_BYTE_OFFSETS: Partial<Record<keyof StakePool, number>> = {
+export const STAKE_POOL_BYTE_OFFSETS = {
   mint: STAKE_POOL_MINT_OFFSET,
   creator: STAKE_POOL_CREATOR_OFFSET,
-};
+} as const;
+
+export const REWARD_POOL_STAKE_POOL_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET + 2;
+export const REWARD_POOL_MINT_OFFSET = REWARD_POOL_STAKE_POOL_OFFSET + 32;
+export const REWARD_POOL_BYTE_OFFSETS = {
+  stakePool: REWARD_POOL_STAKE_POOL_OFFSET,
+  mint: REWARD_POOL_MINT_OFFSET,
+} as const;
+
+export const REWARD_ENTRY_REWARD_POOL_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET;
+export const REWARD_ENTRY_STAKE_ENTRY_OFFSET = REWARD_ENTRY_REWARD_POOL_OFFSET + 32;
+export const REWARD_ENTRY_BYTE_OFFSETS = {
+  stakeEntry: REWARD_ENTRY_STAKE_ENTRY_OFFSET,
+  rewardPool: REWARD_ENTRY_REWARD_POOL_OFFSET,
+} as const;
 
 export const STAKE_POOL_PROGRAM_ID: Record<ICluster, string> = {
   [ICluster.Mainnet]: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",

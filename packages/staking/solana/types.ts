@@ -6,11 +6,13 @@ import BN from "bn.js";
 
 import { RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
 import { StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
+import { FeeManager as FeeManagerIDL } from "./descriptor/fee_manager.js";
 
 export type StakePool = IdlTypes<StakePoolIDL>["stakePool"];
 export type StakeEntry = IdlTypes<StakePoolIDL>["stakeEntry"];
 export type RewardEntry = IdlTypes<RewardPoolIDL>["rewardEntry"];
 export type RewardPool = IdlTypes<RewardPoolIDL>["rewardPool"];
+export type FeeValue = IdlTypes<FeeManagerIDL>["feeValue"];
 
 export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
@@ -45,11 +47,13 @@ export interface StakeArgs extends StakeBaseArgs {
 export interface FundPoolArgs extends BaseStakePoolArgs, TokenProgram {
   amount: BN;
   nonce: number;
+  rewardMint: Address;
+  feeValue: Address | null;
 }
 
 export interface CreateRewardEntryArgs extends BaseStakePoolArgs, TokenProgram {
-  stakePoolNonce: number;
-  nonce: number;
+  depositNonce: number;
+  rewardPoolNonce: number;
 }
 
 export interface CreateRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
@@ -62,12 +66,9 @@ export interface CreateRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
 }
 
 export interface ClaimRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
-  stakePoolNonce: number;
+  depositNonce: number;
   rewardMint: Address;
-  nonce: number;
-  rewardAmount: BN;
-  rewardPeriod: BN;
-  permissionless: boolean;
+  rewardPoolNonce: number;
 }
 
 export interface CreateStakePoolArgs extends TokenProgram {

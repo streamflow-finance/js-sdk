@@ -17,16 +17,25 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { ContractError, ICluster, ITransactionResult } from "@streamflow/common";
-import { buildSendThrottler, prepareTransaction, signAndExecuteTransaction } from "@streamflow/common/solana";
+import {
+  buildSendThrottler,
+  checkOrCreateAtaBatch,
+  prepareTransaction,
+  signAndExecuteTransaction,
+} from "@streamflow/common/solana";
 import PQueue from "p-queue";
 
 import {
+  REWARD_ENTRY_BYTE_OFFSETS,
+  REWARD_POOL_BYTE_OFFSETS,
   REWARD_POOL_PROGRAM_ID,
   STAKE_ENTRY_BYTE_OFFSETS,
   STAKE_POOL_BYTE_OFFSETS,
   STAKE_POOL_PROGRAM_ID,
+  STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "./constants.js";
 import { FeeManager as FeeManagerProgramType } from "./descriptor/fee_manager.js";
+import FeeManagerIDL from "./descriptor/idl/fee_manager.json";
 import RewardPoolIDL from "./descriptor/idl/reward_pool.json";
 import StakePoolIDL from "./descriptor/idl/stake_pool.json";
 import { RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
@@ -36,21 +45,32 @@ import {
   CreateRewardEntryArgs,
   CreateRewardPoolArgs,
   CreateStakePoolArgs,
+  FeeValue,
   FundPoolArgs,
   IInteractSolanaExt,
+  RewardEntry,
   RewardPool,
   StakeArgs,
   StakeEntry,
   StakePool,
   UnstakeArgs,
 } from "./types.js";
-import { deriveRewardPoolPDA, deriveStakeEntryPDA, deriveStakeMintPDA, deriveStakePoolPDA } from "./utils.js";
+import {
+  deriveFeeValuePDA,
+  deriveRewardPoolPDA,
+  deriveRewardVaultPDA,
+  deriveStakeEntryPDA,
+  deriveStakeMintPDA,
+  deriveStakePoolPDA,
+} from "./utils.js";
 
 interface Programs {
-  stakePool: Program<StakePoolProgramType>;
-  rewardPool: Program<RewardPoolProgramType>;
-  feeManager?: Program<FeeManagerProgramType>;
+  stakePoolProgram: Program<StakePoolProgramType>;
+  rewardPoolProgram: Program<RewardPoolProgramType>;
+  feeManagerProgram: Program<FeeManagerProgramType>;
 }
+
+type CreationResult = ITransactionResult & { metadataId: PublicKey };
 
 interface IInitOptions {
   clusterUrl: string;
@@ -93,13 +113,20 @@ export default class SolanaStakingClient {
       ...RewardPoolIDL,
       address: programIds?.rewardPool ?? REWARD_POOL_PROGRAM_ID[cluster] ?? RewardPoolIDL.address,
     } as RewardPoolProgramType;
+    const feeManagerIdl = {
+      ...FeeManagerIDL,
+      address: programIds?.feeManager ?? FeeManagerIDL.address,
+    } as FeeManagerProgramType;
     this.programs = {
-      stakePool: new Program(stakePoolIdl, {
+      stakePoolProgram: new Program(stakePoolIdl, {
         connection: this.connection,
       }) as Program<StakePoolProgramType>,
-      rewardPool: new Program(rewardPoolIdl, {
+      rewardPoolProgram: new Program(rewardPoolIdl, {
         connection: this.connection,
       }) as Program<RewardPoolProgramType>,
+      feeManagerProgram: new Program(feeManagerIdl, {
+        connection: this.connection,
+      }) as Program<FeeManagerProgramType>,
     };
   }
 
@@ -113,85 +140,51 @@ export default class SolanaStakingClient {
     return typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
   }
 
-  getStakePool(id: string | PublicKey): Promise<StakePool> {
-    const stakeProgram = this.programs.stakePool;
-    return stakeProgram.account.stakePool.fetch(id);
+  async getStakePool(id: string | PublicKey): Promise<StakePool> {
+    const { stakePoolProgram } = this.programs;
+    return stakePoolProgram.account.stakePool.fetch(id);
   }
 
   async searchStakePools(
-    criteria: Partial<Pick<StakePool, "mint" | "creator">> = {},
+    criteria: Partial<Pick<StakePool, keyof typeof STAKE_POOL_BYTE_OFFSETS>> = {},
   ): Promise<ProgramAccount<StakePool>[]> {
-    const stakeProgram = this.programs.stakePool;
-
-    const filters: MemcmpFilter[] = Object.entries(criteria).reduce((acc, [key, value]) => {
-      const criteriaKey = key as keyof typeof criteria;
-      const effectiveByteOffset = STAKE_POOL_BYTE_OFFSETS[criteriaKey];
-      if (criteria[criteriaKey] && effectiveByteOffset) {
-        acc.push({
-          memcmp: {
-            offset: effectiveByteOffset,
-            bytes: value.toString(),
-          },
-        });
-      }
-      return acc;
-    }, [] as MemcmpFilter[]);
-
-    return stakeProgram.account.stakePool.all(filters);
+    const { stakePoolProgram } = this.programs;
+    return stakePoolProgram.account.stakePool.all(getFilters(criteria, STAKE_POOL_BYTE_OFFSETS));
   }
 
-  getStakeEntry(id: string | PublicKey): Promise<StakeEntry | null> {
-    const stakeProgram = this.programs.stakePool;
-    return stakeProgram.account.stakeEntry.fetch(id);
+  async getStakeEntry(id: string | PublicKey): Promise<StakeEntry | null> {
+    const { stakePoolProgram } = this.programs;
+    return stakePoolProgram.account.stakeEntry.fetch(id);
   }
 
   async searchStakeEntries(
-    criteria: Partial<Pick<StakeEntry, "payer" | "stakePool">> = {},
+    criteria: Partial<Pick<StakeEntry, keyof typeof STAKE_ENTRY_BYTE_OFFSETS>> = {},
   ): Promise<ProgramAccount<StakeEntry>[]> {
-    const stakeProgram = this.programs.stakePool;
-
-    const filters: MemcmpFilter[] = Object.entries(criteria).reduce((acc, [key, value]) => {
-      const criteriaKey = key as keyof typeof criteria;
-      const effectiveByteOffset = STAKE_ENTRY_BYTE_OFFSETS[criteriaKey];
-      if (criteria[criteriaKey] && effectiveByteOffset) {
-        acc.push({
-          memcmp: {
-            offset: effectiveByteOffset,
-            bytes: value.toString(),
-          },
-        });
-      }
-      return acc;
-    }, [] as MemcmpFilter[]);
-
-    return stakeProgram.account.stakeEntry.all(filters);
+    const { stakePoolProgram } = this.programs;
+    return stakePoolProgram.account.stakeEntry.all(getFilters(criteria, STAKE_ENTRY_BYTE_OFFSETS));
   }
 
   async searchRewardPools(
     criteria: Partial<Pick<RewardPool, "stakePool" | "mint">> = {},
   ): Promise<ProgramAccount<RewardPool>[]> {
-    const rewardProgram = this.programs.rewardPool;
-
-    const filters: MemcmpFilter[] = Object.entries(criteria).reduce((acc, [key, value]) => {
-      const criteriaKey = key as keyof typeof criteria;
-      if (criteria[criteriaKey]) {
-        acc.push({
-          memcmp: {
-            offset: 0,
-            bytes: value.toString(),
-          },
-        });
-      }
-      return acc;
-    }, [] as MemcmpFilter[]);
-
-    return rewardProgram.account.rewardPool.all(filters);
+    const { rewardPoolProgram } = this.programs;
+    return rewardPoolProgram.account.rewardPool.all(getFilters(criteria, REWARD_POOL_BYTE_OFFSETS));
   }
 
-  async createStakePool(
-    data: CreateStakePoolArgs,
-    extParams: IInteractSolanaExt,
-  ): Promise<ITransactionResult & { metadataId: PublicKey }> {
+  async searchRewardEntries(
+    criteria: Partial<Pick<RewardEntry, keyof typeof REWARD_ENTRY_BYTE_OFFSETS>>,
+  ): Promise<ProgramAccount<RewardEntry>[]> {
+    const { rewardPoolProgram } = this.programs;
+    return rewardPoolProgram.account.rewardEntry.all(getFilters(criteria, REWARD_ENTRY_BYTE_OFFSETS));
+  }
+
+  getFeeValueIfExists(target: string | PublicKey): Promise<FeeValue | null> {
+    const { feeManagerProgram } = this.programs;
+    const feeValueKey = deriveFeeValuePDA(feeManagerProgram.programId, new PublicKey(target));
+    return feeManagerProgram.account.feeValue.fetchNullable(feeValueKey);
+  }
+
+  async createStakePool(data: CreateStakePoolArgs, extParams: IInteractSolanaExt): Promise<CreationResult> {
     const { ixs, publicKey } = await this.prepareCreateStakePoolInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -214,10 +207,10 @@ export default class SolanaStakingClient {
     }: CreateStakePoolArgs,
     extParams: IInteractSolanaExt,
   ) {
-    const stakeProgram = this.programs.stakePool;
+    const { stakePoolProgram } = this.programs;
     const creator = extParams.invoker.publicKey;
     invariant(creator, "Undefined invoker publicKey");
-    const createInstruction = await stakeProgram.methods
+    const createInstruction = await stakePoolProgram.methods
       .createPool(nonce, maxWeight, minDuration, maxDuration, permissionless)
       .accounts({
         creator,
@@ -226,7 +219,7 @@ export default class SolanaStakingClient {
       })
       .instruction();
 
-    const stakePoolPDA = deriveStakePoolPDA(stakeProgram.programId, pk(mint), creator, nonce);
+    const stakePoolPDA = deriveStakePoolPDA(stakePoolProgram.programId, pk(mint), creator, nonce);
 
     return { ixs: [createInstruction], publicKey: stakePoolPDA };
   }
@@ -247,18 +240,13 @@ export default class SolanaStakingClient {
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
-    const stakeProgram = this.programs.stakePool;
+    const { stakePoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const mint = deriveStakeMintPDA(stakeProgram.programId, pk(stakePool));
-    const poolMintAccountKey = getAssociatedTokenAddressSync(mint, staker, false, pk(tokenProgramId));
-    const stakeMintAccountKey = getAssociatedTokenAddressSync(
-      pk(stakePoolMint),
-      staker,
-      false,
-      pk(tokenProgramId),
-    );
-    const instruction = await stakeProgram.methods
+    const mint = deriveStakeMintPDA(stakePoolProgram.programId, pk(stakePool));
+    const stakeMintAccountKey = getAssociatedTokenAddressSync(mint, staker, false, pk(tokenProgramId));
+    const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, false, pk(tokenProgramId));
+    const instruction = await stakePoolProgram.methods
       .stake(nonce, amount, duration)
       .accounts({
         stakePool: stakePool,
@@ -273,8 +261,8 @@ export default class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async unstake(data: StakeArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareStakeInstructions(data, extParams);
+  async unstake(data: UnstakeArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+    const { ixs } = await this.prepareUnstakeInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
     return {
@@ -289,29 +277,19 @@ export default class SolanaStakingClient {
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
-    const stakeProgram = this.programs.stakePool;
+    const { stakePoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const stakeMintKey = deriveStakeMintPDA(stakeProgram.programId, pk(stakePool));
-    const stakeEntryKey = deriveStakeEntryPDA(stakeProgram.programId, pk(stakePool), staker, nonce);
-    const poolMintAccountKey = getAssociatedTokenAddressSync(
-      pk(stakePoolMint),
-      staker,
-      false,
-      pk(tokenProgramId),
-    );
-    const stakeMintAccountKey = getAssociatedTokenAddressSync(
-      stakeMintKey,
-      staker,
-      false,
-      pk(tokenProgramId),
-    );
-    const instruction = await stakeProgram.methods
+    const stakeMintKey = deriveStakeMintPDA(stakePoolProgram.programId, pk(stakePool));
+    const stakeEntryKey = deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, nonce);
+    const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, false, pk(tokenProgramId));
+    const stakeMintAccountKey = getAssociatedTokenAddressSync(stakeMintKey, staker, false, pk(tokenProgramId));
+    const instruction = await stakePoolProgram.methods
       .unstake()
       .accounts({
         stakeEntry: stakeEntryKey,
-        from: poolMintAccountKey,
-        to: stakeMintAccountKey,
+        to: poolMintAccountKey,
+        from: stakeMintAccountKey,
         authority: staker,
         tokenProgram: tokenProgramId,
       })
@@ -320,16 +298,14 @@ export default class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async createRewardPool(
-    data: CreateRewardPoolArgs,
-    extParams: IInteractSolanaExt,
-  ): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareCreateRewardPoolInstructions(data, extParams);
+  async createRewardPool(data: CreateRewardPoolArgs, extParams: IInteractSolanaExt): Promise<CreationResult> {
+    const { ixs, publicKey } = await this.prepareCreateRewardPoolInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
     return {
       ixs,
       txId: signature,
+      metadataId: publicKey,
     };
   }
 
@@ -341,25 +317,24 @@ export default class SolanaStakingClient {
       rewardMint,
       permissionless = false,
       stakePool,
-      stakePoolMint,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateRewardPoolArgs,
     extParams: IInteractSolanaExt,
   ) {
-    const rewardProgram = this.programs.rewardPool;
+    const { rewardPoolProgram } = this.programs;
     const creator = extParams.invoker.publicKey;
     invariant(creator, "Undefined invoker publicKey");
-    const instruction = await rewardProgram.methods
+    const instruction = await rewardPoolProgram.methods
       .createPool(nonce, rewardAmount, rewardPeriod, permissionless)
       .accounts({
         creator,
         stakePool,
-        mint: stakePoolMint,
+        mint: rewardMint,
         tokenProgram: tokenProgramId,
       })
       .instruction();
 
-    const rewardPoolKey = deriveStakePoolPDA(rewardProgram.programId, pk(rewardMint), creator, nonce);
+    const rewardPoolKey = deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(rewardMint), nonce);
 
     return { publicKey: rewardPoolKey, ixs: [instruction] };
   }
@@ -375,18 +350,17 @@ export default class SolanaStakingClient {
   }
 
   async prepareClaimRewardsInstructions(
-    { nonce, stakePoolNonce, stakePool, tokenProgramId = TOKEN_PROGRAM_ID, rewardMint }: ClaimRewardPoolArgs,
+    { rewardPoolNonce, depositNonce, stakePool, tokenProgramId = TOKEN_PROGRAM_ID, rewardMint }: ClaimRewardPoolArgs,
     extParams: IInteractSolanaExt,
   ) {
-    const stakeProgram = this.programs.stakePool;
-    const rewardProgram = this.programs.rewardPool;
+    const { stakePoolProgram, rewardPoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const instruction = await rewardProgram.methods
+    const instruction = await rewardPoolProgram.methods
       .claimRewards()
       .accounts({
-        stakeEntry: deriveStakeEntryPDA(stakeProgram.programId, pk(stakePool), staker, stakePoolNonce),
-        rewardPool: deriveRewardPoolPDA(rewardProgram.programId, pk(stakePool), pk(rewardMint), nonce),
+        stakeEntry: deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, depositNonce),
+        rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(rewardMint), rewardPoolNonce),
         claimant: staker,
         tokenProgram: tokenProgramId,
         to: getAssociatedTokenAddressSync(pk(rewardMint), staker, false, pk(tokenProgramId)),
@@ -407,29 +381,43 @@ export default class SolanaStakingClient {
   }
 
   async prepareFundPoolInstructions(
-    { amount, stakePoolMint, tokenProgramId = TOKEN_PROGRAM_ID, stakePool, nonce }: FundPoolArgs,
+    { amount, tokenProgramId = TOKEN_PROGRAM_ID, rewardMint, stakePool, feeValue, nonce }: FundPoolArgs,
     extParams: IInteractSolanaExt,
   ) {
-    const rewardProgram = this.programs.rewardPool;
+    const { rewardPoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const instruction = await rewardProgram.methods
+    const existingFee = await this.getFeeValueIfExists(staker);
+    const rewardMintPk = pk(rewardMint);
+    const tokenProgramPk = pk(tokenProgramId);
+    const treasuryATA =
+      !existingFee || existingFee.streamflowFee.gtn(0)
+        ? await checkOrCreateAtaBatch(
+            this.connection,
+            [STREAMFLOW_TREASURY_PUBLIC_KEY],
+            rewardMintPk,
+            extParams.invoker,
+            tokenProgramPk,
+          )
+        : null;
+    const rewardPoolPda = deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), rewardMintPk, nonce);
+    const instruction = await rewardPoolProgram.methods
       .fundPool(amount)
-      .accounts({
+      .accountsPartial({
         funder: staker,
-        rewardPool: deriveRewardPoolPDA(rewardProgram.programId, pk(stakePool), pk(stakePoolMint), nonce),
-        from: getAssociatedTokenAddressSync(pk(stakePoolMint), staker, false, pk(tokenProgramId)),
+        rewardPool: rewardPoolPda,
+        from: getAssociatedTokenAddressSync(rewardMintPk, staker, false, tokenProgramPk),
         tokenProgram: tokenProgramId,
+        vault: deriveRewardVaultPDA(rewardPoolProgram.programId, rewardPoolPda),
+        mint: rewardMint,
+        feeValue,
       })
       .instruction();
 
-    return { ixs: [instruction] };
+    return { ixs: treasuryATA ? treasuryATA.concat([instruction]) : [instruction] };
   }
 
-  async createRewardEntry(
-    data: CreateRewardEntryArgs,
-    extParams: IInteractSolanaExt,
-  ): Promise<ITransactionResult> {
+  async createRewardEntry(data: CreateRewardEntryArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareCreateRewardEntryInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -440,20 +428,19 @@ export default class SolanaStakingClient {
   }
 
   async prepareCreateRewardEntryInstructions(
-    { stakePoolMint, stakePool, nonce, stakePoolNonce }: CreateRewardEntryArgs,
+    { stakePoolMint, stakePool, rewardPoolNonce, depositNonce }: CreateRewardEntryArgs,
     extParams: IInteractSolanaExt,
   ) {
-    const stakeProgram = this.programs.stakePool;
-    const rewardProgram = this.programs.rewardPool;
+    const { stakePoolProgram, rewardPoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const instruction = await rewardProgram.methods
+    const instruction = await rewardPoolProgram.methods
       .createEntry()
       .accounts({
         payer: staker,
         authority: staker,
-        stakeEntry: deriveStakeEntryPDA(stakeProgram.programId, pk(stakePool), staker, stakePoolNonce),
-        rewardPool: deriveRewardPoolPDA(rewardProgram.programId, pk(stakePool), pk(stakePoolMint), nonce),
+        stakeEntry: deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, depositNonce),
+        rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(stakePoolMint), rewardPoolNonce),
       })
       .instruction();
 
@@ -480,7 +467,7 @@ export default class SolanaStakingClient {
       if (err instanceof Error) {
         const parsed: AnchorError | ProgramError | typeof err = translateError(
           err,
-          parseIdlErrors(this.programs.stakePool.idl), // TODO how to catch an error from a specific program?
+          parseIdlErrors(this.programs.stakePoolProgram.idl), // TODO how to catch an error from a specific program?
         );
         if (parsed) {
           throw new ContractError(err, parsed.name, parsed.message);
@@ -503,4 +490,23 @@ function invariant(condition: any, message?: string | (() => string)): asserts c
   const provided: string | undefined = typeof message === "function" ? message() : message;
   const value: string = provided ? `${prefix}: ${provided}` : prefix;
   throw new Error(value);
+}
+
+function getFilters<T extends Record<string, number | PublicKey>>(
+  criteria: T,
+  byteOffsets: Record<keyof T, number>,
+): MemcmpFilter[] {
+  return Object.entries(criteria).reduce((acc, [key, value]) => {
+    const criteriaKey = key as keyof typeof criteria;
+    const effectiveByteOffset = byteOffsets[criteriaKey];
+    if (criteria[criteriaKey] && effectiveByteOffset) {
+      acc.push({
+        memcmp: {
+          offset: effectiveByteOffset,
+          bytes: value.toString(),
+        },
+      });
+    }
+    return acc;
+  }, [] as MemcmpFilter[]);
 }

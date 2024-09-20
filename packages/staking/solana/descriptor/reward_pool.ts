@@ -140,10 +140,6 @@ export type RewardPool = {
           signer: true;
         },
         {
-          name: "rent";
-          address: "SysvarRent111111111111111111111111111111111";
-        },
-        {
           name: "systemProgram";
           address: "11111111111111111111111111111111";
         },
@@ -196,10 +192,6 @@ export type RewardPool = {
         },
         {
           name: "authority";
-        },
-        {
-          name: "rent";
-          address: "SysvarRent111111111111111111111111111111111";
         },
         {
           name: "systemProgram";
@@ -270,10 +262,6 @@ export type RewardPool = {
         },
         {
           name: "tokenProgram";
-        },
-        {
-          name: "rent";
-          address: "SysvarRent111111111111111111111111111111111";
         },
         {
           name: "systemProgram";
@@ -741,18 +729,22 @@ export type RewardPool = {
           },
           {
             name: "lastRewardAmount";
+            docs: ["`reward_amount` used before the last update"];
             type: "u64";
           },
           {
             name: "lastRewardPeriod";
+            docs: ["`reward_period` used before the last update"];
             type: "u64";
           },
           {
             name: "lastAmountUpdateTs";
+            docs: ["Time when `reward_amount` was updated the last time"];
             type: "u64";
           },
           {
             name: "lastPeriodUpdateTs";
+            docs: ["Time when `reward_period` was updated the last time"];
             type: "u64";
           },
           {
@@ -771,10 +763,15 @@ export type RewardPool = {
             type: "u64";
           },
           {
+            name: "createdTs";
+            docs: ["Time when Reward Pool was created"];
+            type: "u64";
+          },
+          {
             name: "buffer";
             docs: ["Buffer for additional fields"];
             type: {
-              array: ["u8", 64];
+              array: ["u8", 56];
             };
           },
         ];

@@ -97,9 +97,6 @@
         },
         {
           "name": "vault",
-          "docs": [
-            "Escrow Account that will store staked tokens"
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -128,9 +125,6 @@
         },
         {
           "name": "stake_mint",
-          "docs": [
-            "Stake Mint, will be returned in exchange for stake tokens"
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -166,10 +160,6 @@
         },
         {
           "name": "token_program"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
         },
         {
           "name": "system_program",
