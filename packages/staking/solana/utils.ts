@@ -1,5 +1,6 @@
 import { TransferFeeConfig } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
+// eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
 
 import {
