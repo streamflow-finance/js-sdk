@@ -48,6 +48,9 @@ export const layout = borsh.struct([
   borsh.u64("endVestingTs"),
   borsh.u64("clawbackStartTs"),
   borsh.bool("claimsClosable"),
+  borsh.option(borsh.bool(), "canUpdateDuration"),
+  borsh.option(borsh.u64(), "totalAmountUnlocked"),
+  borsh.option(borsh.u64(), "totalAmountLocked"),
 ]);
 
 /**
@@ -102,6 +105,9 @@ export function newDistributor(
       endVestingTs: args.endVestingTs,
       clawbackStartTs: args.clawbackStartTs,
       claimsClosable: args.claimsClosable,
+      canUpdateDuration: null,
+      totalAmountUnlocked: null,
+      totalAmountLocked: null,
     },
     buffer,
   );
