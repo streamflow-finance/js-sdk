@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/common",
-  "version": "7.0.0-alpha.6",
+  "version": "7.0.0-alpha.7",
   "description": "Common utilities and types used by streamflow packages.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/esm/index.js",
