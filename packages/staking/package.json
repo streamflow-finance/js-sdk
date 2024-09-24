@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "7.0.0-alpha.5",
+  "version": "7.0.0-alpha.6",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/esm/index.js",
@@ -30,7 +30,6 @@
   "devDependencies": {
     "@streamflow/eslint-config": "workspace:*",
     "@types/bn.js": "5.1.1",
-    "date-fns": "2.28.0",
     "typescript": "^4.9.5"
   },
   "dependencies": {

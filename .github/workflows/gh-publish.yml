@@ -54,6 +54,13 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish
+        if: steps.tag_check.outputs.exists_tag == 'false'
+        run: |
+          npm run publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       - name: Create Git Tag
         if: steps.tag_check.outputs.exists_tag == 'false'
         uses: pkgdeps/git-tag-action@v2
@@ -74,13 +81,6 @@ jobs:
             ${{ github.event.pull_request.body }}
           draft: false
           prerelease: false
-      - name: Publish
-        if: steps.tag_check.outputs.exists_tag == 'false'
-        run: |
-          npm run publish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       - uses: actions/github-script@v4
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
