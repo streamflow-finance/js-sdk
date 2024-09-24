@@ -1,6 +1,6 @@
 # Streamflow Staking
 
-## JS SDK to interact with Streamflow Staking.
+## JS SDK to interact with Streamflow Staking protocol.
 
 This package allows you to 
 - `create staking pools and rewards pools`;
@@ -11,12 +11,12 @@ This package allows you to
 
 with the Streamflow Staking protocol.
 
-This protocol is the complex of several programs which ensures flexibility and accountability for stakers and respective incentives for them.
+This protocol is the complex of several programs that ensure flexibility and accountability for stakers and respective incentives for them.
 
-aforementioned programs are: 
+aforementioned programs are:
 - Stake Pools Program
 - Reward Pools Program
-- Fee Management Program (for streamflow usage, non-required and ommited from further docs)
+- Fee Management Program (for streamflow usage, non-required and omitted from further docs)
 
 
 ## API Reference
