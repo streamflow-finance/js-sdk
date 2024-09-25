@@ -41,3 +41,24 @@ or
 or
 
 `yarn add @streamflow/common @streamflow/distributor`
+
+## Contributing
+
+To contribute to this repository, please follow these steps:
+
+1. Fork the repository
+2. Clone your forked repository
+3. Navigate to the `/packages` folder
+4. Install dependencies using pnpm:
+   ```
+   pnpm install
+   ```
+5. Build the project:
+   ```
+   pnpm build
+   ```
+6. Make your changes
+7. Commit and push your changes
+8. Create a pull request
+
+Please ensure that you have [pnpm](https://pnpm.io/) installed on your system before contributing.
