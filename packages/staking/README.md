@@ -106,7 +106,7 @@ const maxDuration = new BN(86400);
 const permissionless = false;
 /*
   [0;256) derive stake pool PDA account address. 
-  If stake pool with the same mint already exists, it is required to pick a vacant nonce 
+  If stake pool with the same mint and creator/authority already exists, it is required to pick a vacant nonce 
 */
 const nonce = 0;
 
