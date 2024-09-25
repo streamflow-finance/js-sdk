@@ -19,10 +19,6 @@ export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
 }
 
-export interface ICreateSolanaExt extends IInteractSolanaExt {
-  isNative?: boolean;
-}
-
 export interface BaseStakePoolArgs {
   stakePool: Address;
   stakePoolMint: Address;
