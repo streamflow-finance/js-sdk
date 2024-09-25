@@ -347,11 +347,11 @@ export async function confirmAndEnsureTransaction(
   signature: string,
   ignoreError?: boolean,
 ): Promise<SignatureStatus | null> {
-  const response = await connection.getSignatureStatus(signature);
-  if (!response) {
+  const response = await connection.getSignatureStatuses([signature]);
+  if (!response || response.value.length === 0 || response.value[0] === null) {
     return null;
   }
-  const { value } = response;
+  const value = response.value[0];
   if (!value) {
     return null;
   }
