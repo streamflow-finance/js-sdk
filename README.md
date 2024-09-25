@@ -25,7 +25,7 @@ This repo consists of js-sdk to interact with several protocol exposed by stream
 
 ## Installation
 
-### Instal Stream Protocol SDK
+### Install Stream Protocol SDK
 
 `npm i -s @streamflow/stream`
 
