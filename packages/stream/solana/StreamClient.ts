@@ -230,7 +230,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     if (isNative) {
       const totalFee = await this.getTotalFee({
-        address: partner ?? sender.publicKey.toBase58(),
+        address: partnerPublicKey.toString(),
       });
       const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
@@ -380,7 +380,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       computeLimit,
     });
     if (isNative) {
-      const totalFee = await this.getTotalFee({ address: partner ?? sender.publicKey.toBase58() });
+      const totalFee = await this.getTotalFee({ address: partnerPublicKey.toString() });
       const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
