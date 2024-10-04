@@ -62,7 +62,7 @@ const res = await client.create(
       240, 192, 134, 208, 108, 246, 0, 191,
     ], // Merkle root
     maxNumNodes: 4, // Number of recipients
-    maxTotalClaim: "4000000000", // Total amount to distribute
+    maxTotalClaim: new BN("4000000000"), // Total amount to distribute
     unlockPeriod: 1, // Unlock period in seconds
     startVestingTs: 0, // Timestamp when Airdrop starts
     endVestingTs: now + 3600 * 24 * 7, // Timestamp when Airdrop ends
@@ -93,8 +93,8 @@ const claimRes = await client.claim(
         43, 104, 75, 183, 12, 38, 37, 153,
       ],
     ], // Merkle Proof used to verify claim
-    amountUnlocked: "0", // Total amount unlocked for a Recipient
-    amountLocked: "1000000000", // Total amount locked for a Recipient
+    amountUnlocked: new BN("0"), // Total amount unlocked for a Recipient
+    amountLocked: new BN("1000000000"), // Total amount locked for a Recipient
   },
   solanaParams,
 );

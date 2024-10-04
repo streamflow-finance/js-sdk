@@ -19,13 +19,6 @@ module.exports = {
   },
   ignorePatterns: ["**/dist/**/*"],
   rules: {
-    "no-restricted-imports": [
-      "error",
-      {
-        name: "bn.js",
-        message: "We no longer use BN.js for big number calculations. Switch to using bignumber.js instead. Run pnpm run convert-bn to automatically switch BN to BigNumber in all folders"
-      }
-    ],
     "prettier/prettier": [
       "error",
       {

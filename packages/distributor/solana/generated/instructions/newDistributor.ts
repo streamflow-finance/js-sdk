@@ -1,19 +1,19 @@
 import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import BigNumber from "bignumber.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Buffer } from "buffer";
 
 import { PROGRAM_ID } from "../programId";
 
 export interface NewDistributorArgs {
-  version: BigNumber;
+  version: BN;
   root: Array<number>;
-  maxTotalClaim: BigNumber;
-  maxNumNodes: BigNumber;
-  unlockPeriod: BigNumber;
-  startVestingTs: BigNumber;
-  endVestingTs: BigNumber;
-  clawbackStartTs: BigNumber;
+  maxTotalClaim: BN;
+  maxNumNodes: BN;
+  unlockPeriod: BN;
+  startVestingTs: BN;
+  endVestingTs: BN;
+  clawbackStartTs: BN;
   claimsClosable: boolean;
 }
 

@@ -1,12 +1,12 @@
 import { AptosAccount } from "aptos";
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
-import BigNumber from "bignumber.js";
+import BN from "bn.js";
 import { Buffer } from "buffer";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import { Stream, StreamType } from "../common/types.js";
 import { normalizeAptosAddress } from "./utils.js";
-import { getNumberFromBigNumber } from "../common/utils.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface ICreateStreamAptosExt {
   senderWallet: WalletContextState | AptosAccount;
@@ -77,7 +77,7 @@ export class Contract implements Stream {
 
   createdAt: number;
 
-  withdrawnAmount: BigNumber;
+  withdrawnAmount: BN;
 
   canceledAt: number;
 
@@ -101,15 +101,15 @@ export class Contract implements Stream {
 
   streamflowTreasuryTokens: string;
 
-  streamflowFeeTotal: BigNumber;
+  streamflowFeeTotal: BN;
 
-  streamflowFeeWithdrawn: BigNumber;
+  streamflowFeeWithdrawn: BN;
 
   streamflowFeePercent: number;
 
-  partnerFeeTotal: BigNumber;
+  partnerFeeTotal: BN;
 
-  partnerFeeWithdrawn: BigNumber;
+  partnerFeeWithdrawn: BN;
 
   partnerFeePercent: number;
 
@@ -119,15 +119,15 @@ export class Contract implements Stream {
 
   start: number;
 
-  depositedAmount: BigNumber;
+  depositedAmount: BN;
 
   period: number;
 
-  amountPerPeriod: BigNumber;
+  amountPerPeriod: BN;
 
   cliff: number;
 
-  cliffAmount: BigNumber;
+  cliffAmount: BN;
 
   cancelableBySender: boolean;
 
@@ -149,11 +149,11 @@ export class Contract implements Stream {
 
   currentPauseStart: number;
 
-  pauseCumulative: BigNumber;
+  pauseCumulative: BN;
 
   lastRateChangeTime: number;
 
-  fundsUnlockedAtLastRateChange: BigNumber;
+  fundsUnlockedAtLastRateChange: BN;
 
   type: StreamType;
 
@@ -161,7 +161,7 @@ export class Contract implements Stream {
     this.magic = 0;
     this.version = 0;
     this.createdAt = parseInt(stream.created);
-    this.withdrawnAmount = BigNumber(stream.withdrawn);
+    this.withdrawnAmount = new BN(stream.withdrawn);
     this.canceledAt = parseInt(stream.canceled_at);
     this.end = parseInt(stream.end);
     this.lastWithdrawnAt = parseInt(stream.last_withdrawn_at);
@@ -173,20 +173,20 @@ export class Contract implements Stream {
     this.escrowTokens = "";
     this.streamflowTreasury = "";
     this.streamflowTreasuryTokens = "";
-    this.streamflowFeeTotal = BigNumber(0);
-    this.streamflowFeeWithdrawn = BigNumber(0);
+    this.streamflowFeeTotal = new BN(0);
+    this.streamflowFeeWithdrawn = new BN(0);
     this.streamflowFeePercent = parseInt(stream.fees.streamflow_fee_percentage) / 10000;
-    this.partnerFeeTotal = BigNumber(0);
-    this.partnerFeeWithdrawn = BigNumber(0);
+    this.partnerFeeTotal = new BN(0);
+    this.partnerFeeWithdrawn = new BN(0);
     this.partnerFeePercent = 0;
     this.partner = "";
     this.partnerTokens = "";
     this.start = parseInt(stream.start);
-    this.depositedAmount = BigNumber(stream.amount);
+    this.depositedAmount = new BN(stream.amount);
     this.period = parseInt(stream.period);
-    this.amountPerPeriod = BigNumber(stream.amount_per_period);
+    this.amountPerPeriod = new BN(stream.amount_per_period);
     this.cliff = parseInt(stream.start);
-    this.cliffAmount = BigNumber(stream.cliff_amount);
+    this.cliffAmount = new BN(stream.cliff_amount);
     this.cancelableBySender = stream.meta.cancelable_by_sender;
     this.cancelableByRecipient = stream.meta.cancelable_by_recipient;
     this.automaticWithdrawal = stream.meta.automatic_withdrawal;
@@ -198,13 +198,13 @@ export class Contract implements Stream {
     this.withdrawalFrequency = parseInt(stream.meta.withdrawal_frequency);
     this.closed = stream.closed;
     this.currentPauseStart = parseInt(stream.current_pause_start);
-    this.pauseCumulative = BigNumber(stream.pause_cumulative);
+    this.pauseCumulative = new BN(stream.pause_cumulative);
     this.lastRateChangeTime = parseInt(stream.last_rate_change_time);
-    this.fundsUnlockedAtLastRateChange = BigNumber(stream.funds_unlocked_at_last_rate_change);
+    this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change);
     this.type = buildStreamType(this);
   }
 
-  unlocked(currentTimestamp: number): BigNumber {
+  unlocked(currentTimestamp: number): BN {
     return calculateUnlockedAmount({
       ...this,
       currentTimestamp,
@@ -212,6 +212,6 @@ export class Contract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return getNumberFromBigNumber(this.depositedAmount.minus(this.withdrawnAmount), decimals);
+    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
   }
 }

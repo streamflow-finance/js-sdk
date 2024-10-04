@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import BigNumber from "bignumber.js";
+import BN from "bn.js";
 import { toChecksumAddress } from "ethereum-checksum-address";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
@@ -89,7 +89,7 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const args = (await this.generateMultiPayloads(multiParams))[0];
 
-    const sum = streamData.amount.times(BigNumber(BASE_FEE)).div(BigNumber(1000000));
+    const sum = streamData.amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
 
     await this.approveTokens(streamData.tokenId, sum);
 
@@ -116,9 +116,9 @@ export default class EvmStreamClient extends BaseStreamClient {
     const args = await this.generateMultiPayloads(multipleStreamData);
 
     const sum = multipleStreamData.recipients
-      .reduce((acc, v) => acc.plus(v.amount), BigNumber(0))
-      .times(BigNumber(BASE_FEE))
-      .div(BigNumber(1000000));
+      .reduce((acc, v) => acc.add(v.amount), new BN(0))
+      .mul(new BN(BASE_FEE))
+      .div(new BN(1000000));
     await this.approveTokens(multipleStreamData.tokenId, sum);
 
     const creationPromises = args.map((item) => this.writeContract.create(...item, { value: fees.value }));
@@ -189,7 +189,7 @@ export default class EvmStreamClient extends BaseStreamClient {
   public async topup(topupData: ITopUpData): Promise<ITransactionResult> {
     const fees = await this.readContract.getTopUpWithdrawalFees(topupData.id, topupData.amount.toString());
 
-    const sum = topupData.amount.times(BigNumber(BASE_FEE)).div(BigNumber(1000000));
+    const sum = topupData.amount.mul(new BN(BASE_FEE)).div(new BN(1000000));
 
     const stream = await this.getOne({ id: topupData.id });
 
@@ -268,11 +268,11 @@ export default class EvmStreamClient extends BaseStreamClient {
     return this.programId;
   }
 
-  public async approveTokens(tokenId: string, amount: BigNumber): Promise<void> {
+  public async approveTokens(tokenId: string, amount: BN): Promise<void> {
     const tokenContract = new ethers.Contract(tokenId, ercAbi, this.signer);
     const address = await this.signer.getAddress();
     const allowance = await tokenContract.allowance(address, this.programId);
-    if (BigNumber(allowance.toString()).gte(amount)) {
+    if (new BN(allowance.toString()).gte(amount)) {
       return;
     }
     const approvalTx = await tokenContract.approve(this.programId, amount.toString());

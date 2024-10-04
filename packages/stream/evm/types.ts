@@ -1,9 +1,9 @@
-import BigNumber from "bignumber.js";
+import BN from "bn.js";
 import { BigNumber as BigNumberEvm } from "ethers";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import { Stream, StreamType } from "../common/types.js";
-import { getNumberFromBigNumber } from "../common/utils.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface StreamAbiResult {
   amount: BigNumberEvm;
@@ -61,7 +61,7 @@ export class EvmContract implements Stream {
 
   createdAt: number;
 
-  withdrawnAmount: BigNumber;
+  withdrawnAmount: BN;
 
   canceledAt: number;
 
@@ -85,15 +85,15 @@ export class EvmContract implements Stream {
 
   streamflowTreasuryTokens: string;
 
-  streamflowFeeTotal: BigNumber;
+  streamflowFeeTotal: BN;
 
-  streamflowFeeWithdrawn: BigNumber;
+  streamflowFeeWithdrawn: BN;
 
   streamflowFeePercent: number;
 
-  partnerFeeTotal: BigNumber;
+  partnerFeeTotal: BN;
 
-  partnerFeeWithdrawn: BigNumber;
+  partnerFeeWithdrawn: BN;
 
   partnerFeePercent: number;
 
@@ -103,15 +103,15 @@ export class EvmContract implements Stream {
 
   start: number;
 
-  depositedAmount: BigNumber;
+  depositedAmount: BN;
 
   period: number;
 
-  amountPerPeriod: BigNumber;
+  amountPerPeriod: BN;
 
   cliff: number;
 
-  cliffAmount: BigNumber;
+  cliffAmount: BN;
 
   cancelableBySender: boolean;
 
@@ -133,11 +133,11 @@ export class EvmContract implements Stream {
 
   currentPauseStart: number;
 
-  pauseCumulative: BigNumber;
+  pauseCumulative: BN;
 
   lastRateChangeTime: number;
 
-  fundsUnlockedAtLastRateChange: BigNumber;
+  fundsUnlockedAtLastRateChange: BN;
 
   type: StreamType;
 
@@ -145,7 +145,7 @@ export class EvmContract implements Stream {
     this.magic = 0;
     this.version = 0;
     this.createdAt = stream.created.toNumber();
-    this.withdrawnAmount = BigNumber(stream.withdrawn.toString());
+    this.withdrawnAmount = new BN(stream.withdrawn.toString());
     this.canceledAt = stream.canceled_at.toNumber();
     this.end = stream.end.toNumber();
     this.lastWithdrawnAt = stream.last_withdrawn_at.toNumber();
@@ -157,20 +157,20 @@ export class EvmContract implements Stream {
     this.escrowTokens = "";
     this.streamflowTreasury = "";
     this.streamflowTreasuryTokens = "";
-    this.streamflowFeeTotal = BigNumber(stream.fees.streamflow_fee.toString());
-    this.streamflowFeeWithdrawn = BigNumber(stream.fees.streamflow_fee_withdrawn.toString());
+    this.streamflowFeeTotal = new BN(stream.fees.streamflow_fee.toString());
+    this.streamflowFeeWithdrawn = new BN(stream.fees.streamflow_fee_withdrawn.toString());
     this.streamflowFeePercent = stream.fees.streamflow_fee_percentage.toNumber() / 10000;
-    this.partnerFeeTotal = BigNumber(0);
-    this.partnerFeeWithdrawn = BigNumber(0);
+    this.partnerFeeTotal = new BN(0);
+    this.partnerFeeWithdrawn = new BN(0);
     this.partnerFeePercent = 0;
     this.partner = "";
     this.partnerTokens = "";
     this.start = stream.start.toNumber();
-    this.depositedAmount = BigNumber(stream.amount.toString());
+    this.depositedAmount = new BN(stream.amount.toString());
     this.period = stream.period.toNumber();
-    this.amountPerPeriod = BigNumber(stream.amount_per_period.toString());
+    this.amountPerPeriod = new BN(stream.amount_per_period.toString());
     this.cliff = stream.start.toNumber();
-    this.cliffAmount = BigNumber(stream.cliff_amount.toString());
+    this.cliffAmount = new BN(stream.cliff_amount.toString());
     this.cancelableBySender = stream.meta.cancelable_by_sender;
     this.cancelableByRecipient = stream.meta.cancelable_by_recipient;
     this.automaticWithdrawal = stream.meta.automatic_withdrawal;
@@ -181,13 +181,13 @@ export class EvmContract implements Stream {
     this.withdrawalFrequency = stream.meta.withdrawal_frequency.toNumber();
     this.closed = stream.closed;
     this.currentPauseStart = stream.current_pause_start.toNumber();
-    this.pauseCumulative = BigNumber(stream.pause_cumulative.toString());
+    this.pauseCumulative = new BN(stream.pause_cumulative.toString());
     this.lastRateChangeTime = stream.last_rate_change_time.toNumber();
-    this.fundsUnlockedAtLastRateChange = BigNumber(stream.funds_unlocked_at_last_rate_change.toString());
+    this.fundsUnlockedAtLastRateChange = new BN(stream.funds_unlocked_at_last_rate_change.toString());
     this.type = buildStreamType(this);
   }
 
-  unlocked(currentTimestamp: number): BigNumber {
+  unlocked(currentTimestamp: number): BN {
     return calculateUnlockedAmount({
       ...this,
       currentTimestamp,
@@ -195,6 +195,6 @@ export class EvmContract implements Stream {
   }
 
   remaining(decimals: number): number {
-    return getNumberFromBigNumber(this.depositedAmount.minus(this.withdrawnAmount), decimals);
+    return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
   }
 }
