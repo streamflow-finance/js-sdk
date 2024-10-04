@@ -2,10 +2,36 @@ import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
+import { Address, type IdlTypes } from "@coral-xyz/anchor";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import { IRecipient, Stream, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
+import { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
+
+export { IChain, ICluster, ContractError } from "@streamflow/common";
+
+type AlignedUnlocksTypes = IdlTypes<AlignedUnlocksIDL>;
+
+export type AlignedUnlocksContract = AlignedUnlocksTypes["contract"];
+export type OracleType = AlignedUnlocksTypes["oracleType"];
+export type TestOracle = AlignedUnlocksTypes["testOracle"];
+
+export type CreateParams = AlignedUnlocksTypes["createParams"];
+export type ChangeOracleParams = AlignedUnlocksTypes["changeOracleParams"];
+export type CreateTestOracleParams = AlignedUnlocksTypes["createTestOracleParams"];
+export type UpdateTestOracleParams = AlignedUnlocksTypes["updateTestOracleParams"];
+
+export type IAlignedUnlockConfig = {
+  minPrice: BN;
+  maxPrice: BN;
+  minPercentage: BN;
+  maxPercentage: BN;
+  oracleType?: OracleType;
+  skipInitial?: boolean;
+  tickSize?: BN;
+  priceOracle?: Address;
+};
 
 export interface ISearchStreams {
   mint?: string;
@@ -27,6 +53,7 @@ export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSo
   // allow custom Metadata Account to be passed, ephemeral signer is most cases, accepts array to be compatible in createMultiple
   metadataPubKeys?: PublicKey[];
   partner?: string | null;
+  alignedConfigParams?: IAlignedUnlockConfig;
 }
 
 export interface IInteractStreamSolanaExt extends ITransactionSolanaExt {

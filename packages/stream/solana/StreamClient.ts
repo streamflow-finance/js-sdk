@@ -33,6 +33,7 @@ import {
   IProgramAccount,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
+import { Program } from "@coral-xyz/anchor";
 
 import {
   Account,
@@ -100,6 +101,9 @@ import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import { IPartnerLayout } from "./instructionTypes.js";
 import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
+import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks";
+import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
+import { deriveEscrowPDA } from "./lib/derive-accounts.js";
 
 const METADATA_ACC_SIZE = 1104;
 
@@ -111,6 +115,8 @@ export class SolanaStreamClient extends BaseStreamClient {
   private commitment: Commitment | ConnectionConfig;
 
   private sendThrottler: PQueue;
+
+  private alignedProxyProgram: Program<AlignedUnlocksProgramType>;
 
   /**
    * Create Stream instance
@@ -128,6 +134,11 @@ export class SolanaStreamClient extends BaseStreamClient {
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
+    const alignedUnlocksProgram = {
+      ...StreamflowAlignedUnlocksIDL,
+      address: StreamflowAlignedUnlocksIDL.address,
+    } as AlignedUnlocksProgramType;
+    this.alignedProxyProgram = new Program(alignedUnlocksProgram, { connection: this.connection });
   }
 
   public getConnection(): Connection {
@@ -147,7 +158,21 @@ export class SolanaStreamClient extends BaseStreamClient {
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    */
   public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
+    const { partner, amount } = data;
+    const { isNative, sender } = extParams;
+
+    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
+
+    if (isNative) {
+      const totalFee = await this.getTotalFee({
+        address: partnerPublicKey.toString(),
+      });
+      const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
+      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey!, totalAmount)));
+    }
+
     const { tx, hash, context } = await prepareTransaction(
       this.connection,
       ixs,
@@ -168,6 +193,96 @@ export class SolanaStreamClient extends BaseStreamClient {
     );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
+  }
+
+  async prepareCreateAlignedUnlockInstruction(
+    recipient: IRecipient,
+    streamParams: IStreamConfig,
+    extParams: ICreateStreamSolanaExt,
+  ): Promise<{ ixs: TransactionInstruction[]; metadata: Keypair | undefined; metadataPubKey: PublicKey }> {
+    const {
+      tokenId: mint,
+      start,
+      period,
+      cliff,
+      canTopup,
+      cancelableBySender,
+      cancelableByRecipient,
+      transferableBySender,
+      transferableByRecipient,
+      partner,
+    } = streamParams;
+    const { isNative, sender, computeLimit, computePrice, metadataPubKeys, alignedConfigParams } = extParams;
+
+    if (!sender.publicKey) {
+      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const { minPrice, maxPercentage, minPercentage, maxPrice, oracleType, skipInitial, tickSize, priceOracle } =
+      alignedConfigParams!;
+
+    const { cliffAmount, amountPerPeriod, amount: depositedAmount } = recipient;
+
+    const recipientPublicKey = new PublicKey(recipient.recipient);
+    const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
+
+    const metadata = !metadataPubKeys ? Keypair.generate() : undefined;
+    const metadataPubKey = metadata ? metadata.publicKey : metadataPubKeys![0];
+
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
+    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+
+    const streamflowProgramPublicKey = new PublicKey(this.programId);
+
+    const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, metadataPubKey);
+
+    const oracle = priceOracle ?? new PublicKey("8an9aE6j4STjv1cNXaE7SJfqmfjgLUHpBKURjqcAQJbQ"); //deriveTestOraclePDA(this.program.programId, mintPublicKey, sender.publicKey!);
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
+      computePrice,
+      computeLimit,
+    });
+
+    const createIx = await this.alignedProxyProgram.methods
+      .create({
+        startTime: new BN(start),
+        netAmountDeposited: depositedAmount,
+        period: new BN(period),
+        amountPerPeriod: amountPerPeriod,
+        cliff: new BN(cliff),
+        cliffAmount: cliffAmount,
+        transferableBySender,
+        transferableByRecipient,
+        cancelableByRecipient,
+        cancelableBySender,
+        canTopup,
+        oracleType: oracleType ?? { switchboard: {} },
+        streamName: [],
+        minPrice,
+        maxPrice,
+        minPercentage,
+        maxPercentage,
+        tickSize: tickSize || new BN(1),
+        skipInitial: skipInitial ?? false,
+      })
+      .accountsPartial({
+        sender: sender.publicKey,
+        streamMetadata: metadataPubKey,
+        escrowTokens: escrowPDA,
+        mint: mintPublicKey,
+        partner: partnerPublicKey,
+        recipient: recipientPublicKey,
+        withdrawor: WITHDRAWOR_PUBLIC_KEY,
+        feeOracle: FEE_ORACLE_PUBLIC_KEY,
+        priceOracle: oracle,
+        tokenProgram: tokenProgramId,
+        streamflowProgram: this.programId,
+      })
+      .instruction();
+
+    ixs.push(createIx);
+
+    return { ixs, metadata, metadataPubKey };
   }
 
   /**
@@ -227,14 +342,6 @@ export class SolanaStreamClient extends BaseStreamClient {
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
-
-    if (isNative) {
-      const totalFee = await this.getTotalFee({
-        address: partnerPublicKey.toString(),
-      });
-      const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
-    }
 
     ixs.push(
       createStreamInstruction(
@@ -432,13 +539,18 @@ export class SolanaStreamClient extends BaseStreamClient {
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
-    { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
+    extParams: ICreateStreamSolanaExt,
   ): Promise<IMultiTransactionResult> {
-    const { recipients } = data;
+    const { recipients, ...streamParams } = data;
 
-    if (!sender.publicKey) {
-      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
-    }
+    const {
+      sender,
+      metadataPubKeys: metadataPubKeysExt,
+      isNative,
+      computePrice,
+      computeLimit,
+      alignedConfigParams,
+    } = extParams;
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
@@ -450,16 +562,29 @@ export class SolanaStreamClient extends BaseStreamClient {
       metadata: Keypair | undefined;
       recipient: string;
     }[] = [];
-    metadataPubKeys = metadataPubKeys || [];
+    const metadataPubKeys = metadataPubKeysExt || [];
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
-      const { ixs, metadata, metadataPubKey } = await this.prepareStreamInstructions(recipientData, data, {
-        sender,
-        metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-        computePrice,
-        computeLimit,
-      });
+
+      // here we change logic in case we are doing an alignedUnlock!!!
+      const { ixs, metadata, metadataPubKey } = !!alignedConfigParams
+        ? await this.prepareCreateAlignedUnlockInstruction(recipientData, streamParams, {
+            sender,
+            metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
+            computePrice,
+            computeLimit,
+            alignedConfigParams,
+          })
+        : await this.prepareCreateInstructions(
+            { ...data, ...recipientData },
+            {
+              sender,
+              metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
+              computePrice,
+              computeLimit,
+            },
+          );
 
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
@@ -475,7 +600,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
       const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey,
+        payerKey: sender.publicKey!,
         recentBlockhash: hash.blockhash,
         instructions: ixs,
       }).compileToV0Message();
@@ -488,10 +613,10 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     if (isNative) {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
+      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey!, totalDepositedAmount);
 
       const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey,
+        payerKey: sender.publicKey!,
         recentBlockhash: hash.blockhash,
         instructions: nativeInstructions,
       }).compileToV0Message();
@@ -499,7 +624,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
       batch.push({
         tx,
-        recipient: sender.publicKey.toBase58(),
+        recipient: sender.publicKey!.toBase58(),
       });
     }
 
@@ -629,8 +754,13 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts canceling the specified stream.
    */
-  public async cancel({ id }: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
-    const ixs = await this.prepareCancelInstructions({ id }, extParams);
+  public async cancel(
+    { id, isAlignedUnlock }: ICancelData,
+    extParams: IInteractStreamSolanaExt,
+  ): Promise<ITransactionResult> {
+    const ixs = isAlignedUnlock
+      ? await this.prepareCancelAlignedUnlockInstruction({ id }, extParams)
+      : await this.prepareCancelInstructions({ id }, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -645,6 +775,46 @@ export class SolanaStreamClient extends BaseStreamClient {
     );
 
     return { ixs, txId: signature };
+  }
+
+  public async prepareCancelAlignedUnlockInstruction(
+    { id }: ICancelData,
+    { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
+  ): Promise<TransactionInstruction[]> {
+    const streamPublicKey = new PublicKey(id);
+    const escrowAcc = await this.connection.getAccountInfo(streamPublicKey);
+    if (!escrowAcc?.data) {
+      throw new Error("Couldn't get account info");
+    }
+
+    const streamflowProgramPublicKey = new PublicKey(this.programId);
+    const streamData = decodeStream(escrowAcc?.data);
+    const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, streamPublicKey);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, streamData.mint);
+    const partnerPublicKey = streamData.partner;
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
+      computePrice,
+      computeLimit,
+    });
+    await this.checkAssociatedTokenAccounts(streamData, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
+
+    const cancelIx = await this.alignedProxyProgram.methods
+      .cancel()
+      .accounts({
+        streamMetadata: streamPublicKey,
+        escrowTokens: escrowPDA,
+        recipient: streamData.recipient,
+        partner: partnerPublicKey,
+        streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
+        mint: streamData.mint,
+        tokenProgram: tokenProgramId,
+      })
+      .instruction();
+
+    ixs.push(cancelIx);
+
+    return ixs;
   }
 
   /**
@@ -996,106 +1166,6 @@ export class SolanaStreamClient extends BaseStreamClient {
   public extractErrorCode(err: Error): string | null {
     const logs = "logs" in err && Array.isArray(err.logs) ? err.logs : undefined;
     return extractSolanaErrorCode(err.toString() ?? "Unknown error!", logs);
-  }
-
-  /**
-   * Forms instructions from params, creates a raw transaction and fetch recent blockhash.
-   */
-  private async prepareStreamInstructions(
-    recipient: IRecipient,
-    streamParams: IStreamConfig,
-    extParams: ICreateStreamSolanaExt,
-  ): Promise<{
-    ixs: TransactionInstruction[];
-    metadata: Keypair | undefined;
-    metadataPubKey: PublicKey;
-  }> {
-    const {
-      tokenId: mint,
-      start,
-      period,
-      cliff,
-      canTopup,
-      canUpdateRate,
-      canPause,
-      cancelableBySender,
-      cancelableByRecipient,
-      transferableBySender,
-      transferableByRecipient,
-      automaticWithdrawal = false,
-      withdrawalFrequency = 0,
-      partner,
-    } = streamParams;
-
-    const { sender, metadataPubKeys, computeLimit, computePrice } = extParams;
-
-    if (!sender.publicKey) {
-      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
-    }
-
-    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
-      computePrice,
-      computeLimit,
-    });
-    const recipientPublicKey = new PublicKey(recipient.recipient);
-    const mintPublicKey = new PublicKey(mint);
-    const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
-    const [escrowTokens] = PublicKey.findProgramAddressSync(
-      [Buffer.from("strm"), metadataPubKey.toBuffer()],
-      this.programId,
-    );
-
-    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
-    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
-    const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
-    const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
-    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
-    const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
-
-    ixs.push(
-      createStreamInstruction(
-        {
-          start: new BN(start),
-          depositedAmount: recipient.amount,
-          period: new BN(period),
-          amountPerPeriod: recipient.amountPerPeriod,
-          cliff: new BN(cliff),
-          cliffAmount: new BN(recipient.cliffAmount),
-          cancelableBySender,
-          cancelableByRecipient,
-          automaticWithdrawal,
-          transferableBySender,
-          transferableByRecipient,
-          canTopup,
-          canUpdateRate: !!canUpdateRate,
-          canPause: !!canPause,
-          name: recipient.name,
-          withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
-        },
-        this.programId,
-        {
-          sender: sender.publicKey,
-          senderTokens,
-          recipient: new PublicKey(recipient.recipient),
-          metadata: metadataPubKey,
-          escrowTokens,
-          recipientTokens,
-          streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
-          streamflowTreasuryTokens: streamflowTreasuryTokens,
-          partner: partnerPublicKey,
-          partnerTokens: partnerTokens,
-          mint: new PublicKey(mint),
-          feeOracle: FEE_ORACLE_PUBLIC_KEY,
-          rent: SYSVAR_RENT_PUBKEY,
-          timelockProgram: this.programId,
-          tokenProgram: tokenProgramId,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          withdrawor: WITHDRAWOR_PUBLIC_KEY,
-          systemProgram: SystemProgram.programId,
-        },
-      ),
-    );
-    return { ixs, metadata, metadataPubKey };
   }
 
   /**

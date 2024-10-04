@@ -26,6 +26,19 @@ export const PROGRAM_ID = {
   [ICluster.Local]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
 };
 
+export const ALIGNED_UNLOCKS_PROGRAM_ID = {
+  [ICluster.Devnet]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+  [ICluster.Mainnet]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+  [ICluster.Testnet]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+  [ICluster.Local]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+};
+
+export const CONTRACT_DISCRIMINATOR = [172, 138, 115, 242, 121, 67, 183, 26];
+export const ORACLE_PRICE_DISTRIMINATOR = [];
+export const CONTRACT_SEED = Buffer.from("contract", "utf-8");
+export const ESCROW_SEED = Buffer.from("strm", "utf-8");
+export const TEST_ORACLE_SEED = Buffer.from("test-oracle", "utf-8");
+
 export const PARTNER_ORACLE_PROGRAM_ID = "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa";
 
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
