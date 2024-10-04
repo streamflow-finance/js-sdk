@@ -1,16 +1,16 @@
 import { TransactionInstruction } from "@solana/web3.js";
 import { Types } from "aptos";
-import BigNumber from "bignumber.js";
+import BN from "bn.js";
 
 export { IChain, ICluster, ContractError } from "@streamflow/common";
 
 // Stream Client Types
 export interface IRecipient {
   recipient: string;
-  amount: BigNumber;
+  amount: BN;
   name: string;
-  cliffAmount: BigNumber;
-  amountPerPeriod: BigNumber;
+  cliffAmount: BN;
+  amountPerPeriod: BN;
 }
 
 export interface IStreamConfig {
@@ -41,13 +41,13 @@ export interface IInteractData {
 }
 
 export interface IWithdrawData extends IInteractData {
-  amount?: BigNumber;
+  amount?: BN;
 }
 
 export interface IUpdateData extends IInteractData {
   enableAutomaticWithdrawal?: boolean;
-  withdrawFrequency?: BigNumber;
-  amountPerPeriod?: BigNumber;
+  withdrawFrequency?: BN;
+  amountPerPeriod?: BN;
 }
 
 export type ICancelData = IInteractData;
@@ -57,7 +57,7 @@ export interface ITransferData extends IInteractData {
 }
 
 export interface ITopUpData extends IInteractData {
-  amount: BigNumber;
+  amount: BN;
 }
 
 export type IGetOneData = IInteractData;
@@ -211,7 +211,7 @@ export interface Stream {
   magic: number;
   version: number;
   createdAt: number;
-  withdrawnAmount: BigNumber;
+  withdrawnAmount: BN;
   canceledAt: number;
   end: number;
   lastWithdrawnAt: number;
@@ -223,20 +223,20 @@ export interface Stream {
   escrowTokens: string;
   streamflowTreasury: string;
   streamflowTreasuryTokens: string;
-  streamflowFeeTotal: BigNumber;
-  streamflowFeeWithdrawn: BigNumber;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
   streamflowFeePercent: number;
-  partnerFeeTotal: BigNumber;
-  partnerFeeWithdrawn: BigNumber;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
   partnerFeePercent: number;
   partner: string;
   partnerTokens: string;
   start: number;
-  depositedAmount: BigNumber;
+  depositedAmount: BN;
   period: number;
-  amountPerPeriod: BigNumber;
+  amountPerPeriod: BN;
   cliff: number;
-  cliffAmount: BigNumber;
+  cliffAmount: BN;
   cancelableBySender: boolean;
   cancelableByRecipient: boolean;
   automaticWithdrawal: boolean;
@@ -247,13 +247,13 @@ export interface Stream {
   withdrawalFrequency: number;
   closed: boolean;
   currentPauseStart: number;
-  pauseCumulative: BigNumber;
+  pauseCumulative: BN;
   lastRateChangeTime: number;
-  fundsUnlockedAtLastRateChange: BigNumber;
+  fundsUnlockedAtLastRateChange: BN;
 
   type: StreamType;
 
-  unlocked(currentTimestamp: number): BigNumber;
+  unlocked(currentTimestamp: number): BN;
 
   remaining(decimals: number): number;
 }

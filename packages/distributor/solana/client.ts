@@ -1,5 +1,5 @@
 import bs58 from "bs58";
-import BigNumber from "bignumber.js";
+import BN from "bn.js";
 import PQueue from "p-queue";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -140,14 +140,14 @@ export default class SolanaDistributorClient {
     const senderTokens = await ata(mint, extParams.invoker.publicKey, tokenProgramId);
 
     const args: NewDistributorArgs = {
-      version: BigNumber(data.version),
+      version: new BN(data.version),
       root: data.root,
-      maxTotalClaim: BigNumber(data.maxTotalClaim),
-      maxNumNodes: BigNumber(data.maxNumNodes),
-      unlockPeriod: BigNumber(data.unlockPeriod),
-      startVestingTs: BigNumber(data.startVestingTs),
-      endVestingTs: BigNumber(data.endVestingTs),
-      clawbackStartTs: BigNumber(data.clawbackStartTs),
+      maxTotalClaim: new BN(data.maxTotalClaim),
+      maxNumNodes: new BN(data.maxNumNodes),
+      unlockPeriod: new BN(data.unlockPeriod),
+      startVestingTs: new BN(data.startVestingTs),
+      endVestingTs: new BN(data.endVestingTs),
+      clawbackStartTs: new BN(data.clawbackStartTs),
       claimsClosable: data.claimsClosable,
     };
     const accounts: NewDistributorAccounts = {
@@ -163,14 +163,14 @@ export default class SolanaDistributorClient {
 
     if (extParams.isNative) {
       ixs.push(
-        ...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, BigNumber(data.maxTotalClaim))),
+        ...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, new BN(data.maxTotalClaim))),
       );
     }
 
-    const nowTs = BigNumber(Math.floor(Date.now() / 1000));
+    const nowTs = new BN(Math.floor(Date.now() / 1000));
     const endVestingTs = args.endVestingTs.isZero() ? nowTs : args.endVestingTs;
     const startVestingTs = args.startVestingTs.isZero() ? nowTs : args.startVestingTs;
-    if (endVestingTs.gt(startVestingTs) && endVestingTs.minus(startVestingTs).lt(args.unlockPeriod)) {
+    if (endVestingTs.gt(startVestingTs) && endVestingTs.sub(startVestingTs).lt(args.unlockPeriod)) {
       throw new Error("The unlock period cannot be longer than the total vesting duration!");
     }
 
@@ -282,17 +282,17 @@ export default class SolanaDistributorClient {
 
     if (!claimStatus) {
       const args: NewClaimArgs = {
-        amountLocked: BigNumber(data.amountLocked),
-        amountUnlocked: BigNumber(data.amountUnlocked),
+        amountLocked: new BN(data.amountLocked),
+        amountUnlocked: new BN(data.amountUnlocked),
         proof: data.proof,
       };
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
-    const nowTs = BigNumber(Math.floor(Date.now() / 1000));
+    const nowTs = new BN(Math.floor(Date.now() / 1000));
     if (
       claimStatus ||
-      (BigNumber(data.amountLocked).gt(0) && nowTs.minus(distributor.startTs).gte(distributor.unlockPeriod))
+      (new BN(data.amountLocked).gtn(0) && nowTs.sub(distributor.startTs).gte(distributor.unlockPeriod))
     ) {
       ixs.push(claimLocked(accounts, this.programId));
     }

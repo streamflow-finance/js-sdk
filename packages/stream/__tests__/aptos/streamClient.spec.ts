@@ -1,4 +1,4 @@
-import { BigNumber } from "bignumber.js";
+import { BN } from "bn.js";
 import { describe, expect, test, beforeEach, vi } from "vitest";
 
 import AptosStreamClient from "../../aptos/StreamClient.js";
@@ -40,10 +40,10 @@ describe("AptosStreamClient", () => {
       };
       const mockRecipient = {
         recipient: "0xtest",
-        amount: BigNumber(1000),
+        amount: new BN(1000),
         name: "test name",
-        cliffAmount: BigNumber(1),
-        amountPerPeriod: BigNumber(1),
+        cliffAmount: new BN(1),
+        amountPerPeriod: new BN(1),
       };
       const mockData = {
         period: 100,

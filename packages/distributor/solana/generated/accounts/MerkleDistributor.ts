@@ -1,5 +1,5 @@
 import { PublicKey, Connection } from "@solana/web3.js";
-import BigNumber from "bignumber.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 import { PROGRAM_ID } from "../programId";
@@ -8,7 +8,7 @@ export interface MerkleDistributorFields {
   /** Bump seed. */
   bump: number;
   /** Version of the airdrop */
-  version: BigNumber;
+  version: BN;
   /** The 256-bit merkle root. */
   root: Array<number>;
   /** [Mint] of the token to be distributed. */
@@ -16,21 +16,21 @@ export interface MerkleDistributorFields {
   /** Token Address of the vault */
   tokenVault: PublicKey;
   /** Maximum number of tokens that can ever be claimed from this [MerkleDistributor]. */
-  maxTotalClaim: BigNumber;
+  maxTotalClaim: BN;
   /** Maximum number of nodes in [MerkleDistributor]. */
-  maxNumNodes: BigNumber;
+  maxNumNodes: BN;
   /** Time step (period) in seconds per which the unlock occurs */
-  unlockPeriod: BigNumber;
+  unlockPeriod: BN;
   /** Total amount of tokens that have been claimed. */
-  totalAmountClaimed: BigNumber;
+  totalAmountClaimed: BN;
   /** Number of nodes that have been claimed. */
-  numNodesClaimed: BigNumber;
+  numNodesClaimed: BN;
   /** Lockup time start (Unix Timestamp) */
-  startTs: BigNumber;
+  startTs: BN;
   /** Lockup time end (Unix Timestamp) */
-  endTs: BigNumber;
+  endTs: BN;
   /** Clawback start (Unix Timestamp) */
-  clawbackStartTs: BigNumber;
+  clawbackStartTs: BN;
   /** Clawback receiver */
   clawbackReceiver: PublicKey;
   /** Admin wallet */
@@ -96,7 +96,7 @@ export class MerkleDistributor {
   readonly bump: number;
 
   /** Version of the airdrop */
-  readonly version: BigNumber;
+  readonly version: BN;
 
   /** The 256-bit merkle root. */
   readonly root: Array<number>;
@@ -108,28 +108,28 @@ export class MerkleDistributor {
   readonly tokenVault: PublicKey;
 
   /** Maximum number of tokens that can ever be claimed from this [MerkleDistributor]. */
-  readonly maxTotalClaim: BigNumber;
+  readonly maxTotalClaim: BN;
 
   /** Maximum number of nodes in [MerkleDistributor]. */
-  readonly maxNumNodes: BigNumber;
+  readonly maxNumNodes: BN;
 
   /** Time step (period) in seconds per which the unlock occurs */
-  readonly unlockPeriod: BigNumber;
+  readonly unlockPeriod: BN;
 
   /** Total amount of tokens that have been claimed. */
-  readonly totalAmountClaimed: BigNumber;
+  readonly totalAmountClaimed: BN;
 
   /** Number of nodes that have been claimed. */
-  readonly numNodesClaimed: BigNumber;
+  readonly numNodesClaimed: BN;
 
   /** Lockup time start (Unix Timestamp) */
-  readonly startTs: BigNumber;
+  readonly startTs: BN;
 
   /** Lockup time end (Unix Timestamp) */
-  readonly endTs: BigNumber;
+  readonly endTs: BN;
 
   /** Clawback start (Unix Timestamp) */
-  readonly clawbackStartTs: BigNumber;
+  readonly clawbackStartTs: BN;
 
   /** Clawback receiver */
   readonly clawbackReceiver: PublicKey;
@@ -295,18 +295,18 @@ export class MerkleDistributor {
   static fromJSON(obj: MerkleDistributorJSON): MerkleDistributor {
     return new MerkleDistributor({
       bump: obj.bump,
-      version: BigNumber(obj.version),
+      version: new BN(obj.version),
       root: obj.root,
       mint: new PublicKey(obj.mint),
       tokenVault: new PublicKey(obj.tokenVault),
-      maxTotalClaim: BigNumber(obj.maxTotalClaim),
-      maxNumNodes: BigNumber(obj.maxNumNodes),
-      unlockPeriod: BigNumber(obj.unlockPeriod),
-      totalAmountClaimed: BigNumber(obj.totalAmountClaimed),
-      numNodesClaimed: BigNumber(obj.numNodesClaimed),
-      startTs: BigNumber(obj.startTs),
-      endTs: BigNumber(obj.endTs),
-      clawbackStartTs: BigNumber(obj.clawbackStartTs),
+      maxTotalClaim: new BN(obj.maxTotalClaim),
+      maxNumNodes: new BN(obj.maxNumNodes),
+      unlockPeriod: new BN(obj.unlockPeriod),
+      totalAmountClaimed: new BN(obj.totalAmountClaimed),
+      numNodesClaimed: new BN(obj.numNodesClaimed),
+      startTs: new BN(obj.startTs),
+      endTs: new BN(obj.endTs),
+      clawbackStartTs: new BN(obj.clawbackStartTs),
       clawbackReceiver: new PublicKey(obj.clawbackReceiver),
       admin: new PublicKey(obj.admin),
       clawedBack: obj.clawedBack,
