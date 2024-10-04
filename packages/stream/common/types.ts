@@ -50,7 +50,9 @@ export interface IUpdateData extends IInteractData {
   amountPerPeriod?: BN;
 }
 
-export type ICancelData = IInteractData;
+export interface ICancelData extends IInteractData {
+  isAlignedUnlock?: boolean;
+}
 
 export interface ITransferData extends IInteractData {
   newRecipient: string;
