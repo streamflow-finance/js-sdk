@@ -127,7 +127,7 @@ const createStreamParams: Types.ICreateStreamData = {
   amount: getBN(100, 9), // depositing 100 tokens with 9 decimals mint.
   period: 1, // Time step (period) in seconds per which the unlocking occurs.
   cliff: 1643363160, // Vesting contract "cliff" timestamp in seconds.
-  cliffAmount: 10, // Amount unlocked at the "cliff" timestamp.
+  cliffAmount: new BN(10), // Amount unlocked at the "cliff" timestamp.
   amountPerPeriod: getBN(5, 9), // Release rate: how many tokens are unlocked per each period.
   name: "Transfer to Jane Doe.", // The stream name or subject.
   canTopup: false, // Whether additional tokens can be deposited after creation, setting to FALSE will effectively create a vesting contract.
