@@ -1,5 +1,5 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js";
+import { AccountInfo, PublicKey, Keypair, VersionedTransaction, TransactionInstruction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
 import { Address, type IdlTypes } from "@coral-xyz/anchor";
@@ -64,6 +64,12 @@ export interface IInteractStreamSolanaExt extends ITransactionSolanaExt {
 export interface ITopUpStreamSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
   isNative?: boolean;
+}
+
+export interface ICreateStreamInstructions {
+  ixs: TransactionInstruction[];
+  metadata: Keypair | undefined;
+  metadataPubKey: PublicKey;
 }
 
 export class Contract implements Stream {
@@ -259,7 +265,7 @@ export interface DecodedStream {
   fundsUnlockedAtLastRateChange: BN;
 }
 
-export enum SolanaProxyContractErrorCode {
+export enum SolanaAlignedProxyErrorCode {
   /** Authority does not have permission for this action */
   Unauthorized = "Unauthorized",
 
