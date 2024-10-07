@@ -44,13 +44,14 @@ import {
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
   ISearchStreams,
+  ICreateStreamInstructions,
 } from "./types.js";
 import {
   decodeStream,
   extractSolanaErrorCode,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
-} from "./utils.js";
+} from "./lib/utils.js";
 import {
   PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
@@ -86,8 +87,6 @@ import {
   IGetOneData,
   IFees,
   IMultiTransactionResult,
-  IRecipient,
-  IStreamConfig,
   ITopUpData,
   ITransactionResult,
   ITransferData,
@@ -196,11 +195,21 @@ export class SolanaStreamClient extends BaseStreamClient {
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
   }
 
-  async prepareCreateAlignedUnlockInstruction(
-    recipient: IRecipient,
-    streamParams: IStreamConfig,
+  async prepareCreateInstructions(
+    streamParams: ICreateStreamData,
     extParams: ICreateStreamSolanaExt,
-  ): Promise<{ ixs: TransactionInstruction[]; metadata: Keypair | undefined; metadataPubKey: PublicKey }> {
+  ): Promise<ICreateStreamInstructions> {
+    const { ixs, metadata, metadataPubKey } = !!extParams.alignedConfigParams
+      ? await this.prepareCreateAlignedUnlockInstructions(streamParams, extParams)
+      : await this.prepareCreateStreamInstructions(streamParams, extParams);
+
+    return { ixs, metadata, metadataPubKey };
+  }
+
+  async prepareCreateAlignedUnlockInstructions(
+    streamParams: ICreateStreamData,
+    extParams: ICreateStreamSolanaExt,
+  ): Promise<ICreateStreamInstructions> {
     const {
       tokenId: mint,
       start,
@@ -212,6 +221,10 @@ export class SolanaStreamClient extends BaseStreamClient {
       transferableBySender,
       transferableByRecipient,
       partner,
+      recipient,
+      cliffAmount,
+      amountPerPeriod,
+      amount: depositedAmount,
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys, alignedConfigParams } = extParams;
 
@@ -222,9 +235,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const { minPrice, maxPercentage, minPercentage, maxPrice, oracleType, skipInitial, tickSize, priceOracle } =
       alignedConfigParams!;
 
-    const { cliffAmount, amountPerPeriod, amount: depositedAmount } = recipient;
-
-    const recipientPublicKey = new PublicKey(recipient.recipient);
+    const recipientPublicKey = new PublicKey(recipient);
     const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
 
     const metadata = !metadataPubKeys ? Keypair.generate() : undefined;
@@ -290,7 +301,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    */
-  public async prepareCreateInstructions(
+  public async prepareCreateStreamInstructions(
     {
       recipient,
       tokenId: mint,
@@ -313,11 +324,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       partner,
     }: ICreateStreamData,
     { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
-  ): Promise<{
-    ixs: TransactionInstruction[];
-    metadata: Keypair | undefined;
-    metadataPubKey: PublicKey;
-  }> {
+  ): Promise<ICreateStreamInstructions> {
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
@@ -567,25 +574,19 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
+      const createStreamData = { ...streamParams, ...recipientData };
+      const createStreamExtParams = {
+        sender,
+        metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
+        computePrice,
+        computeLimit,
+        alignedConfigParams,
+      };
 
-      // here we change logic in case we are doing an alignedUnlock!!!
-      const { ixs, metadata, metadataPubKey } = !!alignedConfigParams
-        ? await this.prepareCreateAlignedUnlockInstruction(recipientData, streamParams, {
-            sender,
-            metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-            computePrice,
-            computeLimit,
-            alignedConfigParams,
-          })
-        : await this.prepareCreateInstructions(
-            { ...data, ...recipientData },
-            {
-              sender,
-              metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-              computePrice,
-              computeLimit,
-            },
-          );
+      const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
+        createStreamData,
+        createStreamExtParams,
+      );
 
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
