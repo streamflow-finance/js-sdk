@@ -1,8 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
 
-import { ICluster, SolanaContractErrorCode } from "../common/types.js";
-import { ISearchStreams } from "./types.js";
+import { ICluster } from "../common/types.js";
+import { ISearchStreams, SolanaContractErrorCode, SolanaProxyContractErrorCode } from "./types.js";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
 
@@ -18,6 +18,8 @@ export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
 
 // Defined: https://github.com/streamflow-finance/protocol/blob/main/programs/protocol/src/state.rs#L25
 export const CREATE_PARAMS_PADDING = 126;
+
+export const ORIGINAL_CONTRACT_SENDER_OFFSET = 16;
 
 export const PROGRAM_ID = {
   [ICluster.Devnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
@@ -90,4 +92,17 @@ export const SOLANA_ERROR_MAP: { [key: number]: string } = {
   0x85: SolanaContractErrorCode.AlreadyPaused,
   0x86: SolanaContractErrorCode.NotPaused,
   0x87: SolanaContractErrorCode.MetadataNotRentExempt,
+  0x1770: SolanaProxyContractErrorCode.Unauthorized,
+  0x1771: SolanaProxyContractErrorCode.ArithmeticError,
+  0x1772: SolanaProxyContractErrorCode.UnsupportedTokenExtensions,
+  0x1773: SolanaProxyContractErrorCode.PeriodTooShort,
+  0x1774: SolanaProxyContractErrorCode.InvalidTickSize,
+  0x1775: SolanaProxyContractErrorCode.InvalidPercentageBoundaries,
+  0x1776: SolanaProxyContractErrorCode.InvalidPriceBoundaries,
+  0x1777: SolanaProxyContractErrorCode.UnsupportedOracle,
+  0x1778: SolanaProxyContractErrorCode.InvalidOracleAccount,
+  0x1779: SolanaProxyContractErrorCode.InvalidOraclePrice,
+  0x177a: SolanaProxyContractErrorCode.InvalidStreamMetadata,
+  0x177b: SolanaProxyContractErrorCode.AmountAlreadyUpdated,
+  0x177c: SolanaProxyContractErrorCode.AllFundsUnlocked,
 };
