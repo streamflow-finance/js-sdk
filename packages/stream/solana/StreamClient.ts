@@ -64,6 +64,7 @@ import {
   FEES_METADATA_SEED,
   PARTNERS_SCHEMA,
   STREAM_STRUCT_OFFSETS,
+  ORIGINAL_CONTRACT_SENDER_OFFSET,
 } from "./constants.js";
 import {
   withdrawStreamInstruction,
@@ -103,7 +104,7 @@ import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
-import { deriveEscrowPDA } from "./lib/derive-accounts.js";
+import { deriveContractPDA, deriveEscrowPDA } from "./lib/derive-accounts.js";
 
 const METADATA_ACC_SIZE = 1104;
 
@@ -1020,6 +1021,32 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
+   * Fetch all aligned outgoing streams/contracts by the provided public key.
+   */
+  public async getOutgoingAligned(publicKey: PublicKey): Promise<Record<string, Stream>> {
+    const streams: Record<string, Contract> = {};
+
+    const alignedOutgoingProgramAccounts = await this.alignedProxyProgram.account.contract.all([
+      {
+        memcmp: {
+          offset: ORIGINAL_CONTRACT_SENDER_OFFSET,
+          bytes: publicKey.toBase58(),
+        },
+      },
+    ]);
+    const streamPubKeys = alignedOutgoingProgramAccounts.map((account) => account.account.stream);
+    const streamAccounts = await this.connection.getMultipleAccountsInfo(streamPubKeys, TX_FINALITY_CONFIRMED);
+
+    streamAccounts.forEach((account, index) => {
+      const decoded = new Contract(decodeStream(account!.data));
+      decoded.isAligned = true;
+      streams[streamPubKeys[index].toBase58()] = decoded;
+    });
+
+    return streams;
+  }
+
+  /**
    * Fetch streams/contracts by providing direction.
    * Streams are sorted by start time in ascending order.
    */
@@ -1031,7 +1058,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const publicKey = new PublicKey(address);
     let accounts: Account[] = [];
     //todo: we need to be smart with our layout so we minimize rpc calls to the chain
-    if (direction === "all") {
+    if (direction === StreamDirection.All) {
       const outgoingAccounts = await getProgramAccounts(
         this.connection,
         publicKey,
@@ -1046,20 +1073,29 @@ export class SolanaStreamClient extends BaseStreamClient {
       );
       accounts = [...outgoingAccounts, ...incomingAccounts];
     } else {
-      const offset = direction === "outgoing" ? STREAM_STRUCT_OFFSET_SENDER : STREAM_STRUCT_OFFSET_RECIPIENT;
+      const offset =
+        direction === StreamDirection.Outgoing ? STREAM_STRUCT_OFFSET_SENDER : STREAM_STRUCT_OFFSET_RECIPIENT;
       accounts = await getProgramAccounts(this.connection, publicKey, offset, this.programId);
     }
 
     let streams: Record<string, Contract> = {};
 
+    if ((type === StreamType.All || type === StreamType.Vesting) && direction !== StreamDirection.Incoming) {
+      streams = await this.getOutgoingAligned(publicKey);
+    }
+
     accounts.forEach((account) => {
       const decoded = new Contract(decodeStream(account.account.data));
+      decoded.isAligned =
+        decoded.recipient === address &&
+        decoded.type === StreamType.Vesting &&
+        !!deriveContractPDA(this.alignedProxyProgram.programId, account.pubkey);
       streams = { ...streams, [account.pubkey.toBase58()]: decoded };
     });
 
     const sortedStreams = Object.entries(streams).sort(([, stream1], [, stream2]) => stream2.start - stream1.start);
 
-    if (type === "all") return sortedStreams;
+    if (type === StreamType.All) return sortedStreams;
 
     return sortedStreams.filter((stream) => stream[1].type === type);
   }

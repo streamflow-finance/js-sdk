@@ -156,58 +156,6 @@ export enum ContractErrorCode {
   ENO_RECIPIENT_COIN_ADDRESS = "ENO_RECIPIENT_COIN_ADDRESS",
 }
 
-/**
- * Error codes raised by Solana protocol specifically
- */
-export enum SolanaContractErrorCode {
-  /** Accounts not writable */
-  AccountsNotWritable = "AccountsNotWritable",
-  /** Invalid Metadata */
-  InvalidMetadata = "InvalidMetadata",
-  /** Invalid metadata account */
-  InvalidMetadataAccount = "InvalidMetadataAccount",
-  /** Provided accounts don't match the ones in contract */
-  MetadataAccountMismatch = "MetadataAccountMismatch",
-  /** Invalid escrow account */
-  InvalidEscrowAccount = "InvalidEscrowAccount",
-  /** Provided account(s) is/are not valid associated token accounts */
-  NotAssociated = "NotAssociated",
-  /** Sender mint does not match accounts mint */
-  MintMismatch = "MintMismatch",
-  /** Recipient not transferable for account */
-  TransferNotAllowed = "TransferNotAllowed",
-  /** Contract closed */
-  ContractClosed = "ContractClosed",
-  /** Invalid Streamflow Treasury accounts supplied */
-  InvalidTreasury = "InvalidTreasury",
-  /** Given timestamps are invalid */
-  InvalidTimestamps = "InvalidTimestamps",
-  /** Invalid deposit configuration */
-  InvalidDepositConfiguration = "InvalidDepositConfiguration",
-  /** Amount cannot be zero */
-  AmountIsZero = "AmountIsZero",
-  /** Amount requested is larger than available */
-  AmountMoreThanAvailable = "AmountMoreThanAvailable",
-  /** Amount currently available is zero */
-  AmountAvailableIsZero = "AmountAvailableIsZero",
-  /** Arithmetic error */
-  ArithmeticError = "ArithmeticError",
-  /** Metadata account data must be 1104 bytes long */
-  InvalidMetadataSize = "InvalidMetadataSize",
-  /** Metadata state account must be initialized */
-  UninitializedMetadata = "UninitializedMetadata",
-  /** Authority does not have permission for this action */
-  Unauthorized = "Unauthorized",
-  /** Contract is not transferable to the original recipient */
-  SelfTransfer = "SelfTransfer",
-  /** Contract is already paused */
-  AlreadyPaused = "AlreadyPaused",
-  /** Contract is not paused */
-  NotPaused = "NotPaused",
-  /** Meta account is not rent exempt */
-  MetadataNotRentExempt = "MetadataNotRentExempt",
-}
-
 // Base types, implemented by each chain package
 export interface Stream {
   magic: number;
@@ -254,6 +202,8 @@ export interface Stream {
   fundsUnlockedAtLastRateChange: BN;
 
   type: StreamType;
+
+  isAligned?: boolean;
 
   unlocked(currentTimestamp: number): BN;
 
