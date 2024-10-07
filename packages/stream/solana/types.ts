@@ -1,11 +1,37 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js";
+import { AccountInfo, PublicKey, Keypair, VersionedTransaction, TransactionInstruction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
+import { Address, type IdlTypes } from "@coral-xyz/anchor";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import { IRecipient, Stream, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
+import { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
+
+export { IChain, ICluster, ContractError } from "@streamflow/common";
+
+type AlignedUnlocksTypes = IdlTypes<AlignedUnlocksIDL>;
+
+export type AlignedUnlocksContract = AlignedUnlocksTypes["contract"];
+export type OracleType = AlignedUnlocksTypes["oracleType"];
+export type TestOracle = AlignedUnlocksTypes["testOracle"];
+
+export type CreateParams = AlignedUnlocksTypes["createParams"];
+export type ChangeOracleParams = AlignedUnlocksTypes["changeOracleParams"];
+export type CreateTestOracleParams = AlignedUnlocksTypes["createTestOracleParams"];
+export type UpdateTestOracleParams = AlignedUnlocksTypes["updateTestOracleParams"];
+
+export type IAlignedUnlockConfig = {
+  minPrice: BN;
+  maxPrice: BN;
+  minPercentage: BN;
+  maxPercentage: BN;
+  oracleType?: OracleType;
+  skipInitial?: boolean;
+  tickSize?: BN;
+  priceOracle?: Address;
+};
 
 export interface ISearchStreams {
   mint?: string;
@@ -27,6 +53,7 @@ export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSo
   // allow custom Metadata Account to be passed, ephemeral signer is most cases, accepts array to be compatible in createMultiple
   metadataPubKeys?: PublicKey[];
   partner?: string | null;
+  alignedConfigParams?: IAlignedUnlockConfig;
 }
 
 export interface IInteractStreamSolanaExt extends ITransactionSolanaExt {
@@ -37,6 +64,12 @@ export interface IInteractStreamSolanaExt extends ITransactionSolanaExt {
 export interface ITopUpStreamSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
   isNative?: boolean;
+}
+
+export interface ICreateStreamInstructions {
+  ixs: TransactionInstruction[];
+  metadata: Keypair | undefined;
+  metadataPubKey: PublicKey;
 }
 
 export class Contract implements Stream {
@@ -126,6 +159,8 @@ export class Contract implements Stream {
 
   type: StreamType;
 
+  isAligned?: boolean;
+
   constructor(stream: DecodedStream) {
     this.magic = stream.magic.toNumber();
     this.version = stream.version.toNumber();
@@ -170,6 +205,7 @@ export class Contract implements Stream {
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
     this.type = buildStreamType(this);
+    this.isAligned = false;
   }
 
   unlocked(currentTimestamp: number): BN {
@@ -227,6 +263,99 @@ export interface DecodedStream {
   pauseCumulative: BN;
   lastRateChangeTime: BN;
   fundsUnlockedAtLastRateChange: BN;
+}
+
+export enum SolanaAlignedProxyErrorCode {
+  /** Authority does not have permission for this action */
+  Unauthorized = "Unauthorized",
+
+  /** Arithmetic error */
+  ArithmeticError = "ArithmeticError",
+
+  /** Mint has unsupported Token Extensions */
+  UnsupportedTokenExtensions = "UnsupportedTokenExtensions",
+
+  /** Provided period is too short, should be equal or more than 30 seconds */
+  PeriodTooShort = "PeriodTooShort",
+
+  /** Provided percentage tick size is invalid */
+  InvalidTickSize = "InvalidTickSize",
+
+  /** Provided percentage bounds are invalid */
+  InvalidPercentageBoundaries = "InvalidPercentageBoundaries",
+
+  /** Provided price bounds are invalid */
+  InvalidPriceBoundaries = "InvalidPriceBoundaries",
+
+  /** Unsupported price oracle */
+  UnsupportedOracle = "UnsupportedOracle",
+
+  /** Invalid oracle account */
+  InvalidOracleAccount = "InvalidOracleAccount",
+
+  /** Invalid oracle price */
+  InvalidOraclePrice = "InvalidOraclePrice",
+
+  /** Invalid Stream Metadata */
+  InvalidStreamMetadata = "InvalidStreamMetadata",
+
+  /** Release amount has already been updated in this period */
+  AmountAlreadyUpdated = "AmountAlreadyUpdated",
+
+  /** All funds are already unlocked */
+  AllFundsUnlocked = "AllFundsUnlocked",
+}
+
+/**
+ * Error codes raised by Solana protocol specifically
+ */
+export enum SolanaContractErrorCode {
+  /** Accounts not writable */
+  AccountsNotWritable = "AccountsNotWritable",
+  /** Invalid Metadata */
+  InvalidMetadata = "InvalidMetadata",
+  /** Invalid metadata account */
+  InvalidMetadataAccount = "InvalidMetadataAccount",
+  /** Provided accounts don't match the ones in contract */
+  MetadataAccountMismatch = "MetadataAccountMismatch",
+  /** Invalid escrow account */
+  InvalidEscrowAccount = "InvalidEscrowAccount",
+  /** Provided account(s) is/are not valid associated token accounts */
+  NotAssociated = "NotAssociated",
+  /** Sender mint does not match accounts mint */
+  MintMismatch = "MintMismatch",
+  /** Recipient not transferable for account */
+  TransferNotAllowed = "TransferNotAllowed",
+  /** Contract closed */
+  ContractClosed = "ContractClosed",
+  /** Invalid Streamflow Treasury accounts supplied */
+  InvalidTreasury = "InvalidTreasury",
+  /** Given timestamps are invalid */
+  InvalidTimestamps = "InvalidTimestamps",
+  /** Invalid deposit configuration */
+  InvalidDepositConfiguration = "InvalidDepositConfiguration",
+  /** Amount cannot be zero */
+  AmountIsZero = "AmountIsZero",
+  /** Amount requested is larger than available */
+  AmountMoreThanAvailable = "AmountMoreThanAvailable",
+  /** Amount currently available is zero */
+  AmountAvailableIsZero = "AmountAvailableIsZero",
+  /** Arithmetic error */
+  ArithmeticError = "ArithmeticError",
+  /** Metadata account data must be 1104 bytes long */
+  InvalidMetadataSize = "InvalidMetadataSize",
+  /** Metadata state account must be initialized */
+  UninitializedMetadata = "UninitializedMetadata",
+  /** Authority does not have permission for this action */
+  Unauthorized = "Unauthorized",
+  /** Contract is not transferable to the original recipient */
+  SelfTransfer = "SelfTransfer",
+  /** Contract is already paused */
+  AlreadyPaused = "AlreadyPaused",
+  /** Contract is not paused */
+  NotPaused = "NotPaused",
+  /** Meta account is not rent exempt */
+  MetadataNotRentExempt = "MetadataNotRentExempt",
 }
 
 export interface MetadataRecipientHashMap {
