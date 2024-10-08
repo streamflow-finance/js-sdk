@@ -28,6 +28,7 @@ import StakePoolIDL from "./descriptor/idl/stake_pool.json";
 import { RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
 import { StakePool as StakePoolProgramType } from "./descriptor/stake_pool.js";
 import {
+  deriveConfigPDA,
   deriveFeeValuePDA,
   deriveRewardPoolPDA,
   deriveRewardVaultPDA,
@@ -163,6 +164,20 @@ export class SolanaStakingClient {
   ): Promise<ProgramAccount<RewardEntry>[]> {
     const { rewardPoolProgram } = this.programs;
     return rewardPoolProgram.account.rewardEntry.all(getFilters(criteria, REWARD_ENTRY_BYTE_OFFSETS));
+  }
+
+  async getFee(target: string | PublicKey): Promise<FeeValue> {
+    const perTargetFee = await this.getFeeValueIfExists(target);
+    if (perTargetFee) {
+      return perTargetFee;
+    }
+    return this.getDefaultFeeValue();
+  }
+
+  getDefaultFeeValue(): Promise<FeeValue> {
+    const { feeManagerProgram } = this.programs;
+    const feeValueKey = deriveConfigPDA(feeManagerProgram.programId);
+    return feeManagerProgram.account.feeValue.fetch(feeValueKey);
   }
 
   getFeeValueIfExists(target: string | PublicKey): Promise<FeeValue | null> {
