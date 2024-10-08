@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-import { ContractError } from "./types";
+import { ContractError } from "./types.js";
 
 const FEE_PRECISION = 4;
 const FEE_NORMALIZER = 10 ** FEE_PRECISION;
@@ -68,5 +68,3 @@ export async function handleContractError<T>(
     throw err;
   }
 }
-
-export { normalizeAptosAddress } from "../aptos/utils";

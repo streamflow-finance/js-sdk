@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-import { ContractError } from "./types";
+import { ContractError } from "../types.js";
 
 /**
  * Used for conversion of token amounts to their Big Number representation.
@@ -58,3 +58,5 @@ export async function handleContractError<T>(
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export const divCeilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigInt(1) : BigInt(0));

@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-import { StreamType } from "./types";
+import { StreamType } from "./types.js";
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
@@ -41,7 +41,7 @@ export const calculateUnlockedAmount = ({
 };
 
 export const isCliffCloseToDepositedAmount = (streamData: { depositedAmount: BN; cliffAmount: BN }): boolean => {
-  return streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN("1")));
+  return streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN(1)));
 };
 
 export const isPayment = (streamData: { canTopup: boolean }): boolean => {

@@ -1,50 +1,54 @@
 {
   "name": "@streamflow/stream",
-  "version": "6.5.1",
+  "version": "7.0.0-alpha.12",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./aptos": "./dist/aptos/index.js",
-    "./evm": "./dist/evm/index.js",
-    "./solana": "./dist/solana/index.js",
-    "./sui": "./dist/sui/index.js"
-  },
-  "typesVersions": {
-    "*": {
-      "aptos": [
-        "dist/aptos/index.d.ts"
-      ],
-      "evm": [
-        "dist/evm/index.d.ts"
-      ],
-      "solana": [
-        "dist/solana/index.d.ts"
-      ],
-      "sui": [
-        "dist/sui/index.d.ts"
-      ]
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/esm/index.d.ts"
+    },
+    "./aptos": {
+      "import": "./dist/esm/aptos/index.js",
+      "require": "./dist/cjs/aptos/index.js",
+      "types": "./dist/esm/aptos/index.d.ts"
+    },
+    "./evm": {
+      "import": "./dist/esm/evm/index.js",
+      "require": "./dist/cjs/evm/index.js",
+      "types": "./dist/esm/evm/index.d.ts"
+    },
+    "./solana": {
+      "import": "./dist/esm/solana/index.js",
+      "require": "./dist/cjs/solana/index.js",
+      "types": "./dist/esm/solana/index.d.ts"
+    },
+    "./sui": {
+      "import": "./dist/esm/sui/index.js",
+      "require": "./dist/cjs/sui/index.js",
+      "types": "./dist/esm/sui/index.d.ts"
     }
   },
   "scripts": {
-    "build": "rm -rf dist; tsc -p tsconfig.json",
+    "build:cjs": "rm -rf dist/cjs; tsc -p tsconfig.cjs.json",
+    "build:esm": "rm -rf dist/esm; tsc -p tsconfig.esm.json",
+    "build": "rm -rf dist; pnpm run build:esm && pnpm run build:cjs",
     "pack": "pnpm build && pnpm pack",
-    "test": "jest .",
+    "test": "vitest",
     "lint": "eslint --fix .",
     "prepublishOnly": "npm run lint && npm test && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
     "@streamflow/eslint-config": "workspace:*",
-    "@types/bn.js": "5.1.1",
     "@types/ethereum-checksum-address": "^0.0.0",
-    "@types/jest": "29.2.4",
     "date-fns": "2.28.0",
-    "jest": "29.3.1",
-    "ts-jest": "29.0.3",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@types/bn.js": "5.1.1"
   },
   "dependencies": {
     "@coral-xyz/borsh": "0.30.1",
@@ -62,7 +66,6 @@
     "bs58": "5.0.0",
     "ethereum-checksum-address": "0.0.8",
     "ethers": "5.7.2",
-    "js-sha256": "0.9.0",
-    "p-queue": "^6.6.2"
+    "p-queue": "^8.0.1"
   }
 }

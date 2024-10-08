@@ -1,13 +1,12 @@
 import { TransferFeeConfig } from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import { Buffer } from "buffer";
 import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
-import { ContractError } from "@streamflow/common";
+import { ContractError, divCeilN } from "@streamflow/common";
 import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@streamflow/common/solana";
 
 import { fromTxError } from "./generated/errors";
 import { ONE_IN_BASIS_POINTS } from "./constants";
-
-export const divCeilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigInt(1) : BigInt(0));
 
 export function getDistributorPda(programId: PublicKey, mint: PublicKey, version: number): PublicKey {
   // Constructing the seed for the PDA

@@ -1,0 +1,903 @@
+{
+  "address": "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
+  "metadata": {
+    "name": "reward_pool",
+    "version": "1.0.0",
+    "spec": "0.1.0",
+    "description": "Program to manage Reward Pools for Stake Pools and claim rewards from them"
+  },
+  "instructions": [
+    {
+      "name": "change_authority",
+      "discriminator": [50, 106, 66, 104, 99, 118, 145, 88],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": ["Current Authority"],
+          "writable": true,
+          "signer": true,
+          "relations": ["reward_pool"]
+        },
+        {
+          "name": "new_authority"
+        },
+        {
+          "name": "reward_pool",
+          "docs": ["Stake Pool"],
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_rewards",
+      "discriminator": [4, 144, 132, 71, 116, 23, 151, 80],
+      "accounts": [
+        {
+          "name": "reward_pool",
+          "docs": ["Reward Pool"],
+          "writable": true
+        },
+        {
+          "name": "stake_entry",
+          "docs": ["Stake Entry for which rewards are being claimed"]
+        },
+        {
+          "name": "reward_entry",
+          "docs": ["Reward Entry that stores metadata about claimed rewards"],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 101, 119, 97, 114, 100, 45, 101, 110, 116, 114, 121]
+              },
+              {
+                "kind": "account",
+                "path": "reward_pool"
+              },
+              {
+                "kind": "account",
+                "path": "stake_entry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": ["Reward Pool Vault that stores tokens"],
+          "writable": true,
+          "relations": ["reward_pool"]
+        },
+        {
+          "name": "to",
+          "docs": ["Account to send the reward tokens to."],
+          "writable": true
+        },
+        {
+          "name": "claimant",
+          "docs": ["Who is claiming the tokens."],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": ["The mint to claim."],
+          "relations": ["reward_pool"]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_entry",
+      "discriminator": [132, 26, 202, 145, 190, 37, 114, 67],
+      "accounts": [
+        {
+          "name": "reward_pool",
+          "docs": ["Reward Pool"]
+        },
+        {
+          "name": "stake_entry",
+          "docs": ["Stake Entry for which rewards are being claimed"]
+        },
+        {
+          "name": "reward_entry",
+          "docs": ["Reward Entry that stores metadata about claimed rewards"],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 101, 119, 97, 114, 100, 45, 101, 110, 116, 114, 121]
+              },
+              {
+                "kind": "account",
+                "path": "reward_pool"
+              },
+              {
+                "kind": "account",
+                "path": "stake_entry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_entry",
+      "discriminator": [248, 207, 142, 242, 66, 162, 150, 16],
+      "accounts": [
+        {
+          "name": "stake_pool",
+          "docs": ["Original Stake Pool"],
+          "relations": ["reward_pool", "stake_entry"]
+        },
+        {
+          "name": "reward_pool",
+          "docs": ["Reward Pool"]
+        },
+        {
+          "name": "stake_entry",
+          "docs": ["Stake Entry for which rewards are being claimed"]
+        },
+        {
+          "name": "reward_entry",
+          "docs": ["Reward Entry that stores metadata about claimed rewards"],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 101, 119, 97, 114, 100, 45, 101, 110, 116, 114, 121]
+              },
+              {
+                "kind": "account",
+                "path": "reward_pool"
+              },
+              {
+                "kind": "account",
+                "path": "stake_entry"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "docs": ["Rent payer"],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_pool",
+      "discriminator": [233, 146, 209, 142, 207, 104, 64, 188],
+      "accounts": [
+        {
+          "name": "stake_pool",
+          "docs": ["Stake Pool to Which Reward Pool is being added"]
+        },
+        {
+          "name": "reward_pool",
+          "docs": ["Reward Pool to add"],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 101, 119, 97, 114, 100, 45, 112, 111, 111, 108]
+              },
+              {
+                "kind": "account",
+                "path": "stake_pool"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": ["Mint used for rewards"]
+        },
+        {
+          "name": "vault",
+          "docs": ["Escrow Account that will store the tokens"],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 101, 119, 97, 114, 100, 45, 118, 97, 117, 108, 116]
+              },
+              {
+                "kind": "account",
+                "path": "reward_pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "docs": ["Reward Pool creator"],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        },
+        {
+          "name": "reward_amount",
+          "type": "u64"
+        },
+        {
+          "name": "reward_period",
+          "type": "u64"
+        },
+        {
+          "name": "permissionless",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "fund_pool",
+      "discriminator": [36, 57, 233, 176, 181, 20, 87, 159],
+      "accounts": [
+        {
+          "name": "funder",
+          "docs": ["Reward Pool funder"],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "from",
+          "docs": ["Token Account from which tokens will be transferred"],
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "docs": ["Reward Pool Vault that stores tokens"],
+          "writable": true,
+          "relations": ["reward_pool"]
+        },
+        {
+          "name": "mint",
+          "docs": ["Mint of reward tokens"],
+          "relations": ["reward_pool"]
+        },
+        {
+          "name": "reward_pool",
+          "docs": ["Stake Pool"],
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "streamflow_treasury"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
+              ]
+            }
+          }
+        },
+        {
+          "name": "config",
+          "docs": ["Fee Configuration"],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [99, 111, 110, 102, 105, 103]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "fee_program"
+            }
+          }
+        },
+        {
+          "name": "fee_value",
+          "docs": ["Fee Value for the funder account"],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [102, 101, 101, 45, 118, 97, 108, 117, 101]
+              },
+              {
+                "kind": "account",
+                "path": "funder"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "fee_program"
+            }
+          }
+        },
+        {
+          "name": "fee_program",
+          "address": "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_pool",
+      "discriminator": [239, 214, 170, 78, 36, 35, 30, 34],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": ["Current Authority"],
+          "writable": true,
+          "signer": true,
+          "relations": ["reward_pool"]
+        },
+        {
+          "name": "reward_pool",
+          "docs": ["Stake Pool"],
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "reward_amount",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "reward_period",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [155, 12, 170, 224, 30, 250, 204, 130]
+    },
+    {
+      "name": "FeeValue",
+      "discriminator": [10, 188, 89, 64, 4, 183, 231, 0]
+    },
+    {
+      "name": "RewardEntry",
+      "discriminator": [208, 191, 173, 14, 213, 84, 179, 162]
+    },
+    {
+      "name": "RewardPool",
+      "discriminator": [134, 121, 197, 211, 133, 154, 82, 32]
+    },
+    {
+      "name": "StakeEntry",
+      "discriminator": [187, 127, 9, 35, 155, 68, 86, 40]
+    },
+    {
+      "name": "StakePool",
+      "discriminator": [121, 34, 206, 21, 79, 127, 255, 28]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ArithmeticError",
+      "msg": "Arithmetic Error (overflow/underflow)"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidRewardAmount",
+      "msg": "Reward amount should be more than 0"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidRewardPeriod",
+      "msg": "Reward period should be more than 0"
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Account is not authorized to execute this instruction"
+    },
+    {
+      "code": 6004,
+      "name": "OwnerMismatch",
+      "msg": "Token account owner did not match intended owner"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidRewardVault",
+      "msg": "Provided Reward Vault is Invalid"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidRewardEntry",
+      "msg": "Provided Reward Entry is Invalid"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidStakeEntry",
+      "msg": "Provided Stake Entry is Invalid"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidRewardPool",
+      "msg": "Provided Reward Pool is Invalid"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidMint",
+      "msg": "Invalid Mint"
+    },
+    {
+      "code": 6010,
+      "name": "StakeEntryClosed",
+      "msg": "Stake Entry is closed, rewards are not claimable anymore"
+    },
+    {
+      "code": 6011,
+      "name": "StakeEntryOpened",
+      "msg": "Stake Entry is still opened, closing is not possible"
+    },
+    {
+      "code": 6012,
+      "name": "RewardPoolDrained",
+      "msg": "Reward Pool does not have enough Rewards for Claiming"
+    }
+  ],
+  "types": [
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": ["Fee Manager authority"],
+            "type": "pubkey"
+          },
+          {
+            "name": "streamflow_fee",
+            "docs": ["Default fee"],
+            "type": "u64"
+          },
+          {
+            "name": "_buffer_1",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 64]
+            }
+          },
+          {
+            "name": "_buffer_2",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 64]
+            }
+          },
+          {
+            "name": "_buffer_3",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 64]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeValue",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "streamflow_fee",
+            "type": "u64"
+          },
+          {
+            "name": "_buffer",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 64]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "reward_pool",
+            "docs": ["Reward Pool"],
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_entry",
+            "docs": ["Stake Entry for which reward entry was initialized"],
+            "type": "pubkey"
+          },
+          {
+            "name": "created_ts",
+            "docs": ["Timestamp when reward entry has been created"],
+            "type": "u64"
+          },
+          {
+            "name": "accounted_amount",
+            "docs": ["Sum of accounted amounts, used to correctly issue rewards in case of precision loss"],
+            "type": "u128"
+          },
+          {
+            "name": "claimed_amount",
+            "docs": ["Sum of already claimed rewards"],
+            "type": "u64"
+          },
+          {
+            "name": "last_accounted_ts",
+            "docs": ["Timestamp when rewards have been claimed last time"],
+            "type": "u64"
+          },
+          {
+            "name": "last_reward_amount",
+            "docs": ["Reward amount used on last claim or entry creation"],
+            "type": "u64"
+          },
+          {
+            "name": "last_reward_period",
+            "docs": ["Reward Period used on last claim or entry creation"],
+            "type": "u64"
+          },
+          {
+            "name": "_buffer",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 32]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": ["Bump Seed used to sign transactions"],
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "docs": ["Nonce to differentiate pools for the same mint"],
+            "type": "u8"
+          },
+          {
+            "name": "stake_pool",
+            "docs": ["Stake Pool for which Reward Pool was added"],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "docs": ["Mint of Reward Pool"],
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "docs": ["Creator of the Pool"],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": ["Current authority"],
+            "type": "pubkey"
+          },
+          {
+            "name": "reward_amount",
+            "docs": [
+              "Amount of rewards that will be distributed per effective stake",
+              "",
+              "Should be a fraction of a raw token amount which is 1 / 10^9,",
+              "i.e. `reward_amount` of `1_000_000_000` equals one raw token per effective stake"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reward_period",
+            "docs": ["Period of Rewards distribution in seconds"],
+            "type": "u64"
+          },
+          {
+            "name": "permissionless",
+            "docs": ["Whether anyone can fund the Pool"],
+            "type": "bool"
+          },
+          {
+            "name": "last_reward_amount",
+            "docs": ["`reward_amount` used before the last update"],
+            "type": "u64"
+          },
+          {
+            "name": "last_reward_period",
+            "docs": ["`reward_period` used before the last update"],
+            "type": "u64"
+          },
+          {
+            "name": "last_amount_update_ts",
+            "docs": ["Time when `reward_amount` was updated the last time"],
+            "type": "u64"
+          },
+          {
+            "name": "last_period_update_ts",
+            "docs": ["Time when `reward_period` was updated the last time"],
+            "type": "u64"
+          },
+          {
+            "name": "vault",
+            "docs": ["Escrow Account that stores reward tokens"],
+            "type": "pubkey"
+          },
+          {
+            "name": "funded_amount",
+            "docs": ["Total funded amount"],
+            "type": "u64"
+          },
+          {
+            "name": "claimed_amount",
+            "docs": ["Total number of rewards claimed"],
+            "type": "u64"
+          },
+          {
+            "name": "created_ts",
+            "docs": ["Time when Reward Pool was created"],
+            "type": "u64"
+          },
+          {
+            "name": "_buffer",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 56]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "docs": ["Nonce to differentiate stakes for the same pool"],
+            "type": "u32"
+          },
+          {
+            "name": "stake_pool",
+            "docs": ["Stake Pool for which tokens were staked"],
+            "type": "pubkey"
+          },
+          {
+            "name": "payer",
+            "docs": ["Original Owner of Staked tokens"],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": ["Authority of the Entry"],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": ["Amount of deposited funds"],
+            "type": "u64"
+          },
+          {
+            "name": "duration",
+            "docs": ["Duration of the lockup"],
+            "type": "u64"
+          },
+          {
+            "name": "effective_amount",
+            "docs": ["Effective Amount staked, does not equal to deposited amount, accounts for Stake Weight"],
+            "type": "u128"
+          },
+          {
+            "name": "created_ts",
+            "docs": ["Timestamp when Deposit was made"],
+            "type": "u64"
+          },
+          {
+            "name": "closed_ts",
+            "docs": ["Flag whether entry has been already unstaked"],
+            "type": "u64"
+          },
+          {
+            "name": "_buffer",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 64]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakePool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": ["Bump Seed used to sign transactions"],
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "docs": ["Nonce to differentiate pools for the same mint"],
+            "type": "u8"
+          },
+          {
+            "name": "mint",
+            "docs": ["Mint of the Stake Pool"],
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "docs": ["Initial Creator"],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": ["Current authority"],
+            "type": "pubkey"
+          },
+          {
+            "name": "min_weight",
+            "docs": [
+              "The lowest weight awarded for staking, measured as a fraction of `1 / SCALE_FACTOR_BASE`.",
+              "For instance:",
+              "* `min_weight = 1 x SCALE_FACTOR_BASE` signifies a minimum multiplier of 1x for min staking duration",
+              "* `min_weight = 2 x SCALE_FACTOR_BASE` indicates a minimum multiplier of 2x for min staking duration"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_weight",
+            "docs": [
+              "The highest weight awarded for staking, measured as a fraction of `1 / SCALE_FACTOR_BASE`.",
+              "For instance:",
+              "* `max_weight = 1 x SCALE_FACTOR_BASE` signifies a max multiplier of 1x for max staking duration",
+              "* `max_weight = 2 x SCALE_FACTOR_BASE` indicates a max multiplier of 2x for max staking duration"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_duration",
+            "docs": ["Min Duration of stake in seconds"],
+            "type": "u64"
+          },
+          {
+            "name": "max_duration",
+            "docs": ["Max Duration of stake in seconds, the more duration, the more weight the stake has"],
+            "type": "u64"
+          },
+          {
+            "name": "permissionless",
+            "docs": ["Whether anyone can add Reward Pools or just admin"],
+            "type": "bool"
+          },
+          {
+            "name": "vault",
+            "docs": ["Escrow Account that stores staked tokens"],
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_mint",
+            "docs": ["Stake Mint, will be returned in exchange for stake tokens"],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_stake",
+            "docs": ["Total number of Staked tokens"],
+            "type": "u64"
+          },
+          {
+            "name": "total_effective_stake",
+            "docs": [
+              "Total staked tokens accounting for each stake weight, does not equal `total_stake`,",
+              "represents a sum of effective stake multiplied by 10^9 for precision"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "_buffer",
+            "docs": ["Buffer for additional fields"],
+            "type": {
+              "array": ["u8", 64]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

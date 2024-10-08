@@ -1,7 +1,7 @@
-export { default, default as AptosStreamClient } from "./StreamClient";
+export { default, default as AptosStreamClient } from "./StreamClient.js";
 
-export * from "./utils";
+export * from "./utils.js";
 
-export * from "./types";
+export * from "./types.js";
 
-export * as constants from "./constants";
+export * as constants from "./constants.js";

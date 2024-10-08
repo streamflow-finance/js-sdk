@@ -1,12 +1,4 @@
 {
-    "extends": [
-        "../../typedoc.base.json"
-    ],
-    "entryPoints": [
-        "./index.ts",
-        "./aptos/index.ts",
-        "./evm/index.ts",
-        "./solana/index.ts",
-        "./sui/index.ts"
-    ]
+  "extends": ["../../typedoc.base.json"],
+  "entryPoints": ["./index.ts", "./aptos/index.ts", "./evm/index.ts", "./solana/index.ts", "./sui/index.ts"]
 }

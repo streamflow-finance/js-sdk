@@ -1,14 +1,15 @@
 {
-    "prettier.requireConfig": true,
-    "eslint.enable": true,
-    "eslint.debug": false,
-    "eslint.workingDirectories": [
-        // Monorepo directories
-        {
-            "pattern": "./packages/*/"
-        }
-    ],
-    "cSpell.words": [
-        "Streamflow"
-    ]
+  "prettier.requireConfig": false,
+  "eslint.enable": true,
+  "eslint.debug": false,
+  "eslint.workingDirectories": [
+    // Monorepo directories
+    {
+      "pattern": "./packages/*/"
+    }
+  ],
+  "cSpell.words": ["permissionless", "Solana", "Streamflow", "Unstake"],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "javascript.preferences.importModuleSpecifierEnding": "js"
 }

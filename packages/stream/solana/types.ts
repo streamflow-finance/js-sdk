@@ -3,9 +3,9 @@ import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/w
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { IRecipient, Stream, StreamType } from "../common/types";
-import { getNumberFromBN } from "../common/utils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { IRecipient, Stream, StreamType } from "../common/types.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface ISearchStreams {
   mint?: string;

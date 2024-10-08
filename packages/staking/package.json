@@ -1,0 +1,48 @@
+{
+  "name": "@streamflow/staking",
+  "version": "7.0.0-alpha.11",
+  "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
+  "homepage": "https://github.com/streamflow-finance/js-sdk/",
+  "main": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/esm/index.d.ts"
+    },
+    "./solana": {
+      "import": "./dist/esm/solana/index.js",
+      "require": "./dist/cjs/solana/index.js",
+      "types": "./dist/esm/solana/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build:cjs": "rm -rf dist/cjs; tsc -p tsconfig.cjs.json",
+    "build:esm": "rm -rf dist/esm; tsc -p tsconfig.esm.json",
+    "build": "rm -rf dist; pnpm run build:cjs && pnpm run build:esm",
+    "pack": "pnpm build && pnpm pack",
+    "lint": "eslint --fix .",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
+  "devDependencies": {
+    "@streamflow/eslint-config": "workspace:*",
+    "@types/bn.js": "5.1.1",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.0",
+    "@coral-xyz/borsh": "^0.29.0",
+    "@solana/buffer-layout": "4.0.1",
+    "@solana/spl-token": "0.3.6",
+    "@solana/wallet-adapter-base": "0.9.19",
+    "@solana/web3.js": "1.70.1",
+    "@streamflow/common": "workspace:*",
+    "bn.js": "5.2.1",
+    "borsh": "^2.0.0",
+    "bs58": "5.0.0",
+    "p-queue": "^8.0.1"
+  }
+}

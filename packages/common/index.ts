@@ -1,2 +1,3 @@
-export * from "./types";
-export * from "./utils";
+export * from "./types.js";
+export * from "./lib/assertions.js";
+export * from "./lib/utils.js";

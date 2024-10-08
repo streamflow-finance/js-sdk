@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import BN from "bn.js";
 import { toChecksumAddress } from "ethereum-checksum-address";
 
-import { BaseStreamClient } from "../common/BaseStreamClient";
+import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
   ICancelData,
   IChain,
@@ -23,13 +23,13 @@ import {
   IWithdrawData,
   Stream,
   StreamDirection,
-} from "../common/types";
-import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants";
-import abi from "./abi";
-import ercAbi from "./ercAbi";
-import { BASE_FEE, WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants";
-import { EvmContract, FeesAbiResult, StreamAbiResult } from "./types";
-import { extractEvmErrorCode } from "./utils";
+} from "../common/types.js";
+import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants.js";
+import abi from "./abi.js";
+import ercAbi from "./ercAbi.js";
+import { BASE_FEE, WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
+import { EvmContract, FeesAbiResult, StreamAbiResult } from "./types.js";
+import { extractEvmErrorCode } from "./utils.js";
 
 export default class EvmStreamClient extends BaseStreamClient {
   private programId: string;

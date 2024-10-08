@@ -1,11 +1,12 @@
 import { AptosAccount } from "aptos";
 import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
+import { Buffer } from "buffer";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream, StreamType } from "../common/types";
-import { getNumberFromBN } from "../common/utils";
-import { normalizeAptosAddress } from "./utils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { Stream, StreamType } from "../common/types.js";
+import { normalizeAptosAddress } from "./utils.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface ICreateStreamAptosExt {
   senderWallet: WalletContextState | AptosAccount;

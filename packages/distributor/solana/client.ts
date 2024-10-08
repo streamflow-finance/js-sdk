@@ -140,14 +140,14 @@ export default class SolanaDistributorClient {
     const senderTokens = await ata(mint, extParams.invoker.publicKey, tokenProgramId);
 
     const args: NewDistributorArgs = {
-      version: new BN(data.version, 10),
+      version: new BN(data.version),
       root: data.root,
-      maxTotalClaim: data.maxTotalClaim,
-      maxNumNodes: data.maxNumNodes,
-      unlockPeriod: new BN(data.unlockPeriod, 10),
-      startVestingTs: new BN(data.startVestingTs, 10),
-      endVestingTs: new BN(data.endVestingTs, 10),
-      clawbackStartTs: new BN(data.clawbackStartTs, 10),
+      maxTotalClaim: new BN(data.maxTotalClaim),
+      maxNumNodes: new BN(data.maxNumNodes),
+      unlockPeriod: new BN(data.unlockPeriod),
+      startVestingTs: new BN(data.startVestingTs),
+      endVestingTs: new BN(data.endVestingTs),
+      clawbackStartTs: new BN(data.clawbackStartTs),
       claimsClosable: data.claimsClosable,
     };
     const accounts: NewDistributorAccounts = {
@@ -162,12 +162,14 @@ export default class SolanaDistributorClient {
     };
 
     if (extParams.isNative) {
-      ixs.push(...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, data.maxTotalClaim)));
+      ixs.push(
+        ...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, new BN(data.maxTotalClaim))),
+      );
     }
 
     const nowTs = new BN(Math.floor(Date.now() / 1000));
-    const endVestingTs = args.endVestingTs.eqn(0) ? nowTs : args.endVestingTs;
-    const startVestingTs = args.startVestingTs.eqn(0) ? nowTs : args.startVestingTs;
+    const endVestingTs = args.endVestingTs.isZero() ? nowTs : args.endVestingTs;
+    const startVestingTs = args.startVestingTs.isZero() ? nowTs : args.startVestingTs;
     if (endVestingTs.gt(startVestingTs) && endVestingTs.sub(startVestingTs).lt(args.unlockPeriod)) {
       throw new Error("The unlock period cannot be longer than the total vesting duration!");
     }
@@ -280,15 +282,18 @@ export default class SolanaDistributorClient {
 
     if (!claimStatus) {
       const args: NewClaimArgs = {
-        amountLocked: data.amountLocked,
-        amountUnlocked: data.amountUnlocked,
+        amountLocked: new BN(data.amountLocked),
+        amountUnlocked: new BN(data.amountUnlocked),
         proof: data.proof,
       };
       ixs.push(newClaim(args, accounts, this.programId));
     }
 
     const nowTs = new BN(Math.floor(Date.now() / 1000));
-    if (claimStatus || (data.amountLocked.gtn(0) && nowTs.sub(distributor.startTs).gte(distributor.unlockPeriod))) {
+    if (
+      claimStatus ||
+      (new BN(data.amountLocked).gtn(0) && nowTs.sub(distributor.startTs).gte(distributor.unlockPeriod))
+    ) {
       ixs.push(claimLocked(accounts, this.programId));
     }
 

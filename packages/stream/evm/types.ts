@@ -1,31 +1,31 @@
 import BN from "bn.js";
-import { BigNumber } from "ethers";
+import { BigNumber as BigNumberEvm } from "ethers";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream, StreamType } from "../common/types";
-import { getNumberFromBN } from "../common/utils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { Stream, StreamType } from "../common/types.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface StreamAbiResult {
-  amount: BigNumber;
-  amount_per_period: BigNumber;
-  canceled_at: BigNumber;
-  cliff_amount: BigNumber;
+  amount: BigNumberEvm;
+  amount_per_period: BigNumberEvm;
+  canceled_at: BigNumberEvm;
+  cliff_amount: BigNumberEvm;
   closed: boolean;
-  created: BigNumber;
-  current_pause_start: BigNumber;
-  end: BigNumber;
+  created: BigNumberEvm;
+  current_pause_start: BigNumberEvm;
+  end: BigNumberEvm;
   fees: {
-    streamflow_fee_percentage: BigNumber;
-    streamflow_fee: BigNumber;
-    streamflow_fee_withdrawn: BigNumber;
-    partner_fee_percentage: BigNumber;
-    partner_fee: BigNumber;
-    partner_fee_withdrawn: BigNumber;
-    tx_fee: BigNumber;
+    streamflow_fee_percentage: BigNumberEvm;
+    streamflow_fee: BigNumberEvm;
+    streamflow_fee_withdrawn: BigNumberEvm;
+    partner_fee_percentage: BigNumberEvm;
+    partner_fee: BigNumberEvm;
+    partner_fee_withdrawn: BigNumberEvm;
+    tx_fee: BigNumberEvm;
   };
-  funds_unlocked_at_last_rate_change: BigNumber;
-  last_rate_change_time: BigNumber;
-  last_withdrawn_at: BigNumber;
+  funds_unlocked_at_last_rate_change: BigNumberEvm;
+  last_rate_change_time: BigNumberEvm;
+  last_withdrawn_at: BigNumberEvm;
   meta: {
     automatic_withdrawal: boolean;
     can_topup: boolean;
@@ -36,22 +36,22 @@ export interface StreamAbiResult {
     pausable: boolean;
     transferable_by_recipient: boolean;
     transferable_by_sender: boolean;
-    withdrawal_frequency: BigNumber;
+    withdrawal_frequency: BigNumberEvm;
   };
-  pause_cumulative: BigNumber;
-  period: BigNumber;
+  pause_cumulative: BigNumberEvm;
+  period: BigNumberEvm;
   recipient: string;
   sender: string;
   partner: string;
-  start: BigNumber;
+  start: BigNumberEvm;
   token: string;
-  withdrawn: BigNumber;
+  withdrawn: BigNumberEvm;
 }
 
 export interface FeesAbiResult {
   exists: boolean;
-  streamflow_fee: BigNumber;
-  partner_fee: BigNumber;
+  streamflow_fee: BigNumberEvm;
+  partner_fee: BigNumberEvm;
 }
 
 export class EvmContract implements Stream {

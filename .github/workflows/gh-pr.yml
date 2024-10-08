@@ -5,6 +5,8 @@ on:
     branches:
       - master
       - v6
+      - v7
+      - prerelease/v*
 
 jobs:
   tests:
@@ -14,7 +16,7 @@ jobs:
         node-version: [18, 20]
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
       - name: Use Node.js ${{ matrix.node-version }}

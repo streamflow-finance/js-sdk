@@ -4,9 +4,9 @@ import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui.js/client";
 import BN from "bn.js";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils";
-import { Stream, StreamType } from "../common/types";
-import { getNumberFromBN } from "../common/utils";
+import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { Stream, StreamType } from "../common/types.js";
+import { getNumberFromBN } from "../common/utils.js";
 
 export interface ICreateStreamSuiExt {
   senderWallet: WalletContextState | Keypair;

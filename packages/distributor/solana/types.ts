@@ -1,8 +1,8 @@
-import BN from "bn.js";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Keypair } from "@solana/web3.js";
 import { ITransactionResult } from "@streamflow/common";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
+import BN from "bn.js";
 
 export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
@@ -17,8 +17,8 @@ export interface ICreateDistributorData {
   version: number;
 
   root: Array<number>;
-  maxTotalClaim: BN;
-  maxNumNodes: BN;
+  maxTotalClaim: BN | number | string;
+  maxNumNodes: BN | number | string;
   unlockPeriod: number;
   startVestingTs: number;
   endVestingTs: number;

@@ -26,23 +26,22 @@
     "test": "lerna run test",
     "lint": "lerna run lint",
     "version-all": "lerna version --force-publish --no-git-tag-version --no-push",
-    "publish": "lerna publish from-package --yes",
+    "publish": "lerna publish from-package --yes --loglevel=verbose",
     "local-publish": "lerna publish --no-git-tag-version --no-push --registry=\"http://localhost:4873/\" from-package --yes",
     "local-unpublish": "lerna exec -- npm unpublish --registry=\"http://localhost:4873/\" \"\\${LERNA_PACKAGE_NAME}@\\$(npm view \\$LERNA_PACKAGE_NAME version)\"",
     "local-unpublish-all": "lerna exec -- npm unpublish -f --registry=\"http://localhost:4873/\" \"\\${LERNA_PACKAGE_NAME}\"",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "convert-bn": "./scripts/convertBN.sh"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.3",
-    "@types/jest": "29.2.4",
     "eslint": "^8.56.0",
     "husky": "^8.0.0",
-    "jest": "^29.7.0",
     "lerna": "7.4.2",
     "lint-staged": "^13.1.0",
-    "ts-jest": "^29.1.1",
     "typedoc": "0.25.11",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.0.5"
   },
   "version": "4.0.1"
 }

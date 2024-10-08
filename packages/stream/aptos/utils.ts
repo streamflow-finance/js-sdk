@@ -1,4 +1,4 @@
-import { APTOS_ERROR_MATCH_REGEX } from "./constants";
+import { APTOS_ERROR_MATCH_REGEX } from "./constants.js";
 
 export function extractAptosErrorCode(errorText: string): string | null {
   const match = APTOS_ERROR_MATCH_REGEX.exec(errorText);

@@ -2,22 +2,20 @@
 module.exports = {
   extends: [
     "airbnb-typescript",
-    "plugin:jest/recommended",
     "plugin:import/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
   ],
-  plugins: ["@typescript-eslint", "jest", "import"],
+  plugins: ["@typescript-eslint", "import"],
   env: {
     browser: true,
     es6: true,
-    jest: true,
   },
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: "module",
-    project: ["./tsconfig.json"],
+    project: ["./tsconfig.esm.json"],
   },
   ignorePatterns: ["**/dist/**/*"],
   rules: {
@@ -40,6 +38,7 @@ module.exports = {
     "no-debugger": "warn",
     "no-console": "warn",
     "import/prefer-default-export": "off",
+    "import/no-unresolved": "warn",
     "no-plusplus": "off",
     "import/named": "off",
     "@typescript-eslint/no-use-before-define": "off",
