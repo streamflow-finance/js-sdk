@@ -22,7 +22,8 @@ API Documentation available here: [docs site →](https://streamflow-finance.git
 Most common imports:
 
 ```javascript
-import { Types, GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
+import { BN } from "bn.js";
+import { GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
 ```
 
 _Check the SDK for other types and utility functions._
@@ -405,8 +406,8 @@ const stream = await client.getOne({
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
 });
 
-const unlocked = stream.unlocked(tsInSeconds); // bignumber amount unlocked at the tsInSeconds
-console.log(getNumberFromBN(unlocked, 9));
+const unlocked = stream.unlocked(tsInSeconds); // BN amount unlocked at the tsInSeconds
+console.log(getNumberFromBN(unlocked, 9)); 
 ```
 
 - Note: unlocked amount is determined based on configuration set on creation, no dynamic data is involved.
@@ -417,7 +418,7 @@ console.log(getNumberFromBN(unlocked, 9));
 const stream = await client.getOne({
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
 });
-const withdrawn = stream.withdrawnAmount; // big number amount withdrawn already
+const withdrawn = stream.withdrawnAmount; // bn amount withdrawn already
 console.log(getNumberFromBN(wihtdrawn, 9));
 const remaining = stream.remaining(9); // amount of remaining funds
 console.log(remaining);
@@ -493,6 +494,10 @@ Streamflow protocol program IDs
 
 E.g, if the amount is 1 SOL than this amount in lamports is `1000 \* 10^9 = 1_000_000_000.`
 
-And `BN(1_000_000_000)` is used.
+And `new BN(1_000_000_000)` is used.
 
 Use `getBN` and `getNumberFromBN` utility functions for conversions between `BN` and `Number` types.
+
+`getBN(1, 9)` is equal to `new BN(1_000_000_000)` 
+
+`getNumberFromBN(new BN(1_000_000_000), 9)` will return 1
