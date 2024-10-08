@@ -1,30 +1,9 @@
 import { TransferFeeConfig } from "@solana/spl-token";
 import { Connection } from "@solana/web3.js";
-// eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
+import { divCeilN } from "@streamflow/common";
 
-import {
-  DEFAULT_FEE_BN,
-  FEE_PRECISION_FACTOR_BN,
-  SCALE_PRECISION_FACTOR,
-  SCALE_PRECISION_FACTOR_BN,
-  U64_MAX,
-} from "./constants.js";
-
-export const calculateStakeWeight = (minDuration: BN, maxDuration: BN, maxWeight: BN, duration: BN) => {
-  const durationSpan = maxDuration.sub(minDuration);
-  if (durationSpan.eq(new BN(0))) {
-    return SCALE_PRECISION_FACTOR_BN;
-  }
-  const durationExceedingMin = duration.sub(minDuration);
-  const normalizedWeight = durationExceedingMin.mul(SCALE_PRECISION_FACTOR_BN).div(durationSpan);
-  const weightDiff = maxWeight.sub(SCALE_PRECISION_FACTOR_BN);
-
-  return BN.max(
-    SCALE_PRECISION_FACTOR_BN.add(normalizedWeight.mul(weightDiff).div(SCALE_PRECISION_FACTOR_BN)),
-    SCALE_PRECISION_FACTOR_BN,
-  );
-};
+import { DEFAULT_FEE_BN, FEE_PRECISION_FACTOR_BN, SCALE_PRECISION_FACTOR, U64_MAX } from "../constants.js";
 
 export const calculateFeeAmount = (amount: BN, fee: BN = DEFAULT_FEE_BN) => {
   if (fee.eq(FEE_PRECISION_FACTOR_BN)) {
@@ -47,8 +26,6 @@ export const calculateDecimalsShift = (maxWeight: bigint, maxShift = 999) => {
   }
   return decimalsShift;
 };
-
-export const divCeilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigInt(1) : BigInt(0));
 
 export async function calculateAmountWithTransferFees(
   connection: Connection,

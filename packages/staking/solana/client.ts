@@ -1,25 +1,12 @@
-import {
-  Address,
-  AnchorError,
-  Program,
-  ProgramAccount,
-  ProgramError,
-  parseIdlErrors,
-  translateError,
-} from "@coral-xyz/anchor";
+import { AnchorError, Program, ProgramAccount, ProgramError, parseIdlErrors, translateError } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import {
-  Commitment,
-  Connection,
-  ConnectionConfig,
-  MemcmpFilter,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { ContractError, ICluster, ITransactionResult } from "@streamflow/common";
+import { Commitment, Connection, ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { ContractError, ICluster, ITransactionResult, invariant } from "@streamflow/common";
 import {
   buildSendThrottler,
   checkOrCreateAtaBatch,
+  getFilters,
+  pk,
   prepareTransaction,
   signAndExecuteTransaction,
 } from "@streamflow/common/solana";
@@ -41,6 +28,14 @@ import StakePoolIDL from "./descriptor/idl/stake_pool.json";
 import { RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
 import { StakePool as StakePoolProgramType } from "./descriptor/stake_pool.js";
 import {
+  deriveFeeValuePDA,
+  deriveRewardPoolPDA,
+  deriveRewardVaultPDA,
+  deriveStakeEntryPDA,
+  deriveStakeMintPDA,
+  deriveStakePoolPDA,
+} from "./lib/derive-accounts.js";
+import {
   ClaimRewardPoolArgs,
   CreateRewardEntryArgs,
   CreateRewardPoolArgs,
@@ -55,14 +50,6 @@ import {
   StakePool,
   UnstakeArgs,
 } from "./types.js";
-import {
-  deriveFeeValuePDA,
-  deriveRewardPoolPDA,
-  deriveRewardVaultPDA,
-  deriveStakeEntryPDA,
-  deriveStakeMintPDA,
-  deriveStakePoolPDA,
-} from "./lib/derive-accounts.js";
 
 interface Programs {
   stakePoolProgram: Program<StakePoolProgramType>;
@@ -85,7 +72,7 @@ interface IInitOptions {
   sendThrottler?: PQueue;
 }
 
-export default class SolanaStakingClient {
+export class SolanaStakingClient {
   connection: Connection;
 
   private commitment: Commitment | ConnectionConfig;
@@ -476,37 +463,4 @@ export default class SolanaStakingClient {
       throw err;
     }
   }
-}
-
-function pk(address: Address): PublicKey {
-  return typeof address === "string" ? new PublicKey(address) : address;
-}
-
-const prefix = "Assertion failed";
-function invariant(condition: any, message?: string | (() => string)): asserts condition {
-  if (condition) {
-    return;
-  }
-  const provided: string | undefined = typeof message === "function" ? message() : message;
-  const value: string = provided ? `${prefix}: ${provided}` : prefix;
-  throw new Error(value);
-}
-
-function getFilters<T extends Record<string, number | PublicKey>>(
-  criteria: T,
-  byteOffsets: Record<keyof T, number>,
-): MemcmpFilter[] {
-  return Object.entries(criteria).reduce((acc, [key, value]) => {
-    const criteriaKey = key as keyof typeof criteria;
-    const effectiveByteOffset = byteOffsets[criteriaKey];
-    if (criteria[criteriaKey] && effectiveByteOffset) {
-      acc.push({
-        memcmp: {
-          offset: effectiveByteOffset,
-          bytes: value.toString(),
-        },
-      });
-    }
-    return acc;
-  }, [] as MemcmpFilter[]);
 }

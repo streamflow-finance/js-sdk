@@ -17,8 +17,8 @@ export interface ICreateDistributorData {
   version: number;
 
   root: Array<number>;
-  maxTotalClaim: BN;
-  maxNumNodes: number | string;
+  maxTotalClaim: BN | number | string;
+  maxNumNodes: BN | number | string;
   unlockPeriod: number;
   startVestingTs: number;
   endVestingTs: number;

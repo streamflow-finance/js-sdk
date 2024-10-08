@@ -2,7 +2,6 @@ import { Address, type IdlTypes } from "@coral-xyz/anchor";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Keypair } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
-// eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
 
 import { RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";

@@ -8,6 +8,7 @@
     "moduleDetection": "force",
     "isolatedModules": false,
     "outDir": "dist/esm",
+    "allowJs": true,
     "sourceMap": false,
     "declaration": true,
     "lib": ["es2022", "dom", "dom.iterable"]

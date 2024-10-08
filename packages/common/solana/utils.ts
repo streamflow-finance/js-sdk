@@ -35,7 +35,7 @@ import {
   ThrottleParams,
   TransactionFailedError,
 } from "./types.js";
-import { sleep } from "../utils.js";
+import { sleep } from "../lib/utils.js";
 
 const SIMULATE_TRIES = 3;
 

@@ -2,6 +2,6 @@
   "extends": "../../tsconfig.esm.json",
   "compilerOptions": {
     "outDir": "./dist/esm",
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": true
   }
 }
