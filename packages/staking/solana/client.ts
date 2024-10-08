@@ -41,6 +41,7 @@ import {
   CreateRewardEntryArgs,
   CreateRewardPoolArgs,
   CreateStakePoolArgs,
+  DefaultFeeValueConfig,
   FeeValue,
   FundPoolArgs,
   IInteractSolanaExt,
@@ -166,7 +167,7 @@ export class SolanaStakingClient {
     return rewardPoolProgram.account.rewardEntry.all(getFilters(criteria, REWARD_ENTRY_BYTE_OFFSETS));
   }
 
-  async getFee(target: string | PublicKey): Promise<FeeValue> {
+  async getFee(target: string | PublicKey): Promise<FeeValue | DefaultFeeValueConfig> {
     const perTargetFee = await this.getFeeValueIfExists(target);
     if (perTargetFee) {
       return perTargetFee;
@@ -174,10 +175,10 @@ export class SolanaStakingClient {
     return this.getDefaultFeeValue();
   }
 
-  getDefaultFeeValue(): Promise<FeeValue> {
+  getDefaultFeeValue(): Promise<DefaultFeeValueConfig> {
     const { feeManagerProgram } = this.programs;
     const feeValueKey = deriveConfigPDA(feeManagerProgram.programId);
-    return feeManagerProgram.account.feeValue.fetch(feeValueKey);
+    return feeManagerProgram.account.config.fetch(feeValueKey);
   }
 
   getFeeValueIfExists(target: string | PublicKey): Promise<FeeValue | null> {

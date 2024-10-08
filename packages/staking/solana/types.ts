@@ -13,6 +13,7 @@ export type StakeEntry = IdlTypes<StakePoolIDL>["stakeEntry"];
 export type RewardEntry = IdlTypes<RewardPoolIDL>["rewardEntry"];
 export type RewardPool = IdlTypes<RewardPoolIDL>["rewardPool"];
 export type FeeValue = IdlTypes<FeeManagerIDL>["feeValue"];
+export type DefaultFeeValueConfig = IdlTypes<FeeManagerIDL>["config"];
 
 export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
