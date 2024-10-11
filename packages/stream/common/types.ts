@@ -30,23 +30,16 @@ export interface IBaseStreamConfig {
   partner?: string;
 }
 
-export type IOracleConfig = {
-  oracleType: OracleTypeName;
-  priceOracle: Address;
-};
-
-export type IPriceConfig = {
+export type IAlignedStreamConfig = {
   minPrice: number;
   maxPrice: number;
   minPercentage: number;
   maxPercentage: number;
+  oracleType?: OracleTypeName;
+  priceOracle?: Address;
   skipInitial?: boolean;
   tickSize?: number;
 };
-
-export type IAlignedStreamConfig =
-  | (IPriceConfig & IOracleConfig)
-  | (IPriceConfig & { [K in keyof IOracleConfig]: undefined });
 
 export type ICreateLinearStreamData = IBaseStreamConfig & IRecipient;
 
@@ -234,7 +227,15 @@ export interface LinearStream {
   remaining(decimals: number): number;
 }
 
-export type AlignedStreamData = Required<Omit<IAlignedStreamConfig, "skipInitial">>;
+export type AlignedStreamData = {
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  oracleType: OracleTypeName;
+  priceOracle: string | undefined;
+  tickSize: number;
+};
 
 export type AlignedStream = LinearStream & AlignedStreamData;
 

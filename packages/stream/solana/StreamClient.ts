@@ -108,7 +108,7 @@ import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
-import { deriveContractPDA, deriveEscrowPDA } from "./lib/derive-accounts.js";
+import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
 const METADATA_ACC_SIZE = 1104;
@@ -251,6 +251,10 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
+    if (!priceOracle && oracleType && oracleType !== "none") {
+      throw new Error("Price oracle is required for the specified oracle type");
+    }
+
     const recipientPublicKey = new PublicKey(recipient);
     const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
 
@@ -264,7 +268,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, metadataPubKey);
 
-    const oracle = priceOracle ?? "";
+    const oracle =
+      priceOracle ?? deriveTestOraclePDA(this.alignedProxyProgram.programId, mintPublicKey, sender.publicKey);
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
