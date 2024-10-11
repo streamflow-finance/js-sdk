@@ -34,9 +34,9 @@ import {
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
+import { getBN } from "@streamflow/common";
 
 import {
-  Account,
   MetadataRecipientHashMap,
   Contract,
   BatchItem,
@@ -45,6 +45,10 @@ import {
   ITopUpStreamSolanaExt,
   ISearchStreams,
   ICreateStreamInstructions,
+  SolanaStream,
+  AlignedContract,
+  DecodedStream,
+  AlignedUnlock,
 } from "./types.js";
 import {
   decodeStream,
@@ -66,6 +70,7 @@ import {
   PARTNERS_SCHEMA,
   STREAM_STRUCT_OFFSETS,
   ORIGINAL_CONTRACT_SENDER_OFFSET,
+  ALIGNED_PRECISION_FACTOR_POW,
 } from "./constants.js";
 import {
   withdrawStreamInstruction,
@@ -103,7 +108,7 @@ import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
-import { deriveContractPDA, deriveEscrowPDA } from "./lib/derive-accounts.js";
+import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 
 const METADATA_ACC_SIZE = 1104;
 
@@ -163,6 +168,10 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
 
+    if (!sender.publicKey) {
+      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
+    }
+
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
 
     if (isNative) {
@@ -170,7 +179,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         address: partnerPublicKey.toString(),
       });
       const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey!, totalAmount)));
+      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
     const { tx, hash, context } = await prepareTransaction(
@@ -225,6 +234,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       cliffAmount,
       amountPerPeriod,
       amount: depositedAmount,
+      name: streamName,
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys, alignedConfigParams } = extParams;
 
@@ -248,12 +258,16 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, metadataPubKey);
 
-    const oracle = priceOracle ?? new PublicKey("8an9aE6j4STjv1cNXaE7SJfqmfjgLUHpBKURjqcAQJbQ"); //deriveTestOraclePDA(this.program.programId, mintPublicKey, sender.publicKey!);
+    const oracle =
+      priceOracle ?? deriveTestOraclePDA(this.alignedProxyProgram.programId, mintPublicKey, sender.publicKey);
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
+
+    const encodedUIntArray = new TextEncoder().encode(streamName);
+    const streamNameArray = Array.from(encodedUIntArray);
 
     const createIx = await this.alignedProxyProgram.methods
       .create({
@@ -268,13 +282,13 @@ export class SolanaStreamClient extends BaseStreamClient {
         cancelableByRecipient,
         cancelableBySender,
         canTopup,
-        oracleType: oracleType ?? { switchboard: {} },
-        streamName: [],
-        minPrice,
-        maxPrice,
-        minPercentage,
-        maxPercentage,
-        tickSize: tickSize || new BN(1),
+        oracleType: oracleType ?? { none: {} },
+        streamName: streamNameArray,
+        minPrice: getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW),
+        maxPrice: getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW),
+        minPercentage: getBN(minPercentage, ALIGNED_PRECISION_FACTOR_POW),
+        maxPercentage: getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW),
+        tickSize: new BN(tickSize || 1),
         skipInitial: skipInitial ?? false,
       })
       .accountsPartial({
@@ -572,6 +586,14 @@ export class SolanaStreamClient extends BaseStreamClient {
     }[] = [];
     const metadataPubKeys = metadataPubKeysExt || [];
 
+    if (recipients.length === 0) {
+      throw new Error("Recipients array is empty!");
+    }
+
+    if (!sender.publicKey) {
+      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
+    }
+
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
       const createStreamData = { ...streamParams, ...recipientData };
@@ -602,7 +624,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
       const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey!,
+        payerKey: sender.publicKey,
         recentBlockhash: hash.blockhash,
         instructions: ixs,
       }).compileToV0Message();
@@ -615,10 +637,10 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     if (isNative) {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey!, totalDepositedAmount);
+      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
 
       const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey!,
+        payerKey: sender.publicKey,
         recentBlockhash: hash.blockhash,
         instructions: nativeInstructions,
       }).compileToV0Message();
@@ -626,7 +648,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
       batch.push({
         tx,
-        recipient: sender.publicKey!.toBase58(),
+        recipient: sender.publicKey.toBase58(),
       });
     }
 
@@ -756,13 +778,8 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts canceling the specified stream.
    */
-  public async cancel(
-    { id, isAlignedUnlock }: ICancelData,
-    extParams: IInteractStreamSolanaExt,
-  ): Promise<ITransactionResult> {
-    const ixs = isAlignedUnlock
-      ? await this.prepareCancelAlignedUnlockInstruction({ id }, extParams)
-      : await this.prepareCancelInstructions({ id }, extParams);
+  public async cancel(cancelData: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
+    const ixs = await this.prepareCancelInstructions(cancelData, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -779,7 +796,26 @@ export class SolanaStreamClient extends BaseStreamClient {
     return { ixs, txId: signature };
   }
 
-  public async prepareCancelAlignedUnlockInstruction(
+  public async prepareCancelInstructions(
+    cancelData: ICancelData,
+    extParams: IInteractStreamSolanaExt,
+  ): Promise<TransactionInstruction[]> {
+    const streamPublicKey = new PublicKey(cancelData.id);
+    const account = await this.connection.getAccountInfo(streamPublicKey);
+    if (!account) {
+      throw new Error("Impossible to cancel a stream contract that does not exist");
+    }
+    const { sender: senderPublicKey } = decodeStream(account.data);
+    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, senderPublicKey);
+
+    const ixs = isAlignedUnlock
+      ? await this.prepareCancelAlignedUnlockInstructions(cancelData, extParams)
+      : await this.prepareCancelStreamInstructions(cancelData, extParams);
+
+    return ixs;
+  }
+
+  public async prepareCancelAlignedUnlockInstructions(
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
@@ -822,7 +858,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates Transaction Instructions for cancel
    */
-  public async prepareCancelInstructions(
+  public async prepareCancelStreamInstructions(
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
@@ -1012,38 +1048,64 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch stream data by its id (address).
    */
-  public async getOne({ id }: IGetOneData): Promise<Stream> {
-    const escrow = await this.connection.getAccountInfo(new PublicKey(id), TX_FINALITY_CONFIRMED);
+  public async getOne({ id }: IGetOneData): Promise<SolanaStream> {
+    const streamPublicKey = new PublicKey(id);
+    const escrow = await this.connection.getAccountInfo(streamPublicKey, TX_FINALITY_CONFIRMED);
     if (!escrow?.data) {
       throw new Error("Couldn't get account info.");
     }
+    const stream = decodeStream(escrow.data);
 
-    return new Contract(decodeStream(escrow?.data));
+    if (this.isAlignedUnlock(streamPublicKey, stream.sender)) {
+      const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
+        deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey),
+      );
+      if (!alignedProxy) {
+        throw new Error("Couldn't get proxy account info.");
+      }
+      return new AlignedContract(stream, alignedProxy);
+    }
+    return new Contract(stream);
   }
 
   /**
    * Fetch all aligned outgoing streams/contracts by the provided public key.
    */
-  public async getOutgoingAligned(publicKey: PublicKey): Promise<Record<string, Stream>> {
-    const streams: Record<string, Contract> = {};
+  private async getOutgoingAlignedStreams(sender: string): Promise<Record<string, SolanaStream>> {
+    const streams: Record<string, SolanaStream> = {};
 
     const alignedOutgoingProgramAccounts = await this.alignedProxyProgram.account.contract.all([
       {
         memcmp: {
           offset: ORIGINAL_CONTRACT_SENDER_OFFSET,
-          bytes: publicKey.toBase58(),
+          bytes: sender,
         },
       },
     ]);
     const streamPubKeys = alignedOutgoingProgramAccounts.map((account) => account.account.stream);
     const streamAccounts = await this.connection.getMultipleAccountsInfo(streamPubKeys, TX_FINALITY_CONFIRMED);
-
     streamAccounts.forEach((account, index) => {
-      const decoded = new Contract(decodeStream(account!.data));
-      decoded.isAligned = true;
-      streams[streamPubKeys[index].toBase58()] = decoded;
+      if (account) {
+        const alignedData = alignedOutgoingProgramAccounts[index].account;
+        streams[alignedData.sender.toBase58()] = new AlignedContract(decodeStream(account.data), alignedData);
+      }
     });
 
+    return streams;
+  }
+
+  private async getIncomingAlignedStreams(
+    streamRecord: Record<string, DecodedStream>,
+  ): Promise<Record<string, SolanaStream>> {
+    const streams: Record<string, SolanaStream> = {};
+    const alignedStreamsPubKeys = Object.keys(streamRecord);
+    const alignedProxyAccounts = await this.alignedProxyProgram.account.contract.fetchMultiple(alignedStreamsPubKeys);
+    alignedProxyAccounts.forEach((account, index) => {
+      if (account) {
+        const alignedData = streamRecord[alignedStreamsPubKeys[index]];
+        streams[alignedStreamsPubKeys[index]] = new AlignedContract(alignedData, account);
+      }
+    });
     return streams;
   }
 
@@ -1055,44 +1117,54 @@ export class SolanaStreamClient extends BaseStreamClient {
     address,
     type = StreamType.All,
     direction = StreamDirection.All,
-  }: IGetAllData): Promise<[string, Stream][]> {
+  }: IGetAllData): Promise<[string, SolanaStream][]> {
     const publicKey = new PublicKey(address);
-    let accounts: Account[] = [];
-    //todo: we need to be smart with our layout so we minimize rpc calls to the chain
-    if (direction === StreamDirection.All) {
-      const outgoingAccounts = await getProgramAccounts(
+    let streams: Record<string, SolanaStream> = {};
+    // don't do unnecessary rpc calls if we are not querying for vesting streams
+    const shouldFetchAligned = type === StreamType.All || type === StreamType.Vesting;
+
+    if (direction !== StreamDirection.Incoming) {
+      const outgoingStreamAccounts = await getProgramAccounts(
         this.connection,
         publicKey,
         STREAM_STRUCT_OFFSET_SENDER,
         this.programId,
       );
-      const incomingAccounts = await getProgramAccounts(
+      outgoingStreamAccounts.forEach((account) => {
+        streams[account.pubkey.toBase58()] = new Contract(decodeStream(account.account.data));
+      });
+
+      if (shouldFetchAligned) {
+        const alignedStreams = await this.getOutgoingAlignedStreams(address);
+        streams = { ...streams, ...alignedStreams };
+      }
+    }
+    if (direction !== StreamDirection.Outgoing) {
+      const allIncomingAccounts = await getProgramAccounts(
         this.connection,
         publicKey,
         STREAM_STRUCT_OFFSET_RECIPIENT,
         this.programId,
       );
-      accounts = [...outgoingAccounts, ...incomingAccounts];
-    } else {
-      const offset =
-        direction === StreamDirection.Outgoing ? STREAM_STRUCT_OFFSET_SENDER : STREAM_STRUCT_OFFSET_RECIPIENT;
-      accounts = await getProgramAccounts(this.connection, publicKey, offset, this.programId);
+
+      const allIncomingStreams = allIncomingAccounts.map((account) => decodeStream(account.account.data));
+
+      const alignedDecoded: Record<string, DecodedStream> = {};
+
+      // filter out aligned unlocks and store them in a separate object
+      allIncomingAccounts.forEach((account, index) => {
+        if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender)) {
+          alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
+        } else {
+          streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index]);
+        }
+      });
+
+      if (shouldFetchAligned) {
+        const incomingAlignedStreams = await this.getIncomingAlignedStreams(alignedDecoded);
+        streams = { ...streams, ...incomingAlignedStreams };
+      }
     }
-
-    let streams: Record<string, Contract> = {};
-
-    if ((type === StreamType.All || type === StreamType.Vesting) && direction !== StreamDirection.Incoming) {
-      streams = await this.getOutgoingAligned(publicKey);
-    }
-
-    accounts.forEach((account) => {
-      const decoded = new Contract(decodeStream(account.account.data));
-      decoded.isAligned =
-        decoded.recipient === address &&
-        decoded.type === StreamType.Vesting &&
-        !!deriveContractPDA(this.alignedProxyProgram.programId, account.pubkey);
-      streams = { ...streams, [account.pubkey.toBase58()]: decoded };
-    });
 
     const sortedStreams = Object.entries(streams).sort(([, stream1], [, stream2]) => stream2.start - stream1.start);
 
@@ -1185,7 +1257,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     if (!data) {
       return null;
     }
-    const partners = borsh.deserialize(PARTNERS_SCHEMA, data!.data) as unknown as IPartnerLayout[];
+    const partners = borsh.deserialize(PARTNERS_SCHEMA, data.data) as unknown as IPartnerLayout[];
     const filteredPartners = partners.filter((item) => new PublicKey(item.pubkey).toString() === address);
     if (filteredPartners.length === 0) {
       return null;
@@ -1220,6 +1292,14 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     return { metadata, metadataPubKey };
+  }
+
+  /**
+   * Utility function that checks whether the associated stream address is an aligned unlock contract, indicated by whether the sender/creator is a PDA
+   */
+  private isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
+    const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
+    return senderPublicKey.equals(pda);
   }
 
   /**

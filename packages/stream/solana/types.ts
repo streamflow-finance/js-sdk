@@ -8,6 +8,7 @@ import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtil
 import { IRecipient, Stream, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
 import { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
+import { ALIGNED_PRECISION_FACTOR_POW } from "./constants.js";
 
 export { IChain, ICluster, ContractError } from "@streamflow/common";
 
@@ -23,13 +24,13 @@ export type CreateTestOracleParams = AlignedUnlocksTypes["createTestOracleParams
 export type UpdateTestOracleParams = AlignedUnlocksTypes["updateTestOracleParams"];
 
 export type IAlignedUnlockConfig = {
-  minPrice: BN;
-  maxPrice: BN;
-  minPercentage: BN;
-  maxPercentage: BN;
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
   oracleType?: OracleType;
   skipInitial?: boolean;
-  tickSize?: BN;
+  tickSize?: number;
   priceOracle?: Address;
 };
 
@@ -71,6 +72,20 @@ export interface ICreateStreamInstructions {
   metadata: Keypair | undefined;
   metadataPubKey: PublicKey;
 }
+
+export type AlignedProxyData = {
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  oracleType: OracleType;
+  tickSize: number;
+  priceOracle: Address;
+};
+
+export type AlignedUnlock = Stream & AlignedProxyData;
+
+export type SolanaStream = Stream | AlignedUnlock;
 
 export class Contract implements Stream {
   magic: number;
@@ -220,6 +235,38 @@ export class Contract implements Stream {
   }
 }
 
+export class AlignedContract extends Contract implements AlignedUnlock {
+  minPrice: number;
+
+  maxPrice: number;
+
+  minPercentage: number;
+
+  maxPercentage: number;
+
+  oracleType: OracleType;
+
+  tickSize: number;
+
+  priceOracle: string;
+
+  proxyAddress: string;
+
+  constructor(stream: DecodedStream, alignedProxy: AlignedUnlocksContract) {
+    super(stream);
+    this.minPrice = getNumberFromBN(alignedProxy.minPrice, ALIGNED_PRECISION_FACTOR_POW);
+    this.maxPrice = getNumberFromBN(alignedProxy.maxPrice, ALIGNED_PRECISION_FACTOR_POW);
+    this.minPercentage = getNumberFromBN(alignedProxy.minPercentage, ALIGNED_PRECISION_FACTOR_POW);
+    this.maxPercentage = getNumberFromBN(alignedProxy.maxPercentage, ALIGNED_PRECISION_FACTOR_POW);
+    this.oracleType = alignedProxy.priceOracleType;
+    this.tickSize = alignedProxy.tickSize.toNumber();
+    this.priceOracle = alignedProxy.priceOracle.toBase58();
+    this.sender = alignedProxy.sender.toBase58();
+    this.canceledAt = alignedProxy.streamCanceledTime.toNumber();
+    this.proxyAddress = stream.sender.toBase58();
+  }
+}
+
 export interface DecodedStream {
   magic: BN;
   version: BN;
@@ -263,99 +310,6 @@ export interface DecodedStream {
   pauseCumulative: BN;
   lastRateChangeTime: BN;
   fundsUnlockedAtLastRateChange: BN;
-}
-
-export enum SolanaAlignedProxyErrorCode {
-  /** Authority does not have permission for this action */
-  Unauthorized = "Unauthorized",
-
-  /** Arithmetic error */
-  ArithmeticError = "ArithmeticError",
-
-  /** Mint has unsupported Token Extensions */
-  UnsupportedTokenExtensions = "UnsupportedTokenExtensions",
-
-  /** Provided period is too short, should be equal or more than 30 seconds */
-  PeriodTooShort = "PeriodTooShort",
-
-  /** Provided percentage tick size is invalid */
-  InvalidTickSize = "InvalidTickSize",
-
-  /** Provided percentage bounds are invalid */
-  InvalidPercentageBoundaries = "InvalidPercentageBoundaries",
-
-  /** Provided price bounds are invalid */
-  InvalidPriceBoundaries = "InvalidPriceBoundaries",
-
-  /** Unsupported price oracle */
-  UnsupportedOracle = "UnsupportedOracle",
-
-  /** Invalid oracle account */
-  InvalidOracleAccount = "InvalidOracleAccount",
-
-  /** Invalid oracle price */
-  InvalidOraclePrice = "InvalidOraclePrice",
-
-  /** Invalid Stream Metadata */
-  InvalidStreamMetadata = "InvalidStreamMetadata",
-
-  /** Release amount has already been updated in this period */
-  AmountAlreadyUpdated = "AmountAlreadyUpdated",
-
-  /** All funds are already unlocked */
-  AllFundsUnlocked = "AllFundsUnlocked",
-}
-
-/**
- * Error codes raised by Solana protocol specifically
- */
-export enum SolanaContractErrorCode {
-  /** Accounts not writable */
-  AccountsNotWritable = "AccountsNotWritable",
-  /** Invalid Metadata */
-  InvalidMetadata = "InvalidMetadata",
-  /** Invalid metadata account */
-  InvalidMetadataAccount = "InvalidMetadataAccount",
-  /** Provided accounts don't match the ones in contract */
-  MetadataAccountMismatch = "MetadataAccountMismatch",
-  /** Invalid escrow account */
-  InvalidEscrowAccount = "InvalidEscrowAccount",
-  /** Provided account(s) is/are not valid associated token accounts */
-  NotAssociated = "NotAssociated",
-  /** Sender mint does not match accounts mint */
-  MintMismatch = "MintMismatch",
-  /** Recipient not transferable for account */
-  TransferNotAllowed = "TransferNotAllowed",
-  /** Contract closed */
-  ContractClosed = "ContractClosed",
-  /** Invalid Streamflow Treasury accounts supplied */
-  InvalidTreasury = "InvalidTreasury",
-  /** Given timestamps are invalid */
-  InvalidTimestamps = "InvalidTimestamps",
-  /** Invalid deposit configuration */
-  InvalidDepositConfiguration = "InvalidDepositConfiguration",
-  /** Amount cannot be zero */
-  AmountIsZero = "AmountIsZero",
-  /** Amount requested is larger than available */
-  AmountMoreThanAvailable = "AmountMoreThanAvailable",
-  /** Amount currently available is zero */
-  AmountAvailableIsZero = "AmountAvailableIsZero",
-  /** Arithmetic error */
-  ArithmeticError = "ArithmeticError",
-  /** Metadata account data must be 1104 bytes long */
-  InvalidMetadataSize = "InvalidMetadataSize",
-  /** Metadata state account must be initialized */
-  UninitializedMetadata = "UninitializedMetadata",
-  /** Authority does not have permission for this action */
-  Unauthorized = "Unauthorized",
-  /** Contract is not transferable to the original recipient */
-  SelfTransfer = "SelfTransfer",
-  /** Contract is already paused */
-  AlreadyPaused = "AlreadyPaused",
-  /** Contract is not paused */
-  NotPaused = "NotPaused",
-  /** Meta account is not rent exempt */
-  MetadataNotRentExempt = "MetadataNotRentExempt",
 }
 
 export interface MetadataRecipientHashMap {

@@ -1,8 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
 
-import { ICluster } from "../common/types.js";
-import { ISearchStreams, SolanaContractErrorCode, SolanaAlignedProxyErrorCode } from "./types.js";
+import { ICluster, SolanaContractErrorCode, SolanaAlignedProxyErrorCode } from "../common/types.js";
+import { ISearchStreams } from "./types.js";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
 
@@ -11,6 +11,8 @@ export const ORIGINAL_CONTRACT_SENDER_OFFSET = 16;
 export const STREAM_STRUCT_OFFSET_SENDER = 49;
 export const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 export const STREAM_STRUCT_OFFSET_MINT = 177;
+
+export const ALIGNED_PRECISION_FACTOR_POW = 9;
 
 export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
   mint: STREAM_STRUCT_OFFSET_MINT,
