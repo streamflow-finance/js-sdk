@@ -1,6 +1,6 @@
 import BN from "bn.js";
 
-import { StreamType } from "./types.js";
+import { AlignedStream, ICreateAlignedStreamData, ICreateStreamData, Stream, StreamType } from "./types.js";
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
@@ -50,6 +50,14 @@ export const isPayment = (streamData: { canTopup: boolean }): boolean => {
 
 export const isVesting = (streamData: { canTopup: boolean; depositedAmount: BN; cliffAmount: BN }): boolean => {
   return !streamData.canTopup && !isCliffCloseToDepositedAmount(streamData);
+};
+
+export const isAligned = (stream: Stream): stream is AlignedStream => {
+  return "minPrice" in stream && "maxPrice" in stream && "minPercentage" in stream && "maxPercentage" in stream;
+};
+
+export const isCreateAlignedStreamData = (obj: ICreateStreamData): obj is ICreateAlignedStreamData => {
+  return "minPrice" in obj && "maxPrice" in obj && "minPercentage" in obj && "maxPercentage" in obj;
 };
 
 export const isTokenLock = (streamData: {

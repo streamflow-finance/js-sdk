@@ -45,10 +45,9 @@ import {
   ITopUpStreamSolanaExt,
   ISearchStreams,
   ICreateStreamInstructions,
-  SolanaStream,
   AlignedContract,
   DecodedStream,
-  AlignedUnlock,
+  OracleType,
 } from "./types.js";
 import {
   decodeStream,
@@ -101,6 +100,7 @@ import {
   StreamType,
   Stream,
   ICreateMultiError,
+  ICreateAlignedStreamData,
 } from "../common/types.js";
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import { IPartnerLayout } from "./instructionTypes.js";
@@ -108,7 +108,8 @@ import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
-import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
+import { deriveContractPDA, deriveEscrowPDA } from "./lib/derive-accounts.js";
+import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
 const METADATA_ACC_SIZE = 1104;
 
@@ -208,7 +209,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     streamParams: ICreateStreamData,
     extParams: ICreateStreamSolanaExt,
   ): Promise<ICreateStreamInstructions> {
-    const { ixs, metadata, metadataPubKey } = !!extParams.alignedConfigParams
+    const { ixs, metadata, metadataPubKey } = isCreateAlignedStreamData(streamParams)
       ? await this.prepareCreateAlignedUnlockInstructions(streamParams, extParams)
       : await this.prepareCreateStreamInstructions(streamParams, extParams);
 
@@ -216,7 +217,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   async prepareCreateAlignedUnlockInstructions(
-    streamParams: ICreateStreamData,
+    streamParams: ICreateAlignedStreamData,
     extParams: ICreateStreamSolanaExt,
   ): Promise<ICreateStreamInstructions> {
     const {
@@ -235,15 +236,20 @@ export class SolanaStreamClient extends BaseStreamClient {
       amountPerPeriod,
       amount: depositedAmount,
       name: streamName,
+      minPrice,
+      maxPercentage,
+      minPercentage,
+      maxPrice,
+      skipInitial,
+      tickSize,
+      priceOracle,
+      oracleType,
     } = streamParams;
-    const { isNative, sender, computeLimit, computePrice, metadataPubKeys, alignedConfigParams } = extParams;
+    const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
-
-    const { minPrice, maxPercentage, minPercentage, maxPrice, oracleType, skipInitial, tickSize, priceOracle } =
-      alignedConfigParams!;
 
     const recipientPublicKey = new PublicKey(recipient);
     const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
@@ -258,8 +264,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, metadataPubKey);
 
-    const oracle =
-      priceOracle ?? deriveTestOraclePDA(this.alignedProxyProgram.programId, mintPublicKey, sender.publicKey);
+    const oracle = priceOracle ?? "";
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
@@ -282,7 +287,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         cancelableByRecipient,
         cancelableBySender,
         canTopup,
-        oracleType: oracleType ?? { none: {} },
+        oracleType: (!!oracleType ? { [oracleType]: {} } : { none: {} }) as OracleType,
         streamName: streamNameArray,
         minPrice: getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW),
         maxPrice: getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW),
@@ -565,14 +570,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   ): Promise<IMultiTransactionResult> {
     const { recipients, ...streamParams } = data;
 
-    const {
-      sender,
-      metadataPubKeys: metadataPubKeysExt,
-      isNative,
-      computePrice,
-      computeLimit,
-      alignedConfigParams,
-    } = extParams;
+    const { sender, metadataPubKeys: metadataPubKeysExt, isNative, computePrice, computeLimit } = extParams;
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
@@ -602,7 +600,6 @@ export class SolanaStreamClient extends BaseStreamClient {
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
         computePrice,
         computeLimit,
-        alignedConfigParams,
       };
 
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
@@ -1048,7 +1045,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch stream data by its id (address).
    */
-  public async getOne({ id }: IGetOneData): Promise<SolanaStream> {
+  public async getOne({ id }: IGetOneData): Promise<Stream> {
     const streamPublicKey = new PublicKey(id);
     const escrow = await this.connection.getAccountInfo(streamPublicKey, TX_FINALITY_CONFIRMED);
     if (!escrow?.data) {
@@ -1071,8 +1068,8 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch all aligned outgoing streams/contracts by the provided public key.
    */
-  private async getOutgoingAlignedStreams(sender: string): Promise<Record<string, SolanaStream>> {
-    const streams: Record<string, SolanaStream> = {};
+  private async getOutgoingAlignedStreams(sender: string): Promise<Record<string, Stream>> {
+    const streams: Record<string, Stream> = {};
 
     const alignedOutgoingProgramAccounts = await this.alignedProxyProgram.account.contract.all([
       {
@@ -1096,8 +1093,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   private async getIncomingAlignedStreams(
     streamRecord: Record<string, DecodedStream>,
-  ): Promise<Record<string, SolanaStream>> {
-    const streams: Record<string, SolanaStream> = {};
+  ): Promise<Record<string, Stream>> {
+    const streams: Record<string, Stream> = {};
     const alignedStreamsPubKeys = Object.keys(streamRecord);
     const alignedProxyAccounts = await this.alignedProxyProgram.account.contract.fetchMultiple(alignedStreamsPubKeys);
     alignedProxyAccounts.forEach((account, index) => {
@@ -1117,9 +1114,9 @@ export class SolanaStreamClient extends BaseStreamClient {
     address,
     type = StreamType.All,
     direction = StreamDirection.All,
-  }: IGetAllData): Promise<[string, SolanaStream][]> {
+  }: IGetAllData): Promise<[string, Stream][]> {
     const publicKey = new PublicKey(address);
-    let streams: Record<string, SolanaStream> = {};
+    let streams: Record<string, Stream> = {};
     // don't do unnecessary rpc calls if we are not querying for vesting streams
     const shouldFetchAligned = type === StreamType.All || type === StreamType.Vesting;
 

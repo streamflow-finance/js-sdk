@@ -1,10 +1,10 @@
+import { Address } from "@coral-xyz/anchor";
 import { TransactionInstruction } from "@solana/web3.js";
 import { Types } from "aptos";
 import BN from "bn.js";
 
 export { IChain, ICluster, ContractError } from "@streamflow/common";
 
-// Stream Client Types
 export interface IRecipient {
   recipient: string;
   amount: BN;
@@ -13,7 +13,7 @@ export interface IRecipient {
   amountPerPeriod: BN;
 }
 
-export interface IStreamConfig {
+export interface IBaseStreamConfig {
   period: number;
   start: number;
   cliff: number;
@@ -30,11 +30,37 @@ export interface IStreamConfig {
   partner?: string;
 }
 
-export type ICreateStreamData = IStreamConfig & IRecipient;
+export type IOracleConfig = {
+  oracleType: OracleTypeName;
+  priceOracle: Address;
+};
 
-export type ICreateMultipleStreamData = IStreamConfig & {
+export type IPriceConfig = {
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  skipInitial?: boolean;
+  tickSize?: number;
+};
+
+export type IAlignedStreamConfig =
+  | (IPriceConfig & IOracleConfig)
+  | (IPriceConfig & { [K in keyof IOracleConfig]: undefined });
+
+export type ICreateLinearStreamData = IBaseStreamConfig & IRecipient;
+
+export type ICreateAlignedStreamData = ICreateLinearStreamData & IAlignedStreamConfig;
+
+export type ICreateStreamData = ICreateLinearStreamData | ICreateAlignedStreamData;
+
+export type ICreateMultipleLinearStreamData = IBaseStreamConfig & {
   recipients: IRecipient[];
 };
+
+export type ICreateMultipleAlignedStreamData = ICreateMultipleLinearStreamData & IAlignedStreamConfig;
+
+export type ICreateMultipleStreamData = ICreateMultipleLinearStreamData | ICreateMultipleAlignedStreamData;
 
 export interface IInteractData {
   id: string;
@@ -101,6 +127,8 @@ export interface IMultiTransactionResult {
   errors: ICreateMultiError[];
 }
 
+export type OracleTypeName = "none" | "pyth" | "switchboard" | "test";
+
 export enum StreamDirection {
   Outgoing = "outgoing",
   Incoming = "incoming",
@@ -155,7 +183,7 @@ export enum ContractErrorCode {
 }
 
 // Base types, implemented by each chain package
-export interface Stream {
+export interface LinearStream {
   magic: number;
   version: number;
   createdAt: number;
@@ -205,6 +233,12 @@ export interface Stream {
 
   remaining(decimals: number): number;
 }
+
+export type AlignedStreamData = Required<Omit<IAlignedStreamConfig, "skipInitial">>;
+
+export type AlignedStream = LinearStream & AlignedStreamData;
+
+export type Stream = LinearStream | AlignedStream;
 
 /**
  * Error codes raised by Solana protocol specifically

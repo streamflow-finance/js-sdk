@@ -2,7 +2,7 @@ import BN from "bn.js";
 import { BigNumber as BigNumberEvm } from "ethers";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
-import { Stream, StreamType } from "../common/types.js";
+import { LinearStream, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
 
 export interface StreamAbiResult {
@@ -54,7 +54,7 @@ export interface FeesAbiResult {
   partner_fee: BigNumberEvm;
 }
 
-export class EvmContract implements Stream {
+export class EvmContract implements LinearStream {
   magic: number;
 
   version: number;
