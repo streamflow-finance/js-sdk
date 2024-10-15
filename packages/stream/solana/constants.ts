@@ -37,6 +37,8 @@ export const ALIGNED_UNLOCKS_PROGRAM_ID = {
   [ICluster.Local]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
 };
 
+export const ALIGNED_COMPUTE_LIMIT = 300000;
+
 export const CONTRACT_DISCRIMINATOR = [172, 138, 115, 242, 121, 67, 183, 26];
 export const TEST_ORACLE_DISCRIMINATOR = [198, 49, 63, 134, 232, 251, 168, 28];
 export const CONTRACT_SEED = Buffer.from("contract", "utf-8");

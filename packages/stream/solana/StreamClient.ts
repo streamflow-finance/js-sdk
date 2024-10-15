@@ -70,6 +70,7 @@ import {
   STREAM_STRUCT_OFFSETS,
   ORIGINAL_CONTRACT_SENDER_OFFSET,
   ALIGNED_PRECISION_FACTOR_POW,
+  ALIGNED_COMPUTE_LIMIT,
 } from "./constants.js";
 import {
   withdrawStreamInstruction,
@@ -273,7 +274,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
-      computeLimit,
+      computeLimit: computeLimit ?? ALIGNED_COMPUTE_LIMIT,
     });
 
     const encodedUIntArray = new TextEncoder().encode(streamName);
