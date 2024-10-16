@@ -37,6 +37,7 @@ export const ALIGNED_UNLOCKS_PROGRAM_ID = {
   [ICluster.Local]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
 };
 
+// Aligned Unlocks Program transactions require a higher comput limit
 export const ALIGNED_COMPUTE_LIMIT = 300000;
 
 export const CONTRACT_DISCRIMINATOR = [172, 138, 115, 242, 121, 67, 183, 26];

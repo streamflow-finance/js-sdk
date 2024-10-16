@@ -822,6 +822,9 @@ export class SolanaStreamClient extends BaseStreamClient {
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
+    if (!invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
     const streamPublicKey = new PublicKey(id);
     const escrowAcc = await this.connection.getAccountInfo(streamPublicKey);
     if (!escrowAcc?.data) {
@@ -836,13 +839,14 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
-      computeLimit,
+      computeLimit: computeLimit ?? ALIGNED_COMPUTE_LIMIT,
     });
     await this.checkAssociatedTokenAccounts(streamData, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
 
     const cancelIx = await this.alignedProxyProgram.methods
       .cancel()
-      .accounts({
+      .accountsPartial({
+        sender: invoker.publicKey,
         streamMetadata: streamPublicKey,
         escrowTokens: escrowPDA,
         recipient: streamData.recipient,
@@ -850,6 +854,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
         mint: streamData.mint,
         tokenProgram: tokenProgramId,
+        streamflowProgram: this.programId,
       })
       .instruction();
 
@@ -1102,7 +1107,10 @@ export class SolanaStreamClient extends BaseStreamClient {
   ): Promise<Record<string, Stream>> {
     const streams: Record<string, Stream> = {};
     const alignedStreamsPubKeys = Object.keys(streamRecord);
-    const alignedProxyAccounts = await this.alignedProxyProgram.account.contract.fetchMultiple(alignedStreamsPubKeys);
+    const alignedProxyPDAs = alignedStreamsPubKeys.map((streamPubKey) =>
+      deriveContractPDA(this.alignedProxyProgram.programId, new PublicKey(streamPubKey)),
+    );
+    const alignedProxyAccounts = await this.alignedProxyProgram.account.contract.fetchMultiple(alignedProxyPDAs);
     alignedProxyAccounts.forEach((account, index) => {
       if (account) {
         const alignedData = streamRecord[alignedStreamsPubKeys[index]];

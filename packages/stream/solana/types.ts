@@ -4,7 +4,7 @@ import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
 import { type IdlTypes } from "@coral-xyz/anchor";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
+import { buildStreamType, calculateUnlockedAmount, decodeEndTime } from "../common/contractUtils.js";
 import { AlignedStream, IRecipient, LinearStream, OracleTypeName, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
 import { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
@@ -156,7 +156,8 @@ export class Contract implements LinearStream {
     this.createdAt = stream.createdAt.toNumber();
     this.withdrawnAmount = stream.withdrawnAmount;
     this.canceledAt = stream.canceledAt.toNumber();
-    this.end = stream.end.toNumber();
+    // for aligned contracts end time can be an invalid timeValue
+    this.end = decodeEndTime(stream.end);
     this.lastWithdrawnAt = stream.lastWithdrawnAt.toNumber();
     this.sender = stream.sender.toBase58();
     this.senderTokens = stream.senderTokens.toBase58();

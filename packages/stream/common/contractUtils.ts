@@ -1,6 +1,7 @@
 import BN from "bn.js";
 
 import { AlignedStream, ICreateAlignedStreamData, ICreateStreamData, Stream, StreamType } from "./types.js";
+import { MAX_SAFE_UNIX_TIME_VALUE } from "./constants.js";
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
@@ -98,4 +99,12 @@ export const buildStreamType = (streamData: {
     return StreamType.Lock;
   }
   return StreamType.Payment;
+};
+
+export const decodeEndTime = (endTime: BN): number => {
+  if (endTime.gt(new BN(MAX_SAFE_UNIX_TIME_VALUE))) {
+    console.log("BN END TIME   ", endTime.toString());
+    return MAX_SAFE_UNIX_TIME_VALUE;
+  }
+  return endTime.toNumber();
 };
