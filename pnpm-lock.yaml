@@ -193,7 +193,10 @@ importers:
 
   packages/stream:
     dependencies:
-      "@coral-xyz/borsh":
+      '@coral-xyz/anchor':
+        specifier: ^0.30.0
+        version: 0.30.1(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@coral-xyz/borsh':
         specifier: 0.30.1
         version: 0.30.1(@solana/web3.js@1.90.2(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))
       "@manahippo/aptos-wallet-adapter":

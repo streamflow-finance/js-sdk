@@ -4,7 +4,7 @@ import BN from "bn.js";
 import { Buffer } from "buffer";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
-import { Stream, StreamType } from "../common/types.js";
+import { LinearStream, StreamType } from "../common/types.js";
 import { normalizeAptosAddress } from "./utils.js";
 import { getNumberFromBN } from "../common/utils.js";
 
@@ -70,7 +70,7 @@ export interface ConfigResource {
   withdrawor: string;
 }
 
-export class Contract implements Stream {
+export class Contract implements LinearStream {
   magic: number;
 
   version: number;
