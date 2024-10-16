@@ -103,7 +103,6 @@ export const buildStreamType = (streamData: {
 
 export const decodeEndTime = (endTime: BN): number => {
   if (endTime.gt(new BN(MAX_SAFE_UNIX_TIME_VALUE))) {
-    console.log("BN END TIME   ", endTime.toString());
     return MAX_SAFE_UNIX_TIME_VALUE;
   }
   return endTime.toNumber();
