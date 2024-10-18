@@ -202,7 +202,6 @@ export async function executeTransaction(
   if (tx.signatures.length === 0) {
     throw Error("Error with transaction parameters.");
   }
-  console.log(Buffer.from(tx.serialize()).toString("base64"));
   await simulateTransaction(connection, tx);
 
   return sendAndConfirmTransaction(connection, tx, confirmationParams, throttleParams);
