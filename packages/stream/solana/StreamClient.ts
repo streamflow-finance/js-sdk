@@ -1372,6 +1372,10 @@ export class SolanaStreamClient extends BaseStreamClient {
     if (!checkTokenAccounts) {
       return [];
     }
-    return checkOrCreateAtaBatch(this.connection, owners, mint, invoker, programId);
+    // filter out duplicate PublicKeys, otherwise transaction will fail
+    const uniqueOwners = Array.from(new Set(owners.map((owner) => owner.toBase58()))).map(
+      (pkString) => new PublicKey(pkString),
+    );
+    return checkOrCreateAtaBatch(this.connection, uniqueOwners, mint, invoker, programId);
   }
 }
