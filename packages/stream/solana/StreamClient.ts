@@ -18,7 +18,6 @@ import {
   MemcmpFilter,
 } from "@solana/web3.js";
 import {
-  CheckAssociatedTokenAccountsData,
   ata,
   checkOrCreateAtaBatch,
   signAndExecuteTransaction,
@@ -35,6 +34,7 @@ import {
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
 import { getBN } from "@streamflow/common";
+import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 
 import {
   MetadataRecipientHashMap,
@@ -169,12 +169,22 @@ export class SolanaStreamClient extends BaseStreamClient {
     const { isNative, sender } = extParams;
 
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+    const mintPublicKey = new PublicKey(data.tokenId);
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
+    const ixs = await this.getCreateATAInstructions(
+      [STREAMFLOW_TREASURY_PUBLIC_KEY, partnerPublicKey],
+      mintPublicKey,
+      sender,
+      true,
+    );
+
+    const { ixs: createIxs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
+
+    ixs.push(...createIxs);
 
     if (isNative) {
       const totalFee = await this.getTotalFee({
@@ -276,6 +286,10 @@ export class SolanaStreamClient extends BaseStreamClient {
       computePrice,
       computeLimit: computeLimit ?? ALIGNED_COMPUTE_LIMIT,
     });
+
+    ixs.push(
+      ...(await this.getCreateATAInstructions([recipientPublicKey], mintPublicKey, sender, true, tokenProgramId)),
+    );
 
     const encodedUIntArray = new TextEncoder().encode(streamName);
     const streamNameArray = Array.from(encodedUIntArray);
@@ -590,6 +604,9 @@ export class SolanaStreamClient extends BaseStreamClient {
     }[] = [];
     const metadataPubKeys = metadataPubKeysExt || [];
 
+    const partnerPublicKey = data.partner ? new PublicKey(data.partner) : WITHDRAWOR_PUBLIC_KEY;
+    const mintPublicKey = new PublicKey(data.tokenId);
+
     if (recipients.length === 0) {
       throw new Error("Recipients array is empty!");
     }
@@ -638,14 +655,24 @@ export class SolanaStreamClient extends BaseStreamClient {
       batch.push({ tx, recipient });
     }
 
+    const prepareInstructions = await this.getCreateATAInstructions(
+      [STREAMFLOW_TREASURY_PUBLIC_KEY, partnerPublicKey],
+      mintPublicKey,
+      sender,
+      true,
+    );
+
     if (isNative) {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
       const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
+      prepareInstructions.push(...nativeInstructions);
+    }
 
+    if (prepareInstructions.length > 0) {
       const messageV0 = new TransactionMessage({
         payerKey: sender.publicKey,
         recentBlockhash: hash.blockhash,
-        instructions: nativeInstructions,
+        instructions: prepareInstructions,
       }).compileToV0Message();
       const tx = new VersionedTransaction(messageV0);
 
@@ -657,7 +684,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
 
-    if (isNative) {
+    if (prepareInstructions.length > 0) {
       const prepareTx = signedBatch.pop();
       await sendAndConfirmStreamRawTransaction(
         this.connection,
@@ -754,23 +781,31 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     const data = decodeStream(escrow.data);
-    const { tokenProgramId } = await getMintAndProgram(this.connection, data.mint);
-    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
-    const partnerTokens = await ata(data.mint, data.partner, tokenProgramId);
-    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
+    const { sender, recipient, mint, streamflowTreasury, partner, recipientTokens, escrowTokens } = data;
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const partnerTokens = await ata(mint, partner, tokenProgramId);
+    const ataIx = await this.getCreateATAInstructions(
+      [sender, recipient, streamflowTreasury, partner],
+      mint,
+      invoker,
+      checkTokenAccounts,
+      tokenProgramId,
+    );
 
     ixs.push(
+      ...ataIx,
       withdrawStreamInstruction(amount, this.programId, {
+        partner,
+        partnerTokens,
+        mint,
+        streamflowTreasuryTokens,
+        recipientTokens,
+        escrowTokens,
         authority: invoker.publicKey,
         recipient: invoker.publicKey,
-        recipientTokens: data.recipientTokens,
         metadata: streamPublicKey,
-        escrowTokens: data.escrowTokens,
         streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
-        streamflowTreasuryTokens,
-        partner: data.partner,
-        partnerTokens,
-        mint: data.mint,
         tokenProgram: tokenProgramId,
       }),
     );
@@ -831,34 +866,37 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Couldn't get account info");
     }
 
-    const streamflowProgramPublicKey = new PublicKey(this.programId);
-    const streamData = decodeStream(escrowAcc?.data);
-    const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, streamPublicKey);
-    const { tokenProgramId } = await getMintAndProgram(this.connection, streamData.mint);
-    const partnerPublicKey = streamData.partner;
-
+    const streamData = decodeStream(escrowAcc.data);
+    const { sender, recipient, mint, streamflowTreasury, partner, escrowTokens } = streamData;
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mint);
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit: computeLimit ?? ALIGNED_COMPUTE_LIMIT,
     });
-    await this.checkAssociatedTokenAccounts(streamData, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
+    const ataIx = await this.getCreateATAInstructions(
+      [sender, recipient, partner, streamflowTreasury],
+      mint,
+      invoker,
+      checkTokenAccounts,
+      tokenProgramId,
+    );
 
     const cancelIx = await this.alignedProxyProgram.methods
       .cancel()
       .accountsPartial({
+        mint,
+        partner,
+        recipient,
+        escrowTokens,
         sender: invoker.publicKey,
         streamMetadata: streamPublicKey,
-        escrowTokens: escrowPDA,
-        recipient: streamData.recipient,
-        partner: partnerPublicKey,
         streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
-        mint: streamData.mint,
         tokenProgram: tokenProgramId,
         streamflowProgram: this.programId,
       })
       .instruction();
 
-    ixs.push(cancelIx);
+    ixs.push(...ataIx, cancelIx);
 
     return ixs;
   }
@@ -880,32 +918,40 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Couldn't get account info");
     }
 
-    const data = decodeStream(escrowAcc?.data);
+    const data = decodeStream(escrowAcc.data);
+    const { sender, recipient, partner, streamflowTreasury, mint, senderTokens, recipientTokens, escrowTokens } = data;
 
-    const { tokenProgramId } = await getMintAndProgram(this.connection, data.mint);
-    const streamflowTreasuryTokens = await ata(data.mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
-    const partnerTokens = await ata(data.mint, data.partner, tokenProgramId);
+    const { tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const partnerTokens = await ata(mint, partner, tokenProgramId);
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
-    await this.checkAssociatedTokenAccounts(data, { invoker, checkTokenAccounts }, ixs, tokenProgramId);
+    const ixsAta = await this.getCreateATAInstructions(
+      [sender, recipient, partner, streamflowTreasury],
+      mint,
+      invoker,
+      checkTokenAccounts,
+      tokenProgramId,
+    );
 
     ixs.push(
+      ...ixsAta,
       cancelStreamInstruction(this.programId, {
-        authority: invoker.publicKey,
-        sender: data.sender,
-        senderTokens: data.senderTokens,
-        recipient: data.recipient,
-        recipientTokens: data.recipientTokens,
-        metadata: streamPublicKey,
-        escrowTokens: data.escrowTokens,
-        streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
-        streamflowTreasuryTokens: streamflowTreasuryTokens,
-        partner: data.partner,
+        sender,
+        senderTokens,
+        recipient,
+        recipientTokens,
+        streamflowTreasuryTokens,
+        partner,
         partnerTokens,
-        mint: data.mint,
+        mint,
+        escrowTokens,
+        authority: invoker.publicKey,
+        metadata: streamPublicKey,
+        streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
         tokenProgram: tokenProgramId,
       }),
     );
@@ -1095,7 +1141,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     streamAccounts.forEach((account, index) => {
       if (account) {
         const alignedData = alignedOutgoingProgramAccounts[index].account;
-        streams[alignedData.sender.toBase58()] = new AlignedContract(decodeStream(account.data), alignedData);
+        streams[streamPubKeys[index].toBase58()] = new AlignedContract(decodeStream(account.data), alignedData);
       }
     });
 
@@ -1314,26 +1360,22 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Utility function that checks whether associated token accounts still exist and adds instructions to add them if not
+   * Returns insrtuctions for creating associated token accounts for the provided owners
    */
-  private async checkAssociatedTokenAccounts(
-    data: CheckAssociatedTokenAccountsData,
-    { invoker, checkTokenAccounts }: IInteractStreamSolanaExt,
-    ixs: TransactionInstruction[],
-    programId: PublicKey,
-  ) {
+  private async getCreateATAInstructions(
+    owners: PublicKey[],
+    mint: PublicKey,
+    invoker: Keypair | SignerWalletAdapter,
+    checkTokenAccounts: boolean | undefined,
+    programId?: PublicKey,
+  ): Promise<TransactionInstruction[]> {
     if (!checkTokenAccounts) {
-      return;
+      return [];
     }
-    const owners = Array.from(
-      new Set([
-        data.sender.toBase58(),
-        data.recipient.toBase58(),
-        data.partner.toBase58(),
-        data.streamflowTreasury.toBase58(),
-      ]),
-      (address) => new PublicKey(address),
+    // filter out duplicate PublicKeys, otherwise transaction will fail
+    const uniqueOwners = Array.from(new Set(owners.map((owner) => owner.toBase58()))).map(
+      (pkString) => new PublicKey(pkString),
     );
-    ixs.push(...(await checkOrCreateAtaBatch(this.connection, owners, data.mint, invoker, programId)));
+    return checkOrCreateAtaBatch(this.connection, uniqueOwners, mint, invoker, programId);
   }
 }
