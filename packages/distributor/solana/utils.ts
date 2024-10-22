@@ -5,8 +5,12 @@ import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } fro
 import { ContractError, divCeilN } from "@streamflow/common";
 import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@streamflow/common/solana";
 
-import { fromTxError } from "./generated/errors";
-import { ONE_IN_BASIS_POINTS } from "./constants";
+import { fromTxError } from "./generated/errors/index.js";
+import { ONE_IN_BASIS_POINTS, ALIGNED_DISTRIBUTOR_PREFIX } from "./constants.js";
+
+export const getAlignedDistributorPDA = (programId: PublicKey, distributor: PublicKey): PublicKey => {
+  return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
+};
 
 export function getDistributorPda(programId: PublicKey, mint: PublicKey, version: number): PublicKey {
   // Constructing the seed for the PDA
