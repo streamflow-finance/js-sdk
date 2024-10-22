@@ -1,4 +1,4 @@
-export { default as SolanaDistributorClient } from "./client";
+export * from "./clients/index.js";
 
 export * from "./generated/accounts/index.js";
 
