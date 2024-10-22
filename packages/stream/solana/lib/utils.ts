@@ -9,9 +9,9 @@ import {
 } from "@streamflow/common/solana";
 import BN from "bn.js";
 
-import { streamLayout } from "./layout.js";
-import { DecodedStream, BatchItem, BatchItemResult } from "./types.js";
-import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "./constants.js";
+import { streamLayout } from "../layout.js";
+import { DecodedStream, BatchItem, BatchItemResult } from "../types.js";
+import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "../constants.js";
 
 const decoder = new TextDecoder("utf-8");
 const LE = "le"; //little endian
