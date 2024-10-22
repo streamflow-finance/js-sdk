@@ -1,4 +1,14 @@
-import { AnchorError, Program, ProgramAccount, ProgramError, parseIdlErrors, translateError } from "@coral-xyz/anchor";
+import {
+  AccountsCoder,
+  AnchorError,
+  Idl,
+  IdlTypes,
+  Program,
+  ProgramAccount,
+  ProgramError,
+  parseIdlErrors,
+  translateError,
+} from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { Commitment, Connection, ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { ContractError, ICluster, ITransactionResult, invariant } from "@streamflow/common";
@@ -448,6 +458,38 @@ export class SolanaStakingClient {
       .instruction();
 
     return { ixs: [instruction] };
+  }
+
+  decode<
+    ProgramName extends keyof Programs = keyof Programs,
+    DecodingProgram = Programs[ProgramName],
+    DerivedIdl extends Idl = DecodingProgram extends Program<infer IDLType> ? IDLType : never,
+    AccountName extends keyof IdlTypes<DerivedIdl> = keyof IdlTypes<DerivedIdl>,
+    DecodedAccount = IdlTypes<DerivedIdl>[AccountName],
+  >(
+    programKey: ProgramName,
+    accountName: AccountName,
+    accInfo: Parameters<AccountsCoder["decode"]>[1],
+  ): DecodedAccount {
+    const decodingProgram = this.programs[programKey];
+    invariant(decodingProgram, `Decoding program with key ${programKey} is not available`);
+    return decodingProgram.coder.accounts.decode(accountName.toString(), accInfo);
+  }
+
+  getDiscriminator<
+    ProgramName extends keyof Programs = keyof Programs,
+    DecodingProgram = Programs[ProgramName],
+    DerivedIdl extends Idl = DecodingProgram extends Program<infer IDLType> ? IDLType : never,
+    AccountName extends keyof IdlTypes<DerivedIdl> = keyof IdlTypes<DerivedIdl>,
+  >(programKey: ProgramName, accountName: AccountName): number[] {
+    const decodingProgram = this.programs[programKey];
+    invariant(decodingProgram, `Decoding program with key ${programKey} is not available`);
+    const accountEntity = decodingProgram.idl.accounts.find((acc) => acc.name === accountName);
+    invariant(
+      accountEntity,
+      `Decoding program with key ${programKey} doesn't specify account with name ${accountName.toString()}`,
+    );
+    return accountEntity.discriminator;
   }
 
   private async execute(ixs: TransactionInstruction[], extParams: IInteractSolanaExt) {
