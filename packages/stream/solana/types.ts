@@ -1,11 +1,27 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { AccountInfo, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js";
+import { AccountInfo, PublicKey, Keypair, VersionedTransaction, TransactionInstruction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
+import { type IdlTypes } from "@coral-xyz/anchor";
 
-import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
-import { IRecipient, Stream, StreamType } from "../common/types.js";
+import { buildStreamType, calculateUnlockedAmount, decodeEndTime } from "../common/contractUtils.js";
+import { AlignedStream, IRecipient, LinearStream, OracleTypeName, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
+import { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
+import { ALIGNED_PRECISION_FACTOR_POW } from "./constants.js";
+
+export { IChain, ICluster, ContractError } from "@streamflow/common";
+
+type AlignedUnlocksTypes = IdlTypes<AlignedUnlocksIDL>;
+
+export type AlignedUnlocksContract = AlignedUnlocksTypes["contract"];
+export type OracleType = AlignedUnlocksTypes["oracleType"];
+export type TestOracle = AlignedUnlocksTypes["testOracle"];
+
+export type CreateParams = AlignedUnlocksTypes["createParams"];
+export type ChangeOracleParams = AlignedUnlocksTypes["changeOracleParams"];
+export type CreateTestOracleParams = AlignedUnlocksTypes["createTestOracleParams"];
+export type UpdateTestOracleParams = AlignedUnlocksTypes["updateTestOracleParams"];
 
 export interface ISearchStreams {
   mint?: string;
@@ -39,7 +55,13 @@ export interface ITopUpStreamSolanaExt extends ITransactionSolanaExt {
   isNative?: boolean;
 }
 
-export class Contract implements Stream {
+export interface ICreateStreamInstructions {
+  ixs: TransactionInstruction[];
+  metadata: Keypair | undefined;
+  metadataPubKey: PublicKey;
+}
+
+export class Contract implements LinearStream {
   magic: number;
 
   version: number;
@@ -126,13 +148,16 @@ export class Contract implements Stream {
 
   type: StreamType;
 
+  isAligned?: boolean;
+
   constructor(stream: DecodedStream) {
     this.magic = stream.magic.toNumber();
     this.version = stream.version.toNumber();
     this.createdAt = stream.createdAt.toNumber();
     this.withdrawnAmount = stream.withdrawnAmount;
     this.canceledAt = stream.canceledAt.toNumber();
-    this.end = stream.end.toNumber();
+    // for aligned contracts end time can be an invalid timeValue
+    this.end = decodeEndTime(stream.end);
     this.lastWithdrawnAt = stream.lastWithdrawnAt.toNumber();
     this.sender = stream.sender.toBase58();
     this.senderTokens = stream.senderTokens.toBase58();
@@ -170,6 +195,7 @@ export class Contract implements Stream {
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
     this.type = buildStreamType(this);
+    this.isAligned = false;
   }
 
   unlocked(currentTimestamp: number): BN {
@@ -181,6 +207,38 @@ export class Contract implements Stream {
 
   remaining(decimals: number): number {
     return getNumberFromBN(this.depositedAmount.sub(this.withdrawnAmount), decimals);
+  }
+}
+
+export class AlignedContract extends Contract implements AlignedStream {
+  minPrice: number;
+
+  maxPrice: number;
+
+  minPercentage: number;
+
+  maxPercentage: number;
+
+  tickSize: number;
+
+  proxyAddress: string;
+
+  priceOracle: string | undefined;
+
+  oracleType: OracleTypeName;
+
+  constructor(stream: DecodedStream, alignedProxy: AlignedUnlocksContract) {
+    super(stream);
+    this.minPrice = getNumberFromBN(alignedProxy.minPrice, ALIGNED_PRECISION_FACTOR_POW);
+    this.maxPrice = getNumberFromBN(alignedProxy.maxPrice, ALIGNED_PRECISION_FACTOR_POW);
+    this.minPercentage = getNumberFromBN(alignedProxy.minPercentage, ALIGNED_PRECISION_FACTOR_POW);
+    this.maxPercentage = getNumberFromBN(alignedProxy.maxPercentage, ALIGNED_PRECISION_FACTOR_POW);
+    this.oracleType = (Object.keys(alignedProxy.priceOracleType).find((key) => !!key) || "none") as OracleTypeName;
+    this.tickSize = alignedProxy.tickSize.toNumber();
+    this.priceOracle = this.oracleType === "none" ? undefined : alignedProxy.priceOracle.toBase58();
+    this.sender = alignedProxy.sender.toBase58();
+    this.canceledAt = alignedProxy.streamCanceledTime.toNumber();
+    this.proxyAddress = stream.sender.toBase58();
   }
 }
 

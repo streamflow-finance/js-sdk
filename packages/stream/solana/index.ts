@@ -1,5 +1,6 @@
 export * from "./StreamClient.js";
-export * from "./utils.js";
+export * from "./lib/utils.js";
+export * from "./lib/derive-accounts.js";
 export * from "./types.js";
 export * from "./instructions.js";
 export * as constants from "./constants.js";

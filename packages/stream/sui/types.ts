@@ -5,7 +5,7 @@ import { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } fro
 import BN from "bn.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
-import { Stream, StreamType } from "../common/types.js";
+import { LinearStream, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
 
 export interface ICreateStreamSuiExt {
@@ -113,7 +113,7 @@ export interface FeeValueResource {
   };
 }
 
-export class Contract implements Stream {
+export class Contract implements LinearStream {
   magic: number;
 
   version: number;

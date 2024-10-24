@@ -1,10 +1,10 @@
+import { Address } from "@coral-xyz/anchor";
 import { TransactionInstruction } from "@solana/web3.js";
 import { Types } from "aptos";
 import BN from "bn.js";
 
 export { IChain, ICluster, ContractError } from "@streamflow/common";
 
-// Stream Client Types
 export interface IRecipient {
   recipient: string;
   amount: BN;
@@ -13,7 +13,7 @@ export interface IRecipient {
   amountPerPeriod: BN;
 }
 
-export interface IStreamConfig {
+export interface IBaseStreamConfig {
   period: number;
   start: number;
   cliff: number;
@@ -30,11 +30,30 @@ export interface IStreamConfig {
   partner?: string;
 }
 
-export type ICreateStreamData = IStreamConfig & IRecipient;
+export type IAlignedStreamConfig = {
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  oracleType?: OracleTypeName;
+  priceOracle?: Address;
+  skipInitial?: boolean;
+  tickSize?: number;
+};
 
-export type ICreateMultipleStreamData = IStreamConfig & {
+export type ICreateLinearStreamData = IBaseStreamConfig & IRecipient;
+
+export type ICreateAlignedStreamData = ICreateLinearStreamData & IAlignedStreamConfig;
+
+export type ICreateStreamData = ICreateLinearStreamData | ICreateAlignedStreamData;
+
+export type ICreateMultipleLinearStreamData = IBaseStreamConfig & {
   recipients: IRecipient[];
 };
+
+export type ICreateMultipleAlignedStreamData = ICreateMultipleLinearStreamData & IAlignedStreamConfig;
+
+export type ICreateMultipleStreamData = ICreateMultipleLinearStreamData | ICreateMultipleAlignedStreamData;
 
 export interface IInteractData {
   id: string;
@@ -101,6 +120,8 @@ export interface IMultiTransactionResult {
   errors: ICreateMultiError[];
 }
 
+export type OracleTypeName = "none" | "pyth" | "switchboard" | "test";
+
 export enum StreamDirection {
   Outgoing = "outgoing",
   Incoming = "incoming",
@@ -154,6 +175,72 @@ export enum ContractErrorCode {
   ENO_RECIPIENT_COIN_ADDRESS = "ENO_RECIPIENT_COIN_ADDRESS",
 }
 
+// Base types, implemented by each chain package
+export interface LinearStream {
+  magic: number;
+  version: number;
+  createdAt: number;
+  withdrawnAmount: BN;
+  canceledAt: number;
+  end: number;
+  lastWithdrawnAt: number;
+  sender: string;
+  senderTokens: string;
+  recipient: string;
+  recipientTokens: string;
+  mint: string;
+  escrowTokens: string;
+  streamflowTreasury: string;
+  streamflowTreasuryTokens: string;
+  streamflowFeeTotal: BN;
+  streamflowFeeWithdrawn: BN;
+  streamflowFeePercent: number;
+  partnerFeeTotal: BN;
+  partnerFeeWithdrawn: BN;
+  partnerFeePercent: number;
+  partner: string;
+  partnerTokens: string;
+  start: number;
+  depositedAmount: BN;
+  period: number;
+  amountPerPeriod: BN;
+  cliff: number;
+  cliffAmount: BN;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  canTopup: boolean;
+  name: string;
+  withdrawalFrequency: number;
+  closed: boolean;
+  currentPauseStart: number;
+  pauseCumulative: BN;
+  lastRateChangeTime: number;
+  fundsUnlockedAtLastRateChange: BN;
+
+  type: StreamType;
+
+  unlocked(currentTimestamp: number): BN;
+
+  remaining(decimals: number): number;
+}
+
+export type AlignedStreamData = {
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  oracleType: OracleTypeName;
+  priceOracle: string | undefined;
+  tickSize: number;
+};
+
+export type AlignedStream = LinearStream & AlignedStreamData;
+
+export type Stream = LinearStream | AlignedStream;
+
 /**
  * Error codes raised by Solana protocol specifically
  */
@@ -206,54 +293,43 @@ export enum SolanaContractErrorCode {
   MetadataNotRentExempt = "MetadataNotRentExempt",
 }
 
-// Base types, implemented by each chain package
-export interface Stream {
-  magic: number;
-  version: number;
-  createdAt: number;
-  withdrawnAmount: BN;
-  canceledAt: number;
-  end: number;
-  lastWithdrawnAt: number;
-  sender: string;
-  senderTokens: string;
-  recipient: string;
-  recipientTokens: string;
-  mint: string;
-  escrowTokens: string;
-  streamflowTreasury: string;
-  streamflowTreasuryTokens: string;
-  streamflowFeeTotal: BN;
-  streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: number;
-  partnerFeeTotal: BN;
-  partnerFeeWithdrawn: BN;
-  partnerFeePercent: number;
-  partner: string;
-  partnerTokens: string;
-  start: number;
-  depositedAmount: BN;
-  period: number;
-  amountPerPeriod: BN;
-  cliff: number;
-  cliffAmount: BN;
-  cancelableBySender: boolean;
-  cancelableByRecipient: boolean;
-  automaticWithdrawal: boolean;
-  transferableBySender: boolean;
-  transferableByRecipient: boolean;
-  canTopup: boolean;
-  name: string;
-  withdrawalFrequency: number;
-  closed: boolean;
-  currentPauseStart: number;
-  pauseCumulative: BN;
-  lastRateChangeTime: number;
-  fundsUnlockedAtLastRateChange: BN;
+export enum SolanaAlignedProxyErrorCode {
+  /** Authority does not have permission for this action */
+  Unauthorized = "Unauthorized",
 
-  type: StreamType;
+  /** Arithmetic error */
+  ArithmeticError = "ArithmeticError",
 
-  unlocked(currentTimestamp: number): BN;
+  /** Mint has unsupported Token Extensions */
+  UnsupportedTokenExtensions = "UnsupportedTokenExtensions",
 
-  remaining(decimals: number): number;
+  /** Provided period is too short, should be equal or more than 30 seconds */
+  PeriodTooShort = "PeriodTooShort",
+
+  /** Provided percentage tick size is invalid */
+  InvalidTickSize = "InvalidTickSize",
+
+  /** Provided percentage bounds are invalid */
+  InvalidPercentageBoundaries = "InvalidPercentageBoundaries",
+
+  /** Provided price bounds are invalid */
+  InvalidPriceBoundaries = "InvalidPriceBoundaries",
+
+  /** Unsupported price oracle */
+  UnsupportedOracle = "UnsupportedOracle",
+
+  /** Invalid oracle account */
+  InvalidOracleAccount = "InvalidOracleAccount",
+
+  /** Invalid oracle price */
+  InvalidOraclePrice = "InvalidOraclePrice",
+
+  /** Invalid Stream Metadata */
+  InvalidStreamMetadata = "InvalidStreamMetadata",
+
+  /** Release amount has already been updated in this period */
+  AmountAlreadyUpdated = "AmountAlreadyUpdated",
+
+  /** All funds are already unlocked */
+  AllFundsUnlocked = "AllFundsUnlocked",
 }

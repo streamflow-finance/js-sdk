@@ -1,14 +1,18 @@
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
 
-import { ICluster, SolanaContractErrorCode } from "../common/types.js";
+import { ICluster, SolanaContractErrorCode, SolanaAlignedProxyErrorCode } from "../common/types.js";
 import { ISearchStreams } from "./types.js";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
 
+export const ORIGINAL_CONTRACT_SENDER_OFFSET = 9;
+
 export const STREAM_STRUCT_OFFSET_SENDER = 49;
 export const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 export const STREAM_STRUCT_OFFSET_MINT = 177;
+
+export const ALIGNED_PRECISION_FACTOR_POW = 9;
 
 export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
   mint: STREAM_STRUCT_OFFSET_MINT,
@@ -25,6 +29,22 @@ export const PROGRAM_ID = {
   [ICluster.Testnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
   [ICluster.Local]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
 };
+
+export const ALIGNED_UNLOCKS_PROGRAM_ID = {
+  [ICluster.Devnet]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+  [ICluster.Mainnet]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+  [ICluster.Testnet]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+  [ICluster.Local]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
+};
+
+// Aligned Unlocks Program transactions require a higher comput limit
+export const ALIGNED_COMPUTE_LIMIT = 300000;
+
+export const CONTRACT_DISCRIMINATOR = [172, 138, 115, 242, 121, 67, 183, 26];
+export const TEST_ORACLE_DISCRIMINATOR = [198, 49, 63, 134, 232, 251, 168, 28];
+export const CONTRACT_SEED = Buffer.from("contract", "utf-8");
+export const ESCROW_SEED = Buffer.from("strm", "utf-8");
+export const TEST_ORACLE_SEED = Buffer.from("test-oracle", "utf-8");
 
 export const PARTNER_ORACLE_PROGRAM_ID = "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa";
 
@@ -77,4 +97,17 @@ export const SOLANA_ERROR_MAP: { [key: number]: string } = {
   0x85: SolanaContractErrorCode.AlreadyPaused,
   0x86: SolanaContractErrorCode.NotPaused,
   0x87: SolanaContractErrorCode.MetadataNotRentExempt,
+  0x1770: SolanaAlignedProxyErrorCode.Unauthorized,
+  0x1771: SolanaAlignedProxyErrorCode.ArithmeticError,
+  0x1772: SolanaAlignedProxyErrorCode.UnsupportedTokenExtensions,
+  0x1773: SolanaAlignedProxyErrorCode.PeriodTooShort,
+  0x1774: SolanaAlignedProxyErrorCode.InvalidTickSize,
+  0x1775: SolanaAlignedProxyErrorCode.InvalidPercentageBoundaries,
+  0x1776: SolanaAlignedProxyErrorCode.InvalidPriceBoundaries,
+  0x1777: SolanaAlignedProxyErrorCode.UnsupportedOracle,
+  0x1778: SolanaAlignedProxyErrorCode.InvalidOracleAccount,
+  0x1779: SolanaAlignedProxyErrorCode.InvalidOraclePrice,
+  0x177a: SolanaAlignedProxyErrorCode.InvalidStreamMetadata,
+  0x177b: SolanaAlignedProxyErrorCode.AmountAlreadyUpdated,
+  0x177c: SolanaAlignedProxyErrorCode.AllFundsUnlocked,
 };

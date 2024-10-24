@@ -1,6 +1,7 @@
 import BN from "bn.js";
 
-import { StreamType } from "./types.js";
+import { AlignedStream, ICreateAlignedStreamData, ICreateStreamData, Stream, StreamType } from "./types.js";
+import { MAX_SAFE_UNIX_TIME_VALUE } from "./constants.js";
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
@@ -52,6 +53,14 @@ export const isVesting = (streamData: { canTopup: boolean; depositedAmount: BN; 
   return !streamData.canTopup && !isCliffCloseToDepositedAmount(streamData);
 };
 
+export const isAligned = (stream: Stream): stream is AlignedStream => {
+  return "minPrice" in stream && "maxPrice" in stream && "minPercentage" in stream && "maxPercentage" in stream;
+};
+
+export const isCreateAlignedStreamData = (obj: ICreateStreamData): obj is ICreateAlignedStreamData => {
+  return "minPrice" in obj && "maxPrice" in obj && "minPercentage" in obj && "maxPercentage" in obj;
+};
+
 export const isTokenLock = (streamData: {
   canTopup: boolean;
   automaticWithdrawal: boolean;
@@ -90,4 +99,11 @@ export const buildStreamType = (streamData: {
     return StreamType.Lock;
   }
   return StreamType.Payment;
+};
+
+export const decodeEndTime = (endTime: BN): number => {
+  if (endTime.gt(new BN(MAX_SAFE_UNIX_TIME_VALUE))) {
+    return MAX_SAFE_UNIX_TIME_VALUE;
+  }
+  return endTime.toNumber();
 };
