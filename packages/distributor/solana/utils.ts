@@ -8,7 +8,7 @@ import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@
 import { fromTxError } from "./generated/errors/index.js";
 import { ONE_IN_BASIS_POINTS, ALIGNED_DISTRIBUTOR_PREFIX } from "./constants.js";
 
-export const getAlignedDistributorPDA = (programId: PublicKey, distributor: PublicKey): PublicKey => {
+export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
 };
 

@@ -1,7 +1,7 @@
 import BN from "bn.js";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { getBN, getNumberFromBN } from "@streamflow/common";
+import { getBN, getNumberFromBN, invariant } from "@streamflow/common";
 
 import {
   ICreateAlignedDistributorData,
@@ -15,12 +15,12 @@ import BaseDistributorClient, { IInitOptions } from "./BaseDistributorClient.js"
 import { AlignedDistributor as AlignedAirdropsProgramType } from "../descriptor/aligned_distributor.js";
 import StreamflowAlignedAirdropsIDL from "../descriptor/idl/aligned_distributor.json";
 import { ALIGNED_PRECISION_FACTOR_POW } from "../constants.js";
-import { getAlignedDistributorPDA } from "../utils.js";
+import { getAlignedDistributorPda } from "../utils.js";
 
-export default class SolanaDistributorClient extends BaseDistributorClient {
+export default class SolanaAlignedDistributorClient extends BaseDistributorClient {
   private alignedProxyProgram: Program<AlignedAirdropsProgramType>;
 
-  constructor({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler }: IInitOptions) {
+  public constructor({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler }: IInitOptions) {
     super({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler });
     const alignedAirdropsProgram = {
       ...StreamflowAlignedAirdropsIDL,
@@ -30,11 +30,9 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
 
   public async getAlignedDistributorData(distributorAddress: string): Promise<AlignedDistributorData | null> {
     const distributorKey = new PublicKey(distributorAddress);
-    const alignedDistributorKey = getAlignedDistributorPDA(this.alignedProxyProgram.programId, distributorKey);
+    const alignedDistributorKey = getAlignedDistributorPda(this.alignedProxyProgram.programId, distributorKey);
     const alignedProxy = await this.alignedProxyProgram.account.alignedDistributor.fetch(alignedDistributorKey);
-    if (!alignedProxy) {
-      throw new Error("Aligned Distributor proxy account not found");
-    }
+    invariant(alignedProxy, "Aligned Distributor proxy account not found");
 
     const oracleType = Object.keys(alignedProxy.priceOracleType).find((key) => !!key) as OracleTypeName;
 
@@ -51,7 +49,7 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
     };
   }
 
-  public async prepareNewDistributorInstruction(
+  protected async getNewDistributorInstruction(
     data: ICreateAlignedDistributorData,
     accounts: NewDistributorAccounts,
   ): Promise<TransactionInstruction> {
@@ -78,14 +76,12 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
     return newDistributorIx;
   }
 
-  public async prepareClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
+  protected async getClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
     const { distributor, from, to, mint, tokenProgram } = accounts;
-    const alignedDistributorKey = getAlignedDistributorPDA(this.alignedProxyProgram.programId, distributor);
+    const alignedDistributorKey = getAlignedDistributorPda(this.alignedProxyProgram.programId, distributor);
 
     const alignedProxy = await this.alignedProxyProgram.account.alignedDistributor.fetch(alignedDistributorKey);
-    if (!alignedProxy) {
-      throw new Error("Aligned Distributor proxy account not found");
-    }
+    invariant(alignedProxy, "Aligned Distributor proxy account not found");
 
     const clawbackInstruction = await this.alignedProxyProgram.methods
       .clawback()

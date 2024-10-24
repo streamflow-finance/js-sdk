@@ -27,7 +27,7 @@ import {
   getTransferFeeConfig,
   NATIVE_MINT,
 } from "@solana/spl-token";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes/index";
+import bs58 from "bs58";
 
 import { DISTRIBUTOR_ADMIN_OFFSET, DISTRIBUTOR_MINT_OFFSET, DISTRIBUTOR_PROGRAM_ID } from "../constants";
 import {
@@ -79,7 +79,7 @@ export default abstract class BaseDistributorClient {
 
   protected sendThrottler: PQueue;
 
-  protected constructor({
+  public constructor({
     clusterUrl,
     cluster = ICluster.Mainnet,
     commitment = "confirmed",
@@ -93,11 +93,11 @@ export default abstract class BaseDistributorClient {
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
   }
 
-  protected abstract prepareNewDistributorInstruction(
+  protected abstract getNewDistributorInstruction(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
     accounts: NewDistributorAccounts,
   ): Promise<TransactionInstruction>;
-  protected abstract prepareClawbackInstruction(account: ClawbackAccounts): Promise<TransactionInstruction>;
+  protected abstract getClawbackInstruction(account: ClawbackAccounts): Promise<TransactionInstruction>;
 
   public getCommitment(): Commitment | undefined {
     return typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
@@ -137,7 +137,7 @@ export default abstract class BaseDistributorClient {
       );
     }
 
-    const newDistributorInstruction = await this.prepareNewDistributorInstruction(data, accounts);
+    const newDistributorInstruction = await this.getNewDistributorInstruction(data, accounts);
 
     ixs.push(newDistributorInstruction);
 
@@ -327,11 +327,9 @@ export default abstract class BaseDistributorClient {
       tokenProgram: tokenProgramId,
     };
 
-    const clawbackInstruction = await this.prepareClawbackInstruction(accounts);
+    const clawbackInstruction = await this.getClawbackInstruction(accounts);
 
     ixs.push(clawbackInstruction);
-
-    //ixs.push(clawback(accounts, this.programId));
 
     return ixs;
   }

@@ -5,7 +5,7 @@ import { ClawbackAccounts, NewDistributorAccounts, clawback, newDistributor } fr
 import BaseDistributorClient from "./BaseDistributorClient.js";
 
 export default class SolanaDistributorClient extends BaseDistributorClient {
-  protected async prepareNewDistributorInstruction(
+  protected async getNewDistributorInstruction(
     data: ICreateDistributorData,
     accounts: NewDistributorAccounts,
   ): Promise<TransactionInstruction> {
@@ -13,7 +13,7 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
     return newDistributor(args, accounts, this.programId);
   }
 
-  protected async prepareClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
+  protected async getClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
     return clawback(accounts, this.programId);
   }
 }
