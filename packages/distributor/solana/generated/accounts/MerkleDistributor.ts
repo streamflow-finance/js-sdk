@@ -39,8 +39,18 @@ export interface MerkleDistributorFields {
   clawedBack: boolean;
   /** Whether claims are closable by the admin or not */
   claimsClosable: boolean;
-  /** Buffer for additional fields */
-  buffer1: Array<number>;
+  /** Whether admin can update vesting duration */
+  canUpdateDuration: boolean;
+  /** Total amount of funds unlocked (cliff/instant) */
+  totalAmountUnlocked: BN;
+  /** Total amount of funds locked (vested) */
+  totalAmountLocked: BN;
+  /** Timestamp when update was last called */
+  lastDurationUpdateTs: BN;
+  /** Total amount of locked amount claimable as of last duration update, ever increasing total, accumulates with each update */
+  totalClaimablePreUpdate: BN;
+  /** Timestamp when funds were clawed back */
+  clawedBackTs: BN;
   /** Buffer for additional fields */
   buffer2: Array<number>;
   /** Buffer for additional fields */
@@ -82,8 +92,18 @@ export interface MerkleDistributorJSON {
   clawedBack: boolean;
   /** Whether claims are closable by the admin or not */
   claimsClosable: boolean;
-  /** Buffer for additional fields */
-  buffer1: Array<number>;
+  /** Whether admin can update vesting duration */
+  canUpdateDuration: boolean;
+  /** Total amount of funds unlocked (cliff/instant) */
+  totalAmountUnlocked: string;
+  /** Total amount of funds locked (vested) */
+  totalAmountLocked: string;
+  /** Timestamp when update was last called */
+  lastDurationUpdateTs: string;
+  /** Total amount of locked amount claimable as of last duration update, ever increasing total, accumulates with each update */
+  totalClaimablePreUpdate: string;
+  /** Timestamp when funds were clawed back */
+  clawedBackTs: string;
   /** Buffer for additional fields */
   buffer2: Array<number>;
   /** Buffer for additional fields */
@@ -143,8 +163,23 @@ export class MerkleDistributor {
   /** Whether claims are closable by the admin or not */
   readonly claimsClosable: boolean;
 
-  /** Buffer for additional fields */
-  readonly buffer1: Array<number>;
+  /** Whether admin can update vesting duration */
+  readonly canUpdateDuration: boolean;
+
+  /** Total amount of funds unlocked (cliff/instant) */
+  readonly totalAmountUnlocked: BN;
+
+  /** Total amount of funds locked (vested) */
+  readonly totalAmountLocked: BN;
+
+  /** Timestamp when update was last called */
+  readonly lastDurationUpdateTs: BN;
+
+  /** Total amount of locked amount claimable as of last duration update, ever increasing total, accumulates with each update */
+  readonly totalClaimablePreUpdate: BN;
+
+  /** Timestamp when funds were clawed back */
+  readonly clawedBackTs: BN;
 
   /** Buffer for additional fields */
   readonly buffer2: Array<number>;
@@ -172,8 +207,13 @@ export class MerkleDistributor {
     borsh.publicKey("admin"),
     borsh.bool("clawedBack"),
     borsh.bool("claimsClosable"),
-    borsh.array(borsh.u8(), 32, "buffer1"),
-    borsh.array(borsh.u8(), 32, "buffer2"),
+    borsh.bool("canUpdateDuration"),
+    borsh.u64("totalAmountUnlocked"),
+    borsh.u64("totalAmountLocked"),
+    borsh.u64("lastDurationUpdateTs"),
+    borsh.u64("totalClaimablePreUpdate"),
+    borsh.u64("clawedBackTs"),
+    borsh.array(borsh.u8(), 23, "buffer2"),
     borsh.array(borsh.u8(), 32, "buffer3"),
   ]);
 
@@ -195,7 +235,12 @@ export class MerkleDistributor {
     this.admin = fields.admin;
     this.clawedBack = fields.clawedBack;
     this.claimsClosable = fields.claimsClosable;
-    this.buffer1 = fields.buffer1;
+    this.canUpdateDuration = fields.canUpdateDuration;
+    this.totalAmountUnlocked = fields.totalAmountUnlocked;
+    this.totalAmountLocked = fields.totalAmountLocked;
+    this.lastDurationUpdateTs = fields.lastDurationUpdateTs;
+    this.totalClaimablePreUpdate = fields.totalClaimablePreUpdate;
+    this.clawedBackTs = fields.clawedBackTs;
     this.buffer2 = fields.buffer2;
     this.buffer3 = fields.buffer3;
   }
@@ -261,7 +306,12 @@ export class MerkleDistributor {
       admin: dec.admin,
       clawedBack: dec.clawedBack,
       claimsClosable: dec.claimsClosable,
-      buffer1: dec.buffer1,
+      canUpdateDuration: dec.canUpdateDuration,
+      totalAmountUnlocked: dec.totalAmountUnlocked,
+      totalAmountLocked: dec.totalAmountLocked,
+      lastDurationUpdateTs: dec.lastDurationUpdateTs,
+      totalClaimablePreUpdate: dec.totalClaimablePreUpdate,
+      clawedBackTs: dec.clawedBackTs,
       buffer2: dec.buffer2,
       buffer3: dec.buffer3,
     });
@@ -286,7 +336,12 @@ export class MerkleDistributor {
       admin: this.admin.toString(),
       clawedBack: this.clawedBack,
       claimsClosable: this.claimsClosable,
-      buffer1: this.buffer1,
+      canUpdateDuration: this.canUpdateDuration,
+      totalAmountUnlocked: this.totalAmountUnlocked.toString(),
+      totalAmountLocked: this.totalAmountLocked.toString(),
+      lastDurationUpdateTs: this.lastDurationUpdateTs.toString(),
+      totalClaimablePreUpdate: this.totalClaimablePreUpdate.toString(),
+      clawedBackTs: this.clawedBackTs.toString(),
       buffer2: this.buffer2,
       buffer3: this.buffer3,
     };
@@ -311,7 +366,12 @@ export class MerkleDistributor {
       admin: new PublicKey(obj.admin),
       clawedBack: obj.clawedBack,
       claimsClosable: obj.claimsClosable,
-      buffer1: obj.buffer1,
+      canUpdateDuration: obj.canUpdateDuration,
+      totalAmountUnlocked: new BN(obj.totalAmountUnlocked),
+      totalAmountLocked: new BN(obj.totalAmountLocked),
+      lastDurationUpdateTs: new BN(obj.lastDurationUpdateTs),
+      totalClaimablePreUpdate: new BN(obj.totalClaimablePreUpdate),
+      clawedBackTs: new BN(obj.clawedBackTs),
       buffer2: obj.buffer2,
       buffer3: obj.buffer3,
     });
