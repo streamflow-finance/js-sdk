@@ -15,7 +15,7 @@ import BaseDistributorClient, { IInitOptions } from "./BaseDistributorClient.js"
 import { AlignedDistributor as AlignedAirdropsProgramType } from "../descriptor/aligned_distributor.js";
 import StreamflowAlignedAirdropsIDL from "../descriptor/idl/aligned_distributor.json";
 import { ALIGNED_PRECISION_FACTOR_POW } from "../constants.js";
-import { getAlignedDistributorPda } from "../utils.js";
+import { getAlignedDistributorPda, getTestOraclePda } from "../utils.js";
 
 export default class SolanaAlignedDistributorClient extends BaseDistributorClient {
   private alignedProxyProgram: Program<AlignedAirdropsProgramType>;
@@ -53,10 +53,13 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
     data: ICreateAlignedDistributorData,
     accounts: NewDistributorAccounts,
   ): Promise<TransactionInstruction> {
-    const { distributor, mint, clawbackReceiver, tokenProgram, tokenVault } = accounts;
+    const { distributor, mint, clawbackReceiver, tokenProgram, tokenVault, admin } = accounts;
 
     const baseArgs = this.getNewDistributorArgs(data);
     const alignedArgs = this.getNewAlignedDistributorArgs(data);
+    const oracle = data.oracleAddress
+      ? new PublicKey(data.oracleAddress)
+      : getTestOraclePda(this.alignedProxyProgram.programId, mint, admin);
 
     const newDistributorIx = await this.alignedProxyProgram.methods
       .newDistributor({
@@ -69,7 +72,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
         clawbackReceiver,
         mint,
         tokenProgram,
-        priceOracle: new PublicKey(data.oracleAddress),
+        priceOracle: oracle,
       })
       .instruction();
 
