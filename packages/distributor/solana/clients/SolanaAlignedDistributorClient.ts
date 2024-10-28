@@ -67,6 +67,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
         ...alignedArgs,
       })
       .accounts({
+        admin,
         tokenVault,
         distributor,
         clawbackReceiver,
@@ -111,6 +112,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
       skipInitial,
       totalAmountLocked,
       totalAmountUnlocked,
+      unlockPeriod,
     } = data;
 
     return {
@@ -123,7 +125,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
       maxPercentage: getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW),
       tickSize: new BN(tickSize || 1),
       skipInitial: skipInitial ?? false,
-      updatePeriod: new BN(30),
+      updatePeriod: unlockPeriod < 30 ? new BN(30) : new BN(unlockPeriod),
     };
   }
 }
