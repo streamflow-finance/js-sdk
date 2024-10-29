@@ -81,7 +81,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
   }
 
   protected async getClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
-    const { distributor, from, to, mint, tokenProgram } = accounts;
+    const { distributor, from, to, mint, tokenProgram, admin } = accounts;
     const alignedDistributorKey = getAlignedDistributorPda(this.alignedProxyProgram.programId, distributor);
 
     const alignedProxy = await this.alignedProxyProgram.account.alignedDistributor.fetch(alignedDistributorKey);
@@ -90,6 +90,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
     const clawbackInstruction = await this.alignedProxyProgram.methods
       .clawback()
       .accounts({
+        admin,
         distributor,
         from,
         to,
