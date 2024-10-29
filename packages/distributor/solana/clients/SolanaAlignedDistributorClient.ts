@@ -28,7 +28,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
     this.alignedProxyProgram = new Program(alignedAirdropsProgram, { connection: this.connection });
   }
 
-  public async getAlignedDistributorData(distributorAddress: string): Promise<AlignedDistributorData | null> {
+  public async getAlignedDistributorData(distributorAddress: string): Promise<AlignedDistributorData> {
     const distributorKey = new PublicKey(distributorAddress);
     const alignedDistributorKey = getAlignedDistributorPda(this.alignedProxyProgram.programId, distributorKey);
     const alignedProxy = await this.alignedProxyProgram.account.alignedDistributor.fetch(alignedDistributorKey);

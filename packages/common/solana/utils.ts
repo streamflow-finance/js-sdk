@@ -175,8 +175,6 @@ export async function signAndExecuteTransaction(
 ): Promise<string> {
   const signedTx = await signTransaction(invoker, tx);
 
-  console.log(Buffer.from(tx.serialize()).toString("base64"));
-
   return executeTransaction(connection, signedTx, confirmationParams, throttleParams);
 }
 
