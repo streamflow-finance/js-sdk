@@ -3,6 +3,13 @@ import { Keypair } from "@solana/web3.js";
 import { ITransactionResult } from "@streamflow/common";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
+import { IdlTypes } from "@coral-xyz/anchor";
+
+import { AlignedDistributor as AlignedDistributorIDL } from "./descriptor/aligned_distributor.js";
+
+export type OracleType = IdlTypes<AlignedDistributorIDL>["oracleType"];
+
+export type OracleTypeName = "none" | "pyth" | "switchboard" | "test";
 
 export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
@@ -15,7 +22,6 @@ export interface ICreateSolanaExt extends IInteractSolanaExt {
 export interface ICreateDistributorData {
   mint: string;
   version: number;
-
   root: Array<number>;
   maxTotalClaim: BN | number | string;
   maxNumNodes: BN | number | string;
@@ -24,6 +30,45 @@ export interface ICreateDistributorData {
   endVestingTs: number;
   clawbackStartTs: number;
   claimsClosable: boolean;
+}
+
+export interface AlignedDistributorData {
+  sender: string;
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  oracleType: OracleTypeName;
+  priceOracle: string | undefined;
+  updatePeriod: number;
+  clawedBack: boolean;
+}
+
+export interface NewAlignedDistributorArgs {
+  totalAmountLocked: BN;
+  totalAmountUnlocked: BN;
+  oracleType: OracleType;
+  minPrice: BN;
+  maxPrice: BN;
+  minPercentage: BN;
+  maxPercentage: BN;
+  tickSize: BN;
+  skipInitial: boolean;
+  updatePeriod: BN;
+}
+
+export interface ICreateAlignedDistributorData extends ICreateDistributorData {
+  minPrice: number;
+  maxPrice: number;
+  minPercentage: number;
+  maxPercentage: number;
+  oracleType: OracleTypeName;
+  oracleAddress: string;
+  totalAmountLocked: BN | number | string;
+  totalAmountUnlocked: BN | number | string;
+  updatePeriod?: number;
+  tickSize?: number;
+  skipInitial?: boolean;
 }
 
 export interface IClaimData {
