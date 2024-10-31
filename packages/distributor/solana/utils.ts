@@ -6,7 +6,13 @@ import { ContractError, divCeilN } from "@streamflow/common";
 import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@streamflow/common/solana";
 
 import { fromTxError } from "./generated/errors/index.js";
-import { ONE_IN_BASIS_POINTS, ALIGNED_DISTRIBUTOR_PREFIX, TEST_ORACLE_PREFIX } from "./constants.js";
+import {
+  ONE_IN_BASIS_POINTS,
+  ALIGNED_DISTRIBUTOR_PREFIX,
+  TEST_ORACLE_PREFIX,
+  DISTRIBUTOR_PREFIX,
+  CLAIM_STATUS_PREFIX,
+} from "./constants.js";
 
 export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
@@ -19,7 +25,7 @@ export const getTestOraclePda = (programId: PublicKey, mint: PublicKey, creator:
 export function getDistributorPda(programId: PublicKey, mint: PublicKey, version: number): PublicKey {
   // Constructing the seed for the PDA
   const seeds = [
-    Buffer.from("MerkleDistributor"),
+    DISTRIBUTOR_PREFIX,
     mint.toBuffer(),
     Buffer.from(new Uint8Array(new BigUint64Array([BigInt(version)]).buffer)),
   ];
@@ -30,7 +36,7 @@ export function getDistributorPda(programId: PublicKey, mint: PublicKey, version
 
 export function getClaimantStatusPda(programId: PublicKey, distributor: PublicKey, claimant: PublicKey): PublicKey {
   // Constructing the seed for the PDA
-  const seeds = [Buffer.from("ClaimStatus"), claimant.toBuffer(), distributor.toBuffer()];
+  const seeds = [CLAIM_STATUS_PREFIX, claimant.toBuffer(), distributor.toBuffer()];
 
   // Finding the PDA
   return PublicKey.findProgramAddressSync(seeds, programId)[0];

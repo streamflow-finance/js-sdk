@@ -103,6 +103,10 @@ export default abstract class BaseDistributorClient {
     return typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
   }
 
+  public getDistributorProgramId(): PublicKey {
+    return this.programId;
+  }
+
   public async prepareCreateInstructions(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
     extParams: ICreateSolanaExt,
