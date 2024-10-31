@@ -61,6 +61,7 @@ import {
   StakeEntry,
   StakePool,
   UnstakeArgs,
+  UpdateRewardPoolArgs,
 } from "./types.js";
 
 interface Programs {
@@ -454,6 +455,33 @@ export class SolanaStakingClient {
         authority: staker,
         stakeEntry: deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, depositNonce),
         rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(stakePoolMint), rewardPoolNonce),
+      })
+      .instruction();
+
+    return { ixs: [instruction] };
+  }
+
+  async updateRewardPool(data: UpdateRewardPoolArgs, extParams: IInteractSolanaExt) {
+    const { ixs } = await this.prepareUpdateRewardPoolInstructions(data, extParams);
+    const { signature } = await this.execute(ixs, extParams);
+
+    return {
+      ixs,
+      txId: signature,
+    };
+  }
+
+  async prepareUpdateRewardPoolInstructions(
+    { rewardPool, rewardAmount, rewardPeriod }: UpdateRewardPoolArgs,
+    extParams: IInteractSolanaExt,
+  ) {
+    const { rewardPoolProgram } = this.programs;
+    const invoker = extParams.invoker.publicKey;
+    invariant(invoker, "Undefined invoker publicKey");
+    const instruction = await rewardPoolProgram.methods
+      .updatePool(rewardAmount, rewardPeriod)
+      .accounts({
+        rewardPool,
       })
       .instruction();
 
