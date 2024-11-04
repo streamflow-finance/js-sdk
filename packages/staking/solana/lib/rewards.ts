@@ -2,11 +2,14 @@ import { ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 // eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
+import { getBN } from "@streamflow/common/lib/utils";
 
 import { RewardEntry, StakeEntry, RewardPool } from "../types.js";
-import { SCALE_PRECISION_FACTOR_BN } from "../constants.js";
-
-export const REWARD_AMOUNT_PRECISION_FACTOR = new BN("1000000000");
+import {
+  REWARD_AMOUNT_PRECISION_FACTOR,
+  SCALE_PRECISION_FACTOR_BN,
+  REWARD_AMOUNT_PRECISION_FACTOR_BN,
+} from "../constants.js";
 
 export class RewardEntryAccumulator implements RewardEntry {
   lastAccountedTs: BN;
@@ -65,9 +68,9 @@ export class RewardEntryAccumulator implements RewardEntry {
 
   // Calculates claimable amount from accountable amount.
   getClaimableAmount(): BN {
-    const claimedAmount = this.claimedAmount.mul(REWARD_AMOUNT_PRECISION_FACTOR);
+    const claimedAmount = this.claimedAmount.mul(REWARD_AMOUNT_PRECISION_FACTOR_BN);
     const nonClaimedAmount = this.accountedAmount.sub(claimedAmount);
-    const claimableAmount = nonClaimedAmount.div(REWARD_AMOUNT_PRECISION_FACTOR);
+    const claimableAmount = nonClaimedAmount.div(REWARD_AMOUNT_PRECISION_FACTOR_BN);
 
     return claimableAmount;
   }
@@ -206,4 +209,8 @@ export const calcRewards = (
   rewardEntryAccumulator.addAccountedAmount(accountableAmount);
 
   return rewardEntryAccumulator.getClaimableAmount();
+};
+
+export const calculateRewardAmount = (rewardRate: number, rewardTokenDecimals: number, stakeTokenDecimals: number) => {
+  return getBN(rewardRate, rewardTokenDecimals + (REWARD_AMOUNT_PRECISION_FACTOR - stakeTokenDecimals));
 };
