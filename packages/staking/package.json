@@ -24,6 +24,7 @@
     "build": "rm -rf dist; pnpm run build:cjs && pnpm run build:esm",
     "pack": "pnpm build && pnpm pack",
     "lint": "eslint --fix .",
+    "test": "vitest",
     "prepublishOnly": "npm run lint && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
