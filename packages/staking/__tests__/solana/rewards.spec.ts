@@ -4,7 +4,11 @@ import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { describe, expect, test } from "vitest";
 
-import { RewardEntryAccumulator, calculateRewardAmount } from "../../solana/lib/rewards.js";
+import {
+  RewardEntryAccumulator,
+  calculateRewardAmountFromRate,
+  calculateRewardRateFromAmount,
+} from "../../solana/lib/rewards.js";
 import { SCALE_PRECISION_FACTOR_BN } from "../../solana/constants.js";
 
 const populateRewardEntry = (
@@ -49,20 +53,23 @@ describe("RewardEntryAccumulator", () => {
         const stakedAmount = getBN(1, stakeTokenDecimals);
         const effectiveStakedAmount = stakedAmount.mul(SCALE_PRECISION_FACTOR_BN);
         const rewardPeriod = new BN(1);
-        const rewardAmount = calculateRewardAmount(rewardRate, stakeTokenDecimals, rewardTokenDecimals);
+        const rewardAmount = calculateRewardAmountFromRate(rewardRate, stakeTokenDecimals, rewardTokenDecimals);
         const rewardEntry = populateRewardEntry(effectiveStakedAmount, rewardAmount, rewardPeriod, periods);
         const claimableAmount = rewardEntry.getClaimableAmount();
 
         expect(rewardAmount.toString()).toEqual(expectedRewardAmount.toString());
         expect(claimableAmount.toString()).toEqual(getBN(rewardRate, rewardTokenDecimals).muln(periods).toString());
+        expect(calculateRewardRateFromAmount(rewardAmount, stakeTokenDecimals, rewardTokenDecimals)).toEqual(
+          rewardRate,
+        );
       });
     });
 
     test(`test decimals - negative difference`, () => {
-      let rewardAmount = calculateRewardAmount(0.0025, 18, 1);
+      let rewardAmount = calculateRewardAmountFromRate(0.0025, 18, 1);
       expect(rewardAmount.toString()).toEqual(new BN(0).toString());
 
-      rewardAmount = calculateRewardAmount(0.0025, 12, 4);
+      rewardAmount = calculateRewardAmountFromRate(0.0025, 12, 4);
       expect(rewardAmount.toString()).toEqual(new BN(0).toString());
     });
 
@@ -72,12 +79,13 @@ describe("RewardEntryAccumulator", () => {
       const stakedAmount = getBN(1, stakeTokenDecimals);
       const effectiveStakedAmount = stakedAmount.mul(SCALE_PRECISION_FACTOR_BN);
       const rewardPeriod = new BN(1);
-      const rewardAmount = calculateRewardAmount(0.0025, stakeTokenDecimals, rewardTokenDecimals);
+      const rewardAmount = calculateRewardAmountFromRate(0.0025, stakeTokenDecimals, rewardTokenDecimals);
       const rewardEntry = populateRewardEntry(effectiveStakedAmount, rewardAmount, rewardPeriod);
       const claimableAmount = rewardEntry.getClaimableAmount();
 
       expect(rewardAmount.toString()).toEqual(new BN(2).toString());
       expect(claimableAmount.toString()).toEqual(getBN(0.002, rewardTokenDecimals).toString());
+      expect(calculateRewardRateFromAmount(rewardAmount, stakeTokenDecimals, rewardTokenDecimals)).toEqual(0.002);
     });
   });
 });

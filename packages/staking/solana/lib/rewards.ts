@@ -2,7 +2,7 @@ import { ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 // eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
-import { getBN } from "@streamflow/common";
+import { getBN, getNumberFromBN } from "@streamflow/common";
 
 import { RewardEntry, RewardPool, StakeEntry } from "../types.js";
 import { REWARD_AMOUNT_DECIMALS, REWARD_AMOUNT_PRECISION_FACTOR_BN, SCALE_PRECISION_FACTOR_BN } from "../constants.js";
@@ -225,8 +225,16 @@ export const calcRewards = (
   return rewardEntryAccumulator.getClaimableAmount();
 };
 
-export const calculateRewardAmount = (rewardRate: number, stakeTokenDecimals: number, rewardTokenDecimals: number) => {
-  const rewardTokenValue = getBN(rewardRate, rewardTokenDecimals);
+export const calculateRewardRateFromAmount = (
+  rewardAmount: BN,
+  stakeTokenDecimals: number,
+  rewardTokenDecimals: number,
+) => {
+  const decimals = rewardTokenDecimals + (REWARD_AMOUNT_DECIMALS - stakeTokenDecimals);
+  return getNumberFromBN(rewardAmount, decimals);
+};
+
+export const calculateRewardAmountFromValue = (rewardTokenValue: BN, stakeTokenDecimals: number) => {
   const decimalsDiff = REWARD_AMOUNT_DECIMALS - stakeTokenDecimals;
   if (decimalsDiff === 0) {
     return rewardTokenValue;
@@ -236,4 +244,12 @@ export const calculateRewardAmount = (rewardRate: number, stakeTokenDecimals: nu
     return rewardTokenValue.mul(diffFactor);
   }
   return rewardTokenValue.div(diffFactor);
+};
+
+export const calculateRewardAmountFromRate = (
+  rewardRate: number,
+  stakeTokenDecimals: number,
+  rewardTokenDecimals: number,
+) => {
+  return calculateRewardAmountFromValue(getBN(rewardRate, rewardTokenDecimals), stakeTokenDecimals);
 };

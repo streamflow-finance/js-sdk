@@ -123,7 +123,7 @@ const { metadataId: stakePoolPda } = await client.createStakePool({
 
 #### Create a rewardPool pool
 ```typescript
-import { calculateRewardAmount } from "@streamflow/common";
+import { calculateRewardAmountFromRate } from "@streamflow/staking";
 
 /*
   [0;256) derive reward pool PDA account address.  
@@ -141,7 +141,7 @@ const rewardRate = 0.0025;
 const stakeTokenDecimals = 9;
 const rewardTokenDecimals = 6;
 // For every effectively Staked 1 WHOLE token 0.0025 of Reward Token will be distributed
-const rewardAmount = calculateRewardAmount(rewardRate, stakeTokenDecimals, rewardTokenDecimals);
+const rewardAmount = calculateRewardAmountFromRate(rewardRate, stakeTokenDecimals, rewardTokenDecimals);
 /*
  1 day - Unix time in seconds. Period for rewarding stakers. Period starts counting from the moment of staking
 */
@@ -188,15 +188,15 @@ User wants to set reward amount of `0.003` for every effective staked whole toke
     - We need to remove decimals from the raw token to be distributed making `rewardAmount` = `3_000_000`;
 3. RT with 5 decimals, ST with 7 decimals.
     - `0.003` of RT is `300` raw tokens;
-    - ST has 5 decimals while P is 9, therefore `9 - 7 = 2`;
+    - ST has 7 decimals while P is 9, therefore `9 - 7 = 2`;
     - We need to add 2 decimals making `rewardAmount` = `30_000`;
 4. RT with 9 decimals, ST with 3 decimals.
-- `0.003` of RT is `3_000_000` raw tokens;
-- the difference between RT and ST decimals is `9 - 3 = 6`;
-- ST has 3 decimals while P is 9, therefore `9 - 3 = 6`;
-- We need to add 10 decimals making `rewardAmount` = `3_000_000_000_000`;
+    - `0.003` of RT is `3_000_000` raw tokens;
+    - the difference between RT and ST decimals is `9 - 3 = 6`;
+    - ST has 3 decimals while P is 9, therefore `9 - 3 = 6`;
+    - We need to add 6 decimals making `rewardAmount` = `3_000_000_000_000`;
 
-We recommend to use the `calculateRewardAmount` function exposed by the sdk for the correct reward amount configuration. 
+We recommend to use the `calculateRewardAmountFromRate` function exposed by the sdk for the correct reward amount configuration. 
 
 **Also, some configurations where there is big difference between Stake Pool and Reward Pool token decimals may be unsupported, in this case the function will return 0, so be aware.**
 
