@@ -480,7 +480,8 @@ export class SolanaStakingClient {
     invariant(invoker, "Undefined invoker publicKey");
     const instruction = await rewardPoolProgram.methods
       .updatePool(rewardAmount, rewardPeriod)
-      .accounts({
+      .accountsPartial({
+        authority: invoker,
         rewardPool,
       })
       .instruction();
