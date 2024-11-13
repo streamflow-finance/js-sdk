@@ -326,13 +326,23 @@ export async function simulateTransaction(
     if (res.value.err) {
       const errMessage = JSON.stringify(res.value.err);
       if (!errMessage.includes("BlockhashNotFound") || i === SIMULATE_TRIES - 1) {
-        throw new SendTransactionError("failed to simulate transaction: " + errMessage, res.value.logs || undefined);
+        throw new SendTransactionError({
+          action: "simulate",
+          signature: "",
+          transactionMessage: `failed to simulate transaction: ${typeof res.value.err === "string" ? res.value.err : errMessage}`,
+          logs: res.value.logs ?? undefined,
+        });
       }
       continue;
     }
     return res;
   }
-  throw new SendTransactionError("failed to simulate transaction");
+
+  throw new SendTransactionError({
+    action: "simulate",
+    signature: "",
+    transactionMessage: "failed to simulate transaction",
+  });
 }
 
 /**
