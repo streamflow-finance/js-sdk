@@ -737,6 +737,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates multiple stream/vesting contracts, and send all transactions sequentially.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * In most cases, createMultiple should be used instead.
    */
   public async createMultipleSequential(
     data: ICreateMultipleStreamData,
@@ -839,7 +840,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
 
     if (prepareInstructions.length > 0) {
-      const prepareTx = signedBatch.pop();
+      const prepareTx = signedBatch.shift();
       await sendAndConfirmStreamRawTransaction(
         this.connection,
         prepareTx!,
