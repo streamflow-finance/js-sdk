@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/eslint-config",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "license": "ISC",
   "main": "index.js",
   "files": [
