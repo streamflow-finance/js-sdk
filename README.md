@@ -61,3 +61,6 @@ To contribute to this repository, please follow these steps:
 8. Create a pull request
 
 Please ensure that you have [pnpm](https://pnpm.io/) installed on your system before contributing.
+
+## News
+Stay updated on our [X/Twitter](https://x.com/streamflow_fi).
