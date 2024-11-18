@@ -2,11 +2,10 @@ import { ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 // eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
+import { getBN, getNumberFromBN } from "@streamflow/common";
 
-import { RewardEntry, StakeEntry, RewardPool } from "../types.js";
-import { SCALE_PRECISION_FACTOR_BN } from "../constants.js";
-
-export const REWARD_AMOUNT_PRECISION_FACTOR = new BN("1000000000");
+import { RewardEntry, RewardPool, StakeEntry } from "../types.js";
+import { REWARD_AMOUNT_DECIMALS, REWARD_AMOUNT_PRECISION_FACTOR_BN, SCALE_PRECISION_FACTOR_BN } from "../constants.js";
 
 export class RewardEntryAccumulator implements RewardEntry {
   lastAccountedTs: BN;
@@ -27,16 +26,40 @@ export class RewardEntryAccumulator implements RewardEntry {
 
   buffer: number[];
 
-  constructor(public delegate: RewardEntry) {
-    this.lastAccountedTs = delegate.lastAccountedTs;
-    this.claimedAmount = delegate.claimedAmount;
-    this.accountedAmount = delegate.accountedAmount;
-    this.rewardPool = delegate.rewardPool;
-    this.stakeEntry = delegate.stakeEntry;
-    this.createdTs = delegate.createdTs;
-    this.buffer = delegate.buffer;
-    this.lastRewardAmount = delegate.lastRewardAmount;
-    this.lastRewardPeriod = delegate.lastRewardPeriod;
+  constructor(
+    lastAccountedTs: BN,
+    claimedAmount: BN,
+    accountedAmount: BN,
+    rewardPool: PublicKey,
+    stakeEntry: PublicKey,
+    createdTs: BN,
+    lastRewardAmount: BN,
+    lastRewardPeriod: BN,
+    buffer: number[],
+  ) {
+    this.lastAccountedTs = lastAccountedTs;
+    this.claimedAmount = claimedAmount;
+    this.accountedAmount = accountedAmount;
+    this.rewardPool = rewardPool;
+    this.stakeEntry = stakeEntry;
+    this.createdTs = createdTs;
+    this.buffer = buffer;
+    this.lastRewardAmount = lastRewardAmount;
+    this.lastRewardPeriod = lastRewardPeriod;
+  }
+
+  static fromEntry(entry: RewardEntry): RewardEntryAccumulator {
+    return new this(
+      entry.lastAccountedTs,
+      entry.claimedAmount,
+      entry.accountedAmount,
+      entry.rewardPool,
+      entry.stakeEntry,
+      entry.createdTs,
+      entry.lastRewardAmount,
+      entry.lastRewardPeriod,
+      entry.buffer,
+    );
   }
 
   // Calculate accountable amount by calculating how many seconds have passed since last claim/stake time
@@ -58,18 +81,14 @@ export class RewardEntryAccumulator implements RewardEntry {
 
     const claimablePerEffectiveStake = periodsPassed.mul(rewardAmount);
 
-    const accountableAmount = claimablePerEffectiveStake.mul(effectiveStakedAmount).div(SCALE_PRECISION_FACTOR_BN);
-
-    return accountableAmount;
+    return claimablePerEffectiveStake.mul(effectiveStakedAmount).div(SCALE_PRECISION_FACTOR_BN);
   }
 
   // Calculates claimable amount from accountable amount.
   getClaimableAmount(): BN {
-    const claimedAmount = this.claimedAmount.mul(REWARD_AMOUNT_PRECISION_FACTOR);
+    const claimedAmount = this.claimedAmount.mul(REWARD_AMOUNT_PRECISION_FACTOR_BN);
     const nonClaimedAmount = this.accountedAmount.sub(claimedAmount);
-    const claimableAmount = nonClaimedAmount.div(REWARD_AMOUNT_PRECISION_FACTOR);
-
-    return claimableAmount;
+    return nonClaimedAmount.div(REWARD_AMOUNT_PRECISION_FACTOR_BN);
   }
 
   // Get the time of the last unlock
@@ -78,9 +97,7 @@ export class RewardEntryAccumulator implements RewardEntry {
     const totalSecondsPassed = claimableTs.sub(lastAccountedTs);
     const periodsPassed = totalSecondsPassed.div(rewardPeriod);
     const periodsToSeconds = periodsPassed.mul(rewardPeriod);
-    const currClaimTs = lastAccountedTs.add(periodsToSeconds);
-
-    return currClaimTs;
+    return lastAccountedTs.add(periodsToSeconds);
   }
 
   // Adds accounted amount
@@ -121,7 +138,7 @@ export const calcRewards = (
   const stakeEntry = stakeEntryAccount.account;
   const rewardPool = rewardPoolAccount.account;
 
-  const rewardEntryAccumulator = new RewardEntryAccumulator(rewardEntry);
+  const rewardEntryAccumulator = RewardEntryAccumulator.fromEntry(rewardEntry);
   if (rewardEntryAccumulator.createdTs.lt(stakeEntry.createdTs)) {
     throw new Error("InvalidRewardEntry");
   }
@@ -206,4 +223,33 @@ export const calcRewards = (
   rewardEntryAccumulator.addAccountedAmount(accountableAmount);
 
   return rewardEntryAccumulator.getClaimableAmount();
+};
+
+export const calculateRewardRateFromAmount = (
+  rewardAmount: BN,
+  stakeTokenDecimals: number,
+  rewardTokenDecimals: number,
+) => {
+  const decimals = rewardTokenDecimals + (REWARD_AMOUNT_DECIMALS - stakeTokenDecimals);
+  return getNumberFromBN(rewardAmount, decimals);
+};
+
+export const calculateRewardAmountFromValue = (rewardTokenValue: BN, stakeTokenDecimals: number) => {
+  const decimalsDiff = REWARD_AMOUNT_DECIMALS - stakeTokenDecimals;
+  if (decimalsDiff === 0) {
+    return rewardTokenValue;
+  }
+  const diffFactor = new BN(10).pow(new BN(Math.abs(decimalsDiff)));
+  if (decimalsDiff > 0) {
+    return rewardTokenValue.mul(diffFactor);
+  }
+  return rewardTokenValue.div(diffFactor);
+};
+
+export const calculateRewardAmountFromRate = (
+  rewardRate: number,
+  stakeTokenDecimals: number,
+  rewardTokenDecimals: number,
+) => {
+  return calculateRewardAmountFromValue(getBN(rewardRate, rewardTokenDecimals), stakeTokenDecimals);
 };

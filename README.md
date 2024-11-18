@@ -14,7 +14,7 @@ Protocol audits available [here](https://www.notion.so/streamflow/Streamflow-Sec
 Partner oracle audit available [here](https://github.com/streamflow-finance/rust-sdk/blob/main/partner_oracle_audit.pdf).
 
 ## Documentation
-API Documentation available here: [docs site →](https://streamflow-finance.github.io/js-sdk/)
+API Documentation available here: [docs site →](https://js-sdk-docs.streamflow.finance/)
 
 ## JS SDK to interact with Streamflow protocols
 
@@ -61,3 +61,6 @@ To contribute to this repository, please follow these steps:
 8. Create a pull request
 
 Please ensure that you have [pnpm](https://pnpm.io/) installed on your system before contributing.
+
+## News
+Stay updated on our [X/Twitter](https://x.com/streamflow_fi).

@@ -19,8 +19,8 @@ export interface ClaimStatusFields {
   lastAmountPerUnlock: BN;
   /** Whether claim is closed */
   closed: boolean;
-  /** Buffer for additional fields */
-  buffer1: Array<number>;
+  /** Distributor account for which ClaimStatus was created, useful to filter by in get_program_accounts */
+  distributor: PublicKey;
   /** Buffer for additional fields */
   buffer2: Array<number>;
 }
@@ -40,8 +40,8 @@ export interface ClaimStatusJSON {
   lastAmountPerUnlock: string;
   /** Whether claim is closed */
   closed: boolean;
-  /** Buffer for additional fields */
-  buffer1: Array<number>;
+  /** Distributor account for which ClaimStatus was created, useful to filter by in get_program_accounts */
+  distributor: string;
   /** Buffer for additional fields */
   buffer2: Array<number>;
 }
@@ -69,8 +69,8 @@ export class ClaimStatus {
   /** Whether claim is closed */
   readonly closed: boolean;
 
-  /** Buffer for additional fields */
-  readonly buffer1: Array<number>;
+  /** Distributor account for which ClaimStatus was created, useful to filter by in get_program_accounts */
+  readonly distributor: PublicKey;
 
   /** Buffer for additional fields */
   readonly buffer2: Array<number>;
@@ -85,7 +85,7 @@ export class ClaimStatus {
     borsh.u64("lastClaimTs"),
     borsh.u64("lastAmountPerUnlock"),
     borsh.bool("closed"),
-    borsh.array(borsh.u8(), 32, "buffer1"),
+    borsh.publicKey("distributor"),
     borsh.array(borsh.u8(), 32, "buffer2"),
   ]);
 
@@ -97,7 +97,7 @@ export class ClaimStatus {
     this.lastClaimTs = fields.lastClaimTs;
     this.lastAmountPerUnlock = fields.lastAmountPerUnlock;
     this.closed = fields.closed;
-    this.buffer1 = fields.buffer1;
+    this.distributor = fields.distributor;
     this.buffer2 = fields.buffer2;
   }
 
@@ -152,7 +152,7 @@ export class ClaimStatus {
       lastClaimTs: dec.lastClaimTs,
       lastAmountPerUnlock: dec.lastAmountPerUnlock,
       closed: dec.closed,
-      buffer1: dec.buffer1,
+      distributor: dec.distributor,
       buffer2: dec.buffer2,
     });
   }
@@ -166,7 +166,7 @@ export class ClaimStatus {
       lastClaimTs: this.lastClaimTs.toString(),
       lastAmountPerUnlock: this.lastAmountPerUnlock.toString(),
       closed: this.closed,
-      buffer1: this.buffer1,
+      distributor: this.distributor.toString(),
       buffer2: this.buffer2,
     };
   }
@@ -180,7 +180,7 @@ export class ClaimStatus {
       lastClaimTs: new BN(obj.lastClaimTs),
       lastAmountPerUnlock: new BN(obj.lastAmountPerUnlock),
       closed: obj.closed,
-      buffer1: obj.buffer1,
+      distributor: new PublicKey(obj.distributor),
       buffer2: obj.buffer2,
     });
   }

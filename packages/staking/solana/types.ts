@@ -62,6 +62,12 @@ export interface CreateRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
   permissionless: boolean;
 }
 
+export interface UpdateRewardPoolArgs {
+  rewardAmount: BN | null;
+  rewardPeriod: BN | null;
+  rewardPool: Address;
+}
+
 export interface ClaimRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
   depositNonce: number;
   rewardMint: Address;

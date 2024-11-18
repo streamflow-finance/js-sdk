@@ -123,6 +123,8 @@ const { metadataId: stakePoolPda } = await client.createStakePool({
 
 #### Create a rewardPool pool
 ```typescript
+import { calculateRewardAmountFromRate } from "@streamflow/staking";
+
 /*
   [0;256) derive reward pool PDA account address.  
   If reward pool with the same mint already exists, it is required to pick a vacant nonce 
@@ -132,6 +134,14 @@ const nonce = 0;
  Amount of rewarding tokens stakers get in return for staking exactly 1 token to the staking pool
 */
 const rewardAmount = new BN(100);
+/*
+  Alternatively you may want to calculate the correct reward amount from desired reward rate taking into account stake pool and reward pools tokes decimals
+*/
+const rewardRate = 0.0025;
+const stakeTokenDecimals = 9;
+const rewardTokenDecimals = 6;
+// For every effectively Staked 1 WHOLE token 0.0025 of Reward Token will be distributed
+const rewardAmount = calculateRewardAmountFromRate(rewardRate, stakeTokenDecimals, rewardTokenDecimals);
 /*
  1 day - Unix time in seconds. Period for rewarding stakers. Period starts counting from the moment of staking
 */
@@ -153,6 +163,42 @@ client.createRewardPool({
     })
 ```
 
+
+#### Reward Amount configuration (in-depth)
+
+`rewardAmount` represents a 10^9 fraction of a raw token distributed for every **effective staked raw token** - it's important to account for both reward and stake token decimals when creating staking pool because of that.
+
+Example with only raw tokens: if `rewardAmount` is configured to be `1_000` and user staked `1_000_000_000` Raw Tokens with a weight of `2` (in the actual protocol this number will be represented as `2_000_000_000`), it means that the effective number of raw tokens staked is `2_000_000_000` and on every reward distribution user will get `2_000_000_000 * 1_000 / 10^9 = 200` Raw Tokens;
+
+Examples with decimals:
+
+RT - Reward Token
+ST - Stake Pool Token
+P - fixed `rewardAmount` precision of 9
+
+User wants to set reward amount of `0.003` for every effective staked whole token, depending on number of decimals RT and ST have configuration may look different:
+
+1. RT with 6 decimals, ST with 6 decimals.
+    - `0.003` of RT is `3_000` raw tokens;
+    - ST has 6 decimals while P is 9, therefore `9 - 6 = 3`;
+    - We need to add 3 decimals to the `rewardAmount` for proper distribution making it `3_000_000`;
+2. RT with 12 decimals, ST with 12 decimals.
+    - `0.003` of RT is `3_000_000_000` raw tokens;
+    - ST has 12 decimals while P is 9, therefore `9 - 12 = -3`;
+    - We need to remove decimals from the raw token to be distributed making `rewardAmount` = `3_000_000`;
+3. RT with 5 decimals, ST with 7 decimals.
+    - `0.003` of RT is `300` raw tokens;
+    - ST has 7 decimals while P is 9, therefore `9 - 7 = 2`;
+    - We need to add 2 decimals making `rewardAmount` = `30_000`;
+4. RT with 9 decimals, ST with 3 decimals.
+    - `0.003` of RT is `3_000_000` raw tokens;
+    - the difference between RT and ST decimals is `9 - 3 = 6`;
+    - ST has 3 decimals while P is 9, therefore `9 - 3 = 6`;
+    - We need to add 6 decimals making `rewardAmount` = `3_000_000_000_000`;
+
+We recommend to use the `calculateRewardAmountFromRate` function exposed by the sdk for the correct reward amount configuration. 
+
+**Also, some configurations where there is big difference between Stake Pool and Reward Pool token decimals may be unsupported, in this case the function will return 0, so be aware.**
 
 #### Deposit/Stake to a stake pool
 ```typescript

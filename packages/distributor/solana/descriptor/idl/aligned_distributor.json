@@ -1,0 +1,1242 @@
+{
+  "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
+  "metadata": {
+    "name": "aligned_distributor",
+    "version": "1.2.0",
+    "spec": "0.1.0",
+    "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
+  },
+  "instructions": [
+    {
+      "name": "change_oracle",
+      "discriminator": [
+        177,
+        227,
+        230,
+        103,
+        13,
+        72,
+        141,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "aligned_distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "new_price_oracle"
+        }
+      ],
+      "args": [
+        {
+          "name": "ix",
+          "type": {
+            "defined": {
+              "name": "ChangeOracleParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "clawback",
+      "discriminator": [
+        111,
+        92,
+        142,
+        79,
+        33,
+        234,
+        82,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "aligned_distributor",
+          "docs": [
+            "The [AlignedDistributor]."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  108,
+                  105,
+                  103,
+                  110,
+                  101,
+                  100,
+                  45,
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "from",
+          "docs": [
+            "Distributor ATA containing the tokens to distribute."
+          ],
+          "writable": true
+        },
+        {
+          "name": "to",
+          "docs": [
+            "The Clawback token account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Only Admin can trigger the clawback of funds"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "distributor_program",
+          "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The [System] program."
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "SPL [Token] program."
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_test_oracle",
+      "discriminator": [
+        183,
+        110,
+        4,
+        11,
+        131,
+        220,
+        84,
+        12
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "test_oracle",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  101,
+                  115,
+                  116,
+                  45,
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "ix",
+          "type": {
+            "defined": {
+              "name": "CreateTestOracleParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "new_distributor",
+      "discriminator": [
+        32,
+        139,
+        112,
+        171,
+        0,
+        2,
+        225,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "aligned_distributor",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  108,
+                  105,
+                  103,
+                  110,
+                  101,
+                  100,
+                  45,
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "price_oracle"
+        },
+        {
+          "name": "withdrawor",
+          "writable": true,
+          "address": "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"
+        },
+        {
+          "name": "clawback_receiver",
+          "docs": [
+            "Clawback receiver token account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint to distribute."
+          ]
+        },
+        {
+          "name": "distributor",
+          "writable": true
+        },
+        {
+          "name": "token_vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Original Admin wallet, responsible for creating the distributor and paying for the transaction.",
+            "Also has the authority to set the clawback receiver and change itself."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "distributor_program",
+          "docs": [
+            "MerkleDistributor program"
+          ],
+          "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The [System] program."
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The [Associated Token] program."
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The [Token] program."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "ix",
+          "type": {
+            "defined": {
+              "name": "NewDistributorIx"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_admin",
+      "discriminator": [
+        251,
+        163,
+        0,
+        52,
+        91,
+        194,
+        187,
+        92
+      ],
+      "accounts": [
+        {
+          "name": "aligned_distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "new_admin",
+          "docs": [
+            "New admin account"
+          ],
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_test_oracle_authority",
+      "discriminator": [
+        26,
+        66,
+        233,
+        99,
+        38,
+        118,
+        181,
+        247
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "test_oracle",
+          "writable": true
+        },
+        {
+          "name": "new_authority"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_duration",
+      "discriminator": [
+        69,
+        126,
+        172,
+        250,
+        164,
+        14,
+        10,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Wallet authorised to call this method"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "aligned_distributor",
+          "docs": [
+            "The account holding the proxy parameters."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  108,
+                  105,
+                  103,
+                  110,
+                  101,
+                  100,
+                  45,
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "distributor",
+          "docs": [
+            "The account holding the vesting parameters."
+          ],
+          "writable": true
+        },
+        {
+          "name": "price_oracle",
+          "relations": [
+            "aligned_distributor"
+          ]
+        },
+        {
+          "name": "distributor_program",
+          "docs": [
+            "MerkleDistributor program"
+          ],
+          "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_test_oracle",
+      "discriminator": [
+        158,
+        147,
+        215,
+        74,
+        34,
+        123,
+        80,
+        76
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "test_oracle",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "ix",
+          "type": {
+            "defined": {
+              "name": "UpdateTestOracleParams"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AlignedDistributor",
+      "discriminator": [
+        128,
+        76,
+        80,
+        203,
+        248,
+        175,
+        3,
+        43
+      ]
+    },
+    {
+      "name": "MerkleDistributor",
+      "discriminator": [
+        77,
+        119,
+        139,
+        70,
+        84,
+        247,
+        12,
+        26
+      ]
+    },
+    {
+      "name": "TestOracle",
+      "discriminator": [
+        198,
+        49,
+        63,
+        134,
+        232,
+        251,
+        168,
+        28
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Account is not authorized to execute this instruction"
+    },
+    {
+      "code": 6001,
+      "name": "ArithmeticError",
+      "msg": "Arithmetic error"
+    },
+    {
+      "code": 6002,
+      "name": "NoLockedAmount",
+      "msg": "Provided Distributor has no locked amount"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidUpdatePeriod",
+      "msg": "Provided is invalid, should be equal or more than 30 seconds and unlock_period"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTickSize",
+      "msg": "Provided percentage tick size is invalid"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidPercentageBoundaries",
+      "msg": "Provided percentage bounds are invalid"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidPriceBoundaries",
+      "msg": "Provided price bounds are invalid"
+    },
+    {
+      "code": 6007,
+      "name": "UnsupportedOracle",
+      "msg": "Unsupported price oracle"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidOracleAccount",
+      "msg": "Invalid oracle account"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidOraclePrice",
+      "msg": "Invalid oracle price"
+    },
+    {
+      "code": 6010,
+      "name": "DurationAlreadyUpdated",
+      "msg": "Duration has been already updated in this period"
+    },
+    {
+      "code": 6011,
+      "name": "VestingAlreadyFinished",
+      "msg": "Vesting already finished"
+    },
+    {
+      "code": 6012,
+      "name": "SameAdmin",
+      "msg": "New and old admin are identical"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidMint",
+      "msg": "Invalid Mint"
+    }
+  ],
+  "types": [
+    {
+      "name": "AlignedDistributor",
+      "docs": [
+        "State for the account which distributes tokens."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "distributor",
+            "docs": [
+              "[Mint] of the token to be distributed."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin wallet"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "price_oracle_type",
+            "docs": [
+              "Type of the Oracle used to derive Token Price"
+            ],
+            "type": {
+              "defined": {
+                "name": "OracleType"
+              }
+            }
+          },
+          {
+            "name": "price_oracle",
+            "docs": [
+              "Address of the Price Oracle"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "update_period",
+            "docs": [
+              "Period of updates, can be different from unlock period if needed"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_price",
+            "docs": [
+              "Min price boundary"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_price",
+            "docs": [
+              "Max price boundary"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_percentage",
+            "docs": [
+              "Min percentage boundary, can be 0 that equals 1 Raw Token"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_percentage",
+            "docs": [
+              "Max percentage boundary"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "tick_size",
+            "docs": [
+              "Ticket size for percentage boundaries"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "start_ts",
+            "docs": [
+              "Copy start ts from the Distributor to be used in the worker"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "end_ts",
+            "docs": [
+              "Copy end ts from the Distributor to be used in the worker"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_duration_update_ts",
+            "docs": [
+              "Copy last_duration_update_ts from Distributor for our worker to be able to fetch it in one call with the proxy"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_price",
+            "docs": [
+              "Price used on last amount calculation"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "initial_duration",
+            "docs": [
+              "Initial Airdrop Vesting duration"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "initial_price",
+            "docs": [
+              "Initial token price at the time of Contract creation"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "distributor_clawed_back",
+            "docs": [
+              "Whether distributor was clawed backed"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "buffer_1",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "buffer_2",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "buffer_3",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeOracleParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oracle_type",
+            "type": {
+              "defined": {
+                "name": "OracleType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateTestOracleParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "expo",
+            "type": "i32"
+          },
+          {
+            "name": "conf",
+            "type": "u64"
+          },
+          {
+            "name": "publish_time",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MerkleDistributor",
+      "docs": [
+        "State for the account which distributes tokens."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "docs": [
+              "Version of the airdrop"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "root",
+            "docs": [
+              "The 256-bit merkle root."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "[Mint] of the token to be distributed."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_vault",
+            "docs": [
+              "Token Address of the vault"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "max_total_claim",
+            "docs": [
+              "Maximum number of tokens that can ever be claimed from this [MerkleDistributor]."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_num_nodes",
+            "docs": [
+              "Maximum number of nodes in [MerkleDistributor]."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "unlock_period",
+            "docs": [
+              "Time step (period) in seconds per which the unlock occurs"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_amount_claimed",
+            "docs": [
+              "Total amount of tokens that have been claimed."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "num_nodes_claimed",
+            "docs": [
+              "Number of nodes that have been claimed."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "start_ts",
+            "docs": [
+              "Lockup time start (Unix Timestamp)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "end_ts",
+            "docs": [
+              "Lockup time end (Unix Timestamp)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clawback_start_ts",
+            "docs": [
+              "Clawback start (Unix Timestamp)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clawback_receiver",
+            "docs": [
+              "Clawback receiver"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin wallet"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "clawed_back",
+            "docs": [
+              "Whether or not the distributor has been clawed back"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "claims_closable",
+            "docs": [
+              "Whether claims are closable by the admin or not"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "can_update_duration",
+            "docs": [
+              "Whether admin can update vesting duration"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "total_amount_unlocked",
+            "docs": [
+              "Total amount of funds unlocked (cliff/instant)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_amount_locked",
+            "docs": [
+              "Total amount of funds locked (vested)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_duration_update_ts",
+            "docs": [
+              "Timestamp when update was last called"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_claimable_pre_update",
+            "docs": [
+              "Total amount of locked amount claimable as of last duration update, ever increasing total, accumulates with each update"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clawed_back_ts",
+            "docs": [
+              "Timestamp when funds were clawed back"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "buffer_2",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                23
+              ]
+            }
+          },
+          {
+            "name": "buffer_3",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NewDistributorIx",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u64"
+          },
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "max_total_claim",
+            "type": "u64"
+          },
+          {
+            "name": "max_num_nodes",
+            "type": "u64"
+          },
+          {
+            "name": "unlock_period",
+            "type": "u64"
+          },
+          {
+            "name": "start_vesting_ts",
+            "type": "u64"
+          },
+          {
+            "name": "end_vesting_ts",
+            "type": "u64"
+          },
+          {
+            "name": "clawback_start_ts",
+            "type": "u64"
+          },
+          {
+            "name": "claims_closable",
+            "type": "bool"
+          },
+          {
+            "name": "total_amount_unlocked",
+            "type": "u64"
+          },
+          {
+            "name": "total_amount_locked",
+            "type": "u64"
+          },
+          {
+            "name": "update_period",
+            "type": "u64"
+          },
+          {
+            "name": "oracle_type",
+            "type": {
+              "defined": {
+                "name": "OracleType"
+              }
+            }
+          },
+          {
+            "name": "min_price",
+            "type": "u64"
+          },
+          {
+            "name": "max_price",
+            "type": "u64"
+          },
+          {
+            "name": "min_percentage",
+            "type": "u64"
+          },
+          {
+            "name": "max_percentage",
+            "type": "u64"
+          },
+          {
+            "name": "tick_size",
+            "type": "u64"
+          },
+          {
+            "name": "skip_initial",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Test"
+          },
+          {
+            "name": "Pyth"
+          },
+          {
+            "name": "Switchboard"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TestOracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "expo",
+            "type": "i32"
+          },
+          {
+            "name": "conf",
+            "type": "u64"
+          },
+          {
+            "name": "publish_time",
+            "type": "i64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateTestOracleParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "expo",
+            "type": "i32"
+          },
+          {
+            "name": "conf",
+            "type": "u64"
+          },
+          {
+            "name": "publish_time",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}
