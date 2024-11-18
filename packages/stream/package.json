@@ -40,7 +40,7 @@
     "pack": "pnpm build && pnpm pack",
     "test": "vitest",
     "lint": "eslint --fix .",
-    "prepublishOnly": "npm run lint && npm test && npm run build"
+    "prepublishOnly": "pnpm run lint && pnpm run test run && pnpm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
