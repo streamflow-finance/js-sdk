@@ -481,16 +481,3 @@ export class SolanaLaunchpadClient {
     }
   }
 }
-
-export function buildMessageInspectorUrl(cluster: ICluster, message: string) {
-  const url = new URL("https://explorer.solana.com/tx/inspector");
-  if (cluster !== ICluster.Local) {
-    url.searchParams.set("cluster", cluster);
-  } else {
-    url.searchParams.set("cluster", "custom");
-    url.searchParams.set("customUrl", "http://localhost:8899");
-  }
-  url.searchParams.set("message", message);
-
-  return url.toString();
-}
