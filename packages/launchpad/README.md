@@ -128,7 +128,7 @@ const { txId: fundLaunchpadSig } = await client.fundLaunchpad(
 );
 ```
 
-> [!Note]
+> [!Note]  
 > Client just uses spl transfer instruction, so technically anyone can fund a Launchpad.
 
 ### Claim deposited tokens
