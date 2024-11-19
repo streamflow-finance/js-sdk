@@ -285,6 +285,12 @@ export type RewardPool = {
           name: "permissionless";
           type: "bool";
         },
+        {
+          name: "lastClaimPeriodOpt";
+          type: {
+            option: "u64";
+          };
+        },
       ];
     },
     {
@@ -444,8 +450,13 @@ export type RewardPool = {
           relations: ["rewardPool"];
         },
         {
+          name: "stakePool";
+          docs: ["Stake Pool to Which Reward Pool belongs"];
+          relations: ["rewardPool"];
+        },
+        {
           name: "rewardPool";
-          docs: ["Stake Pool"];
+          docs: ["Reward Pool"];
           writable: true;
         },
       ];
@@ -556,6 +567,16 @@ export type RewardPool = {
       code: 6012;
       name: "rewardPoolDrained";
       msg: "Reward Pool does not have enough Rewards for Claiming";
+    },
+    {
+      code: 6013;
+      name: "updateTooSoon";
+      msg: "Repeated update can not happen sooner than the stake pool max duration";
+    },
+    {
+      code: 6014;
+      name: "invalidLastClaimPeriod";
+      msg: "Invalid last claim period provided";
     },
   ];
   types: [
@@ -768,10 +789,15 @@ export type RewardPool = {
             type: "u64";
           },
           {
+            name: "lastClaimPeriod";
+            docs: ["For how much seconds after unstake user should be able to claim rewards"];
+            type: "u64";
+          },
+          {
             name: "buffer";
             docs: ["Buffer for additional fields"];
             type: {
-              array: ["u8", 56];
+              array: ["u8", 48];
             };
           },
         ];

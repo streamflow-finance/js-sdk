@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "7.0.2",
+  "version": "7.0.3",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/esm/index.js",
@@ -40,7 +40,7 @@
     "pack": "pnpm build && pnpm pack",
     "test": "vitest",
     "lint": "eslint --fix .",
-    "prepublishOnly": "npm run lint && npm test && npm run build"
+    "prepublishOnly": "pnpm run lint && pnpm run test run && pnpm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {

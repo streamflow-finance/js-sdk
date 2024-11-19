@@ -278,6 +278,12 @@
         {
           "name": "permissionless",
           "type": "bool"
+        },
+        {
+          "name": "last_claim_period_opt",
+          "type": {
+            "option": "u64"
+          }
         }
       ]
     },
@@ -408,8 +414,13 @@
           "relations": ["reward_pool"]
         },
         {
+          "name": "stake_pool",
+          "docs": ["Stake Pool to Which Reward Pool belongs"],
+          "relations": ["reward_pool"]
+        },
+        {
           "name": "reward_pool",
-          "docs": ["Stake Pool"],
+          "docs": ["Reward Pool"],
           "writable": true
         }
       ],
@@ -520,6 +531,16 @@
       "code": 6012,
       "name": "RewardPoolDrained",
       "msg": "Reward Pool does not have enough Rewards for Claiming"
+    },
+    {
+      "code": 6013,
+      "name": "UpdateTooSoon",
+      "msg": "Repeated update can not happen sooner than the stake pool max duration"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidLastClaimPeriod",
+      "msg": "Invalid last claim period provided"
     }
   ],
   "types": [
@@ -732,10 +753,15 @@
             "type": "u64"
           },
           {
+            "name": "last_claim_period",
+            "docs": ["For how much seconds after unstake user should be able to claim rewards"],
+            "type": "u64"
+          },
+          {
             "name": "_buffer",
             "docs": ["Buffer for additional fields"],
             "type": {
-              "array": ["u8", 56]
+              "array": ["u8", 48]
             }
           }
         ]

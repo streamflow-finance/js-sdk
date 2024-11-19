@@ -258,8 +258,8 @@ export class SolanaStakingClient {
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
     const mint = deriveStakeMintPDA(stakePoolProgram.programId, pk(stakePool));
-    const stakeMintAccountKey = getAssociatedTokenAddressSync(mint, staker, false, pk(tokenProgramId));
-    const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, false, pk(tokenProgramId));
+    const stakeMintAccountKey = getAssociatedTokenAddressSync(mint, staker, true, pk(tokenProgramId));
+    const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
       .stake(nonce, amount, duration)
       .accounts({
@@ -296,8 +296,8 @@ export class SolanaStakingClient {
     invariant(staker, "Undefined invoker publicKey");
     const stakeMintKey = deriveStakeMintPDA(stakePoolProgram.programId, pk(stakePool));
     const stakeEntryKey = deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, nonce);
-    const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, false, pk(tokenProgramId));
-    const stakeMintAccountKey = getAssociatedTokenAddressSync(stakeMintKey, staker, false, pk(tokenProgramId));
+    const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
+    const stakeMintAccountKey = getAssociatedTokenAddressSync(stakeMintKey, staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
       .unstake()
       .accounts({
@@ -331,6 +331,7 @@ export class SolanaStakingClient {
       rewardMint,
       permissionless = false,
       stakePool,
+      lastClaimPeriodOpt,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateRewardPoolArgs,
     extParams: IInteractSolanaExt,
@@ -339,7 +340,7 @@ export class SolanaStakingClient {
     const creator = extParams.invoker.publicKey;
     invariant(creator, "Undefined invoker publicKey");
     const instruction = await rewardPoolProgram.methods
-      .createPool(nonce, rewardAmount, rewardPeriod, permissionless)
+      .createPool(nonce, rewardAmount, rewardPeriod, permissionless, lastClaimPeriodOpt)
       .accounts({
         creator,
         stakePool,
@@ -377,7 +378,7 @@ export class SolanaStakingClient {
         rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(rewardMint), rewardPoolNonce),
         claimant: staker,
         tokenProgram: tokenProgramId,
-        to: getAssociatedTokenAddressSync(pk(rewardMint), staker, false, pk(tokenProgramId)),
+        to: getAssociatedTokenAddressSync(pk(rewardMint), staker, true, pk(tokenProgramId)),
       })
       .instruction();
 
@@ -420,7 +421,7 @@ export class SolanaStakingClient {
       .accountsPartial({
         funder: staker,
         rewardPool: rewardPoolPda,
-        from: getAssociatedTokenAddressSync(rewardMintPk, staker, false, tokenProgramPk),
+        from: getAssociatedTokenAddressSync(rewardMintPk, staker, true, tokenProgramPk),
         tokenProgram: tokenProgramId,
         vault: deriveRewardVaultPDA(rewardPoolProgram.programId, rewardPoolPda),
         mint: rewardMint,
@@ -442,7 +443,7 @@ export class SolanaStakingClient {
   }
 
   async prepareCreateRewardEntryInstructions(
-    { stakePoolMint, stakePool, rewardPoolNonce, depositNonce }: CreateRewardEntryArgs,
+    { stakePool, rewardPoolNonce, depositNonce, rewardMint }: CreateRewardEntryArgs,
     extParams: IInteractSolanaExt,
   ) {
     const { stakePoolProgram, rewardPoolProgram } = this.programs;
@@ -454,7 +455,7 @@ export class SolanaStakingClient {
         payer: staker,
         authority: staker,
         stakeEntry: deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, depositNonce),
-        rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(stakePoolMint), rewardPoolNonce),
+        rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(rewardMint), rewardPoolNonce),
       })
       .instruction();
 
@@ -472,7 +473,7 @@ export class SolanaStakingClient {
   }
 
   async prepareUpdateRewardPoolInstructions(
-    { rewardPool, rewardAmount, rewardPeriod }: UpdateRewardPoolArgs,
+    { rewardPool, rewardAmount, rewardPeriod, stakePool }: UpdateRewardPoolArgs,
     extParams: IInteractSolanaExt,
   ) {
     const { rewardPoolProgram } = this.programs;
@@ -481,6 +482,7 @@ export class SolanaStakingClient {
     const instruction = await rewardPoolProgram.methods
       .updatePool(rewardAmount, rewardPeriod)
       .accountsPartial({
+        stakePool,
         authority: invoker,
         rewardPool,
       })

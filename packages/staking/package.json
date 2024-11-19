@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "7.0.2",
+  "version": "7.0.3",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/esm/index.js",
@@ -25,7 +25,7 @@
     "pack": "pnpm build && pnpm pack",
     "lint": "eslint --fix .",
     "test": "vitest",
-    "prepublishOnly": "npm run lint && npm run build"
+    "prepublishOnly": "pnpm run lint && pnpm run test run && pnpm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
