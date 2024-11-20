@@ -1,5 +1,5 @@
 {
-  "name": "@streamflow/laucnhpad",
+  "name": "@streamflow/launchpad",
   "version": "7.1.0-alpha.1",
   "description": "JavaScript SDK to interact with Streamflow Launchpad protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",

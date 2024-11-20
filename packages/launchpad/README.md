@@ -6,7 +6,7 @@ This package exposes several instruction needed by both Launchpad creator and de
 - `create new Launchpad`;
 - `fund launchpad`;
 - `deposit into launchpad`;
-- `claim depositted tokens`;
+- `claim deposited tokens`;
 - `claim allocated tokens`;
 
 Each Launchpad consist of multiple configuration options:
@@ -67,7 +67,7 @@ await client.getDepositAccount(id) // fetch specific Deposit Account by its ID.
 const { txId: createSig, metadataId } = await client.createLaunchpad({
     baseMint, // Mint that users will be buying
     quoteMint, // Mint that users will deposit
-    receiver, // [optional] Token account that shuold receive deposits once deposit period is ended
+    receiver, // [optional] Token account that should receive deposits once deposit period is ended
     priceOracle, // [optional] Price Oracle address that will be used in dynamic vesting
     nonce: 1, // Nonce value, Launchpad PDA will be derived from nonce + baseMint
     price: 0.15, // Price per 1 `baseMint` token denominated in `quoteMint` tokens
@@ -100,7 +100,7 @@ const { txId: depositSig } = await client.deposit(
     launchpad: metadataId, // Id of the Launchpad to deposit tokens into
     quoteMint, // [optional] Mint Id, if not provided it will be fetched from the Laucnhpad
     amount: 100.15, // Amount of `quoteMint` tokens to deposit,
-    autoCap: true, // [opional] Whether to automatically cap depositted tokens in case user deposited more than `maxDepositingCap`
+    autoCap: true, // [opional] Whether to automatically cap deposited tokens in case user deposited more than `maxDepositingCap`
     memo: "I don't reside in a sanctioned country.", // [optional] Text for memo instruction
     owner: user1.publicKey, // [optional] Deposit owner in case it differs from the invoker
     tokenProgramId: TOKEN_PROGRAM_ID // [optional] SPL Token Program to use
@@ -136,7 +136,7 @@ const { txId: fundLaunchpadSig } = await client.fundLaunchpad(
 ```typescript
 const { txId: claimDepositsSig } = await client.claimDeposits(
   {
-    launchpad: metadataId, // Id of the Launchpad to claim depositted tokens from
+    launchpad: metadataId, // Id of the Launchpad to claim deposited tokens from
     quoteMint, // [optional] Mint Id, if not provided it will be fetched from the Laucnhpad
     tokenProgramId: TOKEN_PROGRAM_ID // [optional] SPL Token Program to use
   },
@@ -146,11 +146,6 @@ const { txId: claimDepositsSig } = await client.claimDeposits(
 
 > [!Warning]  
 > Claiming of Deposited tokens is possible only after Deposit period has ended.
-
-### Fund Launchpad with tokens
-
-```typescript
-```
 
 ### Claim token allocation
 
@@ -170,7 +165,7 @@ const { txId: claimAllocatedSig } = await client.claimAllocatedVested(
 > Anyone can call this action on behalf of the Deposit after Deposit period has ended.
 > 
 > This action will essentially create a Streamflow Dynamic vesting contract where:
-> - total depositted amount will be equal to the Depositor token allocation;
+> - total depostted amount will be equal to the Depositor token allocation;
 > - initial vesting start and end time will be set according to the vesting configuration
 >   - in case `skipInitial` was not disabled, vesting schedule may differ depending on current price of the token;
 
