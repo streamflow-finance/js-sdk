@@ -17,6 +17,7 @@ import {
   checkOrCreateAtaBatch,
   getFilters,
   pk,
+  prepareBaseInstructions,
   prepareTransaction,
   signAndExecuteTransaction,
 } from "@streamflow/common/solana";
@@ -524,7 +525,11 @@ export class SolanaStakingClient {
   }
 
   private async execute(ixs: TransactionInstruction[], extParams: IInteractSolanaExt) {
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const { tx, hash, context } = await prepareTransaction(
+      this.connection,
+      prepareBaseInstructions(this.connection, extParams).concat(ixs),
+      extParams.invoker.publicKey,
+    );
 
     try {
       const signature = await signAndExecuteTransaction(
