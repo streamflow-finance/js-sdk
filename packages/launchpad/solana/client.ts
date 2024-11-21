@@ -53,10 +53,6 @@ import {
   IFundLaunchpad,
 } from "./types.js";
 
-interface Programs {
-  launchpadProgram: Program<StreamflowLaunchpad>;
-}
-
 interface IInitOptions {
   clusterUrl?: string;
   cluster?: ICluster;
@@ -81,11 +77,11 @@ export class SolanaLaunchpadClient {
 
   private readonly sendThrottler: PQueue;
 
-  private readonly programs: Programs;
+  private readonly program: Program<StreamflowLaunchpad>;
 
-  private readonly dynamicVestingId: string;
+  private readonly dynamicVestingId: PublicKey;
 
-  private readonly vestingId: string;
+  private readonly vestingId: PublicKey;
 
   constructor({
     clusterUrl,
@@ -117,21 +113,18 @@ export class SolanaLaunchpadClient {
       ...StreamflowLaunchpadIDL,
       address: programIds?.launchpad ?? PROGRAM_ID[cluster] ?? StreamflowLaunchpadIDL.address,
     } as StreamflowLaunchpad;
-    this.programs = {
-      launchpadProgram: new Program(launchpadIdl, {
-        connection: this.connection,
-      }) as Program<StreamflowLaunchpad>,
-    };
-    this.dynamicVestingId = programIds?.dynamicVesting
-      ? programIds.dynamicVesting
-      : streamConstants.ALIGNED_UNLOCKS_PROGRAM_ID[cluster];
-    this.vestingId = programIds?.vesting ? programIds.vesting : streamConstants.PROGRAM_ID[cluster];
+    this.program = new Program(launchpadIdl, {
+      connection: this.connection,
+    }) as Program<StreamflowLaunchpad>;
+    this.dynamicVestingId = pk(
+      programIds?.dynamicVesting ? programIds.dynamicVesting : streamConstants.ALIGNED_UNLOCKS_PROGRAM_ID[cluster],
+    );
+    this.vestingId = pk(programIds?.vesting ? programIds.vesting : streamConstants.PROGRAM_ID[cluster]);
   }
 
-  getCurrentProgramId(programKey: keyof Programs): PublicKey {
-    const program = this.programs[programKey];
-    invariant(program, `Program ${programKey} is not found`);
-    return program.programId;
+  getCurrentProgramId(): PublicKey {
+    invariant(this.program, `Program is not found`);
+    return this.program.programId;
   }
 
   getCommitment(): Commitment | undefined {
@@ -139,17 +132,17 @@ export class SolanaLaunchpadClient {
   }
 
   getLaunchpad(id: Address): Promise<Launchpad> {
-    return this.programs.launchpadProgram.account.launchpad.fetch(id);
+    return this.program.account.launchpad.fetch(id);
   }
 
   searchLaunchpads(
     criteria: Partial<Pick<Launchpad, keyof typeof LAUNCHPAD_BYTE_OFFSETS>> = {},
   ): Promise<ProgramAccount<Launchpad>[]> {
-    return this.programs.launchpadProgram.account.launchpad.all(getFilters(criteria, LAUNCHPAD_BYTE_OFFSETS));
+    return this.program.account.launchpad.all(getFilters(criteria, LAUNCHPAD_BYTE_OFFSETS));
   }
 
   getDepositAccount(id: Address): Promise<DepositAccount> {
-    return this.programs.launchpadProgram.account.depositAccount.fetch(id);
+    return this.program.account.depositAccount.fetch(id);
   }
 
   async createLaunchpad(data: ICreateLaunchpad, extParams: IInteractSolanaExt): Promise<CreationResult> {
@@ -194,7 +187,6 @@ export class SolanaLaunchpadClient {
   }> {
     baseMintKey = pk(baseMintKey);
     quoteMintKey = pk(quoteMintKey);
-    const { launchpadProgram } = this.programs;
     const authority = extParams.invoker.publicKey;
 
     invariant(authority, "Undefined creator publicKey");
@@ -204,10 +196,10 @@ export class SolanaLaunchpadClient {
     }
 
     receiver = receiver ?? getAssociatedTokenAddressSync(quoteMintKey, authority);
-    const oracle = priceOracle ?? deriveTestOraclePDA(pk(this.dynamicVestingId), baseMintKey, authority);
-    const launchpadPDA = deriveLaunchpadPDA(launchpadProgram.programId, baseMintKey, nonce);
+    const oracle = priceOracle ?? deriveTestOraclePDA(this.dynamicVestingId, baseMintKey, authority);
+    const launchpadPDA = deriveLaunchpadPDA(this.program.programId, baseMintKey, nonce);
 
-    const createIx = await launchpadProgram.methods
+    const createIx = await this.program.methods
       .createLaunchpad({
         nonce,
         price,
@@ -310,8 +302,6 @@ export class SolanaLaunchpadClient {
     ixs: TransactionInstruction[];
     publicKey: PublicKey;
   }> {
-    const { launchpadProgram } = this.programs;
-
     const payer = extParams.invoker.publicKey;
     invariant(payer, "Undefined payer publicKey");
 
@@ -320,7 +310,7 @@ export class SolanaLaunchpadClient {
       quoteMintKey = (await this.getLaunchpad(launchpadKey)).quoteMint;
     }
 
-    const depositPDA = deriveDepositPDA(launchpadProgram.programId, pk(launchpadKey), owner);
+    const depositPDA = deriveDepositPDA(this.program.programId, pk(launchpadKey), owner);
     const ixs: TransactionInstruction[] = [];
     if (memo) {
       ixs.push(
@@ -332,7 +322,7 @@ export class SolanaLaunchpadClient {
       );
     }
     ixs.push(
-      await launchpadProgram.methods
+      await this.program.methods
         .deposit({ amount, autoCap })
         .accounts({
           payer,
@@ -362,14 +352,12 @@ export class SolanaLaunchpadClient {
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
-    const { launchpadProgram } = this.programs;
-
     const authority = extParams.invoker.publicKey;
     invariant(authority, "Undefined authority publicKey");
 
     return {
       ixs: [
-        await launchpadProgram.methods
+        await this.program.methods
           .claimDeposits()
           .accounts({
             authority,
@@ -400,8 +388,6 @@ export class SolanaLaunchpadClient {
     ixs: TransactionInstruction[];
     streamKeypair: Keypair;
   }> {
-    const { launchpadProgram } = this.programs;
-
     const payer = extParams.invoker.publicKey;
     invariant(payer, "Undefined payer publicKey");
 
@@ -411,12 +397,12 @@ export class SolanaLaunchpadClient {
     }
     const streamKeypair = Keypair.generate();
     const streamKey = streamKeypair.publicKey;
-    const proxyMetadataKey = deriveContractPDA(pk(this.dynamicVestingId), streamKeypair.publicKey);
+    const proxyMetadataKey = deriveContractPDA(this.dynamicVestingId, streamKeypair.publicKey);
     const proxyTokensKey = getAssociatedTokenAddressSync(pk(baseMintKey), proxyMetadataKey, true);
-    const escrowKey = deriveEscrowPDA(pk(this.vestingId), streamKeypair.publicKey);
-    const depositKey = deriveDepositPDA(launchpadProgram.programId, pk(launchpadKey), owner);
+    const escrowKey = deriveEscrowPDA(this.vestingId, streamKeypair.publicKey);
+    const depositKey = deriveDepositPDA(this.program.programId, pk(launchpadKey), owner);
 
-    const ix = await launchpadProgram.methods
+    const ix = await this.program.methods
       .claimAllocatedVested()
       .accounts({
         depositAccount: depositKey,
@@ -467,10 +453,7 @@ export class SolanaLaunchpadClient {
       return { signature };
     } catch (err: any) {
       if (err instanceof Error) {
-        const parsed: AnchorError | ProgramError | typeof err = translateError(
-          err,
-          parseIdlErrors(this.programs.launchpadProgram.idl),
-        );
+        const parsed: AnchorError | ProgramError | typeof err = translateError(err, parseIdlErrors(this.program.idl));
         if (parsed) {
           throw new ContractError(err, parsed.name, parsed.message);
         }
