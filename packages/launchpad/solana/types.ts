@@ -3,6 +3,7 @@ import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Keypair } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import { OracleTypeName } from "@streamflow/stream";
+import BN from "bn.js";
 
 import { StreamflowLaunchpad } from "./descriptor/streamflow_launchpad.js";
 
@@ -34,14 +35,14 @@ export interface ICreateLaunchpad extends ITokenProgram {
   priceOracle?: Address;
 
   nonce: number;
-  price: number;
-  individualDepositingCap: number;
-  maxDepositingCap: number;
-  depositingStartTs: number;
-  depositingEndTs: number;
-  vestingStartTs: number;
-  vestingEndTs: number;
-  vestingPeriod: number;
+  price: BN;
+  individualDepositingCap: BN;
+  maxDepositingCap: BN;
+  depositingStartTs: number | BN;
+  depositingEndTs: number | BN;
+  vestingStartTs: number | BN;
+  vestingEndTs: number | BN;
+  vestingPeriod: number | BN;
   oracleType?: OracleTypeName;
   minPrice: number;
   maxPrice: number;
@@ -53,11 +54,11 @@ export interface ICreateLaunchpad extends ITokenProgram {
 }
 
 export interface IFundLaunchpad extends ILaunchpad, ITokenProgram {
-  amount: number;
+  amount: BN;
 }
 
 export interface IDeposit extends ILaunchpad, IOwner, ITokenProgram {
-  amount: number;
+  amount: BN;
   autoCap?: boolean;
   memo?: string;
 }

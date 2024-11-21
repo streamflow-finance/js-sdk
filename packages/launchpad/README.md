@@ -62,6 +62,7 @@ await client.getDepositAccount(id) // fetch specific Deposit Account by its ID.
 ```
 
 ### Create new Launchpad
+import { getBN } from "@streamflow/common";
 
 ```typescript
 const { txId: createSig, metadataId } = await client.createLaunchpad({
@@ -70,9 +71,9 @@ const { txId: createSig, metadataId } = await client.createLaunchpad({
     receiver, // [optional] Token account that should receive deposits once deposit period is ended
     priceOracle, // [optional] Price Oracle address that will be used in dynamic vesting
     nonce: 1, // Nonce value, Launchpad PDA will be derived from nonce + baseMint
-    price: 0.15, // Price per 1 `baseMint` token denominated in `quoteMint` tokens
-    individualDepositingCap: 1_000, // Max Cap per User of `quoteMint` tokens to deposit
-    maxDepositingCap: 1_000_000, // Max global Cap of `quoteMint` tokens to deposit
+    price: getBN(0.15, QUOTE_MINT_DECIMALS), // Price per 1 `baseMint` whole token denominated in `quoteMint` tokens
+    individualDepositingCap: getBN(1_000, QUOTE_MINT_DECIMALS), // Max Cap per User of `quoteMint` tokens to deposit
+    maxDepositingCap: getBN(1_000_000, QUOTE_MINT_DECIMALS), // Max global Cap of `quoteMint` tokens to deposit
     depositingStartTs, // Timestamp when depositing should start
     depositingEndTs, // Timestamp when depositing should end
     vestingStartTs, // Timestamp when vesting should start
@@ -99,7 +100,7 @@ const { txId: depositSig } = await client.deposit(
   {
     launchpad: metadataId, // Id of the Launchpad to deposit tokens into
     quoteMint, // [optional] Mint Id, if not provided it will be fetched from the Laucnhpad
-    amount: 100.15, // Amount of `quoteMint` tokens to deposit,
+    amount: getBN(100.15, QUOTE_MINT_DECIMALS), // Amount of `quoteMint` tokens to deposit,
     autoCap: true, // [opional] Whether to automatically cap deposited tokens in case user deposited more than `maxDepositingCap`
     memo: "I don't reside in a sanctioned country.", // [optional] Text for memo instruction
     owner: user1.publicKey, // [optional] Deposit owner in case it differs from the invoker
@@ -121,7 +122,7 @@ const { txId: fundLaunchpadSig } = await client.fundLaunchpad(
   {
     launchpad: metadataId, // Id of the Launchpad to fund
     baseMint, // [optional] Mint Id, if not provided it will be fetched from the Laucnhpad
-    amount: 6_666_666, // Amount of base tokens to funds Laucnhpad by
+    amount: getBN(6_666_666, BASE_MINT_DECIMALS), // Amount of base tokens to funds Laucnhpad by
     tokenProgramId: TOKEN_PROGRAM_ID  // [optional] SPL Token Program to use
   },
   { invoker: authority }

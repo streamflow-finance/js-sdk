@@ -195,7 +195,6 @@ export class SolanaLaunchpadClient {
     baseMintKey = pk(baseMintKey);
     quoteMintKey = pk(quoteMintKey);
     const { launchpadProgram } = this.programs;
-    const { mint: quoteMint } = await getMintAndProgram(this.connection, quoteMintKey);
     const authority = extParams.invoker.publicKey;
 
     invariant(authority, "Undefined creator publicKey");
@@ -211,9 +210,9 @@ export class SolanaLaunchpadClient {
     const createIx = await launchpadProgram.methods
       .createLaunchpad({
         nonce,
-        price: getBN(price, quoteMint.decimals),
-        individualDepositingCap: getBN(individualDepositingCap, quoteMint.decimals),
-        maxDepositingCap: getBN(maxDepositingCap, quoteMint.decimals),
+        price,
+        individualDepositingCap,
+        maxDepositingCap,
         depositingStartTs: new BN(depositingStartTs),
         depositingEndTs: new BN(depositingEndTs),
         vestingStartTs: new BN(vestingStartTs),
@@ -278,7 +277,7 @@ export class SolanaLaunchpadClient {
           mint.address,
           getAssociatedTokenAddressSync(mint.address, pk(launchpadKey), true, pk(tokenProgramId)),
           authority,
-          BigInt(getBN(amount, mint.decimals).toString()),
+          BigInt(amount.toString()),
           mint.decimals,
           undefined,
           pk(tokenProgramId),
@@ -320,7 +319,6 @@ export class SolanaLaunchpadClient {
     if (!quoteMintKey) {
       quoteMintKey = (await this.getLaunchpad(launchpadKey)).quoteMint;
     }
-    const { mint: quoteMint } = await getMintAndProgram(this.connection, pk(quoteMintKey));
 
     const depositPDA = deriveDepositPDA(launchpadProgram.programId, pk(launchpadKey), owner);
     const ixs: TransactionInstruction[] = [];
@@ -335,7 +333,7 @@ export class SolanaLaunchpadClient {
     }
     ixs.push(
       await launchpadProgram.methods
-        .deposit({ amount: getBN(amount, quoteMint.decimals), autoCap })
+        .deposit({ amount, autoCap })
         .accounts({
           payer,
           owner: owner,
