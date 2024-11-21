@@ -8,7 +8,7 @@ export type StreamflowAlignedUnlocks = {
   address: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH";
   metadata: {
     name: "streamflowAlignedUnlocks";
-    version: "1.0.0";
+    version: "1.1.0";
     spec: "0.1.0";
     description: "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics";
   };
@@ -396,13 +396,19 @@ export type StreamflowAlignedUnlocks = {
       discriminator: [24, 30, 200, 40, 5, 28, 7, 119];
       accounts: [
         {
+          name: "payer";
+          docs: ["Rent payer"];
+          writable: true;
+          signer: true;
+        },
+        {
           name: "sender";
           writable: true;
           signer: true;
         },
         {
           name: "senderTokens";
-          docs: ["Associated token account address of `sender`."];
+          docs: ["Associated token account address of `payer`."];
           writable: true;
           pda: {
             seeds: [
@@ -607,64 +613,6 @@ export type StreamflowAlignedUnlocks = {
         },
         {
           name: "partner";
-          writable: true;
-        },
-        {
-          name: "partnerTokens";
-          writable: true;
-          pda: {
-            seeds: [
-              {
-                kind: "account";
-                path: "partner";
-              },
-              {
-                kind: "account";
-                path: "tokenProgram";
-              },
-              {
-                kind: "account";
-                path: "mint";
-              },
-            ];
-            program: {
-              kind: "const";
-              value: [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89,
-              ];
-            };
-          };
         },
         {
           name: "mint";

@@ -1,7 +1,7 @@
 {
-  "name": "@streamflow/staking",
+  "name": "@streamflow/launchpad",
   "version": "7.1.0-alpha.1",
-  "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
+  "description": "JavaScript SDK to interact with Streamflow Launchpad protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -24,8 +24,7 @@
     "build": "rm -rf dist; pnpm run build:cjs && pnpm run build:esm",
     "pack": "pnpm build && pnpm pack",
     "lint": "eslint --fix .",
-    "test": "vitest",
-    "prepublishOnly": "pnpm run lint && pnpm run test run && pnpm run build"
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {
@@ -34,13 +33,14 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.0",
+    "@coral-xyz/anchor": "^0.30.1",
     "@coral-xyz/borsh": "^0.30.1",
     "@solana/buffer-layout": "4.0.1",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-base": "0.9.19",
     "@solana/web3.js": "1.95.4",
     "@streamflow/common": "workspace:*",
+    "@streamflow/stream": "workspace:*",
     "bn.js": "5.2.1",
     "borsh": "^2.0.0",
     "bs58": "5.0.0",
