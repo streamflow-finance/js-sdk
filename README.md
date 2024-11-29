@@ -41,6 +41,15 @@ npm i -s @streamflow/common @streamflow/distributor
 yarn add @streamflow/common @streamflow/distributor
 ```
 
+## Environments
+For web browser runtimes polyfills might be required. SDKs use `node:` prefixed modules, for instance: `node:crypto`. However, transitive 3rd parties might use non-prefixed modules so both ways of importing should be polyfilled.
+
+The easiest way to achieve it is using a bundler's plugin.
+For polyfills take a look on these libraries:
+1. Vite - https://www.npmjs.com/package/vite-plugin-node-polyfills
+2. Rsbuild - https://github.com/rspack-contrib/rsbuild-plugin-node-polyfill
+3. Webpack - https://www.npmjs.com/package/node-polyfill-webpack-plugin
+
 ## Contributing
 
 To contribute to this repository, please follow these steps:
