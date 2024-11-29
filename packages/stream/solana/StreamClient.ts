@@ -391,7 +391,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
 
     ixs.push(
-      createStreamInstruction(
+      await createStreamInstruction(
         {
           start: new BN(start),
           depositedAmount,
@@ -539,7 +539,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
-    const createInstruction = createUncheckedStreamInstruction(
+    const createInstruction = await createUncheckedStreamInstruction(
       {
         start: new BN(start),
         depositedAmount,
@@ -935,7 +935,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     ixs.push(
       ...ataIx,
-      withdrawStreamInstruction(amount, this.programId, {
+      await withdrawStreamInstruction(amount, this.programId, {
         partner,
         partnerTokens,
         mint,
@@ -1079,7 +1079,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     ixs.push(
       ...ixsAta,
-      cancelStreamInstruction(this.programId, {
+      await cancelStreamInstruction(this.programId, {
         sender,
         senderTokens,
         recipient,
@@ -1152,7 +1152,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const newRecipientTokens = await ata(mint, newRecipientPublicKey, tokenProgramId);
 
     ixs.push(
-      transferStreamInstruction(this.programId, {
+      await transferStreamInstruction(this.programId, {
         authority: invoker.publicKey,
         newRecipient: newRecipientPublicKey,
         newRecipientTokens,
@@ -1220,7 +1220,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     ixs.push(
-      topupStreamInstruction(amount, this.programId, {
+      await topupStreamInstruction(amount, this.programId, {
         sender: invoker.publicKey,
         senderTokens,
         metadata: streamPublicKey,
@@ -1434,7 +1434,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       computeLimit,
     });
     ixs.push(
-      updateStreamInstruction(data, this.programId, {
+      await updateStreamInstruction(data, this.programId, {
         authority: invoker.publicKey,
         metadata: streamPublicKey,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,

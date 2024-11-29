@@ -1,14 +1,16 @@
 import { Buffer } from "buffer";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
-import { createHash } from "node:crypto";
 
 import * as Layout from "./layout.js";
 import { IUpdateData } from "../common/types.js";
 
-const hasher = () => createHash("sha256");
 const sha256 = {
-  digest: (data: string): Uint8Array => new Uint8Array(hasher().update(data).digest()),
+  digest: async (data: string): Promise<Uint8Array> => {
+    const dataBuffer = new TextEncoder().encode(data);
+    const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", dataBuffer);
+    return new Uint8Array(hashBuffer);
+  },
 };
 
 interface CreateStreamData {
@@ -51,11 +53,11 @@ interface CreateStreamAccounts {
   systemProgram: PublicKey;
 }
 
-export const createStreamInstruction = (
+export const createStreamInstruction = async (
   data: CreateStreamData,
   programId: PublicKey,
   accounts: CreateStreamAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: accounts.sender, isSigner: true, isWritable: true },
     { pubkey: accounts.senderTokens, isSigner: false, isWritable: true },
@@ -116,7 +118,11 @@ export const createStreamInstruction = (
   };
   const encodeLength = Layout.createStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
-  bufferData = Buffer.concat([Buffer.from(sha256.digest("global:create")).slice(0, 8), bufferData, Buffer.alloc(10)]);
+  bufferData = Buffer.concat([
+    Buffer.from(await sha256.digest("global:create")).slice(0, 8),
+    bufferData,
+    Buffer.alloc(10),
+  ]);
 
   return new TransactionInstruction({
     keys,
@@ -161,11 +167,11 @@ interface CreateUncheckedStreamAccounts {
   systemProgram: PublicKey;
 }
 
-export const createUncheckedStreamInstruction = (
+export const createUncheckedStreamInstruction = async (
   data: CreateUncheckedStreamData,
   programId: PublicKey,
   accounts: CreateUncheckedStreamAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: accounts.sender, isSigner: true, isWritable: true },
     { pubkey: accounts.senderTokens, isSigner: false, isWritable: true },
@@ -216,8 +222,8 @@ export const createUncheckedStreamInstruction = (
   const encodeLength = Layout.createUncheckedStreamLayout.encode(decodedData, bufferData);
   bufferData = bufferData.slice(0, encodeLength);
   const digest = accounts.payer
-    ? sha256.digest("global:create_unchecked_with_payer")
-    : sha256.digest("global:create_unchecked");
+    ? await sha256.digest("global:create_unchecked_with_payer")
+    : await sha256.digest("global:create_unchecked");
   bufferData = Buffer.concat([Buffer.from(digest).slice(0, 8), bufferData, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
@@ -241,7 +247,7 @@ interface WithdrawAccounts {
   tokenProgram: PublicKey;
 }
 
-export const withdrawStreamInstruction = (
+export const withdrawStreamInstruction = async (
   amount: BN,
   programId: PublicKey,
   {
@@ -257,7 +263,7 @@ export const withdrawStreamInstruction = (
     mint,
     tokenProgram,
   }: WithdrawAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
     { pubkey: recipient, isSigner: false, isWritable: true },
@@ -280,7 +286,7 @@ export const withdrawStreamInstruction = (
   const decodedData = { amount: amount.toArrayLike(Buffer, "le", 8) };
   const encodeLength = Layout.withdrawStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([Buffer.from(sha256.digest("global:withdraw")).slice(0, 8), data, Buffer.alloc(10)]);
+  data = Buffer.concat([Buffer.from(await sha256.digest("global:withdraw")).slice(0, 8), data, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -295,11 +301,11 @@ interface UpdateAccounts {
   withdrawor: PublicKey;
   systemProgram: PublicKey;
 }
-export const updateStreamInstruction = (
+export const updateStreamInstruction = async (
   params: IUpdateData,
   programId: PublicKey,
   { authority, metadata, withdrawor, systemProgram }: UpdateAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
     { pubkey: metadata, isSigner: false, isWritable: true },
@@ -315,7 +321,7 @@ export const updateStreamInstruction = (
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([Buffer.from(sha256.digest("global:update")).slice(0, 8), data, Buffer.alloc(20)]);
+  data = Buffer.concat([Buffer.from(await sha256.digest("global:update")).slice(0, 8), data, Buffer.alloc(20)]);
   return new TransactionInstruction({
     keys: keys,
     programId: programId,
@@ -339,7 +345,7 @@ interface CancelAccounts {
   tokenProgram: PublicKey;
 }
 
-export const cancelStreamInstruction = (
+export const cancelStreamInstruction = async (
   programId: PublicKey,
   {
     authority,
@@ -356,7 +362,7 @@ export const cancelStreamInstruction = (
     mint,
     tokenProgram,
   }: CancelAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: false },
     { pubkey: sender, isSigner: false, isWritable: true },
@@ -377,7 +383,7 @@ export const cancelStreamInstruction = (
     { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.concat([Buffer.from(sha256.digest("global:cancel")).slice(0, 8), Buffer.alloc(10)]);
+  const data = Buffer.concat([Buffer.from(await sha256.digest("global:cancel")).slice(0, 8), Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
@@ -398,7 +404,7 @@ interface TransferAccounts {
   systemProgram: PublicKey;
 }
 
-export const transferStreamInstruction = (
+export const transferStreamInstruction = async (
   programId: PublicKey,
   {
     authority,
@@ -411,7 +417,7 @@ export const transferStreamInstruction = (
     associatedTokenProgram,
     systemProgram,
   }: TransferAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: true },
     { pubkey: newRecipient, isSigner: false, isWritable: true },
@@ -424,7 +430,10 @@ export const transferStreamInstruction = (
     { pubkey: systemProgram, isSigner: false, isWritable: false },
   ];
 
-  const data = Buffer.concat([Buffer.from(sha256.digest("global:transfer_recipient")).slice(0, 8), Buffer.alloc(10)]);
+  const data = Buffer.concat([
+    Buffer.from(await sha256.digest("global:transfer_recipient")).slice(0, 8),
+    Buffer.alloc(10),
+  ]);
 
   return new TransactionInstruction({
     keys,
@@ -448,7 +457,7 @@ interface TopupAccounts {
   systemProgram: PublicKey;
 }
 
-export const topupStreamInstruction = (
+export const topupStreamInstruction = async (
   amount: BN,
   programId: PublicKey,
   {
@@ -465,7 +474,7 @@ export const topupStreamInstruction = (
     withdrawor,
     systemProgram,
   }: TopupAccounts,
-): TransactionInstruction => {
+): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: sender, isSigner: true, isWritable: true },
     { pubkey: senderTokens, isSigner: false, isWritable: true },
@@ -490,7 +499,7 @@ export const topupStreamInstruction = (
 
   const encodeLength = Layout.topupStreamLayout.encode(decodedData, data);
   data = data.slice(0, encodeLength);
-  data = Buffer.concat([Buffer.from(sha256.digest("global:topup")).slice(0, 8), data, Buffer.alloc(10)]);
+  data = Buffer.concat([Buffer.from(await sha256.digest("global:topup")).slice(0, 8), data, Buffer.alloc(10)]);
 
   return new TransactionInstruction({
     keys,
