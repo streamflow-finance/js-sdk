@@ -11,6 +11,7 @@ export const ORIGINAL_CONTRACT_SENDER_OFFSET = 9;
 export const STREAM_STRUCT_OFFSET_SENDER = 49;
 export const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 export const STREAM_STRUCT_OFFSET_MINT = 177;
+export const STREAM_STRUCT_OFFSET_CLOSED = 671;
 
 export const ALIGNED_PRECISION_FACTOR_POW = 9;
 
@@ -18,6 +19,7 @@ export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
   mint: STREAM_STRUCT_OFFSET_MINT,
   recipient: STREAM_STRUCT_OFFSET_RECIPIENT,
   sender: STREAM_STRUCT_OFFSET_SENDER,
+  closed: STREAM_STRUCT_OFFSET_CLOSED,
 };
 
 // Defined: https://github.com/streamflow-finance/protocol/blob/main/programs/protocol/src/state.rs#L25

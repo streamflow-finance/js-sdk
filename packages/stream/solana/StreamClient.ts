@@ -1,6 +1,7 @@
 // Latest version of the SDK that does not use Anchor. It supports raw instructions.
 
 import BN from "bn.js";
+import bs58 from "bs58";
 import { Buffer } from "buffer";
 import PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
@@ -16,6 +17,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
   MemcmpFilter,
+  DataSizeFilter,
 } from "@solana/web3.js";
 import {
   ata,
@@ -1371,16 +1373,19 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
-    const filters: MemcmpFilter[] = Object.entries(data)
+    const filters: (MemcmpFilter | DataSizeFilter)[] = Object.entries(data)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_, value]) => value) // Only keep entries where the value is truthy
+      .filter(([_, value]) => value !== undefined) // Only keep entries where the value is truthy
       .map(([key, value]) => ({
         memcmp: {
           offset: STREAM_STRUCT_OFFSETS[key as keyof ISearchStreams],
-          bytes: value,
+          bytes: typeof value === "boolean" ? bs58.encode([Number(value)]) : value.toString(),
         },
       }));
-    const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
+    filters.push({ dataSize: METADATA_ACC_SIZE });
+    const accounts = await this.connection.getProgramAccounts(this.programId, {
+      filters,
+    });
 
     return accounts.map(({ pubkey, account }) => ({
       publicKey: pubkey,
