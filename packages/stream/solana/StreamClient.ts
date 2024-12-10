@@ -1374,7 +1374,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
     const filters: (MemcmpFilter | DataSizeFilter)[] = Object.entries(data)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_, value]) => value) // Only keep entries where the value is truthy
+      .filter(([_, value]) => value !== undefined) // Only keep entries where the value is truthy
       .map(([key, value]) => ({
         memcmp: {
           offset: STREAM_STRUCT_OFFSETS[key as keyof ISearchStreams],
