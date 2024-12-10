@@ -1,6 +1,7 @@
 // Latest version of the SDK that does not use Anchor. It supports raw instructions.
 
 import BN from "bn.js";
+import bs58 from "bs58";
 import { Buffer } from "buffer";
 import PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
@@ -1378,7 +1379,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       .map(([key, value]) => ({
         memcmp: {
           offset: STREAM_STRUCT_OFFSETS[key as keyof ISearchStreams],
-          bytes: value,
+          bytes: typeof value === "boolean" ? bs58.encode([Number(value)]) : value.toString(),
         },
       }));
     filters.push({ dataSize: METADATA_ACC_SIZE });
