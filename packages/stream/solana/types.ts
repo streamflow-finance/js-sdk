@@ -27,6 +27,7 @@ export interface ISearchStreams {
   mint?: string;
   sender?: string;
   recipient?: string;
+  closed?: boolean;
 }
 
 export interface Account {

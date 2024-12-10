@@ -16,6 +16,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
   MemcmpFilter,
+  DataSizeFilter,
 } from "@solana/web3.js";
 import {
   ata,
@@ -1371,7 +1372,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
-    const filters: MemcmpFilter[] = Object.entries(data)
+    const filters: (MemcmpFilter | DataSizeFilter)[] = Object.entries(data)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_, value]) => value) // Only keep entries where the value is truthy
       .map(([key, value]) => ({
@@ -1380,7 +1381,10 @@ export class SolanaStreamClient extends BaseStreamClient {
           bytes: value,
         },
       }));
-    const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
+    filters.push({ dataSize: METADATA_ACC_SIZE });
+    const accounts = await this.connection.getProgramAccounts(this.programId, {
+      filters,
+    });
 
     return accounts.map(({ pubkey, account }) => ({
       publicKey: pubkey,
