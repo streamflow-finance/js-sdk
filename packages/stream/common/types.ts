@@ -1,9 +1,14 @@
 import { Address } from "@coral-xyz/anchor";
-import { TransactionInstruction } from "@solana/web3.js";
+import { Commitment, ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { IChain, ICluster } from "@streamflow/common";
 import { Types } from "aptos";
 import BN from "bn.js";
+import type { Signer } from "ethers";
+import type { default as PQueue } from "p-queue";
 
-export { IChain, ICluster, ContractError } from "@streamflow/common";
+import { ISuiIdParameters } from "../sui/index.js";
+
+export { ContractError, IChain, ICluster } from "@streamflow/common";
 
 export interface IRecipient {
   recipient: string;
@@ -28,6 +33,7 @@ export interface IBaseStreamConfig {
   canPause?: boolean;
   canUpdateRate?: boolean;
   partner?: string;
+  tokenProgramId?: string | PublicKey;
 }
 
 export type IAlignedStreamConfig = {
@@ -332,4 +338,61 @@ export enum SolanaAlignedProxyErrorCode {
 
   /** All funds are already unlocked */
   AllFundsUnlocked = "AllFundsUnlocked",
+}
+
+/**
+ * @interface
+ */
+export interface SolanaStreamClientOptions {
+  chain: IChain.Solana;
+  clusterUrl: string;
+  cluster?: ICluster;
+  programId?: string;
+  commitment?: Commitment | ConnectionConfig;
+  sendRate?: number;
+  sendThrottler?: PQueue;
+  sendScheduler?:
+    | PQueue
+    | {
+        /**
+         * concurrency rate for scheduling
+         */
+        sendRate: number;
+        /**
+         * time interval between consecutive sends
+         */
+        sendInterval?: number;
+      };
+}
+
+/**
+ * @interface
+ */
+export interface AptosStreamClientOptions {
+  chain: IChain.Aptos;
+  clusterUrl: string;
+  cluster?: ICluster;
+  programId?: string;
+  maxGas?: string;
+}
+
+/**
+ * @interface
+ */
+export interface EvmStreamClientOptions {
+  chain: IChain.Ethereum | IChain.BNB | IChain.Polygon;
+  clusterUrl: string;
+  signer: Signer;
+  cluster?: ICluster;
+  programId?: string;
+}
+
+/**
+ * @interface
+ */
+export interface SuiStreamClientOptions {
+  chain: IChain.Sui;
+  clusterUrl: string;
+  cluster?: ICluster;
+  ids?: ISuiIdParameters;
 }

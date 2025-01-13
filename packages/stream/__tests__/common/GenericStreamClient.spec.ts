@@ -2,14 +2,15 @@ import { Wallet } from "ethers";
 import { describe, expect, test } from "vitest";
 
 import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../index.js";
+import { default as GenericStreamClient } from "../../common/GenericStreamClient.js";
 import {
-  default as GenericStreamClient,
-  SolanaStreamClientOptions,
-  SuiStreamClientOptions,
   AptosStreamClientOptions,
   EvmStreamClientOptions,
-} from "../../common/GenericStreamClient.js";
-import { IChain, ICluster } from "../../common/types.js";
+  IChain,
+  ICluster,
+  SolanaStreamClientOptions,
+  SuiStreamClientOptions,
+} from "../../common/types.js";
 import { BaseStreamClient } from "../../common/BaseStreamClient.js";
 
 type StreamClientOptions =

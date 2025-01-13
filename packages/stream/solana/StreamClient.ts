@@ -104,6 +104,7 @@ import {
   Stream,
   ICreateMultiError,
   ICreateAlignedStreamData,
+  SolanaStreamClientOptions,
 } from "../common/types.js";
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import { IPartnerLayout } from "./instructionTypes.js";
@@ -115,6 +116,14 @@ import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/d
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
 const METADATA_ACC_SIZE = 1104;
+
+/**
+ * Solana Client creation options
+ * @property cluster {@link ICluster} cluster type
+ * @property clusterUrl cluster url
+ * @interface ClientCreationOptions
+ */
+export type ClientCreationOptions = Omit<SolanaStreamClientOptions, "chain" | "sendRate" | "sendThrottler">;
 
 export class SolanaStreamClient extends BaseStreamClient {
   private connection: Connection;
@@ -128,10 +137,27 @@ export class SolanaStreamClient extends BaseStreamClient {
   private alignedProxyProgram: Program<AlignedUnlocksProgramType>;
 
   /**
-   * Create Stream instance
+   * Create Stream instance with flat arguments
    */
   constructor(
     clusterUrl: string,
+    cluster?: ICluster,
+    commitment?: Commitment | ConnectionConfig,
+    programId?: string,
+    sendRate?: number,
+    sendThrottler?: PQueue,
+  );
+
+  /**
+   * Create Stream instance with options
+   */
+  constructor(options: ClientCreationOptions);
+
+  /**
+   * Create Stream instance
+   */
+  constructor(
+    optionsOrClusterUrl: string | ClientCreationOptions,
     cluster: ICluster = ICluster.Mainnet,
     commitment: Commitment | ConnectionConfig = "confirmed",
     programId = "",
@@ -139,10 +165,28 @@ export class SolanaStreamClient extends BaseStreamClient {
     sendThrottler?: PQueue,
   ) {
     super();
-    this.commitment = commitment;
-    this.connection = new Connection(clusterUrl, this.commitment);
-    this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
-    this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
+    if (typeof optionsOrClusterUrl === "string") {
+      this.commitment = commitment;
+      this.connection = new Connection(optionsOrClusterUrl, this.commitment);
+      this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
+    } else {
+      const {
+        clusterUrl,
+        cluster = ICluster.Mainnet,
+        commitment = "confirmed",
+        programId = "",
+        sendScheduler,
+      } = optionsOrClusterUrl;
+      this.commitment = commitment;
+      this.connection = new Connection(clusterUrl, this.commitment);
+      this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.sendThrottler = !sendScheduler
+        ? buildSendThrottler(1)
+        : "sendRate" in sendScheduler
+          ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
+          : sendScheduler;
+    }
     const alignedUnlocksProgram = {
       ...StreamflowAlignedUnlocksIDL,
       address: StreamflowAlignedUnlocksIDL.address,
@@ -167,7 +211,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    */
   public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
-    const { partner, amount } = data;
+    const { partner, amount, tokenProgramId } = data;
     const { isNative, sender } = extParams;
 
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
@@ -182,6 +226,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       mintPublicKey,
       sender,
       true,
+      tokenProgramId ? new PublicKey(tokenProgramId) : undefined,
     );
 
     const { ixs: createIxs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
@@ -257,6 +302,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       tickSize,
       priceOracle,
       oracleType,
+      tokenProgramId: streamTokenProgramId,
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
@@ -274,7 +320,10 @@ export class SolanaStreamClient extends BaseStreamClient {
     const metadata = !metadataPubKeys ? Keypair.generate() : undefined;
     const metadataPubKey = metadata ? metadata.publicKey : metadataPubKeys![0];
 
-    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
+    let tokenProgramId = streamTokenProgramId ? new PublicKey(streamTokenProgramId) : undefined;
+    if (!tokenProgramId) {
+      tokenProgramId = (await getMintAndProgram(this.connection, mintPublicKey)).tokenProgramId;
+    }
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
 
     const streamflowProgramPublicKey = new PublicKey(this.programId);
@@ -363,6 +412,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       automaticWithdrawal = false,
       withdrawalFrequency = 0,
       partner,
+      tokenProgramId: streamTokenProgramId,
     }: ICreateStreamData,
     { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: ICreateStreamSolanaExt,
   ): Promise<ICreateStreamInstructions> {
@@ -383,7 +433,10 @@ export class SolanaStreamClient extends BaseStreamClient {
       this.programId,
     );
 
-    const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
+    let tokenProgramId = streamTokenProgramId ? new PublicKey(streamTokenProgramId) : undefined;
+    if (!tokenProgramId) {
+      tokenProgramId = (await getMintAndProgram(this.connection, mintPublicKey)).tokenProgramId;
+    }
     const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
     const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
