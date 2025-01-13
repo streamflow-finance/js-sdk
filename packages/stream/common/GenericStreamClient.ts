@@ -1,12 +1,7 @@
-import { Commitment, ConnectionConfig } from "@solana/web3.js";
-import { Signer } from "ethers";
-import PQueue from "p-queue";
-
 import { BaseStreamClient } from "./BaseStreamClient.js";
 import {
   ICancelData,
   IChain,
-  ICluster,
   ICreateMultipleStreamData,
   ICreateStreamData,
   IGetOneData,
@@ -21,6 +16,10 @@ import {
   Stream,
   IFees,
   IGetFeesData,
+  AptosStreamClientOptions,
+  SuiStreamClientOptions,
+  EvmStreamClientOptions,
+  SolanaStreamClientOptions,
 } from "./types.js";
 import { handleContractError } from "./utils.js";
 import { AptosStreamClient, ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos/index.js";
@@ -31,41 +30,8 @@ import {
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
 } from "../solana/index.js";
-import { ICreateStreamSuiExt, ITransactionSuiExt, ISuiIdParameters, SuiStreamClient } from "../sui/index.js";
+import { ICreateStreamSuiExt, ITransactionSuiExt, SuiStreamClient } from "../sui/index.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "./constants.js";
-
-export interface SolanaStreamClientOptions {
-  chain: IChain.Solana;
-  clusterUrl: string;
-  cluster?: ICluster;
-  programId?: string;
-  commitment?: Commitment | ConnectionConfig;
-  sendRate?: number;
-  sendThrottler?: PQueue;
-}
-
-export interface AptosStreamClientOptions {
-  chain: IChain.Aptos;
-  clusterUrl: string;
-  cluster?: ICluster;
-  programId?: string;
-  maxGas?: string;
-}
-
-export interface EvmStreamClientOptions {
-  chain: IChain.Ethereum | IChain.BNB | IChain.Polygon;
-  clusterUrl: string;
-  signer: Signer;
-  cluster?: ICluster;
-  programId?: string;
-}
-
-export interface SuiStreamClientOptions {
-  chain: IChain.Sui;
-  clusterUrl: string;
-  cluster?: ICluster;
-  ids?: ISuiIdParameters;
-}
 
 /** Type referencing options for specific Chain Client */
 type StreamClientOptions<T extends IChain> = T extends IChain.Solana
@@ -129,14 +95,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
 
     switch (options.chain) {
       case IChain.Solana:
-        this.nativeStreamClient = new SolanaStreamClient(
-          options.clusterUrl,
-          options.cluster,
-          options.commitment,
-          options.programId,
-          options.sendRate,
-          options.sendThrottler,
-        ) as StreamClientType<T>;
+        this.nativeStreamClient = new SolanaStreamClient(options) as StreamClientType<T>;
         break;
       case IChain.Aptos:
         this.nativeStreamClient = new AptosStreamClient(
