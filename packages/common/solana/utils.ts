@@ -221,14 +221,18 @@ export async function executeMultipleTransactions(
   connection: Connection,
   txs: (Transaction | VersionedTransaction)[],
   confirmationParams: ConfirmationParams,
-  { sendRate = 1, sendThrottler }: ThrottleParams,
+  { sendRate = 1, sendThrottler, ...throttlingParams }: ThrottleParams,
 ): Promise<PromiseSettledResult<string>[]> {
   if (!sendThrottler) {
     sendThrottler = buildSendThrottler(sendRate);
   }
   return Promise.allSettled(
     txs.map((tx) =>
-      executeTransaction(connection, tx, confirmationParams, { sendRate: sendRate, sendThrottler: sendThrottler }),
+      executeTransaction(connection, tx, confirmationParams, {
+        ...throttlingParams,
+        sendRate: sendRate,
+        sendThrottler: sendThrottler,
+      }),
     ),
   );
 }
@@ -250,7 +254,7 @@ export async function sendAndConfirmTransaction(
   connection: Connection,
   tx: Transaction | VersionedTransaction,
   { hash, context, commitment }: ConfirmationParams,
-  { sendRate = 1, sendThrottler }: ThrottleParams,
+  { sendRate = 1, sendThrottler, waitBeforeConfirming }: ThrottleParams,
 ): Promise<string> {
   const isVersioned = isTransactionVersioned(tx);
 
@@ -291,7 +295,8 @@ export async function sendAndConfirmTransaction(
       }
       throw e;
     }
-    await sleep(500);
+    // Wait at least 5 slots (~400ms before confirming)
+    await sleep(waitBeforeConfirming ?? 2000);
     try {
       const value = await confirmAndEnsureTransaction(connection, signature);
       if (value) {

@@ -34,6 +34,7 @@ export interface ConfirmationParams {
 export interface ThrottleParams {
   sendRate?: number;
   sendThrottler?: PQueue;
+  waitBeforeConfirming?: number | undefined;
 }
 
 export interface IProgramAccount<T> {
