@@ -343,6 +343,24 @@ export enum SolanaAlignedProxyErrorCode {
 /**
  * @interface
  */
+export interface SolanaTransactionSchedulingOptions {
+  /**
+   * concurrency rate for scheduling
+   */
+  sendRate: number;
+  /**
+   * time interval between consecutive sends
+   */
+  sendInterval?: number;
+  /**
+   * time interval before confirming the transaction
+   */
+  waitBeforeConfirming?: number;
+}
+
+/**
+ * @interface
+ */
 export interface SolanaStreamClientOptions {
   chain: IChain.Solana;
   clusterUrl: string;
@@ -351,18 +369,7 @@ export interface SolanaStreamClientOptions {
   commitment?: Commitment | ConnectionConfig;
   sendRate?: number;
   sendThrottler?: PQueue;
-  sendScheduler?:
-    | PQueue
-    | {
-        /**
-         * concurrency rate for scheduling
-         */
-        sendRate: number;
-        /**
-         * time interval between consecutive sends
-         */
-        sendInterval?: number;
-      };
+  sendScheduler?: PQueue | SolanaTransactionSchedulingOptions;
 }
 
 /**

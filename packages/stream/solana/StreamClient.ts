@@ -32,6 +32,7 @@ import {
   executeMultipleTransactions,
   buildSendThrottler,
   IProgramAccount,
+  ThrottleParams,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
@@ -132,9 +133,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   private commitment: Commitment | ConnectionConfig;
 
-  private sendThrottler: PQueue;
-
   private alignedProxyProgram: Program<AlignedUnlocksProgramType>;
+
+  private schedulingParams: ThrottleParams;
 
   /**
    * Create Stream instance with flat arguments
@@ -169,7 +170,9 @@ export class SolanaStreamClient extends BaseStreamClient {
       this.commitment = commitment;
       this.connection = new Connection(optionsOrClusterUrl, this.commitment);
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
-      this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
+      this.schedulingParams = {
+        sendThrottler: sendThrottler ?? buildSendThrottler(sendRate),
+      };
     } else {
       const {
         clusterUrl,
@@ -181,11 +184,16 @@ export class SolanaStreamClient extends BaseStreamClient {
       this.commitment = commitment;
       this.connection = new Connection(clusterUrl, this.commitment);
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
-      this.sendThrottler = !sendScheduler
+      const schedulingOptions = sendScheduler && "sendRate" in sendScheduler ? sendScheduler : undefined;
+      const sendThrottler = !sendScheduler
         ? buildSendThrottler(1)
         : "sendRate" in sendScheduler
           ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
           : sendScheduler;
+      this.schedulingParams = {
+        ...schedulingOptions,
+        sendThrottler,
+      };
     }
     const alignedUnlocksProgram = {
       ...StreamflowAlignedUnlocksIDL,
@@ -257,7 +265,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
@@ -520,7 +528,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
@@ -741,12 +749,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     if (prepareInstructions.length > 0) {
       const prepareTx = signedBatch.pop();
-      await sendAndConfirmStreamRawTransaction(
-        this.connection,
-        prepareTx!,
-        { hash, context },
-        { sendThrottler: this.sendThrottler },
-      );
+      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, this.schedulingParams);
     }
 
     const responses: PromiseSettledResult<string>[] = [];
@@ -756,7 +759,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       for (const batchTx of signedBatch) {
         responses.push(
           ...(await Promise.allSettled([
-            executeTransaction(this.connection, batchTx.tx, { hash, context }, { sendThrottler: this.sendThrottler }),
+            executeTransaction(this.connection, batchTx.tx, { hash, context }, this.schedulingParams),
           ])),
         );
       }
@@ -769,7 +772,7 @@ export class SolanaStreamClient extends BaseStreamClient {
           this.connection,
           signedBatch.map((item) => item.tx),
           { hash, context },
-          { sendThrottler: this.sendThrottler },
+          this.schedulingParams,
         )),
       );
     }
@@ -896,12 +899,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     if (prepareInstructions.length > 0) {
       const prepareTx = signedBatch.shift();
-      await sendAndConfirmStreamRawTransaction(
-        this.connection,
-        prepareTx!,
-        { hash, context },
-        { sendThrottler: this.sendThrottler },
-      );
+      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, this.schedulingParams);
     }
 
     const responses: PromiseSettledResult<string>[] = [];
@@ -909,7 +907,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     for (const batchTx of signedBatch) {
       responses.push(
         ...(await Promise.allSettled([
-          executeTransaction(this.connection, batchTx.tx, { hash, context }, { sendThrottler: this.sendThrottler }),
+          executeTransaction(this.connection, batchTx.tx, { hash, context }, this.schedulingParams),
         ])),
       );
     }
@@ -947,7 +945,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return { ixs, txId: signature };
@@ -1023,7 +1021,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return { ixs, txId: signature };
@@ -1173,7 +1171,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return { ixs, txId: signature };
@@ -1238,7 +1236,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return { ixs, txId: signature };
@@ -1461,7 +1459,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      this.schedulingParams,
     );
 
     return {
