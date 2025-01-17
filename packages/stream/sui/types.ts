@@ -1,7 +1,7 @@
-import { Keypair } from "@mysten/sui.js/cryptography";
+import { Keypair } from "@mysten/sui/cryptography";
 import { WalletContextState } from "@suiet/wallet-kit";
-import { TransactionBlock } from "@mysten/sui.js/transactions";
-import { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui.js/client";
+import { Transaction } from "@mysten/sui/transactions";
+import { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui/client";
 import BN from "bn.js";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
@@ -274,7 +274,7 @@ export interface SuiErrorInfo {
 }
 
 export interface SuiSignAndExecuteTransactionBlockInput {
-  transactionBlock: TransactionBlock;
+  transaction: Transaction;
   requestType?: ExecuteTransactionRequestType;
   options?: SuiTransactionBlockResponseOptions;
 }

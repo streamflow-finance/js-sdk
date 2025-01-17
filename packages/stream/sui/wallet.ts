@@ -1,6 +1,6 @@
-import { Keypair } from "@mysten/sui.js/cryptography";
+import { Keypair } from "@mysten/sui/cryptography";
 import { WalletContextState } from "@suiet/wallet-kit";
-import { SuiClient, SuiTransactionBlockResponse } from "@mysten/sui.js/client";
+import { SuiClient, SuiTransactionBlockResponse } from "@mysten/sui/client";
 
 import { SuiSignAndExecuteTransactionBlockInput } from "./types.js";
 
@@ -14,7 +14,7 @@ export function isSignerKeypair(walletOrKeypair: Keypair | WalletContextState): 
     walletOrKeypair instanceof Keypair ||
     walletOrKeypair.constructor === Keypair ||
     walletOrKeypair.constructor.name === Keypair.prototype.constructor.name ||
-    "export" in walletOrKeypair
+    "getSecretKey" in walletOrKeypair
   );
 }
 
@@ -35,17 +35,17 @@ export class SuiWalletWrapper<T extends WalletContextState | Keypair> {
     }
   }
 
-  public async signAndExecuteTransactionBlock(
+  public async signAndExecuteTransaction(
     input: SuiSignAndExecuteTransactionBlockInput,
   ): Promise<SuiTransactionBlockResponse> {
     if (isSignerKeypair(this.wallet)) {
-      return this.client.signAndExecuteTransactionBlock({
+      return this.client.signAndExecuteTransaction({
         ...input,
         // @ts-ignore
         signer: this.wallet,
       });
     }
     // @ts-ignore
-    return this.wallet.signAndExecuteTransactionBlock(input);
+    return this.wallet.signAndExecuteTransaction(input);
   }
 }
