@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "7.3.1",
+  "version": "7.3.2",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/esm/index.js",
@@ -54,7 +54,6 @@
     "@coral-xyz/anchor": "^0.30.1",
     "@coral-xyz/borsh": "0.30.1",
     "@manahippo/aptos-wallet-adapter": "1.0.10",
-    "@mysten/bcs": "1.1.0",
     "@mysten/sui": "1.12.0",
     "@solana/buffer-layout": "4.0.1",
     "@solana/spl-token": "0.4.9",
