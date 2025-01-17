@@ -132,11 +132,14 @@ export default class SuiStreamClient extends BaseStreamClient {
                 error: currentEffects.status.$kind,
               };
         }
-      } else {
+      } else if (effects && effects.status) {
         effectsShort = {
-          status: effects!.status.status,
-          error: effects!.status.error,
+          status: effects.status.status,
+          error: effects.status.error,
         };
+      }
+      if (!effectsShort) {
+        console.warn(`Got no effects from the transaction ${digest}, raw: ${effects}`);
       }
 
       if (effectsShort?.status === "failure") {

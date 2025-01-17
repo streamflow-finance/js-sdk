@@ -36,7 +36,7 @@ module.exports = {
     "react/jsx-filename-extension": "off",
     "@typescript-eslint/no-throw-literal": "off",
     "no-debugger": "warn",
-    "no-console": "warn",
+    "no-console": ["warn", { allow: ["warn"] }],
     "import/prefer-default-export": "off",
     "import/no-unresolved": "warn",
     "no-plusplus": "off",
