@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import { fromBase64 } from "@mysten/bcs";
 import { CoinStruct, SuiClient } from "@mysten/sui/client";
 import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui/utils";
@@ -114,7 +115,34 @@ export default class SuiStreamClient extends BaseStreamClient {
       });
       txs.push(digest);
 
-      if (effects!.status.status === "failure") {
+      // effects may be string according to Sui Wallet standard
+      // https://github.com/MystenLabs/ts-sdks/blob/main/packages/wallet-standard/src/features/suiSignAndExecuteTransaction.ts#L34
+      // Loosely ported from https://github.com/MystenLabs/ts-sdks/blob/main/packages/graphql-transport/src/mappers/transaction-block.ts#L376
+      let effectsShort: { status: "success" | "failure"; error?: string } | undefined = undefined;
+      if (typeof effects === "string") {
+        const parsedEffects = bcs.TransactionEffects.parse(fromBase64(effects));
+        const currentEffects = parsedEffects.V2 || parsedEffects.V1;
+        if (currentEffects) {
+          effectsShort = currentEffects.status.Success
+            ? {
+                status: "success",
+              }
+            : {
+                status: "failure",
+                error: currentEffects.status.$kind,
+              };
+        }
+      } else if (effects && effects.status) {
+        effectsShort = {
+          status: effects.status.status,
+          error: effects.status.error,
+        };
+      }
+      if (!effectsShort) {
+        console.warn(`Got no effects from the transaction ${digest}, raw: ${effects}`);
+      }
+
+      if (effectsShort?.status === "failure") {
         multipleStreamData.recipients.forEach((recipient) => {
           errors.push({
             error: effects!.status.error ?? "Unknown error!",
