@@ -67,7 +67,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     const totalFee = await this.getTotalFee({
       address: streamData.partner ?? wallet.address,
     });
-    const [txb] = await this.generateCreateBlock(
+    const [tx] = await this.generateCreateBlock(
       wallet.address,
       {
         ...streamData,
@@ -76,8 +76,8 @@ export default class SuiStreamClient extends BaseStreamClient {
       totalFee,
     );
 
-    const { digest, events } = await wallet.signAndExecuteTransactionBlock({
-      transaction: txb,
+    const { digest, events } = await wallet.signAndExecuteTransaction({
+      transaction: tx,
       options: { showEvents: true },
     });
 
@@ -100,7 +100,7 @@ export default class SuiStreamClient extends BaseStreamClient {
     const totalFee = await this.getTotalFee({
       address: multipleStreamData.partner ?? wallet.address,
     });
-    const [txb, firstIndex] = await this.generateCreateBlock(wallet.address, multipleStreamData, totalFee);
+    const [tx, firstIndex] = await this.generateCreateBlock(wallet.address, multipleStreamData, totalFee);
 
     const txs: string[] = [];
     const metadatas: string[] = [];
@@ -108,8 +108,8 @@ export default class SuiStreamClient extends BaseStreamClient {
     const errors: ICreateMultiError[] = [];
 
     try {
-      const { digest, events, effects } = await wallet.signAndExecuteTransactionBlock({
-        transaction: txb,
+      const { digest, events, effects } = await wallet.signAndExecuteTransaction({
+        transaction: tx,
         options: { showEffects: true, showEvents: true },
       });
       txs.push(digest);
@@ -162,20 +162,20 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const txb = new Transaction();
-    txb.moveCall({
+    const tx = new Transaction();
+    tx.moveCall({
       target: `${this.programId}::protocol::withdraw`,
       typeArguments: [tokenId],
       arguments: [
-        txb.object(id),
-        txb.object(this.configId),
-        txb.object(SUI_CLOCK_OBJECT_ID),
-        txb.pure.u64(amount.toString()),
+        tx.object(id),
+        tx.object(this.configId),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.pure.u64(amount.toString()),
       ],
     });
 
-    const { digest } = await wallet.signAndExecuteTransactionBlock({
-      transaction: txb,
+    const { digest } = await wallet.signAndExecuteTransaction({
+      transaction: tx,
     });
 
     return {
@@ -192,15 +192,15 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const txb = new Transaction();
-    txb.moveCall({
+    const tx = new Transaction();
+    tx.moveCall({
       target: `${this.programId}::protocol::cancel`,
       typeArguments: [tokenId],
-      arguments: [txb.object(cancelData.id), txb.object(this.configId), txb.object(SUI_CLOCK_OBJECT_ID)],
+      arguments: [tx.object(cancelData.id), tx.object(this.configId), tx.object(SUI_CLOCK_OBJECT_ID)],
     });
 
-    const { digest } = await wallet.signAndExecuteTransactionBlock({
-      transaction: txb,
+    const { digest } = await wallet.signAndExecuteTransaction({
+      transaction: tx,
     });
 
     return {
@@ -217,15 +217,15 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const txb = new Transaction();
-    txb.moveCall({
+    const tx = new Transaction();
+    tx.moveCall({
       target: `${this.programId}::protocol::transfer`,
       typeArguments: [tokenId],
-      arguments: [txb.object(transferData.id), txb.pure.address(transferData.newRecipient)],
+      arguments: [tx.object(transferData.id), tx.pure.address(transferData.newRecipient)],
     });
 
-    const { digest } = await wallet.signAndExecuteTransactionBlock({
-      transaction: txb,
+    const { digest } = await wallet.signAndExecuteTransaction({
+      transaction: tx,
     });
 
     return {
@@ -242,26 +242,26 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const txb = new Transaction();
+    const tx = new Transaction();
     const coins = await this.getAllCoins(wallet.address, tokenId);
     const stream = await this.getOne({ id: topupData.id });
     const totalFee = (stream.partnerFeePercent + stream.streamflowFeePercent) / 100;
-    const coinObject = this.splitCoinObjectForAmount(txb, topupData.amount, tokenId, coins, totalFee);
-    txb.moveCall({
+    const coinObject = this.splitCoinObjectForAmount(tx, topupData.amount, tokenId, coins, totalFee);
+    tx.moveCall({
       target: `${this.programId}::protocol::topup`,
       typeArguments: [tokenId],
       arguments: [
-        txb.object(topupData.id),
-        txb.object(this.configId),
+        tx.object(topupData.id),
+        tx.object(this.configId),
         coinObject,
-        txb.gas,
-        txb.pure.u64(topupData.amount.toString()),
+        tx.gas,
+        tx.pure.u64(topupData.amount.toString()),
       ],
     });
-    this.returnSplittedCoinObject(txb, tokenId, coins, coinObject);
+    this.returnSplittedCoinObject(tx, tokenId, coins, coinObject);
 
-    const { digest } = await wallet.signAndExecuteTransactionBlock({
-      transaction: txb,
+    const { digest } = await wallet.signAndExecuteTransaction({
+      transaction: tx,
     });
 
     return {
@@ -307,15 +307,15 @@ export default class SuiStreamClient extends BaseStreamClient {
     { senderWallet, tokenId }: ITransactionSuiExt,
   ): Promise<ITransactionResult> {
     const wallet = new SuiWalletWrapper(senderWallet, this.client);
-    const txb = new Transaction();
-    txb.moveCall({
+    const tx = new Transaction();
+    tx.moveCall({
       target: `${this.programId}::protocol::update`,
       typeArguments: [tokenId],
       arguments: [
-        txb.object(updateData.id),
-        txb.object(this.configId),
-        txb.object(SUI_CLOCK_OBJECT_ID),
-        txb.gas,
+        tx.object(updateData.id),
+        tx.object(this.configId),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.gas,
         bcs
           .vector(bcs.bool())
           .serialize(updateData.enableAutomaticWithdrawal !== undefined ? [updateData.enableAutomaticWithdrawal] : []),
@@ -328,8 +328,8 @@ export default class SuiStreamClient extends BaseStreamClient {
       ],
     });
 
-    const { digest } = await wallet.signAndExecuteTransactionBlock({
-      transaction: txb,
+    const { digest } = await wallet.signAndExecuteTransaction({
+      transaction: tx,
     });
 
     return {
@@ -419,46 +419,46 @@ export default class SuiStreamClient extends BaseStreamClient {
     const totalAmount = multipleStreamData.recipients
       .map((recipiient) => recipiient.amount)
       .reduce((prev, current) => current.add(prev));
-    const txb = new Transaction();
-    const coinObject = this.splitCoinObjectForAmount(txb, totalAmount, multipleStreamData.tokenId, coins, totalFee);
+    const tx = new Transaction();
+    const coinObject = this.splitCoinObjectForAmount(tx, totalAmount, multipleStreamData.tokenId, coins, totalFee);
     coins = [coins[0]];
     let firstIndex: number | null = null;
 
     multipleStreamData.recipients.forEach((recipient) => {
-      const result = txb.moveCall({
+      const result = tx.moveCall({
         target: `${this.programId}::protocol::create`,
         typeArguments: [multipleStreamData.tokenId],
         arguments: [
-          txb.object(this.configId),
-          txb.object(this.feeTableId),
-          txb.object(SUI_CLOCK_OBJECT_ID),
+          tx.object(this.configId),
+          tx.object(this.feeTableId),
+          tx.object(SUI_CLOCK_OBJECT_ID),
           coinObject,
-          txb.gas,
-          txb.pure.u64(recipient.amount.toString()),
-          txb.pure.u64(multipleStreamData.period),
-          txb.pure.u64(recipient.amountPerPeriod.toString()),
-          txb.pure.u64(multipleStreamData.start),
-          txb.pure.u64(recipient.cliffAmount.toString()),
-          txb.pure.bool(multipleStreamData.cancelableBySender),
-          txb.pure.bool(multipleStreamData.cancelableByRecipient),
-          txb.pure.bool(multipleStreamData.transferableBySender),
-          txb.pure.bool(multipleStreamData.transferableByRecipient),
-          txb.pure.bool(multipleStreamData.canTopup),
-          txb.pure.bool(!!multipleStreamData.canPause),
-          txb.pure.bool(!!multipleStreamData.canUpdateRate),
-          txb.pure.bool(!!multipleStreamData.automaticWithdrawal),
-          txb.pure.u64(multipleStreamData.withdrawalFrequency || 0),
-          txb.pure.string(recipient.name),
-          txb.pure.address(recipient.recipient),
-          txb.pure.address(multipleStreamData.partner || walletAddress),
+          tx.gas,
+          tx.pure.u64(recipient.amount.toString()),
+          tx.pure.u64(multipleStreamData.period),
+          tx.pure.u64(recipient.amountPerPeriod.toString()),
+          tx.pure.u64(multipleStreamData.start),
+          tx.pure.u64(recipient.cliffAmount.toString()),
+          tx.pure.bool(multipleStreamData.cancelableBySender),
+          tx.pure.bool(multipleStreamData.cancelableByRecipient),
+          tx.pure.bool(multipleStreamData.transferableBySender),
+          tx.pure.bool(multipleStreamData.transferableByRecipient),
+          tx.pure.bool(multipleStreamData.canTopup),
+          tx.pure.bool(!!multipleStreamData.canPause),
+          tx.pure.bool(!!multipleStreamData.canUpdateRate),
+          tx.pure.bool(!!multipleStreamData.automaticWithdrawal),
+          tx.pure.u64(multipleStreamData.withdrawalFrequency || 0),
+          tx.pure.string(recipient.name),
+          tx.pure.address(recipient.recipient),
+          tx.pure.address(multipleStreamData.partner || walletAddress),
         ],
       });
       if (result.$kind === "Result" && firstIndex === null) {
         firstIndex = result.Result;
       }
     });
-    this.returnSplittedCoinObject(txb, multipleStreamData.tokenId, coins, coinObject);
-    return [txb, firstIndex!];
+    this.returnSplittedCoinObject(tx, multipleStreamData.tokenId, coins, coinObject);
+    return [tx, firstIndex!];
   }
 
   /**
@@ -488,7 +488,7 @@ export default class SuiStreamClient extends BaseStreamClient {
    * Utility function to split Coin object and use splitted object for stream operations.
    * We do it like thid to mitigate risk of Transaction reverting in case Stream is created for Sui Coin object.
    * This way we can safely pass splitted Sui Coin object in Stream payload and use another object for gas/withdrawal fees.
-   * @param txb current transanction block
+   * @param tx current transanction block
    * @param amount minimal amount of coins requried
    * @param coinType coin type
    * @param coins array of owned coins of the same type
@@ -496,38 +496,38 @@ export default class SuiStreamClient extends BaseStreamClient {
    * @returns Coin Object to use in a Move Call
    */
   private splitCoinObjectForAmount(
-    txb: Transaction,
+    tx: Transaction,
     amount: BN,
     coinType: string,
     coins: CoinStruct[],
     totalFee: number,
   ): TransactionObjectArgument {
-    const coinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
+    const coinObject = coinType === SUI_TYPE_ARG ? tx.gas : tx.object(coins[0].coinObjectId);
 
     if (coins.length > 1) {
-      txb.mergeCoins(
+      tx.mergeCoins(
         coinObject,
-        coins.slice(1).map((item) => txb.object(item.coinObjectId)),
+        coins.slice(1).map((item) => tx.object(item.coinObjectId)),
       );
     }
     const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-    return txb.splitCoins(coinObject, [txb.pure.u64(totalAmount.toString())])[0];
+    return tx.splitCoins(coinObject, [tx.pure.u64(totalAmount.toString())])[0];
   }
 
   /**
    * Return previously splitted Coin Object to owner and merge it to to rebate storage fees
-   * @param txb current transanction block
+   * @param tx current transaction
    * @param coinType coin type
    * @param coinObject splitted object
    * @param coins array of objects used in
    */
   private returnSplittedCoinObject(
-    txb: Transaction,
+    tx: Transaction,
     coinType: string,
     coins: CoinStruct[],
     coinObject: TransactionObjectArgument,
   ): void {
-    const firstCoinObject = coinType === SUI_TYPE_ARG ? txb.gas : txb.object(coins[0].coinObjectId);
-    txb.mergeCoins(firstCoinObject, [coinObject]);
+    const firstCoinObject = coinType === SUI_TYPE_ARG ? tx.gas : tx.object(coins[0].coinObjectId);
+    tx.mergeCoins(firstCoinObject, [coinObject]);
   }
 }
