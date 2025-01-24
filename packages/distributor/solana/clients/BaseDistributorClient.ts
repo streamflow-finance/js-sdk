@@ -296,6 +296,24 @@ export default abstract class BaseDistributorClient {
     return ixs;
   }
 
+  public async closeClaim(data: ICloseClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+    const ixs = await this.prepareCloseClaimInstructions(data, extParams);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
+
+    return { ixs, txId: signature };
+  }
+
   public async prepareCloseClaimInstructions(
     data: ICloseClaimData,
     extParams: IInteractSolanaExt,
