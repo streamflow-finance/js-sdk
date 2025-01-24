@@ -8,7 +8,7 @@ export type AlignedDistributor = {
   address: "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2";
   metadata: {
     name: "alignedDistributor";
-    version: "1.2.0";
+    version: "1.3.0";
     spec: "0.1.0";
     description: "Proxy for merkle distributor that updates Vesting duration according to token market performance.";
   };
@@ -695,7 +695,7 @@ export type AlignedDistributor = {
             type: "bool";
           },
           {
-            name: "claimsClosable";
+            name: "claimsClosableByAdmin";
             docs: ["Whether claims are closable by the admin or not"];
             type: "bool";
           },
@@ -732,10 +732,20 @@ export type AlignedDistributor = {
             type: "u64";
           },
           {
+            name: "claimsClosableByClaimant";
+            docs: ["Whether claims are closable by claimant or not"];
+            type: "bool";
+          },
+          {
+            name: "claimsLimit";
+            docs: ["Limit number of claims"];
+            type: "u16";
+          },
+          {
             name: "buffer2";
             docs: ["Buffer for additional fields"];
             type: {
-              array: ["u8", 23];
+              array: ["u8", 20];
             };
           },
           {
