@@ -30,7 +30,7 @@ export interface ICreateDistributorData {
   endVestingTs: number;
   clawbackStartTs: number;
   claimsClosableByAdmin: boolean;
-  claimsClosableByClaimant: boolean;
+  claimsClosableByClaimant?: boolean;
   claimsLimit?: number;
 }
 

@@ -6,9 +6,9 @@ import { Buffer } from "buffer";
 import { PROGRAM_ID } from "../programId";
 
 export interface CloseClaimArgs {
-  amountUnlocked: BN;
-  amountLocked: BN;
-  proof: Array<Array<number>>;
+  amountUnlocked?: BN;
+  amountLocked?: BN;
+  proof?: Array<Array<number>>;
 }
 export interface CloseClaimAccounts {
   /** The [MerkleDistributor]. */
@@ -25,9 +25,9 @@ export interface CloseClaimAccounts {
 }
 
 export const layout = borsh.struct([
-  borsh.u64("amountUnlocked"),
-  borsh.u64("amountLocked"),
-  borsh.vec(borsh.array(borsh.u8(), 32), "proof"),
+  borsh.option(borsh.u64(), "amountUnlocked"),
+  borsh.option(borsh.u64(), "amountLocked"),
+  borsh.option(borsh.vec(borsh.array(borsh.u8(), 32)), "proof"),
 ]);
 
 export function closeClaim(args: CloseClaimArgs, accounts: CloseClaimAccounts, programId: PublicKey = PROGRAM_ID) {

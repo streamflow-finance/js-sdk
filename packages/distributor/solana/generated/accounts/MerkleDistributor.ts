@@ -54,7 +54,7 @@ export interface MerkleDistributorFields {
   /** Whether claims are closable by the claimant or not */
   claimsClosableByClaimant: boolean;
   /** Limit number of claims */
-  claimsLimit: BN;
+  claimsLimit: number;
   /** Buffer for additional fields */
   buffer2: Array<number>;
   /** Buffer for additional fields */
@@ -111,7 +111,7 @@ export interface MerkleDistributorJSON {
   /** Whether claims are closable by the claimant or not */
   claimsClosableByClaimant: boolean;
   /** Limit number of claims */
-  claimsLimit: string;
+  claimsLimit: number;
   /** Buffer for additional fields */
   buffer2: Array<number>;
   /** Buffer for additional fields */
@@ -193,7 +193,7 @@ export class MerkleDistributor {
   readonly claimsClosableByClaimant: boolean;
 
   /** Limit number of claims */
-  readonly claimsLimit: BN;
+  readonly claimsLimit: number;
 
   /** Buffer for additional fields */
   readonly buffer2: Array<number>;
@@ -363,7 +363,7 @@ export class MerkleDistributor {
       totalClaimablePreUpdate: this.totalClaimablePreUpdate.toString(),
       clawedBackTs: this.clawedBackTs.toString(),
       claimsClosableByClaimant: this.claimsClosableByClaimant,
-      claimsLimit: this.claimsLimit.toString(),
+      claimsLimit: this.claimsLimit,
       buffer2: this.buffer2,
       buffer3: this.buffer3,
     };
@@ -395,7 +395,7 @@ export class MerkleDistributor {
       totalClaimablePreUpdate: new BN(obj.totalClaimablePreUpdate),
       clawedBackTs: new BN(obj.clawedBackTs),
       claimsClosableByClaimant: obj.claimsClosableByClaimant,
-      claimsLimit: new BN(obj.claimsLimit),
+      claimsLimit: obj.claimsLimit,
       buffer2: obj.buffer2,
       buffer3: obj.buffer3,
     });

@@ -22,7 +22,7 @@ export interface ClaimStatusFields {
   /** Distributor account for which ClaimStatus was created, useful to filter by in get_program_accounts */
   distributor: PublicKey;
   /** Number of time amount has been claimed */
-  claimsCount: BN;
+  claimsCount: number;
   /** Time when claim was closed */
   closedTs: BN;
   /** Buffer for additional fields */
@@ -47,7 +47,7 @@ export interface ClaimStatusJSON {
   /** Distributor account for which ClaimStatus was created, useful to filter by in get_program_accounts */
   distributor: string;
   /** Number of time amount has been claimed */
-  claimsCount: string;
+  claimsCount: number;
   /** Time when claim was closed */
   closedTs: string;
   /** Buffer for additional fields */
@@ -81,7 +81,7 @@ export class ClaimStatus {
   readonly distributor: PublicKey;
 
   /** Number of time amount has been claimed */
-  readonly claimsCount: BN;
+  readonly claimsCount: number;
 
   /** Time when claim was closed */
   readonly closedTs: BN;
@@ -187,7 +187,7 @@ export class ClaimStatus {
       lastAmountPerUnlock: this.lastAmountPerUnlock.toString(),
       closed: this.closed,
       distributor: this.distributor.toString(),
-      claimsCount: this.claimsCount.toString(),
+      claimsCount: this.claimsCount,
       closedTs: this.closedTs.toString(),
       buffer2: this.buffer2,
     };
@@ -203,7 +203,7 @@ export class ClaimStatus {
       lastAmountPerUnlock: new BN(obj.lastAmountPerUnlock),
       closed: obj.closed,
       distributor: new PublicKey(obj.distributor),
-      claimsCount: new BN(obj.claimsCount),
+      claimsCount: obj.claimsCount,
       closedTs: new BN(obj.closedTs),
       buffer2: obj.buffer2,
     });

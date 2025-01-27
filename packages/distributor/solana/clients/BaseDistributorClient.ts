@@ -19,6 +19,7 @@ import {
   buildSendThrottler,
   prepareWrappedAccount,
   IProgramAccount,
+  pk,
 } from "@streamflow/common/solana";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -325,7 +326,7 @@ export default abstract class BaseDistributorClient {
     const distributorPublicKey = new PublicKey(data.id);
     const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
 
-    const claimantPublicKey = new PublicKey(data.claimant);
+    const claimantPublicKey = pk(data.claimant);
 
     if (!distributor) {
       throw new Error("Couldn't get distributor account info");
@@ -469,7 +470,7 @@ export default abstract class BaseDistributorClient {
       clawbackStartTs: new BN(data.clawbackStartTs),
       claimsClosableByAdmin: data.claimsClosableByAdmin,
       claimsClosableByClaimant: data.claimsClosableByClaimant,
-      claimsLimit: new BN(data.claimsLimit || 0),
+      claimsLimit: data.claimsLimit,
     };
 
     const nowTs = new BN(Math.floor(Date.now() / 1000));

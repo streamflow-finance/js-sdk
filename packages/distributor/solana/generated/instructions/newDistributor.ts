@@ -15,8 +15,8 @@ export interface NewDistributorArgs {
   endVestingTs: BN;
   clawbackStartTs: BN;
   claimsClosableByAdmin: boolean;
-  claimsClosableByClaimant: boolean;
-  claimsLimit: BN;
+  claimsClosableByClaimant?: boolean;
+  claimsLimit?: number;
 }
 
 export interface NewDistributorAccounts {
