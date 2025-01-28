@@ -17,7 +17,12 @@ export type CustomError =
   | InvalidMint
   | ClaimIsClosed
   | ClaimsAreNotClosable
-  | InvalidUnlockPeriod;
+  | InvalidUnlockPeriod
+  | DurationUpdateNotAllowed
+  | NoVestingAmount
+  | VestingAlreadyFinished
+  | InvalidAmounts
+  | ClaimsLimitReached;
 
 export class InsufficientUnlockedTokens extends Error {
   static readonly code = 6000;
@@ -285,6 +290,76 @@ export class InvalidUnlockPeriod extends Error {
   }
 }
 
+export class DurationUpdateNotAllowed extends Error {
+  static readonly code = 6019;
+
+  readonly code = 6019;
+
+  readonly name = "DurationUpdateNotAllowed";
+
+  readonly msg = "Duration update is not allowed";
+
+  constructor(readonly logs?: string[]) {
+    super("6019: Duration update is not allowed");
+  }
+}
+
+export class NoVestingAmount extends Error {
+  static readonly code = 6020;
+
+  readonly code = 6020;
+
+  readonly name = "NoVestingAmount";
+
+  readonly msg = "Vesting amounts are not set";
+
+  constructor(readonly logs?: string[]) {
+    super("6020: Vesting amounts are not set");
+  }
+}
+
+export class VestingAlreadyFinished extends Error {
+  static readonly code = 6021;
+
+  readonly code = 6021;
+
+  readonly name = "VestingAlreadyFinished";
+
+  readonly msg = "Vesting already finished";
+
+  constructor(readonly logs?: string[]) {
+    super("6021: Vesting already finished");
+  }
+}
+
+export class InvalidAmounts extends Error {
+  static readonly code = 6022;
+
+  readonly code = 6022;
+
+  readonly name = "InvalidAmounts";
+
+  readonly msg = "Provided amounts are invalid";
+
+  constructor(readonly logs?: string[]) {
+    super("6022: Provided amounts are invalid");
+  }
+}
+
+export class ClaimsLimitReached extends Error {
+  static readonly code = 6023;
+
+  readonly code = 6023;
+
+  readonly name = "ClaimsLimitReached";
+
+  readonly msg = "Claims limit has been reached";
+
+  constructor(readonly logs?: string[]) {
+    super("6023: Claims limit has been reached");
+  }
+}
+
 export function fromCode(code: number, logs?: string[]): CustomError | null {
   switch (code) {
     case 6000:
@@ -325,6 +400,16 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
       return new ClaimsAreNotClosable(logs);
     case 6018:
       return new InvalidUnlockPeriod(logs);
+    case 6019:
+      return new DurationUpdateNotAllowed(logs);
+    case 6020:
+      return new NoVestingAmount(logs);
+    case 6021:
+      return new VestingAlreadyFinished(logs);
+    case 6022:
+      return new InvalidAmounts(logs);
+    case 6023:
+      return new ClaimsLimitReached(logs);
   }
 
   return null;

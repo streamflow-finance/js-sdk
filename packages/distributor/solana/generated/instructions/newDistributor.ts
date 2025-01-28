@@ -14,7 +14,9 @@ export interface NewDistributorArgs {
   startVestingTs: BN;
   endVestingTs: BN;
   clawbackStartTs: BN;
-  claimsClosable: boolean;
+  claimsClosableByAdmin: boolean;
+  claimsClosableByClaimant?: boolean;
+  claimsLimit?: number;
 }
 
 export interface NewDistributorAccounts {
@@ -107,12 +109,12 @@ export function newDistributor(
       startVestingTs: args.startVestingTs,
       endVestingTs: args.endVestingTs,
       clawbackStartTs: args.clawbackStartTs,
-      claimsClosableByAdmin: args.claimsClosable,
+      claimsClosableByAdmin: args.claimsClosableByAdmin,
       canUpdateDuration: null,
       totalAmountUnlocked: null,
       totalAmountLocked: null,
-      claimsClosableByClaimant: null,
-      claimsLimit: null,
+      claimsClosableByClaimant: args.claimsClosableByClaimant,
+      claimsLimit: args.claimsLimit,
     },
     buffer,
   );

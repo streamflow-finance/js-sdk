@@ -1,5 +1,5 @@
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { ITransactionResult } from "@streamflow/common";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
@@ -29,7 +29,9 @@ export interface ICreateDistributorData {
   startVestingTs: number;
   endVestingTs: number;
   clawbackStartTs: number;
-  claimsClosable: boolean;
+  claimsClosableByAdmin: boolean;
+  claimsClosableByClaimant?: boolean;
+  claimsLimit?: number;
 }
 
 export interface AlignedDistributorData {
@@ -77,6 +79,10 @@ export interface IClaimData {
   amountUnlocked: BN;
   amountLocked: BN;
   proof: Array<Array<number>>;
+}
+
+export interface ICloseClaimData extends IClaimData {
+  claimant: string | PublicKey;
 }
 
 export interface IClawbackData {

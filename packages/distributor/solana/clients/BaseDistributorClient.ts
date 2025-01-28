@@ -19,6 +19,7 @@ import {
   buildSendThrottler,
   prepareWrappedAccount,
   IProgramAccount,
+  pk,
 } from "@streamflow/common/solana";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -41,6 +42,7 @@ import {
   ICreateDistributorData,
   ICreateAlignedDistributorData,
   ISearchDistributors,
+  ICloseClaimData,
 } from "../types";
 import {
   ClaimLockedAccounts,
@@ -60,6 +62,7 @@ import {
   getEventAuthorityPda,
   wrappedSignAndExecuteTransaction,
 } from "../utils";
+import { closeClaim, CloseClaimAccounts, CloseClaimArgs } from "../generated/instructions/closeClaim";
 
 export interface IInitOptions {
   clusterUrl: string;
@@ -294,6 +297,67 @@ export default abstract class BaseDistributorClient {
     return ixs;
   }
 
+  public async closeClaim(data: ICloseClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+    const ixs = await this.prepareCloseClaimInstructions(data, extParams);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler },
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  public async prepareCloseClaimInstructions(
+    data: ICloseClaimData,
+    extParams: IInteractSolanaExt,
+  ): Promise<TransactionInstruction[]> {
+    if (!extParams.invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const distributorPublicKey = new PublicKey(data.id);
+    const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
+
+    const claimantPublicKey = pk(data.claimant);
+
+    if (!distributor) {
+      throw new Error("Couldn't get distributor account info");
+    }
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
+
+    const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, claimantPublicKey);
+    const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
+
+    const closeClaimAccounts: CloseClaimAccounts = {
+      adminOrClaimant: extParams.invoker.publicKey,
+      distributor: distributorPublicKey,
+      claimStatus: claimStatusPublicKey,
+      claimant: claimantPublicKey,
+      systemProgram: SystemProgram.programId,
+      eventAuthority: eventAuthorityPublicKey,
+      program: this.programId,
+    };
+
+    const closeClaimArgs: CloseClaimArgs = {
+      amountLocked: new BN(data.amountLocked),
+      amountUnlocked: new BN(data.amountUnlocked),
+      proof: data.proof,
+    };
+
+    ixs.push(closeClaim(closeClaimArgs, closeClaimAccounts, this.programId));
+
+    return ixs;
+  }
+
   public async prepareClawbackInstructions(
     data: IClawbackData,
     extParams: IInteractSolanaExt,
@@ -404,7 +468,9 @@ export default abstract class BaseDistributorClient {
       startVestingTs: new BN(data.startVestingTs),
       endVestingTs: new BN(data.endVestingTs),
       clawbackStartTs: new BN(data.clawbackStartTs),
-      claimsClosable: data.claimsClosable,
+      claimsClosableByAdmin: data.claimsClosableByAdmin,
+      claimsClosableByClaimant: data.claimsClosableByClaimant,
+      claimsLimit: data.claimsLimit,
     };
 
     const nowTs = new BN(Math.floor(Date.now() / 1000));

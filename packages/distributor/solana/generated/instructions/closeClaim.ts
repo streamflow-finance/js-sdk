@@ -5,11 +5,16 @@ import { Buffer } from "buffer";
 
 import { PROGRAM_ID } from "../programId";
 
+export interface CloseClaimArgs {
+  amountUnlocked?: BN;
+  amountLocked?: BN;
+  proof?: Array<Array<number>>;
+}
 export interface CloseClaimAccounts {
   /** The [MerkleDistributor]. */
   distributor: PublicKey;
   /** Admin signer */
-  admin: PublicKey;
+  adminOrClaimant: PublicKey;
   claimant: PublicKey;
   /** Claim Status PDA */
   claimStatus: PublicKey;
@@ -19,10 +24,16 @@ export interface CloseClaimAccounts {
   program: PublicKey;
 }
 
-export function closeClaim(accounts: CloseClaimAccounts, programId: PublicKey = PROGRAM_ID) {
+export const layout = borsh.struct([
+  borsh.option(borsh.u64(), "amountUnlocked"),
+  borsh.option(borsh.u64(), "amountLocked"),
+  borsh.option(borsh.vec(borsh.array(borsh.u8(), 32)), "proof"),
+]);
+
+export function closeClaim(args: CloseClaimArgs, accounts: CloseClaimAccounts, programId: PublicKey = PROGRAM_ID) {
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
-    { pubkey: accounts.admin, isSigner: true, isWritable: true },
+    { pubkey: accounts.adminOrClaimant, isSigner: true, isWritable: true },
     { pubkey: accounts.claimant, isSigner: false, isWritable: false },
     { pubkey: accounts.claimStatus, isSigner: false, isWritable: true },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
@@ -30,7 +41,16 @@ export function closeClaim(accounts: CloseClaimAccounts, programId: PublicKey = 
     { pubkey: accounts.program, isSigner: false, isWritable: false },
   ];
   const identifier = Buffer.from([42, 177, 165, 35, 213, 179, 211, 19]);
-  const data = identifier;
+  const buffer = Buffer.alloc(1000);
+  const len = layout.encode(
+    {
+      amountUnlocked: args.amountUnlocked,
+      amountLocked: args.amountLocked,
+      proof: args.proof,
+    },
+    buffer,
+  );
+  const data = Buffer.concat([identifier, buffer]).slice(0, 8 + len);
   const ix = new TransactionInstruction({ keys, programId, data });
   return ix;
 }

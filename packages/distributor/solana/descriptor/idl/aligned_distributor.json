@@ -2,36 +2,23 @@
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "aligned_distributor",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
   "instructions": [
     {
       "name": "change_oracle",
-      "discriminator": [
-        177,
-        227,
-        230,
-        103,
-        13,
-        72,
-        141,
-        248
-      ],
+      "discriminator": [177, 227, 230, 103, 13, 72, 141, 248],
       "accounts": [
         {
           "name": "aligned_distributor",
-          "docs": [
-            "The [MerkleDistributor]."
-          ],
+          "docs": ["The [MerkleDistributor]."],
           "writable": true
         },
         {
           "name": "admin",
-          "docs": [
-            "Admin signer"
-          ],
+          "docs": ["Admin signer"],
           "writable": true,
           "signer": true
         },
@@ -52,48 +39,17 @@
     },
     {
       "name": "clawback",
-      "discriminator": [
-        111,
-        92,
-        142,
-        79,
-        33,
-        234,
-        82,
-        27
-      ],
+      "discriminator": [111, 92, 142, 79, 33, 234, 82, 27],
       "accounts": [
         {
           "name": "aligned_distributor",
-          "docs": [
-            "The [AlignedDistributor]."
-          ],
+          "docs": ["The [AlignedDistributor]."],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  97,
-                  108,
-                  105,
-                  103,
-                  110,
-                  101,
-                  100,
-                  45,
-                  100,
-                  105,
-                  115,
-                  116,
-                  114,
-                  105,
-                  98,
-                  117,
-                  116,
-                  111,
-                  114
-                ]
+                "value": [97, 108, 105, 103, 110, 101, 100, 45, 100, 105, 115, 116, 114, 105, 98, 117, 116, 111, 114]
               },
               {
                 "kind": "account",
@@ -104,30 +60,22 @@
         },
         {
           "name": "distributor",
-          "docs": [
-            "The [MerkleDistributor]."
-          ],
+          "docs": ["The [MerkleDistributor]."],
           "writable": true
         },
         {
           "name": "from",
-          "docs": [
-            "Distributor ATA containing the tokens to distribute."
-          ],
+          "docs": ["Distributor ATA containing the tokens to distribute."],
           "writable": true
         },
         {
           "name": "to",
-          "docs": [
-            "The Clawback token account."
-          ],
+          "docs": ["The Clawback token account."],
           "writable": true
         },
         {
           "name": "admin",
-          "docs": [
-            "Only Admin can trigger the clawback of funds"
-          ],
+          "docs": ["Only Admin can trigger the clawback of funds"],
           "writable": true,
           "signer": true
         },
@@ -140,32 +88,19 @@
         },
         {
           "name": "system_program",
-          "docs": [
-            "The [System] program."
-          ],
+          "docs": ["The [System] program."],
           "address": "11111111111111111111111111111111"
         },
         {
           "name": "token_program",
-          "docs": [
-            "SPL [Token] program."
-          ]
+          "docs": ["SPL [Token] program."]
         }
       ],
       "args": []
     },
     {
       "name": "create_test_oracle",
-      "discriminator": [
-        183,
-        110,
-        4,
-        11,
-        131,
-        220,
-        84,
-        12
-      ],
+      "discriminator": [183, 110, 4, 11, 131, 220, 84, 12],
       "accounts": [
         {
           "name": "creator",
@@ -182,19 +117,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  116,
-                  101,
-                  115,
-                  116,
-                  45,
-                  111,
-                  114,
-                  97,
-                  99,
-                  108,
-                  101
-                ]
+                "value": [116, 101, 115, 116, 45, 111, 114, 97, 99, 108, 101]
               },
               {
                 "kind": "account",
@@ -225,16 +148,7 @@
     },
     {
       "name": "new_distributor",
-      "discriminator": [
-        32,
-        139,
-        112,
-        171,
-        0,
-        2,
-        225,
-        155
-      ],
+      "discriminator": [32, 139, 112, 171, 0, 2, 225, 155],
       "accounts": [
         {
           "name": "aligned_distributor",
@@ -243,27 +157,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  97,
-                  108,
-                  105,
-                  103,
-                  110,
-                  101,
-                  100,
-                  45,
-                  100,
-                  105,
-                  115,
-                  116,
-                  114,
-                  105,
-                  98,
-                  117,
-                  116,
-                  111,
-                  114
-                ]
+                "value": [97, 108, 105, 103, 110, 101, 100, 45, 100, 105, 115, 116, 114, 105, 98, 117, 116, 111, 114]
               },
               {
                 "kind": "account",
@@ -282,16 +176,12 @@
         },
         {
           "name": "clawback_receiver",
-          "docs": [
-            "Clawback receiver token account"
-          ],
+          "docs": ["Clawback receiver token account"],
           "writable": true
         },
         {
           "name": "mint",
-          "docs": [
-            "The mint to distribute."
-          ]
+          "docs": ["The mint to distribute."]
         },
         {
           "name": "distributor",
@@ -312,30 +202,22 @@
         },
         {
           "name": "distributor_program",
-          "docs": [
-            "MerkleDistributor program"
-          ],
+          "docs": ["MerkleDistributor program"],
           "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N"
         },
         {
           "name": "system_program",
-          "docs": [
-            "The [System] program."
-          ],
+          "docs": ["The [System] program."],
           "address": "11111111111111111111111111111111"
         },
         {
           "name": "associated_token_program",
-          "docs": [
-            "The [Associated Token] program."
-          ],
+          "docs": ["The [Associated Token] program."],
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "token_program",
-          "docs": [
-            "The [Token] program."
-          ]
+          "docs": ["The [Token] program."]
         }
       ],
       "args": [
@@ -351,37 +233,22 @@
     },
     {
       "name": "set_admin",
-      "discriminator": [
-        251,
-        163,
-        0,
-        52,
-        91,
-        194,
-        187,
-        92
-      ],
+      "discriminator": [251, 163, 0, 52, 91, 194, 187, 92],
       "accounts": [
         {
           "name": "aligned_distributor",
-          "docs": [
-            "The [MerkleDistributor]."
-          ],
+          "docs": ["The [MerkleDistributor]."],
           "writable": true
         },
         {
           "name": "admin",
-          "docs": [
-            "Admin signer"
-          ],
+          "docs": ["Admin signer"],
           "writable": true,
           "signer": true
         },
         {
           "name": "new_admin",
-          "docs": [
-            "New admin account"
-          ],
+          "docs": ["New admin account"],
           "writable": true
         }
       ],
@@ -389,16 +256,7 @@
     },
     {
       "name": "set_test_oracle_authority",
-      "discriminator": [
-        26,
-        66,
-        233,
-        99,
-        38,
-        118,
-        181,
-        247
-      ],
+      "discriminator": [26, 66, 233, 99, 38, 118, 181, 247],
       "accounts": [
         {
           "name": "authority",
@@ -417,56 +275,23 @@
     },
     {
       "name": "update_duration",
-      "discriminator": [
-        69,
-        126,
-        172,
-        250,
-        164,
-        14,
-        10,
-        161
-      ],
+      "discriminator": [69, 126, 172, 250, 164, 14, 10, 161],
       "accounts": [
         {
           "name": "authority",
-          "docs": [
-            "Wallet authorised to call this method"
-          ],
+          "docs": ["Wallet authorised to call this method"],
           "writable": true,
           "signer": true
         },
         {
           "name": "aligned_distributor",
-          "docs": [
-            "The account holding the proxy parameters."
-          ],
+          "docs": ["The account holding the proxy parameters."],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  97,
-                  108,
-                  105,
-                  103,
-                  110,
-                  101,
-                  100,
-                  45,
-                  100,
-                  105,
-                  115,
-                  116,
-                  114,
-                  105,
-                  98,
-                  117,
-                  116,
-                  111,
-                  114
-                ]
+                "value": [97, 108, 105, 103, 110, 101, 100, 45, 100, 105, 115, 116, 114, 105, 98, 117, 116, 111, 114]
               },
               {
                 "kind": "account",
@@ -477,22 +302,16 @@
         },
         {
           "name": "distributor",
-          "docs": [
-            "The account holding the vesting parameters."
-          ],
+          "docs": ["The account holding the vesting parameters."],
           "writable": true
         },
         {
           "name": "price_oracle",
-          "relations": [
-            "aligned_distributor"
-          ]
+          "relations": ["aligned_distributor"]
         },
         {
           "name": "distributor_program",
-          "docs": [
-            "MerkleDistributor program"
-          ],
+          "docs": ["MerkleDistributor program"],
           "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N"
         },
         {
@@ -504,16 +323,7 @@
     },
     {
       "name": "update_test_oracle",
-      "discriminator": [
-        158,
-        147,
-        215,
-        74,
-        34,
-        123,
-        80,
-        76
-      ],
+      "discriminator": [158, 147, 215, 74, 34, 123, 80, 76],
       "accounts": [
         {
           "name": "authority",
@@ -540,42 +350,15 @@
   "accounts": [
     {
       "name": "AlignedDistributor",
-      "discriminator": [
-        128,
-        76,
-        80,
-        203,
-        248,
-        175,
-        3,
-        43
-      ]
+      "discriminator": [128, 76, 80, 203, 248, 175, 3, 43]
     },
     {
       "name": "MerkleDistributor",
-      "discriminator": [
-        77,
-        119,
-        139,
-        70,
-        84,
-        247,
-        12,
-        26
-      ]
+      "discriminator": [77, 119, 139, 70, 84, 247, 12, 26]
     },
     {
       "name": "TestOracle",
-      "discriminator": [
-        198,
-        49,
-        63,
-        134,
-        232,
-        251,
-        168,
-        28
-      ]
+      "discriminator": [198, 49, 63, 134, 232, 251, 168, 28]
     }
   ],
   "errors": [
@@ -653,38 +436,28 @@
   "types": [
     {
       "name": "AlignedDistributor",
-      "docs": [
-        "State for the account which distributes tokens."
-      ],
+      "docs": ["State for the account which distributes tokens."],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "bump",
-            "docs": [
-              "Bump seed."
-            ],
+            "docs": ["Bump seed."],
             "type": "u8"
           },
           {
             "name": "distributor",
-            "docs": [
-              "[Mint] of the token to be distributed."
-            ],
+            "docs": ["[Mint] of the token to be distributed."],
             "type": "pubkey"
           },
           {
             "name": "admin",
-            "docs": [
-              "Admin wallet"
-            ],
+            "docs": ["Admin wallet"],
             "type": "pubkey"
           },
           {
             "name": "price_oracle_type",
-            "docs": [
-              "Type of the Oracle used to derive Token Price"
-            ],
+            "docs": ["Type of the Oracle used to derive Token Price"],
             "type": {
               "defined": {
                 "name": "OracleType"
@@ -693,65 +466,47 @@
           },
           {
             "name": "price_oracle",
-            "docs": [
-              "Address of the Price Oracle"
-            ],
+            "docs": ["Address of the Price Oracle"],
             "type": "pubkey"
           },
           {
             "name": "update_period",
-            "docs": [
-              "Period of updates, can be different from unlock period if needed"
-            ],
+            "docs": ["Period of updates, can be different from unlock period if needed"],
             "type": "u64"
           },
           {
             "name": "min_price",
-            "docs": [
-              "Min price boundary"
-            ],
+            "docs": ["Min price boundary"],
             "type": "u64"
           },
           {
             "name": "max_price",
-            "docs": [
-              "Max price boundary"
-            ],
+            "docs": ["Max price boundary"],
             "type": "u64"
           },
           {
             "name": "min_percentage",
-            "docs": [
-              "Min percentage boundary, can be 0 that equals 1 Raw Token"
-            ],
+            "docs": ["Min percentage boundary, can be 0 that equals 1 Raw Token"],
             "type": "u64"
           },
           {
             "name": "max_percentage",
-            "docs": [
-              "Max percentage boundary"
-            ],
+            "docs": ["Max percentage boundary"],
             "type": "u64"
           },
           {
             "name": "tick_size",
-            "docs": [
-              "Ticket size for percentage boundaries"
-            ],
+            "docs": ["Ticket size for percentage boundaries"],
             "type": "u64"
           },
           {
             "name": "start_ts",
-            "docs": [
-              "Copy start ts from the Distributor to be used in the worker"
-            ],
+            "docs": ["Copy start ts from the Distributor to be used in the worker"],
             "type": "u64"
           },
           {
             "name": "end_ts",
-            "docs": [
-              "Copy end ts from the Distributor to be used in the worker"
-            ],
+            "docs": ["Copy end ts from the Distributor to be used in the worker"],
             "type": "u64"
           },
           {
@@ -763,66 +518,43 @@
           },
           {
             "name": "last_price",
-            "docs": [
-              "Price used on last amount calculation"
-            ],
+            "docs": ["Price used on last amount calculation"],
             "type": "u64"
           },
           {
             "name": "initial_duration",
-            "docs": [
-              "Initial Airdrop Vesting duration"
-            ],
+            "docs": ["Initial Airdrop Vesting duration"],
             "type": "u64"
           },
           {
             "name": "initial_price",
-            "docs": [
-              "Initial token price at the time of Contract creation"
-            ],
+            "docs": ["Initial token price at the time of Contract creation"],
             "type": "u64"
           },
           {
             "name": "distributor_clawed_back",
-            "docs": [
-              "Whether distributor was clawed backed"
-            ],
+            "docs": ["Whether distributor was clawed backed"],
             "type": "bool"
           },
           {
             "name": "buffer_1",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
             "name": "buffer_2",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
             "name": "buffer_3",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         ]
@@ -870,162 +602,115 @@
     },
     {
       "name": "MerkleDistributor",
-      "docs": [
-        "State for the account which distributes tokens."
-      ],
+      "docs": ["State for the account which distributes tokens."],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "bump",
-            "docs": [
-              "Bump seed."
-            ],
+            "docs": ["Bump seed."],
             "type": "u8"
           },
           {
             "name": "version",
-            "docs": [
-              "Version of the airdrop"
-            ],
+            "docs": ["Version of the airdrop"],
             "type": "u64"
           },
           {
             "name": "root",
-            "docs": [
-              "The 256-bit merkle root."
-            ],
+            "docs": ["The 256-bit merkle root."],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
             "name": "mint",
-            "docs": [
-              "[Mint] of the token to be distributed."
-            ],
+            "docs": ["[Mint] of the token to be distributed."],
             "type": "pubkey"
           },
           {
             "name": "token_vault",
-            "docs": [
-              "Token Address of the vault"
-            ],
+            "docs": ["Token Address of the vault"],
             "type": "pubkey"
           },
           {
             "name": "max_total_claim",
-            "docs": [
-              "Maximum number of tokens that can ever be claimed from this [MerkleDistributor]."
-            ],
+            "docs": ["Maximum number of tokens that can ever be claimed from this [MerkleDistributor]."],
             "type": "u64"
           },
           {
             "name": "max_num_nodes",
-            "docs": [
-              "Maximum number of nodes in [MerkleDistributor]."
-            ],
+            "docs": ["Maximum number of nodes in [MerkleDistributor]."],
             "type": "u64"
           },
           {
             "name": "unlock_period",
-            "docs": [
-              "Time step (period) in seconds per which the unlock occurs"
-            ],
+            "docs": ["Time step (period) in seconds per which the unlock occurs"],
             "type": "u64"
           },
           {
             "name": "total_amount_claimed",
-            "docs": [
-              "Total amount of tokens that have been claimed."
-            ],
+            "docs": ["Total amount of tokens that have been claimed."],
             "type": "u64"
           },
           {
             "name": "num_nodes_claimed",
-            "docs": [
-              "Number of nodes that have been claimed."
-            ],
+            "docs": ["Number of nodes that have been claimed."],
             "type": "u64"
           },
           {
             "name": "start_ts",
-            "docs": [
-              "Lockup time start (Unix Timestamp)"
-            ],
+            "docs": ["Lockup time start (Unix Timestamp)"],
             "type": "u64"
           },
           {
             "name": "end_ts",
-            "docs": [
-              "Lockup time end (Unix Timestamp)"
-            ],
+            "docs": ["Lockup time end (Unix Timestamp)"],
             "type": "u64"
           },
           {
             "name": "clawback_start_ts",
-            "docs": [
-              "Clawback start (Unix Timestamp)"
-            ],
+            "docs": ["Clawback start (Unix Timestamp)"],
             "type": "u64"
           },
           {
             "name": "clawback_receiver",
-            "docs": [
-              "Clawback receiver"
-            ],
+            "docs": ["Clawback receiver"],
             "type": "pubkey"
           },
           {
             "name": "admin",
-            "docs": [
-              "Admin wallet"
-            ],
+            "docs": ["Admin wallet"],
             "type": "pubkey"
           },
           {
             "name": "clawed_back",
-            "docs": [
-              "Whether or not the distributor has been clawed back"
-            ],
+            "docs": ["Whether or not the distributor has been clawed back"],
             "type": "bool"
           },
           {
-            "name": "claims_closable",
-            "docs": [
-              "Whether claims are closable by the admin or not"
-            ],
+            "name": "claims_closable_by_admin",
+            "docs": ["Whether claims are closable by the admin or not"],
             "type": "bool"
           },
           {
             "name": "can_update_duration",
-            "docs": [
-              "Whether admin can update vesting duration"
-            ],
+            "docs": ["Whether admin can update vesting duration"],
             "type": "bool"
           },
           {
             "name": "total_amount_unlocked",
-            "docs": [
-              "Total amount of funds unlocked (cliff/instant)"
-            ],
+            "docs": ["Total amount of funds unlocked (cliff/instant)"],
             "type": "u64"
           },
           {
             "name": "total_amount_locked",
-            "docs": [
-              "Total amount of funds locked (vested)"
-            ],
+            "docs": ["Total amount of funds locked (vested)"],
             "type": "u64"
           },
           {
             "name": "last_duration_update_ts",
-            "docs": [
-              "Timestamp when update was last called"
-            ],
+            "docs": ["Timestamp when update was last called"],
             "type": "u64"
           },
           {
@@ -1037,33 +722,31 @@
           },
           {
             "name": "clawed_back_ts",
-            "docs": [
-              "Timestamp when funds were clawed back"
-            ],
+            "docs": ["Timestamp when funds were clawed back"],
             "type": "u64"
           },
           {
+            "name": "claims_closable_by_claimant",
+            "docs": ["Whether claims are closable by claimant or not"],
+            "type": "bool"
+          },
+          {
+            "name": "claims_limit",
+            "docs": ["Limit number of claims"],
+            "type": "u16"
+          },
+          {
             "name": "buffer_2",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                23
-              ]
+              "array": ["u8", 20]
             }
           },
           {
             "name": "buffer_3",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         ]
@@ -1081,10 +764,7 @@
           {
             "name": "root",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {

@@ -71,7 +71,15 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
 
     const newDistributorIx = await this.alignedProxyProgram.methods
       .newDistributor({
-        ...baseArgs,
+        claimsClosable: baseArgs.claimsClosableByAdmin,
+        version: baseArgs.version,
+        root: baseArgs.root,
+        maxTotalClaim: baseArgs.maxTotalClaim,
+        maxNumNodes: baseArgs.maxNumNodes,
+        unlockPeriod: baseArgs.unlockPeriod,
+        startVestingTs: baseArgs.startVestingTs,
+        endVestingTs: baseArgs.endVestingTs,
+        clawbackStartTs: baseArgs.clawbackStartTs,
         ...alignedArgs,
       })
       .accounts({

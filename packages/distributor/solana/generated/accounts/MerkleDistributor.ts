@@ -38,7 +38,7 @@ export interface MerkleDistributorFields {
   /** Whether or not the distributor has been clawed back */
   clawedBack: boolean;
   /** Whether claims are closable by the admin or not */
-  claimsClosable: boolean;
+  claimsClosableByAdmin: boolean;
   /** Whether admin can update vesting duration */
   canUpdateDuration: boolean;
   /** Total amount of funds unlocked (cliff/instant) */
@@ -51,6 +51,10 @@ export interface MerkleDistributorFields {
   totalClaimablePreUpdate: BN;
   /** Timestamp when funds were clawed back */
   clawedBackTs: BN;
+  /** Whether claims are closable by the claimant or not */
+  claimsClosableByClaimant: boolean;
+  /** Limit number of claims */
+  claimsLimit: number;
   /** Buffer for additional fields */
   buffer2: Array<number>;
   /** Buffer for additional fields */
@@ -91,7 +95,7 @@ export interface MerkleDistributorJSON {
   /** Whether or not the distributor has been clawed back */
   clawedBack: boolean;
   /** Whether claims are closable by the admin or not */
-  claimsClosable: boolean;
+  claimsClosableByAdmin: boolean;
   /** Whether admin can update vesting duration */
   canUpdateDuration: boolean;
   /** Total amount of funds unlocked (cliff/instant) */
@@ -104,6 +108,10 @@ export interface MerkleDistributorJSON {
   totalClaimablePreUpdate: string;
   /** Timestamp when funds were clawed back */
   clawedBackTs: string;
+  /** Whether claims are closable by the claimant or not */
+  claimsClosableByClaimant: boolean;
+  /** Limit number of claims */
+  claimsLimit: number;
   /** Buffer for additional fields */
   buffer2: Array<number>;
   /** Buffer for additional fields */
@@ -161,7 +169,7 @@ export class MerkleDistributor {
   readonly clawedBack: boolean;
 
   /** Whether claims are closable by the admin or not */
-  readonly claimsClosable: boolean;
+  readonly claimsClosableByAdmin: boolean;
 
   /** Whether admin can update vesting duration */
   readonly canUpdateDuration: boolean;
@@ -180,6 +188,12 @@ export class MerkleDistributor {
 
   /** Timestamp when funds were clawed back */
   readonly clawedBackTs: BN;
+
+  /** Whether claims are closable by the claimant or not */
+  readonly claimsClosableByClaimant: boolean;
+
+  /** Limit number of claims */
+  readonly claimsLimit: number;
 
   /** Buffer for additional fields */
   readonly buffer2: Array<number>;
@@ -206,14 +220,16 @@ export class MerkleDistributor {
     borsh.publicKey("clawbackReceiver"),
     borsh.publicKey("admin"),
     borsh.bool("clawedBack"),
-    borsh.bool("claimsClosable"),
+    borsh.bool("claimsClosableByAdmin"),
     borsh.bool("canUpdateDuration"),
     borsh.u64("totalAmountUnlocked"),
     borsh.u64("totalAmountLocked"),
     borsh.u64("lastDurationUpdateTs"),
     borsh.u64("totalClaimablePreUpdate"),
     borsh.u64("clawedBackTs"),
-    borsh.array(borsh.u8(), 23, "buffer2"),
+    borsh.bool("claimsClosableByClaimant"),
+    borsh.u16("claimsLimit"),
+    borsh.array(borsh.u8(), 20, "buffer2"),
     borsh.array(borsh.u8(), 32, "buffer3"),
   ]);
 
@@ -234,13 +250,15 @@ export class MerkleDistributor {
     this.clawbackReceiver = fields.clawbackReceiver;
     this.admin = fields.admin;
     this.clawedBack = fields.clawedBack;
-    this.claimsClosable = fields.claimsClosable;
+    this.claimsClosableByAdmin = fields.claimsClosableByAdmin;
     this.canUpdateDuration = fields.canUpdateDuration;
     this.totalAmountUnlocked = fields.totalAmountUnlocked;
     this.totalAmountLocked = fields.totalAmountLocked;
     this.lastDurationUpdateTs = fields.lastDurationUpdateTs;
     this.totalClaimablePreUpdate = fields.totalClaimablePreUpdate;
     this.clawedBackTs = fields.clawedBackTs;
+    this.claimsClosableByClaimant = fields.claimsClosableByClaimant;
+    this.claimsLimit = fields.claimsLimit;
     this.buffer2 = fields.buffer2;
     this.buffer3 = fields.buffer3;
   }
@@ -305,13 +323,15 @@ export class MerkleDistributor {
       clawbackReceiver: dec.clawbackReceiver,
       admin: dec.admin,
       clawedBack: dec.clawedBack,
-      claimsClosable: dec.claimsClosable,
+      claimsClosableByAdmin: dec.claimsClosableByAdmin,
       canUpdateDuration: dec.canUpdateDuration,
       totalAmountUnlocked: dec.totalAmountUnlocked,
       totalAmountLocked: dec.totalAmountLocked,
       lastDurationUpdateTs: dec.lastDurationUpdateTs,
       totalClaimablePreUpdate: dec.totalClaimablePreUpdate,
       clawedBackTs: dec.clawedBackTs,
+      claimsClosableByClaimant: dec.claimsClosableByClaimant,
+      claimsLimit: dec.claimsLimit,
       buffer2: dec.buffer2,
       buffer3: dec.buffer3,
     });
@@ -335,13 +355,15 @@ export class MerkleDistributor {
       clawbackReceiver: this.clawbackReceiver.toString(),
       admin: this.admin.toString(),
       clawedBack: this.clawedBack,
-      claimsClosable: this.claimsClosable,
+      claimsClosableByAdmin: this.claimsClosableByAdmin,
       canUpdateDuration: this.canUpdateDuration,
       totalAmountUnlocked: this.totalAmountUnlocked.toString(),
       totalAmountLocked: this.totalAmountLocked.toString(),
       lastDurationUpdateTs: this.lastDurationUpdateTs.toString(),
       totalClaimablePreUpdate: this.totalClaimablePreUpdate.toString(),
       clawedBackTs: this.clawedBackTs.toString(),
+      claimsClosableByClaimant: this.claimsClosableByClaimant,
+      claimsLimit: this.claimsLimit,
       buffer2: this.buffer2,
       buffer3: this.buffer3,
     };
@@ -365,13 +387,15 @@ export class MerkleDistributor {
       clawbackReceiver: new PublicKey(obj.clawbackReceiver),
       admin: new PublicKey(obj.admin),
       clawedBack: obj.clawedBack,
-      claimsClosable: obj.claimsClosable,
+      claimsClosableByAdmin: obj.claimsClosableByAdmin,
       canUpdateDuration: obj.canUpdateDuration,
       totalAmountUnlocked: new BN(obj.totalAmountUnlocked),
       totalAmountLocked: new BN(obj.totalAmountLocked),
       lastDurationUpdateTs: new BN(obj.lastDurationUpdateTs),
       totalClaimablePreUpdate: new BN(obj.totalClaimablePreUpdate),
       clawedBackTs: new BN(obj.clawedBackTs),
+      claimsClosableByClaimant: obj.claimsClosableByClaimant,
+      claimsLimit: obj.claimsLimit,
       buffer2: obj.buffer2,
       buffer3: obj.buffer3,
     });
