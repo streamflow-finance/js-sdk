@@ -57,6 +57,7 @@ export async function wrappedSignAndExecuteTransaction(
   confirmationParams: ConfirmationParams,
   throttleParams: ThrottleParams,
 ): Promise<string> {
+  console.log(Buffer.from(tx.serialize()).toString("base64"));
   try {
     return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams, throttleParams);
   } catch (err: any) {
