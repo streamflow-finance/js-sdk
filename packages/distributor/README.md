@@ -67,7 +67,9 @@ const res = await client.create(
     startVestingTs: 0, // Timestamp when Airdrop starts
     endVestingTs: now + 3600 * 24 * 7, // Timestamp when Airdrop ends
     clawbackStartTs: now + 5, // Timestamp after which Airdrop can be clawed back to the Sender address
-    claimsClosable: false, // Whether individual Claims can be closed by the Sender
+    claimsClosableByAdmin: false, // Whether individual Claims can be closed by the Sender
+    claimsClosableByClaimant: false, // Whether the Recipient can close their own Claim
+    claimsLimit: null, // The number of times a Recipient can Claim the Airdrop - 0 or null for no limit on claims
   },
   solanaParams,
 );
@@ -99,6 +101,45 @@ const claimRes = await client.claim(
   solanaParams,
 );
 ```
+
+## Close a Claim
+
+```javascript
+const solanaParams = {
+    invoker: recipient, // SignerWalletAdapter or Keypair of Recipient account
+};
+
+// By Admin
+const closeRes = await client.closeClaim(
+  {
+    id: res.metadataId, // address of the Distributor Account
+    claimant: "s3pWmY359mDrNRnDBZ3v5TrrqqxvxiW2t4U2WZyxRoA" // address of the Recipient/Claimant
+  },
+  solanaParams,
+);
+
+// By Claimant
+const closeRes = await client.closeClaim(
+  {
+    id: res.metadataId, // address of the Distributor Account
+    proof: [
+      [
+        36, 11, 128, 61, 125, 228, 9, 50, 112, 51, 54, 201, 213, 81, 228, 216, 62, 191, 68, 63, 59, 125, 163, 77, 44,
+        88, 170, 65, 139, 25, 147, 145,
+      ],
+      [
+        53, 101, 204, 14, 202, 64, 98, 238, 49, 6, 119, 208, 98, 195, 150, 81, 191, 55, 46, 103, 91, 245, 121, 195,
+        43, 104, 75, 183, 12, 38, 37, 153,
+      ],
+    ], // Merkle Proof used to verify claim
+    amountUnlocked: new BN("0"), // Total amount unlocked for a Recipient
+    amountLocked: new BN("1000000000"), // Total amount locked for a Recipient
+    claimant: "s3pWmY359mDrNRnDBZ3v5TrrqqxvxiW2t4U2WZyxRoA" // address of the Recipient/Claimant
+  },
+  solanaParams,
+);
+```
+
 
 ## Clawback an Airdrop
 
