@@ -44,9 +44,9 @@ export function closeClaim(args: CloseClaimArgs, accounts: CloseClaimAccounts, p
   const buffer = Buffer.alloc(1000);
   const len = layout.encode(
     {
-      amountUnlocked: args.amountUnlocked,
-      amountLocked: args.amountLocked,
-      proof: args.proof,
+      amountUnlocked: args.amountUnlocked ?? null,
+      amountLocked: args.amountLocked ?? null,
+      proof: args.proof ?? null,
     },
     buffer,
   );

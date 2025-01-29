@@ -81,7 +81,8 @@ export interface IClaimData {
   proof: Array<Array<number>>;
 }
 
-export interface ICloseClaimData extends IClaimData {
+export interface ICloseClaimData extends Partial<Omit<IClaimData, "id">> {
+  id: string;
   claimant: string | PublicKey;
 }
 

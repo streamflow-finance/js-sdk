@@ -348,8 +348,8 @@ export default abstract class BaseDistributorClient {
     };
 
     const closeClaimArgs: CloseClaimArgs = {
-      amountLocked: new BN(data.amountLocked),
-      amountUnlocked: new BN(data.amountUnlocked),
+      amountLocked: data.amountLocked ? new BN(data.amountLocked) : undefined,
+      amountUnlocked: data.amountUnlocked ? new BN(data.amountUnlocked) : undefined,
       proof: data.proof,
     };
 
