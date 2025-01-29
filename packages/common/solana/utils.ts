@@ -174,7 +174,6 @@ export async function signAndExecuteTransaction(
   throttleParams: ThrottleParams,
 ): Promise<string> {
   const signedTx = await signTransaction(invoker, tx);
-  console.log(Buffer.from(tx.serialize()).toString("base64"));
 
   return executeTransaction(connection, signedTx, confirmationParams, throttleParams);
 }
@@ -203,10 +202,7 @@ export async function executeTransaction(
   if (tx.signatures.length === 0) {
     throw Error("Error with transaction parameters.");
   }
-  console.log(Buffer.from(tx.serialize()).toString("base64"));
   await simulateTransaction(connection, tx);
-
-  // console.log(Buffer.from(tx.serialize()).toString("base64"));
 
   return sendAndConfirmTransaction(connection, tx, confirmationParams, throttleParams);
 }
