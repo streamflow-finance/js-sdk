@@ -2,7 +2,7 @@ import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { AccountInfo, PublicKey, Keypair, VersionedTransaction, TransactionInstruction } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
 import BN from "bn.js";
-import { type IdlTypes } from "@coral-xyz/anchor";
+import { type IdlAccounts, type IdlTypes } from "@coral-xyz/anchor";
 
 import { buildStreamType, calculateUnlockedAmount, decodeEndTime } from "../common/contractUtils.js";
 import { AlignedStream, IRecipient, LinearStream, OracleTypeName, StreamType } from "../common/types.js";
@@ -13,10 +13,11 @@ import { ALIGNED_PRECISION_FACTOR_POW } from "./constants.js";
 export { IChain, ICluster, ContractError } from "@streamflow/common";
 
 type AlignedUnlocksTypes = IdlTypes<AlignedUnlocksIDL>;
+type AlignedUnlocksAccounts = IdlAccounts<AlignedUnlocksIDL>;
 
-export type AlignedUnlocksContract = AlignedUnlocksTypes["contract"];
-export type OracleType = AlignedUnlocksTypes["oracleType"];
-export type TestOracle = AlignedUnlocksTypes["testOracle"];
+export type AlignedUnlocksContract = AlignedUnlocksAccounts["contract"];
+export type OracleType = IdlTypes<AlignedUnlocksIDL>["oracleType"];
+export type TestOracle = AlignedUnlocksAccounts["testOracle"];
 
 export type CreateParams = AlignedUnlocksTypes["createParams"];
 export type ChangeOracleParams = AlignedUnlocksTypes["changeOracleParams"];

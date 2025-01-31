@@ -1,4 +1,4 @@
-import { Address, type IdlTypes } from "@coral-xyz/anchor";
+import { Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Keypair } from "@solana/web3.js";
 import { ITransactionSolanaExt } from "@streamflow/common/solana";
@@ -8,12 +8,12 @@ import { RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
 import { StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
 import { FeeManager as FeeManagerIDL } from "./descriptor/fee_manager.js";
 
-export type StakePool = IdlTypes<StakePoolIDL>["stakePool"];
-export type StakeEntry = IdlTypes<StakePoolIDL>["stakeEntry"];
-export type RewardEntry = IdlTypes<RewardPoolIDL>["rewardEntry"];
-export type RewardPool = IdlTypes<RewardPoolIDL>["rewardPool"];
-export type FeeValue = IdlTypes<FeeManagerIDL>["feeValue"];
-export type DefaultFeeValueConfig = IdlTypes<FeeManagerIDL>["config"];
+export type StakePool = IdlAccounts<StakePoolIDL>["stakePool"];
+export type StakeEntry = IdlAccounts<StakePoolIDL>["stakeEntry"];
+export type RewardEntry = IdlAccounts<RewardPoolIDL>["rewardEntry"];
+export type RewardPool = IdlAccounts<RewardPoolIDL>["rewardPool"];
+export type FeeValue = IdlAccounts<FeeManagerIDL>["feeValue"];
+export type DefaultFeeValueConfig = IdlAccounts<FeeManagerIDL>["config"];
 
 export interface IInteractSolanaExt extends ITransactionSolanaExt {
   invoker: SignerWalletAdapter | Keypair;
