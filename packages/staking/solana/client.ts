@@ -2,7 +2,7 @@ import {
   AccountsCoder,
   AnchorError,
   Idl,
-  IdlTypes,
+  IdlAccounts,
   Program,
   ProgramAccount,
   ProgramError,
@@ -496,8 +496,8 @@ export class SolanaStakingClient {
     ProgramName extends keyof Programs = keyof Programs,
     DecodingProgram = Programs[ProgramName],
     DerivedIdl extends Idl = DecodingProgram extends Program<infer IDLType> ? IDLType : never,
-    AccountName extends keyof IdlTypes<DerivedIdl> = keyof IdlTypes<DerivedIdl>,
-    DecodedAccount = IdlTypes<DerivedIdl>[AccountName],
+    AccountName extends keyof IdlAccounts<DerivedIdl> = keyof IdlAccounts<DerivedIdl>,
+    DecodedAccount = IdlAccounts<DerivedIdl>[AccountName],
   >(
     programKey: ProgramName,
     accountName: AccountName,
@@ -512,7 +512,7 @@ export class SolanaStakingClient {
     ProgramName extends keyof Programs = keyof Programs,
     DecodingProgram = Programs[ProgramName],
     DerivedIdl extends Idl = DecodingProgram extends Program<infer IDLType> ? IDLType : never,
-    AccountName extends keyof IdlTypes<DerivedIdl> = keyof IdlTypes<DerivedIdl>,
+    AccountName extends keyof IdlAccounts<DerivedIdl> = keyof IdlAccounts<DerivedIdl>,
   >(programKey: ProgramName, accountName: AccountName): number[] {
     const decodingProgram = this.programs[programKey];
     invariant(decodingProgram, `Decoding program with key ${programKey} is not available`);
