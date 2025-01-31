@@ -77,11 +77,11 @@ export class SolanaLaunchpadClient {
 
   private readonly sendThrottler: PQueue;
 
-  private readonly program: Program<StreamflowLaunchpad>;
-
   private readonly dynamicVestingId: PublicKey;
 
   private readonly vestingId: PublicKey;
+
+  public readonly program: Program<StreamflowLaunchpad>;
 
   constructor({
     clusterUrl,

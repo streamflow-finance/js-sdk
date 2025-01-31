@@ -89,11 +89,11 @@ interface IInitOptions {
 export class SolanaStakingClient {
   connection: Connection;
 
-  private commitment: Commitment | ConnectionConfig;
+  private readonly commitment: Commitment | ConnectionConfig;
 
-  private sendThrottler: PQueue;
+  private readonly sendThrottler: PQueue;
 
-  private programs: Programs;
+  public readonly programs: Programs;
 
   constructor({
     clusterUrl,
