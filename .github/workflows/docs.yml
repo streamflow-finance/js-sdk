@@ -18,7 +18,7 @@ jobs:
         with:
           version: 9
       - name: Use Node.js 20
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
@@ -30,7 +30,7 @@ jobs:
       # Generate your TypeDoc documentation
       - run: npx typedoc
       # https://github.com/actions/upload-pages-artifact
-      - uses: actions/upload-pages-artifact@v2
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs # This should be your TypeDoc "out" path.
   deploy:
@@ -43,4 +43,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         # https://github.com/actions/deploy-pages
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4

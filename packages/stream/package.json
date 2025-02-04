@@ -67,6 +67,7 @@
     "bs58": "5.0.0",
     "ethereum-checksum-address": "0.0.8",
     "ethers": "5.7.2",
-    "p-queue": "^8.0.1"
+    "p-queue": "^8.0.1",
+    "p-retry": "^6.2.1"
   }
 }
