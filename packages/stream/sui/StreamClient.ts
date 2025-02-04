@@ -35,7 +35,7 @@ import {
   FeeTableResource,
   FeeValueResource,
 } from "./types.js";
-import { extractSuiErrorInfo } from "./utils.js";
+import { extractSuiErrorInfo, getTransactionBlock } from "./utils.js";
 import { SuiWalletWrapper } from "./wallet.js";
 import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
@@ -117,7 +117,7 @@ export default class SuiStreamClient extends BaseStreamClient {
       // https://github.com/MystenLabs/ts-sdks/blob/main/packages/wallet-standard/src/features/suiSignAndExecuteTransaction.ts#L34
       const { events, effects } =
         !executedTx.effects || typeof executedTx.effects === "string"
-          ? await this.client.getTransactionBlock({ digest, options: { showEvents: true, showEffects: true } })
+          ? await getTransactionBlock(this.client, { digest, options: { showEvents: true, showEffects: true } })
           : executedTx;
       txs.push(digest);
 
