@@ -18,7 +18,7 @@ import { ALIGNED_PRECISION_FACTOR_POW } from "../constants.js";
 import { getAlignedDistributorPda, getTestOraclePda } from "../utils.js";
 
 export default class SolanaAlignedDistributorClient extends BaseDistributorClient {
-  private alignedProxyProgram: Program<AlignedAirdropsProgramType>;
+  public alignedProxyProgram: Program<AlignedAirdropsProgramType>;
 
   public constructor({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler }: IInitOptions) {
     super({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler });

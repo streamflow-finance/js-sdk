@@ -127,15 +127,15 @@ const METADATA_ACC_SIZE = 1104;
 export type ClientCreationOptions = Omit<SolanaStreamClientOptions, "chain" | "sendRate" | "sendThrottler">;
 
 export class SolanaStreamClient extends BaseStreamClient {
-  private connection: Connection;
+  private readonly connection: Connection;
 
-  private programId: PublicKey;
+  private readonly programId: PublicKey;
 
-  private commitment: Commitment | ConnectionConfig;
+  private readonly commitment: Commitment | ConnectionConfig;
 
-  private alignedProxyProgram: Program<AlignedUnlocksProgramType>;
+  public readonly alignedProxyProgram: Program<AlignedUnlocksProgramType>;
 
-  private schedulingParams: ThrottleParams;
+  private readonly schedulingParams: ThrottleParams;
 
   /**
    * Create Stream instance with flat arguments
