@@ -102,6 +102,10 @@ export default abstract class BaseDistributorClient {
   ): Promise<TransactionInstruction>;
   protected abstract getClawbackInstruction(account: ClawbackAccounts): Promise<TransactionInstruction>;
 
+  public getConnection(): Connection {
+    return this.connection;
+  }
+
   public getCommitment(): Commitment | undefined {
     return typeof this.commitment == "string" ? this.commitment : this.commitment.commitment;
   }
