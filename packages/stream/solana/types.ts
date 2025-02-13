@@ -41,13 +41,19 @@ export interface ICreateSolanaExt {
   isNative?: boolean;
 }
 
-export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSolanaExt {
+export interface ITransactionSolanaExtWithInstructions extends ITransactionSolanaExt {
+  customInstructions?: {
+    after?: InstructionGenerator;
+  };
+}
+
+export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSolanaExtWithInstructions {
   // allow custom Metadata Account to be passed, ephemeral signer is most cases, accepts array to be compatible in createMultiple
   metadataPubKeys?: PublicKey[];
   partner?: string | null;
 }
 
-export interface IInteractStreamSolanaExt extends ITransactionSolanaExt {
+export interface IInteractStreamSolanaExt extends ITransactionSolanaExtWithInstructions {
   invoker: SignerWalletAdapter | Keypair;
   checkTokenAccounts?: boolean;
 }
@@ -307,3 +313,10 @@ export interface BatchItemError extends BatchItem {
 }
 
 export type BatchItemResult = BatchItemSuccess | BatchItemError;
+
+export type InstructionGenerator =
+  | TransactionInstruction[]
+  | ((params: {
+      instructions: TransactionInstruction[];
+      metadata?: PublicKey;
+    }) => TransactionInstruction[] | Promise<TransactionInstruction[]>);
