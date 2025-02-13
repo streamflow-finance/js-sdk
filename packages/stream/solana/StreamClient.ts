@@ -46,6 +46,7 @@ import {
   ICreateStreamSolanaExt,
   IInteractStreamSolanaExt,
   ITopUpStreamSolanaExt,
+  ITransactionSolanaExtWithInstructions,
   ISearchStreams,
   ICreateStreamInstructions,
   AlignedContract,
@@ -111,7 +112,7 @@ import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import { IPartnerLayout } from "./instructionTypes.js";
 import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
-import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks";
+import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
 import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
@@ -220,7 +221,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    */
   public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
     const { partner, amount, tokenProgramId } = data;
-    const { isNative, sender } = extParams;
+    const { isNative, sender, customInstructions } = extParams;
 
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
     const mintPublicKey = new PublicKey(data.tokenId);
@@ -229,7 +230,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const ixs = await this.getCreateATAInstructions(
+    const ixs: TransactionInstruction[] = await this.getCreateATAInstructions(
       [STREAMFLOW_TREASURY_PUBLIC_KEY, partnerPublicKey],
       mintPublicKey,
       sender,
@@ -249,13 +250,9 @@ export class SolanaStreamClient extends BaseStreamClient {
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
-    const { tx, hash, context } = await prepareTransaction(
-      this.connection,
-      ixs,
-      extParams.sender.publicKey,
-      undefined,
-      metadata,
-    );
+    await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
+
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, metadata);
     const signature = await signAndExecuteTransaction(
       this.connection,
       extParams.sender,
@@ -653,7 +650,14 @@ export class SolanaStreamClient extends BaseStreamClient {
   ): Promise<IMultiTransactionResult> {
     const { recipients, ...streamParams } = data;
 
-    const { sender, metadataPubKeys: metadataPubKeysExt, isNative, computePrice, computeLimit } = extParams;
+    const {
+      sender,
+      metadataPubKeys: metadataPubKeysExt,
+      isNative,
+      computePrice,
+      computeLimit,
+      customInstructions,
+    } = extParams;
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
@@ -686,6 +690,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
         computePrice,
         computeLimit,
+        customInstructions,
       };
 
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
@@ -693,6 +698,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         createStreamExtParams,
       );
 
+      await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
       metadatas.push(metadataPubKey.toBase58());
@@ -803,7 +809,14 @@ export class SolanaStreamClient extends BaseStreamClient {
   ): Promise<IMultiTransactionResult> {
     const { recipients, ...streamParams } = data;
 
-    const { sender, metadataPubKeys: metadataPubKeysExt, isNative, computePrice, computeLimit } = extParams;
+    const {
+      sender,
+      metadataPubKeys: metadataPubKeysExt,
+      isNative,
+      computePrice,
+      computeLimit,
+      customInstructions,
+    } = extParams;
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
@@ -836,6 +849,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
         computePrice,
         computeLimit,
+        customInstructions,
       };
 
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
@@ -843,6 +857,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         createStreamExtParams,
       );
 
+      await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
       metadatas.push(metadataPubKey.toBase58());
@@ -934,8 +949,18 @@ export class SolanaStreamClient extends BaseStreamClient {
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     extParams: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
+    const { invoker, customInstructions } = extParams;
+
+    if (!invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
     const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, extParams);
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+
+    const metadata = new PublicKey(id);
+    await this.applyCustomAfterInstructions(ixs, customInstructions, metadata);
+
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
       extParams.invoker,
@@ -1573,5 +1598,22 @@ export class SolanaStreamClient extends BaseStreamClient {
       (pkString) => new PublicKey(pkString),
     );
     return checkOrCreateAtaBatch(this.connection, uniqueOwners, mint, invoker, programId);
+  }
+
+  private async applyCustomAfterInstructions(
+    ixs: TransactionInstruction[],
+    customInstructions: ITransactionSolanaExtWithInstructions["customInstructions"],
+    metadata?: PublicKey,
+  ): Promise<void> {
+    if (customInstructions?.after) {
+      const afterInstructions =
+        typeof customInstructions.after === "function"
+          ? await customInstructions.after({
+              instructions: ixs,
+              metadata,
+            })
+          : customInstructions.after;
+      ixs.push(...afterInstructions);
+    }
   }
 }
