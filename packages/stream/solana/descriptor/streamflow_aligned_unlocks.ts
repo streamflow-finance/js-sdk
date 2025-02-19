@@ -8,7 +8,7 @@ export type StreamflowAlignedUnlocks = {
   address: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH";
   metadata: {
     name: "streamflowAlignedUnlocks";
-    version: "1.1.0";
+    version: "1.1.1";
     spec: "0.1.0";
     description: "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics";
   };
@@ -466,11 +466,9 @@ export type StreamflowAlignedUnlocks = {
         },
         {
           name: "recipient";
-          writable: true;
         },
         {
           name: "recipientTokens";
-          writable: true;
           pda: {
             seeds: [
               {
@@ -1003,6 +1001,16 @@ export type StreamflowAlignedUnlocks = {
             type: "u64";
           },
           {
+            name: "initialNetAmount";
+            docs: ["Initial deposited amount"];
+            type: "u64";
+          },
+          {
+            name: "mint";
+            docs: ["Mint for which the contract was created"];
+            type: "pubkey";
+          },
+          {
             name: "buffer";
             docs: ["Buffer for additional fields"];
             type: {
@@ -1187,6 +1195,10 @@ export type StreamflowAlignedUnlocks = {
           },
           {
             name: "authority";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
             type: "pubkey";
           },
         ];
