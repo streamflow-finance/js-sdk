@@ -373,6 +373,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         skipInitial: skipInitial ?? false,
       })
       .accountsPartial({
+        payer: sender.publicKey,
         sender: sender.publicKey,
         streamMetadata: metadataPubKey,
         escrowTokens: escrowPDA,
