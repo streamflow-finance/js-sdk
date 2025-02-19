@@ -2,7 +2,7 @@
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflow_aligned_unlocks",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -512,12 +512,10 @@
           }
         },
         {
-          "name": "recipient",
-          "writable": true
+          "name": "recipient"
         },
         {
           "name": "recipient_tokens",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1168,6 +1166,20 @@
             "type": "u64"
           },
           {
+            "name": "initial_net_amount",
+            "docs": [
+              "Initial deposited amount"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "Mint for which the contract was created"
+            ],
+            "type": "pubkey"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields"
@@ -1388,6 +1400,10 @@
           },
           {
             "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
             "type": "pubkey"
           }
         ]

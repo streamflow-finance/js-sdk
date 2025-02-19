@@ -8,7 +8,7 @@ export type AlignedDistributor = {
   address: "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2";
   metadata: {
     name: "alignedDistributor";
-    version: "1.3.0";
+    version: "1.3.2";
     spec: "0.1.0";
     description: "Proxy for merkle distributor that updates Vesting duration according to token market performance.";
   };
@@ -543,11 +543,9 @@ export type AlignedDistributor = {
             type: "bool";
           },
           {
-            name: "buffer1";
-            docs: ["Buffer for additional fields"];
-            type: {
-              array: ["u8", 32];
-            };
+            name: "mint";
+            docs: ["Mint for which the distributor was created"];
+            type: "pubkey";
           },
           {
             name: "buffer2";
@@ -895,6 +893,10 @@ export type AlignedDistributor = {
           },
           {
             name: "authority";
+            type: "pubkey";
+          },
+          {
+            name: "mint";
             type: "pubkey";
           },
         ];
