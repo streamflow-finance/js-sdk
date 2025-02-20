@@ -37,10 +37,10 @@ export interface IBaseStreamConfig {
 }
 
 export type IAlignedStreamConfig = {
-  minPrice: number;
-  maxPrice: number;
-  minPercentage: number;
-  maxPercentage: number;
+  minPrice: number | BN;
+  maxPrice: number | BN;
+  minPercentage: number | BN;
+  maxPercentage: number | BN;
   oracleType?: OracleTypeName;
   priceOracle?: Address;
   skipInitial?: boolean;
