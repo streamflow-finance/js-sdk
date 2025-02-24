@@ -49,8 +49,18 @@ export const isPayment = (streamData: { canTopup: boolean }): boolean => {
   return streamData.canTopup;
 };
 
-export const isVesting = (streamData: { canTopup: boolean; depositedAmount: BN; cliffAmount: BN }): boolean => {
-  return !streamData.canTopup && !isCliffCloseToDepositedAmount(streamData);
+export const isVesting = (streamData: {
+  canTopup: boolean;
+  depositedAmount: BN;
+  cliffAmount: BN;
+  minPrice?: number;
+  maxPrice?: number;
+}): boolean => {
+  return (
+    !streamData.canTopup &&
+    !isCliffCloseToDepositedAmount(streamData) &&
+    !isDynamicLock(streamData.minPrice, streamData.maxPrice)
+  );
 };
 
 export const isAligned = (stream: Stream): stream is AlignedStream => {
@@ -59,6 +69,10 @@ export const isAligned = (stream: Stream): stream is AlignedStream => {
 
 export const isCreateAlignedStreamData = (obj: ICreateStreamData): obj is ICreateAlignedStreamData => {
   return "minPrice" in obj && "maxPrice" in obj && "minPercentage" in obj && "maxPercentage" in obj;
+};
+
+export const isDynamicLock = (minPrice?: number, maxPrice?: number): boolean => {
+  return !!minPrice && !!maxPrice && minPrice > 0 && maxPrice - minPrice <= 1;
 };
 
 export const isTokenLock = (streamData: {
@@ -70,6 +84,8 @@ export const isTokenLock = (streamData: {
   transferableByRecipient: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
+  minPrice?: number;
+  maxPrice?: number;
 }): boolean => {
   return (
     !streamData.canTopup &&
@@ -78,7 +94,7 @@ export const isTokenLock = (streamData: {
     !streamData.cancelableByRecipient &&
     !streamData.transferableBySender &&
     !streamData.transferableByRecipient &&
-    isCliffCloseToDepositedAmount(streamData)
+    (isCliffCloseToDepositedAmount(streamData) || isDynamicLock(streamData.minPrice, streamData.maxPrice))
   );
 };
 
@@ -91,6 +107,8 @@ export const buildStreamType = (streamData: {
   transferableByRecipient: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
+  minPrice?: number;
+  maxPrice?: number;
 }): StreamType => {
   if (isVesting(streamData)) {
     return StreamType.Vesting;

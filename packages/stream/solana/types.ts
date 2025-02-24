@@ -247,6 +247,9 @@ export class AlignedContract extends Contract implements AlignedStream {
     this.sender = alignedProxy.sender.toBase58();
     this.canceledAt = alignedProxy.streamCanceledTime.toNumber();
     this.proxyAddress = stream.sender.toBase58();
+    // need to call this again since minPrice and maxPrice are used in determining the type
+    this.type = buildStreamType(this);
+    this.isAligned = true;
   }
 }
 
