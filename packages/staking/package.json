@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "7.4.12",
+  "version": "7.4.13",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "dist/esm/index.js",
@@ -8,14 +8,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/esm/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/esm/index.d.ts"
+      "require": "./dist/cjs/index.js"
     },
-    "./solana": {
-      "import": "./dist/esm/solana/index.js",
-      "require": "./dist/cjs/solana/index.js",
-      "types": "./dist/esm/solana/index.d.ts"
+    "./solana/idl/*": {
+      "types": "./dist/esm/solana/descriptor/*",
+      "import": "./dist/esm/solana/descriptor/*",
+      "require": "./dist/cjs/solana/descriptor/*"
     }
   },
   "scripts": {
