@@ -118,6 +118,7 @@ import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/d
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
 const METADATA_ACC_SIZE = 1104;
+const ALIGNED_METADATA_ACC_SIZE = 320;
 
 /**
  * Solana Client creation options
@@ -1354,6 +1355,9 @@ export class SolanaStreamClient extends BaseStreamClient {
           bytes: sender,
         },
       },
+      {
+        dataSize: ALIGNED_METADATA_ACC_SIZE,
+      },
     ]);
     const streamPubKeys = alignedOutgoingProgramAccounts.map((account) => account.account.stream);
     const streamAccounts = await this.connection.getMultipleAccountsInfo(streamPubKeys, TX_FINALITY_CONFIRMED);
@@ -1375,11 +1379,14 @@ export class SolanaStreamClient extends BaseStreamClient {
     const alignedProxyPDAs = alignedStreamsPubKeys.map((streamPubKey) =>
       deriveContractPDA(this.alignedProxyProgram.programId, new PublicKey(streamPubKey)),
     );
-    const alignedProxyAccounts = await this.alignedProxyProgram.account.contract.fetchMultiple(alignedProxyPDAs);
+    const alignedProxyAccounts = await this.connection.getMultipleAccountsInfo(alignedProxyPDAs);
     alignedProxyAccounts.forEach((account, index) => {
-      if (account) {
+      if (account && account.data.length === ALIGNED_METADATA_ACC_SIZE) {
         const alignedData = streamRecord[alignedStreamsPubKeys[index]];
-        streams[alignedStreamsPubKeys[index]] = new AlignedContract(alignedData, account);
+        streams[alignedStreamsPubKeys[index]] = new AlignedContract(
+          alignedData,
+          this.alignedProxyProgram.account.contract.coder.accounts.decode("contract", account.data),
+        );
       }
     });
     return streams;
