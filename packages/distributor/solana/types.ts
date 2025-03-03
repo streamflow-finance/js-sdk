@@ -44,6 +44,10 @@ export interface AlignedDistributorData {
   priceOracle: string | undefined;
   updatePeriod: number;
   clawedBack: boolean;
+  initialDuration: number;
+  initialPrice: number;
+  lastPrice: number;
+  lastDurationUpdateTs: number;
 }
 
 export interface NewAlignedDistributorArgs {

@@ -235,6 +235,16 @@ export class AlignedContract extends Contract implements AlignedStream {
 
   oracleType: OracleTypeName;
 
+  initialAmountPerPeriod: BN;
+
+  initialPrice: number;
+
+  lastPrice: number;
+
+  lastAmountUpdateTime: number;
+
+  initialNetAmount: BN;
+
   constructor(stream: DecodedStream, alignedProxy: AlignedUnlocksContract) {
     super(stream);
     this.minPrice = getNumberFromBN(alignedProxy.minPrice, ALIGNED_PRECISION_FACTOR_POW);
@@ -247,6 +257,11 @@ export class AlignedContract extends Contract implements AlignedStream {
     this.sender = alignedProxy.sender.toBase58();
     this.canceledAt = alignedProxy.streamCanceledTime.toNumber();
     this.proxyAddress = stream.sender.toBase58();
+    this.initialAmountPerPeriod = alignedProxy.initialAmountPerPeriod;
+    this.initialPrice = getNumberFromBN(alignedProxy.initialPrice, ALIGNED_PRECISION_FACTOR_POW);
+    this.lastPrice = getNumberFromBN(alignedProxy.lastPrice, ALIGNED_PRECISION_FACTOR_POW);
+    this.lastAmountUpdateTime = alignedProxy.lastAmountUpdateTime.toNumber();
+    this.initialNetAmount = alignedProxy.initialNetAmount;
     // need to call this again since minPrice and maxPrice are used in determining the type
     this.type = buildStreamType(this);
     this.isAligned = true;

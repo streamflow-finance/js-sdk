@@ -54,6 +54,10 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
       sender: alignedProxy.admin.toBase58(),
       updatePeriod: getNumberFromBN(alignedProxy.updatePeriod, ALIGNED_PRECISION_FACTOR_POW),
       clawedBack: alignedProxy.distributorClawedBack,
+      initialDuration: alignedProxy.initialDuration.toNumber(),
+      initialPrice: getNumberFromBN(alignedProxy.initialPrice, ALIGNED_PRECISION_FACTOR_POW),
+      lastPrice: getNumberFromBN(alignedProxy.lastPrice, ALIGNED_PRECISION_FACTOR_POW),
+      lastDurationUpdateTs: alignedProxy.lastDurationUpdateTs.toNumber(),
     };
   }
 
