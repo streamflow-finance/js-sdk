@@ -241,6 +241,11 @@ export type AlignedStreamData = {
   oracleType: OracleTypeName;
   priceOracle: string | undefined;
   tickSize: number;
+  initialAmountPerPeriod: BN;
+  initialPrice: number;
+  lastPrice: number;
+  lastAmountUpdateTime: number;
+  initialNetAmount: BN;
 };
 
 export type AlignedStream = LinearStream & AlignedStreamData;
