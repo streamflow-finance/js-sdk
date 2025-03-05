@@ -58,7 +58,7 @@ export async function handleContractError<T>(
 ): Promise<T> {
   try {
     return await func();
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof Error) {
       if (callback) {
         throw new ContractError(err, callback(err));

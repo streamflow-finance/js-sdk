@@ -1,4 +1,5 @@
 const prefix = "Assertion failed";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const invariant: (condition: any, message?: string | (() => string)) => asserts condition = (
   condition,
   message,

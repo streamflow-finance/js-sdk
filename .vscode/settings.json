@@ -10,6 +10,7 @@
   ],
   "cSpell.words": ["permissionless", "Solana", "Streamflow", "Unstake"],
   "typescript.tsdk": "node_modules/typescript/lib",
+  "javascript.preferences.importModuleSpecifierEnding": "js",
   "typescript.preferences.importModuleSpecifierEnding": "js",
-  "javascript.preferences.importModuleSpecifierEnding": "js"
+  "typescript.preferences.importModuleSpecifier": "relative"
 }

@@ -1,4 +1,8 @@
 {
   "extends": ["../../typedoc.base.json"],
-  "entryPoints": ["./index.ts", "./solana/index.ts"]
+  "tsconfig": "./tsconfig.json",
+  "entryPoints": ["./index.ts", "./solana/index.ts", "./solana/descriptor/*"],
+  "compilerOptions": {
+    "snoUncheckedIndexedAccess": true
+  }
 }

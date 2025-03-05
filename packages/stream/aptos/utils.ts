@@ -7,7 +7,7 @@ export function extractAptosErrorCode(errorText: string): string | null {
     return null;
   }
 
-  return match[2];
+  return match[2] ?? null;
 }
 
 function isAddressSpecial(address: string): boolean {

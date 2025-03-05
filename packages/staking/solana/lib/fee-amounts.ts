@@ -1,4 +1,4 @@
-import { TransferFeeConfig } from "@solana/spl-token";
+import type { TransferFeeConfig } from "@solana/spl-token";
 import { Connection } from "@solana/web3.js";
 import BN from "bn.js";
 import { divCeilN } from "@streamflow/common";

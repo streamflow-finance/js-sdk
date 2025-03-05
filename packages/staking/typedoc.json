@@ -1,4 +1,4 @@
 {
   "extends": ["../../typedoc.base.json"],
-  "entryPoints": ["./index.ts", "./solana/index.ts"]
+  "entryPoints": ["./index.ts"]
 }
