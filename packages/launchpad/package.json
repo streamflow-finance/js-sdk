@@ -1,30 +1,50 @@
 {
   "name": "@streamflow/launchpad",
-  "version": "7.5.3",
+  "version": "8.0.0",
   "description": "JavaScript SDK to interact with Streamflow Launchpad protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
-  "main": "dist/esm/index.js",
-  "types": "dist/esm/index.d.ts",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
+      "types": {
+        "import": "./dist/esm/index.d.ts",
+        "require": "./dist/cjs/index.d.cts"
+      },
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "require": "./dist/cjs/index.cjs"
     },
-    "./solana/idl/*": {
-      "types": "./dist/esm/solana/descriptor/*",
-      "import": "./dist/esm/solana/descriptor/*",
-      "require": "./dist/cjs/solana/descriptor/*"
-    }
+    "./solana/idl/streamflow_launchpad.json": {
+      "import": "./dist/esm/solana/descriptor/idl/streamflow_launchpad.json",
+      "require": "./dist/esm/solana/descriptor/idl/streamflow_launchpad.json",
+      "default": "./dist/esm/solana/descriptor/idl/streamflow_launchpad.json"
+    },
+    "./solana/descriptor/streamflow_launchpad": {
+      "types": {
+        "import": "./dist/esm/solana/descriptor/streamflow_launchpad.d.ts",
+        "require": "./dist/cjs/solana/descriptor/streamflow_launchpad.d.cts"
+      },
+      "import": "./dist/esm/solana/descriptor/streamflow_launchpad.js",
+      "require": "./dist/cjs/solana/descriptor/streamflow_launchpad.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build:cjs": "rm -rf dist/cjs; tsc -p tsconfig.cjs.json",
-    "build:esm": "rm -rf dist/esm; tsc -p tsconfig.esm.json",
-    "build": "rm -rf dist; pnpm run build:cjs && pnpm run build:esm",
+    "copyIdls": "mkdir -p dist/esm/solana/descriptor/idl && cp solana/descriptor/idl/*.json dist/esm/solana/descriptor/idl/",
+    "tsc:lint": "tsc --noEmit",
+    "build": "rm -rf dist && tsup && pnpm copyIdls",
     "pack": "pnpm build && pnpm pack",
+    "test": "vitest run --passWithNoTests",
     "lint": "eslint --fix .",
-    "prepublishOnly": "npm run lint && npm run build"
+    "prepublishOnly": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {

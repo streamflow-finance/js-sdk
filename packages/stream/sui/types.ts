@@ -1,11 +1,11 @@
-import { Keypair } from "@mysten/sui/cryptography";
-import { WalletContextState } from "@suiet/wallet-kit";
-import { Transaction } from "@mysten/sui/transactions";
-import { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui/client";
+import type { Keypair } from "@mysten/sui/cryptography";
+import type { Transaction } from "@mysten/sui/transactions";
+import type { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui/client";
 import BN from "bn.js";
+import type { WalletContextState } from "@suiet/wallet-kit";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
-import { LinearStream, StreamType } from "../common/types.js";
+import type { LinearStream, StreamType } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
 
 export interface ICreateStreamSuiExt {

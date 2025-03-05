@@ -1,12 +1,8 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "includeVersion": true,
+  "tsconfig": "./tsconfig.tsdoc.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "downlevelIteration": true,
-    "resolveJsonModule": true,
-    "target": "ES2022"
+    "noUncheckedIndexedAccess": true
   }
 }

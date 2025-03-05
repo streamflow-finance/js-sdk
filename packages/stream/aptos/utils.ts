@@ -2,12 +2,7 @@ import { APTOS_ERROR_MATCH_REGEX } from "./constants.js";
 
 export function extractAptosErrorCode(errorText: string): string | null {
   const match = APTOS_ERROR_MATCH_REGEX.exec(errorText);
-
-  if (!match) {
-    return null;
-  }
-
-  return match[2];
+  return match?.[2] ?? null;
 }
 
 function isAddressSpecial(address: string): boolean {

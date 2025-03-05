@@ -1,6 +1,11 @@
 {
   "name": "@streamflow/eslint-config",
-  "version": "7.5.3",
+  "version": "8.0.0",
+  "description": "ESLint configuration for Streamflow protocol.",
+  "homepage": "https://github.com/streamflow-finance/js-sdk/",
+  "engines": {
+    "node": ">=18"
+  },
   "license": "ISC",
   "main": "index.js",
   "files": [

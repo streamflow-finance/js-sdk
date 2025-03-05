@@ -4,8 +4,9 @@ import {
   createAssociatedTokenAccountInstruction,
   createSyncNativeInstruction,
 } from "@solana/spl-token";
-import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
-import BN from "bn.js";
+import type { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { SystemProgram } from "@solana/web3.js";
+import type BN from "bn.js";
 
 export const prepareWrappedAccount = async (
   connection: Connection,

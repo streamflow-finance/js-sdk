@@ -1,36 +1,36 @@
 import { BaseStreamClient } from "./BaseStreamClient.js";
 import {
-  ICancelData,
+  type ICancelData,
   IChain,
-  ICreateMultipleStreamData,
-  ICreateStreamData,
-  IGetOneData,
-  ITopUpData,
-  ITransferData,
-  IUpdateData,
-  IWithdrawData,
-  ITransactionResult,
-  IMultiTransactionResult,
-  ICreateResult,
-  IGetAllData,
-  Stream,
-  IFees,
-  IGetFeesData,
-  AptosStreamClientOptions,
-  SuiStreamClientOptions,
-  EvmStreamClientOptions,
-  SolanaStreamClientOptions,
+  type ICreateMultipleStreamData,
+  type ICreateStreamData,
+  type IGetOneData,
+  type ITopUpData,
+  type ITransferData,
+  type IUpdateData,
+  type IWithdrawData,
+  type ITransactionResult,
+  type IMultiTransactionResult,
+  type ICreateResult,
+  type IGetAllData,
+  type Stream,
+  type IFees,
+  type IGetFeesData,
+  type AptosStreamClientOptions,
+  type SuiStreamClientOptions,
+  type EvmStreamClientOptions,
+  type SolanaStreamClientOptions,
 } from "./types.js";
 import { handleContractError } from "./utils.js";
-import { AptosStreamClient, ICreateStreamAptosExt, ITransactionAptosExt } from "../aptos/index.js";
+import { AptosStreamClient, type ICreateStreamAptosExt, type ITransactionAptosExt } from "../aptos/index.js";
 import { EvmStreamClient } from "../evm/index.js";
 import {
   SolanaStreamClient,
-  ICreateStreamSolanaExt,
-  IInteractStreamSolanaExt,
-  ITopUpStreamSolanaExt,
+  type ICreateStreamSolanaExt,
+  type IInteractStreamSolanaExt,
+  type ITopUpStreamSolanaExt,
 } from "../solana/index.js";
-import { ICreateStreamSuiExt, ITransactionSuiExt, SuiStreamClient } from "../sui/index.js";
+import { type ICreateStreamSuiExt, type ITransactionSuiExt, SuiStreamClient } from "../sui/index.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "./constants.js";
 
 /** Type referencing options for specific Chain Client */
@@ -130,6 +130,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
    */
   public create(streamData: ICreateStreamData, chainSpecificParams?: CreateSpecificParams<T>): Promise<ICreateResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.create(streamData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );
@@ -143,6 +144,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     chainSpecificParams?: CreateSpecificParams<T>,
   ): Promise<IMultiTransactionResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.createMultiple(multipleStreamData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );
@@ -156,6 +158,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     chainSpecificParams?: InteractSpecificParams<T>,
   ): Promise<ITransactionResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.withdraw({ id, amount }, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );
@@ -166,6 +169,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
    */
   public cancel(cancelData: ICancelData, chainSpecificParams?: InteractSpecificParams<T>): Promise<ITransactionResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.cancel(cancelData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );
@@ -179,6 +183,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
     chainSpecificParams?: InteractSpecificParams<T>,
   ): Promise<ITransactionResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.transfer(transferData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );
@@ -189,6 +194,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
    */
   public topup(topupData: ITopUpData, chainSpecificParams?: TopupSpecificParams<T>): Promise<ITransactionResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.topup(topupData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );
@@ -213,6 +219,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
    */
   public update(updateData: IUpdateData, chainSpecificParams?: InteractSpecificParams<T>): Promise<ITransactionResult> {
     return handleContractError(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.nativeStreamClient.update(updateData, chainSpecificParams as any),
       this.nativeStreamClient.extractErrorCode,
     );

@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "cancel",
-      "discriminator": [
-        232,
-        219,
-        223,
-        41,
-        219,
-        236,
-        220,
-        190
-      ],
+      "discriminator": [232, 219, 223, 41, 219, 236, 220, 190],
       "accounts": [
         {
           "name": "sender",
@@ -27,9 +18,7 @@
         },
         {
           "name": "sender_tokens",
-          "docs": [
-            "Associated token account address of `sender`."
-          ],
+          "docs": ["Associated token account address of `sender`."],
           "writable": true,
           "pda": {
             "seeds": [
@@ -49,38 +38,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -91,9 +50,7 @@
         },
         {
           "name": "recipient_tokens",
-          "docs": [
-            "CHECK; Associated token account address of `recipient`."
-          ],
+          "docs": ["CHECK; Associated token account address of `recipient`."],
           "writable": true,
           "pda": {
             "seeds": [
@@ -113,62 +70,21 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
         },
         {
           "name": "proxy_metadata",
-          "docs": [
-            "Proxy Contract"
-          ],
+          "docs": ["Proxy Contract"],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  116,
-                  114,
-                  97,
-                  99,
-                  116
-                ]
+                "value": [99, 111, 110, 116, 114, 97, 99, 116]
               },
               {
                 "kind": "account",
@@ -198,38 +114,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -267,38 +153,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -328,47 +184,15 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
         },
         {
           "name": "mint",
-          "docs": [
-            "The SPL token mint account."
-          ],
+          "docs": ["The SPL token mint account."],
           "writable": true
         },
         {
@@ -377,26 +201,14 @@
         },
         {
           "name": "token_program",
-          "docs": [
-            "The SPL program needed in case an associated account",
-            "for the new recipient is being created."
-          ]
+          "docs": ["The SPL program needed in case an associated account", "for the new recipient is being created."]
         }
       ],
       "args": []
     },
     {
       "name": "change_oracle",
-      "discriminator": [
-        177,
-        227,
-        230,
-        103,
-        13,
-        72,
-        141,
-        248
-      ],
+      "discriminator": [177, 227, 230, 103, 13, 72, 141, 248],
       "accounts": [
         {
           "name": "sender",
@@ -405,9 +217,7 @@
         },
         {
           "name": "proxy_metadata",
-          "docs": [
-            "Proxy Contract"
-          ],
+          "docs": ["Proxy Contract"],
           "writable": true
         },
         {
@@ -427,22 +237,11 @@
     },
     {
       "name": "create",
-      "discriminator": [
-        24,
-        30,
-        200,
-        40,
-        5,
-        28,
-        7,
-        119
-      ],
+      "discriminator": [24, 30, 200, 40, 5, 28, 7, 119],
       "accounts": [
         {
           "name": "payer",
-          "docs": [
-            "Rent payer"
-          ],
+          "docs": ["Rent payer"],
           "writable": true,
           "signer": true
         },
@@ -453,9 +252,7 @@
         },
         {
           "name": "sender_tokens",
-          "docs": [
-            "Associated token account address of `payer`."
-          ],
+          "docs": ["Associated token account address of `payer`."],
           "writable": true,
           "pda": {
             "seeds": [
@@ -475,38 +272,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -534,38 +301,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -577,16 +314,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  116,
-                  114,
-                  97,
-                  99,
-                  116
-                ]
+                "value": [99, 111, 110, 116, 114, 97, 99, 116]
               },
               {
                 "kind": "account",
@@ -616,38 +344,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -710,16 +408,7 @@
     },
     {
       "name": "create_test_oracle",
-      "discriminator": [
-        183,
-        110,
-        4,
-        11,
-        131,
-        220,
-        84,
-        12
-      ],
+      "discriminator": [183, 110, 4, 11, 131, 220, 84, 12],
       "accounts": [
         {
           "name": "creator",
@@ -736,19 +425,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  116,
-                  101,
-                  115,
-                  116,
-                  45,
-                  111,
-                  114,
-                  97,
-                  99,
-                  108,
-                  101
-                ]
+                "value": [116, 101, 115, 116, 45, 111, 114, 97, 99, 108, 101]
               },
               {
                 "kind": "account",
@@ -779,16 +456,7 @@
     },
     {
       "name": "set_test_oracle_authority",
-      "discriminator": [
-        26,
-        66,
-        233,
-        99,
-        38,
-        118,
-        181,
-        247
-      ],
+      "discriminator": [26, 66, 233, 99, 38, 118, 181, 247],
       "accounts": [
         {
           "name": "authority",
@@ -807,22 +475,11 @@
     },
     {
       "name": "update_amount",
-      "discriminator": [
-        212,
-        178,
-        69,
-        133,
-        251,
-        180,
-        212,
-        71
-      ],
+      "discriminator": [212, 178, 69, 133, 251, 180, 212, 71],
       "accounts": [
         {
           "name": "authority",
-          "docs": [
-            "Wallet authorised to call this method"
-          ],
+          "docs": ["Wallet authorised to call this method"],
           "writable": true,
           "signer": true
         },
@@ -833,16 +490,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  116,
-                  114,
-                  97,
-                  99,
-                  116
-                ]
+                "value": [99, 111, 110, 116, 114, 97, 99, 116]
               },
               {
                 "kind": "account",
@@ -861,9 +509,7 @@
         },
         {
           "name": "price_oracle",
-          "relations": [
-            "proxy_metadata"
-          ]
+          "relations": ["proxy_metadata"]
         },
         {
           "name": "streamflow_program",
@@ -878,16 +524,7 @@
     },
     {
       "name": "update_test_oracle",
-      "discriminator": [
-        158,
-        147,
-        215,
-        74,
-        34,
-        123,
-        80,
-        76
-      ],
+      "discriminator": [158, 147, 215, 74, 34, 123, 80, 76],
       "accounts": [
         {
           "name": "authority",
@@ -914,29 +551,11 @@
   "accounts": [
     {
       "name": "Contract",
-      "discriminator": [
-        172,
-        138,
-        115,
-        242,
-        121,
-        67,
-        183,
-        26
-      ]
+      "discriminator": [172, 138, 115, 242, 121, 67, 183, 26]
     },
     {
       "name": "TestOracle",
-      "discriminator": [
-        198,
-        49,
-        63,
-        134,
-        232,
-        251,
-        168,
-        28
-      ]
+      "discriminator": [198, 49, 63, 134, 232, 251, 168, 28]
     }
   ],
   "errors": [
@@ -1030,37 +649,27 @@
         "fields": [
           {
             "name": "bump",
-            "docs": [
-              "Bump Seed used to sign transactions"
-            ],
+            "docs": ["Bump Seed used to sign transactions"],
             "type": "u8"
           },
           {
             "name": "sender",
-            "docs": [
-              "Original Contract sender"
-            ],
+            "docs": ["Original Contract sender"],
             "type": "pubkey"
           },
           {
             "name": "sender_tokens",
-            "docs": [
-              "Original Contract sender tokens address"
-            ],
+            "docs": ["Original Contract sender tokens address"],
             "type": "pubkey"
           },
           {
             "name": "stream",
-            "docs": [
-              "Vesting Stream address"
-            ],
+            "docs": ["Vesting Stream address"],
             "type": "pubkey"
           },
           {
             "name": "price_oracle_type",
-            "docs": [
-              "Type of the Oracle used to derive Token Price"
-            ],
+            "docs": ["Type of the Oracle used to derive Token Price"],
             "type": {
               "defined": {
                 "name": "OracleType"
@@ -1069,44 +678,32 @@
           },
           {
             "name": "price_oracle",
-            "docs": [
-              "Address of the Price Oracle"
-            ],
+            "docs": ["Address of the Price Oracle"],
             "type": "pubkey"
           },
           {
             "name": "min_price",
-            "docs": [
-              "Min price boundary"
-            ],
+            "docs": ["Min price boundary"],
             "type": "u64"
           },
           {
             "name": "max_price",
-            "docs": [
-              "Max price boundary"
-            ],
+            "docs": ["Max price boundary"],
             "type": "u64"
           },
           {
             "name": "min_percentage",
-            "docs": [
-              "Min percentage boundary, can be 0 that equals 1 Raw Token"
-            ],
+            "docs": ["Min percentage boundary, can be 0 that equals 1 Raw Token"],
             "type": "u64"
           },
           {
             "name": "max_percentage",
-            "docs": [
-              "Max percentage boundary"
-            ],
+            "docs": ["Max percentage boundary"],
             "type": "u64"
           },
           {
             "name": "tick_size",
-            "docs": [
-              "Ticket size for percentage boundaries"
-            ],
+            "docs": ["Ticket size for percentage boundaries"],
             "type": "u64"
           },
           {
@@ -1139,56 +736,39 @@
           },
           {
             "name": "last_price",
-            "docs": [
-              "Price used on last amount calculation"
-            ],
+            "docs": ["Price used on last amount calculation"],
             "type": "u64"
           },
           {
             "name": "stream_canceled_time",
-            "docs": [
-              "Timestamp when stream was cancelled"
-            ],
+            "docs": ["Timestamp when stream was cancelled"],
             "type": "u64"
           },
           {
             "name": "initial_amount_per_period",
-            "docs": [
-              "Amount per period to use as base for calculations"
-            ],
+            "docs": ["Amount per period to use as base for calculations"],
             "type": "u64"
           },
           {
             "name": "initial_price",
-            "docs": [
-              "Initial token price at the time of Contract creation"
-            ],
+            "docs": ["Initial token price at the time of Contract creation"],
             "type": "u64"
           },
           {
             "name": "initial_net_amount",
-            "docs": [
-              "Initial deposited amount"
-            ],
+            "docs": ["Initial deposited amount"],
             "type": "u64"
           },
           {
             "name": "mint",
-            "docs": [
-              "Mint for which the contract was created"
-            ],
+            "docs": ["Mint for which the contract was created"],
             "type": "pubkey"
           },
           {
             "name": "buffer",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           }
         ]
@@ -1201,91 +781,64 @@
         "fields": [
           {
             "name": "start_time",
-            "docs": [
-              "Timestamp when the tokens start vesting"
-            ],
+            "docs": ["Timestamp when the tokens start vesting"],
             "type": "u64"
           },
           {
             "name": "net_amount_deposited",
-            "docs": [
-              "Deposited amount of tokens"
-            ],
+            "docs": ["Deposited amount of tokens"],
             "type": "u64"
           },
           {
             "name": "period",
-            "docs": [
-              "Time step (period) in seconds per which the vesting/release occurs"
-            ],
+            "docs": ["Time step (period) in seconds per which the vesting/release occurs"],
             "type": "u64"
           },
           {
             "name": "amount_per_period",
-            "docs": [
-              "Base Amount released per period. Combined with `period`, we get a release rate."
-            ],
+            "docs": ["Base Amount released per period. Combined with `period`, we get a release rate."],
             "type": "u64"
           },
           {
             "name": "cliff",
-            "docs": [
-              "Vesting contract \"cliff\" timestamp"
-            ],
+            "docs": ["Vesting contract \"cliff\" timestamp"],
             "type": "u64"
           },
           {
             "name": "cliff_amount",
-            "docs": [
-              "Amount unlocked at the \"cliff\" timestamp"
-            ],
+            "docs": ["Amount unlocked at the \"cliff\" timestamp"],
             "type": "u64"
           },
           {
             "name": "cancelable_by_sender",
-            "docs": [
-              "Whether a stream can be canceled by a sender"
-            ],
+            "docs": ["Whether a stream can be canceled by a sender"],
             "type": "bool"
           },
           {
             "name": "cancelable_by_recipient",
-            "docs": [
-              "Whether a stream can be canceled by a recipient"
-            ],
+            "docs": ["Whether a stream can be canceled by a recipient"],
             "type": "bool"
           },
           {
             "name": "transferable_by_sender",
-            "docs": [
-              "Whether the sender can transfer the stream"
-            ],
+            "docs": ["Whether the sender can transfer the stream"],
             "type": "bool"
           },
           {
             "name": "transferable_by_recipient",
-            "docs": [
-              "Whether the recipient can transfer the stream"
-            ],
+            "docs": ["Whether the recipient can transfer the stream"],
             "type": "bool"
           },
           {
             "name": "can_topup",
-            "docs": [
-              "Whether topup is enabled"
-            ],
+            "docs": ["Whether topup is enabled"],
             "type": "bool"
           },
           {
             "name": "stream_name",
-            "docs": [
-              "The name of this stream"
-            ],
+            "docs": ["The name of this stream"],
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           },
           {
@@ -1310,16 +863,12 @@
           },
           {
             "name": "skip_initial",
-            "docs": [
-              "Whether to skip initial calculation of amount per period"
-            ],
+            "docs": ["Whether to skip initial calculation of amount per period"],
             "type": "bool"
           },
           {
             "name": "oracle_type",
-            "docs": [
-              "Type of Oracle to use to derive Token Price"
-            ],
+            "docs": ["Type of Oracle to use to derive Token Price"],
             "type": {
               "defined": {
                 "name": "OracleType"

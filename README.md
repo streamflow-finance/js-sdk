@@ -53,23 +53,10 @@ For polyfills take a look on these libraries:
 ## Contributing
 
 To contribute to this repository, please follow these steps:
+[CONTRIBUTING](./CONTRIBUTING.md)
 
-1. Fork the repository
-2. Clone your forked repository
-3. Navigate to the `/packages` folder
-4. Install dependencies using pnpm:
-   ```bash
-   pnpm install
-   ```
-5. Build the project:
-   ```bash
-   pnpm build
-   ```
-6. Make your changes
-7. Commit and push your changes
-8. Create a pull request
-
-Please ensure that you have [pnpm](https://pnpm.io/) installed on your system before contributing.
+## Release Notes
+Check out our [RELEASE NOTES](./RELEASE_NOTES.md) for the latest updates and migration guides.
 
 ## News
 Stay updated on our [X/Twitter](https://x.com/streamflow_fi).

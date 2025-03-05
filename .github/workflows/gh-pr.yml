@@ -1,4 +1,4 @@
-name: Tests
+name: PR Checks
 
 on:
   pull_request:
@@ -10,22 +10,4 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
-      - name: Install dependencies
-        run: pnpm install
-      - name: Build dependencies
-        run: npm run build
-      - run: npm test
+    uses: ./.github/workflows/version-tests.yml

@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 // eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
 
-import { LAUNCHPAD_PREFIX, DEPOSIT_PREFIX, VAULT_PREFIX } from "../constants.js";
+import { DEPOSIT_PREFIX, LAUNCHPAD_PREFIX, VAULT_PREFIX } from "../constants.js";
 
 export const deriveLaunchpadPDA = (programId: PublicKey, baseMint: PublicKey, nonce: number): PublicKey => {
   return PublicKey.findProgramAddressSync(
