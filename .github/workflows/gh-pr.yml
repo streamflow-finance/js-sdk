@@ -24,8 +24,15 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
-      - name: Install dependencies
+      - name: 📂 Install dependencies
         run: pnpm install
-      - name: Build dependencies
+      - name: 📦 Build dependencies
         run: npm run build
-      - run: npm test
+      - name: 🧪 Run Tests
+        run: npm test
+      - name: Lint Types
+        run: pnpm tsc:lint  
+      - name: 🔍 Validate Packages
+        run: pnpm validate
+      - name: 📝 Validate Examples
+        run: pnpm validate-examples

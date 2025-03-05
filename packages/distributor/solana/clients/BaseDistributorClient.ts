@@ -5,11 +5,11 @@ import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
-  Commitment,
-  ConnectionConfig,
-  MemcmpFilter,
+  type Commitment,
+  type ConnectionConfig,
+  type MemcmpFilter,
 } from "@solana/web3.js";
-import { ICluster, ITransactionResult } from "@streamflow/common";
+import { ICluster, type ITransactionResult } from "@streamflow/common";
 import {
   ata,
   checkOrCreateAtaBatch,
@@ -18,7 +18,7 @@ import {
   getMintAndProgram,
   buildSendThrottler,
   prepareWrappedAccount,
-  IProgramAccount,
+  type IProgramAccount,
   pk,
 } from "@streamflow/common/solana";
 import {
@@ -36,39 +36,39 @@ import {
   DISTRIBUTOR_MINT_OFFSET,
   DISTRIBUTOR_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
-} from "../constants";
+} from "../constants.js";
 import {
-  IClaimData,
-  IClawbackData,
-  ICreateDistributorResult,
-  IGetClaimData,
-  IGetDistributors,
-  ICreateSolanaExt,
-  IInteractSolanaExt,
-  ICreateDistributorData,
-  ICreateAlignedDistributorData,
-  ISearchDistributors,
-  ICloseClaimData,
-} from "../types";
+  type IClaimData,
+  type IClawbackData,
+  type ICreateDistributorResult,
+  type IGetClaimData,
+  type IGetDistributors,
+  type ICreateSolanaExt,
+  type IInteractSolanaExt,
+  type ICreateDistributorData,
+  type ICreateAlignedDistributorData,
+  type ISearchDistributors,
+  type ICloseClaimData,
+} from "../types.js";
 import {
-  ClaimLockedAccounts,
-  ClawbackAccounts,
-  NewClaimAccounts,
-  NewClaimArgs,
-  NewDistributorAccounts,
-  NewDistributorArgs,
+  type ClaimLockedAccounts,
+  type ClawbackAccounts,
+  type NewClaimAccounts,
+  type NewClaimArgs,
+  type NewDistributorAccounts,
+  type NewDistributorArgs,
   claimLocked,
   newClaim,
-} from "../generated/instructions";
-import { ClaimStatus, MerkleDistributor } from "../generated/accounts";
+} from "../generated/instructions/index.js";
+import { ClaimStatus, MerkleDistributor } from "../generated/accounts/index.js";
 import {
   calculateAmountWithTransferFees,
   getClaimantStatusPda,
   getDistributorPda,
   getEventAuthorityPda,
   wrappedSignAndExecuteTransaction,
-} from "../utils";
-import { closeClaim, CloseClaimAccounts, CloseClaimArgs } from "../generated/instructions/closeClaim";
+} from "../utils.js";
+import { closeClaim, type CloseClaimAccounts, type CloseClaimArgs } from "../generated/instructions/closeClaim.js";
 
 export interface IInitOptions {
   clusterUrl: string;

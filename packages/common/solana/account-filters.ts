@@ -1,4 +1,4 @@
-import { MemcmpFilter, PublicKey } from "@solana/web3.js";
+import type { MemcmpFilter, PublicKey } from "@solana/web3.js";
 
 export const getFilters = <T extends Record<string, number | PublicKey>>(
   criteria: T,

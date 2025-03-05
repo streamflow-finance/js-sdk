@@ -2,26 +2,26 @@ import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddress,
   unpackMint,
-  Mint,
+  type Mint,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import {
-  BlockhashWithExpiryBlockHeight,
-  Commitment,
+  type BlockhashWithExpiryBlockHeight,
+  type Commitment,
   ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
   Transaction,
   TransactionInstruction,
-  SignatureStatus,
+  type SignatureStatus,
   TransactionMessage,
   VersionedTransaction,
-  Context,
-  RpcResponseAndContext,
-  SimulatedTransactionResponse,
+  type Context,
+  type RpcResponseAndContext,
+  type SimulatedTransactionResponse,
   SendTransactionError,
   AccountInfo,
 } from "@solana/web3.js";
@@ -29,11 +29,11 @@ import bs58 from "bs58";
 import PQueue from "p-queue";
 
 import {
-  Account,
-  AtaParams,
-  ConfirmationParams,
-  ITransactionSolanaExt,
-  ThrottleParams,
+  type Account,
+  type AtaParams,
+  type ConfirmationParams,
+  type ITransactionSolanaExt,
+  type ThrottleParams,
   TransactionFailedError,
 } from "./types.js";
 import { sleep } from "../lib/utils.js";

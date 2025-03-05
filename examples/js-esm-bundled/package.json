@@ -1,0 +1,23 @@
+{
+  "name": "js-esm-bundled",
+  "version": "1.0.0",
+  "description": "Example of using Streamflow SDK with JavaScript, ESM, and Vite bundler",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "start": "node dist/index.js",
+    "verify": "npm run build && node dist/index.js"
+  },
+  "dependencies": {
+    "@streamflow/common": "workspace:*",
+    "@streamflow/distributor": "workspace:*",
+    "@streamflow/launchpad": "workspace:*",
+    "@streamflow/staking": "workspace:*",
+    "@streamflow/stream": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-node-polyfills": "0.17.0"
+  }
+}

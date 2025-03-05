@@ -1,6 +1,6 @@
-import { TransactionInstruction, PublicKey, AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { TransactionInstruction, type PublicKey, type AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-import { PROGRAM_ID } from "../programId";
+import { PROGRAM_ID } from "../programId.js";
 
 export interface ClaimLockedAccounts {
   /** The [MerkleDistributor]. */

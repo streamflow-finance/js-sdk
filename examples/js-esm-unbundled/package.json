@@ -1,0 +1,20 @@
+{
+  "name": "js-esm-unbundled",
+  "version": "1.0.0",
+  "description": "Example of using Streamflow SDK with JavaScript, ESM, and no bundler",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start-node18": "node src/start-node18.js",
+    "start-node20": "node src/start-node20.js",
+    "start": "node src/runner.js",
+    "verify": "node src/runner.js"
+  },
+  "dependencies": {
+    "@streamflow/stream": "workspace:*",
+    "@streamflow/common": "workspace:*",
+    "@streamflow/staking": "workspace:*",
+    "@streamflow/distributor": "workspace:*",
+    "@streamflow/launchpad": "workspace:*"
+  }
+}

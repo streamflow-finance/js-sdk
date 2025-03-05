@@ -1,10 +1,10 @@
-import { ProgramAccount } from "@coral-xyz/anchor";
+import type { ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 // eslint-disable-next-line no-restricted-imports
 import BN from "bn.js";
 import { getBN, getNumberFromBN } from "@streamflow/common";
 
-import { RewardEntry, RewardPool, StakeEntry } from "../types.js";
+import type { RewardEntry, RewardPool, StakeEntry } from "../types.js";
 import { REWARD_AMOUNT_DECIMALS, REWARD_AMOUNT_PRECISION_FACTOR_BN, SCALE_PRECISION_FACTOR_BN } from "../constants.js";
 
 export class RewardEntryAccumulator implements RewardEntry {
