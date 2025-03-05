@@ -99,7 +99,7 @@ const maxDuration = new BN(2592000);
 /*
  1 day - Unix time in seconds
 */
-const maxDuration = new BN(86400);
+const minDuration = new BN(86400);
 /*
  Limits signers that can create/assign reward pools to this stake pool. True - anyone can
 */
