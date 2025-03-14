@@ -133,6 +133,157 @@ export type StakePool = {
           name: "permissionless";
           type: "bool";
         },
+        {
+          name: "freezeStakeMint";
+          type: {
+            option: "bool";
+          };
+        },
+        {
+          name: "unstakePeriod";
+          type: {
+            option: "u64";
+          };
+        },
+      ];
+    },
+    {
+      name: "requestUnstake";
+      discriminator: [44, 154, 110, 253, 160, 202, 54, 34];
+      accounts: [
+        {
+          name: "stakePool";
+          writable: true;
+          relations: ["stakeEntry"];
+        },
+        {
+          name: "stakeEntry";
+          docs: ["Entry that stores Stake Metadata"];
+          writable: true;
+        },
+        {
+          name: "authority";
+          docs: ["Stake Entry Authority"];
+          writable: true;
+          signer: true;
+        },
+      ];
+      args: [];
+    },
+    {
+      name: "setTokenMetadataSpl";
+      discriminator: [244, 162, 227, 218, 129, 5, 25, 253];
+      accounts: [
+        {
+          name: "authority";
+          docs: ["Stake Pool Authority"];
+          signer: true;
+          relations: ["stakePool"];
+        },
+        {
+          name: "stakePool";
+        },
+        {
+          name: "stakeMint";
+          relations: ["stakePool"];
+        },
+        {
+          name: "metadataAccount";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [109, 101, 116, 97, 100, 97, 116, 97];
+              },
+              {
+                kind: "account";
+                path: "metadataProgram";
+              },
+              {
+                kind: "account";
+                path: "stakeMint";
+              },
+            ];
+            program: {
+              kind: "account";
+              path: "metadataProgram";
+            };
+          };
+        },
+        {
+          name: "metadataProgram";
+          docs: ["MPL Program"];
+          address: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+        },
+        {
+          name: "rent";
+          address: "SysvarRent111111111111111111111111111111111";
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        },
+      ];
+      args: [
+        {
+          name: "name";
+          type: "string";
+        },
+        {
+          name: "symbol";
+          type: "string";
+        },
+        {
+          name: "uri";
+          type: "string";
+        },
+      ];
+    },
+    {
+      name: "setTokenMetadataT22";
+      discriminator: [239, 134, 91, 83, 196, 57, 120, 106];
+      accounts: [
+        {
+          name: "authority";
+          docs: ["Stake Pool Authority"];
+          signer: true;
+          relations: ["stakePool"];
+        },
+        {
+          name: "stakePool";
+        },
+        {
+          name: "stakeMint";
+          writable: true;
+          relations: ["stakePool"];
+        },
+        {
+          name: "tokenProgram";
+          address: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        },
+      ];
+      args: [
+        {
+          name: "name";
+          type: "string";
+        },
+        {
+          name: "symbol";
+          type: "string";
+        },
+        {
+          name: "uri";
+          type: "string";
+        },
       ];
     },
     {
@@ -208,10 +359,6 @@ export type StakePool = {
         },
         {
           name: "tokenProgram";
-        },
-        {
-          name: "rent";
-          address: "SysvarRent111111111111111111111111111111111";
         },
         {
           name: "systemProgram";
@@ -374,6 +521,21 @@ export type StakePool = {
       name: "unsupportedTokenExtensions";
       msg: "Mint has unsupported Token Extensions";
     },
+    {
+      code: 6015;
+      name: "unstakeRequestNotRequired";
+      msg: "Unstake request is not required";
+    },
+    {
+      code: 6016;
+      name: "unstakeRequestRequired";
+      msg: "Stake pool has unstake period, request is required prior to unstake";
+    },
+    {
+      code: 6017;
+      name: "unstakeTooEarly";
+      msg: "Unstake is not possible until unstake period has passed";
+    },
   ];
   types: [
     {
@@ -423,14 +585,24 @@ export type StakePool = {
           },
           {
             name: "closedTs";
-            docs: ["Flag whether entry has been already unstaked"];
+            docs: ["Timestamp when entry has been closed"];
+            type: "u64";
+          },
+          {
+            name: "priorTotalEffectiveStake";
+            docs: ["Total effective stake at the time of staking"];
+            type: "u128";
+          },
+          {
+            name: "unstakeTs";
+            docs: ["Timestamp when unstake was requested, will be used in case `unstake_period` is set"];
             type: "u64";
           },
           {
             name: "buffer";
             docs: ["Buffer for additional fields"];
             type: {
-              array: ["u8", 64];
+              array: ["u8", 40];
             };
           },
         ];
@@ -525,10 +697,22 @@ export type StakePool = {
             type: "u128";
           },
           {
+            name: "freezeStakeMint";
+            docs: ["Whether we should freeze stake mint token accounts"];
+            type: "bool";
+          },
+          {
+            name: "unstakePeriod";
+            docs: [
+              "Period for unstaking, if set unstake at first should be requested, and the real unstake can only happen after this period",
+            ];
+            type: "u64";
+          },
+          {
             name: "buffer";
             docs: ["Buffer for additional fields"];
             type: {
-              array: ["u8", 64];
+              array: ["u8", 55];
             };
           },
         ];

@@ -226,7 +226,7 @@ export class SolanaStakingClient {
     const creator = extParams.invoker.publicKey;
     invariant(creator, "Undefined invoker publicKey");
     const createInstruction = await stakePoolProgram.methods
-      .createPool(nonce, maxWeight, minDuration, maxDuration, permissionless)
+      .createPool(nonce, maxWeight, minDuration, maxDuration, permissionless, null, null)
       .accounts({
         creator,
         mint,
