@@ -23,6 +23,7 @@ import {
   RpcResponseAndContext,
   SimulatedTransactionResponse,
   SendTransactionError,
+  AccountInfo,
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import PQueue from "p-queue";
@@ -580,4 +581,31 @@ export async function getMintAndProgram(
     mint: unpackMint(address, accountInfo, programId),
     tokenProgramId: programId!,
   };
+}
+
+/**
+ * Split fetching of Multiple Accounts Info into batches of 100
+ * as the maximum number of accounts that can be fetched in a single call is 100
+ *
+ * @param connection Connection to use
+ * @param pubKeys Array of public keys to fetch account info for
+ * @param commitment Desired level of commitment for querying the state
+ *
+ * @return Array of AccountInfo objects
+ */
+export async function getMultipleAccountsInfoBatched(
+  connection: Connection,
+  pubKeys: PublicKey[],
+  commitment?: Commitment,
+): Promise<(AccountInfo<Buffer> | null)[]> {
+  const batchSize = 99;
+  const batches: Promise<(AccountInfo<Buffer> | null)[]>[] = [];
+
+  for (let i = 0; i < pubKeys.length; i += batchSize) {
+    const batch = pubKeys.slice(i, i + batchSize);
+    batches.push(connection.getMultipleAccountsInfo(batch, commitment));
+  }
+
+  const results = await Promise.all(batches);
+  return results.flat();
 }

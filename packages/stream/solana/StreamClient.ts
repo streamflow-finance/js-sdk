@@ -33,6 +33,7 @@ import {
   buildSendThrottler,
   IProgramAccount,
   ThrottleParams,
+  getMultipleAccountsInfoBatched,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
@@ -1360,7 +1361,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       },
     ]);
     const streamPubKeys = alignedOutgoingProgramAccounts.map((account) => account.account.stream);
-    const streamAccounts = await this.connection.getMultipleAccountsInfo(streamPubKeys, TX_FINALITY_CONFIRMED);
+    const streamAccounts = await getMultipleAccountsInfoBatched(this.connection, streamPubKeys, TX_FINALITY_CONFIRMED);
     streamAccounts.forEach((account, index) => {
       if (account) {
         const alignedData = alignedOutgoingProgramAccounts[index].account;
@@ -1379,7 +1380,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const alignedProxyPDAs = alignedStreamsPubKeys.map((streamPubKey) =>
       deriveContractPDA(this.alignedProxyProgram.programId, new PublicKey(streamPubKey)),
     );
-    const alignedProxyAccounts = await this.connection.getMultipleAccountsInfo(alignedProxyPDAs);
+    const alignedProxyAccounts = await getMultipleAccountsInfoBatched(this.connection, alignedProxyPDAs);
     alignedProxyAccounts.forEach((account, index) => {
       if (account && account.data.length === ALIGNED_METADATA_ACC_SIZE) {
         const alignedData = streamRecord[alignedStreamsPubKeys[index]];
