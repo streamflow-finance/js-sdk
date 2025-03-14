@@ -245,6 +245,34 @@ await client.claimRewards({
 > For instance, prepareClaimRewardsInstructions.  
 > These APIs allow to aggregate multiple operations in a single transaction according to the app needs.  
 
+### Set Token Metadata
+
+SolanaStakingClient also exposes original IDL of all programs, so you can use some additional instructions, that are not wrapped by the client. Currently there is no method to update Token Metadata of the Staking Mint that stakers get in return for their stake, but you can call the instructions from the original IDL like so:
+
+```typescript
+// Stake Mint Token Program matches token program of the original token, program exposes separate methods depending on the program.
+import { signAndExecuteTransaction, prepareTransaction } from "@streamflow/common/solana";
+
+const program = client.programs.stakePoolProgram;
+
+// for SPL
+let ix = await program.methods.setTokenMetadataSpl("sToken", "sTST", "https://arweave.net/VVrrcRaOYombRAzWrcDLiV5hVmQUfvp1nS8nfttQvBE").accounts({
+   stakePool: metadataId
+}).accountsPartial({
+   authority: keypair.publicKey
+}).instruction();
+// for Token22
+ix = await program.methods.setTokenMetadataT22("sToken", "sTST", "https://arweave.net/VVrrcRaOYombRAzWrcDLiV5hVmQUfvp1nS8nfttQvBE").accounts({
+   stakePool: metadataId
+}).accountsPartial({
+   authority: keypair.publicKey
+}).instruction();
+
+const { tx, hash, context } = await prepareTransaction(client.connection, [ix], keypair.publicKey);
+const sig = await signAndExecuteTransaction(client.connection, keypair, tx, { hash, context }, {});
+console.log(sig);
+ ```
+
 ## Appendix
 
 Streamflow Staking protocol program IDs

@@ -9,16 +9,29 @@
   "instructions": [
     {
       "name": "change_authority",
-      "discriminator": [50, 106, 66, 104, 99, 118, 145, 88],
+      "discriminator": [
+        50,
+        106,
+        66,
+        104,
+        99,
+        118,
+        145,
+        88
+      ],
       "accounts": [
         {
           "name": "stake_pool",
-          "docs": ["Stake Pool"],
+          "docs": [
+            "Stake Pool"
+          ],
           "writable": true
         },
         {
           "name": "authority",
-          "docs": ["Current Authority"],
+          "docs": [
+            "Current Authority"
+          ],
           "writable": true,
           "signer": true
         },
@@ -30,7 +43,16 @@
     },
     {
       "name": "create_pool",
-      "discriminator": [233, 146, 209, 142, 207, 104, 64, 188],
+      "discriminator": [
+        233,
+        146,
+        209,
+        142,
+        207,
+        104,
+        64,
+        188
+      ],
       "accounts": [
         {
           "name": "stake_pool",
@@ -39,7 +61,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [115, 116, 97, 107, 101, 45, 112, 111, 111, 108]
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  112,
+                  111,
+                  111,
+                  108
+                ]
               },
               {
                 "kind": "account",
@@ -58,7 +91,9 @@
         },
         {
           "name": "mint",
-          "docs": ["Mint used for staking"]
+          "docs": [
+            "Mint used for staking"
+          ]
         },
         {
           "name": "vault",
@@ -67,7 +102,19 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [115, 116, 97, 107, 101, 45, 118, 97, 117, 108, 116]
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -83,7 +130,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [115, 116, 97, 107, 101, 45, 109, 105, 110, 116]
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -94,7 +152,9 @@
         },
         {
           "name": "creator",
-          "docs": ["Stake Pool creator"],
+          "docs": [
+            "Stake Pool creator"
+          ],
           "writable": true,
           "signer": true
         },
@@ -126,27 +186,259 @@
         {
           "name": "permissionless",
           "type": "bool"
+        },
+        {
+          "name": "freeze_stake_mint",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "unstake_period",
+          "type": {
+            "option": "u64"
+          }
         }
       ]
     },
     {
-      "name": "stake",
-      "discriminator": [206, 176, 202, 18, 200, 209, 179, 108],
+      "name": "request_unstake",
+      "discriminator": [
+        44,
+        154,
+        110,
+        253,
+        160,
+        202,
+        54,
+        34
+      ],
       "accounts": [
         {
           "name": "stake_pool",
-          "docs": ["Stake Pool"],
-          "writable": true
+          "writable": true,
+          "relations": [
+            "stake_entry"
+          ]
         },
         {
           "name": "stake_entry",
-          "docs": ["Entry that will store Stake Metadata"],
+          "docs": [
+            "Entry that stores Stake Metadata"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Stake Entry Authority"
+          ],
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_token_metadata_spl",
+      "discriminator": [
+        244,
+        162,
+        227,
+        218,
+        129,
+        5,
+        25,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Stake Pool Authority"
+          ],
+          "signer": true,
+          "relations": [
+            "stake_pool"
+          ]
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "stake_mint",
+          "relations": [
+            "stake_pool"
+          ]
+        },
+        {
+          "name": "metadata_account",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [115, 116, 97, 107, 101, 45, 101, 110, 116, 114, 121]
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "metadata_program"
+              },
+              {
+                "kind": "account",
+                "path": "stake_mint"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "metadata_program"
+            }
+          }
+        },
+        {
+          "name": "metadata_program",
+          "docs": [
+            "MPL Program"
+          ],
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "set_token_metadata_t22",
+      "discriminator": [
+        239,
+        134,
+        91,
+        83,
+        196,
+        57,
+        120,
+        106
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Stake Pool Authority"
+          ],
+          "signer": true,
+          "relations": [
+            "stake_pool"
+          ]
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "stake_mint",
+          "writable": true,
+          "relations": [
+            "stake_pool"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "stake",
+      "discriminator": [
+        206,
+        176,
+        202,
+        18,
+        200,
+        209,
+        179,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "stake_pool",
+          "docs": [
+            "Stake Pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "stake_entry",
+          "docs": [
+            "Entry that will store Stake Metadata"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -165,23 +457,33 @@
         },
         {
           "name": "from",
-          "docs": ["Token Account from which stake tokens will be transferred"],
+          "docs": [
+            "Token Account from which stake tokens will be transferred"
+          ],
           "writable": true
         },
         {
           "name": "vault",
-          "docs": ["Stake Pool Vault that stores staked tokens"],
+          "docs": [
+            "Stake Pool Vault that stores staked tokens"
+          ],
           "writable": true,
-          "relations": ["stake_pool"]
+          "relations": [
+            "stake_pool"
+          ]
         },
         {
           "name": "to",
-          "docs": ["Token Account to transfer Stake Mint tokens to"],
+          "docs": [
+            "Token Account to transfer Stake Mint tokens to"
+          ],
           "writable": true
         },
         {
           "name": "payer",
-          "docs": ["Owner of the Token Account from which tokens will be staked"],
+          "docs": [
+            "Owner of the Token Account from which tokens will be staked"
+          ],
           "writable": true,
           "signer": true
         },
@@ -190,22 +492,26 @@
         },
         {
           "name": "mint",
-          "docs": ["Original mint of staked tokens"],
+          "docs": [
+            "Original mint of staked tokens"
+          ],
           "writable": true,
-          "relations": ["stake_pool"]
+          "relations": [
+            "stake_pool"
+          ]
         },
         {
           "name": "stake_mint",
-          "docs": ["Mint of stake tokens that will be minted in return for staking"],
+          "docs": [
+            "Mint of stake tokens that will be minted in return for staking"
+          ],
           "writable": true,
-          "relations": ["stake_pool"]
+          "relations": [
+            "stake_pool"
+          ]
         },
         {
           "name": "token_program"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
         },
         {
           "name": "system_program",
@@ -229,51 +535,82 @@
     },
     {
       "name": "unstake",
-      "discriminator": [90, 95, 107, 42, 205, 124, 50, 225],
+      "discriminator": [
+        90,
+        95,
+        107,
+        42,
+        205,
+        124,
+        50,
+        225
+      ],
       "accounts": [
         {
           "name": "stake_pool",
           "writable": true,
-          "relations": ["stake_entry"]
+          "relations": [
+            "stake_entry"
+          ]
         },
         {
           "name": "stake_entry",
-          "docs": ["Entry that stores Stake Metadata"],
+          "docs": [
+            "Entry that stores Stake Metadata"
+          ],
           "writable": true
         },
         {
           "name": "from",
-          "docs": ["Stake Mint Token account"],
+          "docs": [
+            "Stake Mint Token account"
+          ],
           "writable": true
         },
         {
           "name": "vault",
-          "docs": ["Escrow Account that stores Staked tokens"],
+          "docs": [
+            "Escrow Account that stores Staked tokens"
+          ],
           "writable": true,
-          "relations": ["stake_pool"]
+          "relations": [
+            "stake_pool"
+          ]
         },
         {
           "name": "to",
-          "docs": ["Token account to withdraw Staked tokens to"],
+          "docs": [
+            "Token account to withdraw Staked tokens to"
+          ],
           "writable": true
         },
         {
           "name": "authority",
-          "docs": ["Stake Entry Authority"],
+          "docs": [
+            "Stake Entry Authority"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "mint",
-          "docs": ["Original mint of staked tokens"],
+          "docs": [
+            "Original mint of staked tokens"
+          ],
           "writable": true,
-          "relations": ["stake_pool"]
+          "relations": [
+            "stake_pool"
+          ]
         },
         {
           "name": "stake_mint",
-          "docs": ["Stake Mint used to exchanged Staked tokens to"],
+          "docs": [
+            "Stake Mint used to exchanged Staked tokens to"
+          ],
           "writable": true,
-          "relations": ["stake_pool"]
+          "relations": [
+            "stake_pool"
+          ]
         },
         {
           "name": "token_program"
@@ -285,11 +622,29 @@
   "accounts": [
     {
       "name": "StakeEntry",
-      "discriminator": [187, 127, 9, 35, 155, 68, 86, 40]
+      "discriminator": [
+        187,
+        127,
+        9,
+        35,
+        155,
+        68,
+        86,
+        40
+      ]
     },
     {
       "name": "StakePool",
-      "discriminator": [121, 34, 206, 21, 79, 127, 255, 28]
+      "discriminator": [
+        121,
+        34,
+        206,
+        21,
+        79,
+        127,
+        255,
+        28
+      ]
     }
   ],
   "errors": [
@@ -367,6 +722,21 @@
       "code": 6014,
       "name": "UnsupportedTokenExtensions",
       "msg": "Mint has unsupported Token Extensions"
+    },
+    {
+      "code": 6015,
+      "name": "UnstakeRequestNotRequired",
+      "msg": "Unstake request is not required"
+    },
+    {
+      "code": 6016,
+      "name": "UnstakeRequestRequired",
+      "msg": "Stake pool has unstake period, request is required prior to unstake"
+    },
+    {
+      "code": 6017,
+      "name": "UnstakeTooEarly",
+      "msg": "Unstake is not possible until unstake period has passed"
     }
   ],
   "types": [
@@ -377,54 +747,91 @@
         "fields": [
           {
             "name": "nonce",
-            "docs": ["Nonce to differentiate stakes for the same pool"],
+            "docs": [
+              "Nonce to differentiate stakes for the same pool"
+            ],
             "type": "u32"
           },
           {
             "name": "stake_pool",
-            "docs": ["Stake Pool for which tokens were staked"],
+            "docs": [
+              "Stake Pool for which tokens were staked"
+            ],
             "type": "pubkey"
           },
           {
             "name": "payer",
-            "docs": ["Original Owner of Staked tokens"],
+            "docs": [
+              "Original Owner of Staked tokens"
+            ],
             "type": "pubkey"
           },
           {
             "name": "authority",
-            "docs": ["Authority of the Entry"],
+            "docs": [
+              "Authority of the Entry"
+            ],
             "type": "pubkey"
           },
           {
             "name": "amount",
-            "docs": ["Amount of deposited funds"],
+            "docs": [
+              "Amount of deposited funds"
+            ],
             "type": "u64"
           },
           {
             "name": "duration",
-            "docs": ["Duration of the lockup"],
+            "docs": [
+              "Duration of the lockup"
+            ],
             "type": "u64"
           },
           {
             "name": "effective_amount",
-            "docs": ["Effective Amount staked, does not equal to deposited amount, accounts for Stake Weight"],
+            "docs": [
+              "Effective Amount staked, does not equal to deposited amount, accounts for Stake Weight"
+            ],
             "type": "u128"
           },
           {
             "name": "created_ts",
-            "docs": ["Timestamp when Deposit was made"],
+            "docs": [
+              "Timestamp when Deposit was made"
+            ],
             "type": "u64"
           },
           {
             "name": "closed_ts",
-            "docs": ["Flag whether entry has been already unstaked"],
+            "docs": [
+              "Timestamp when entry has been closed"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "prior_total_effective_stake",
+            "docs": [
+              "Total effective stake at the time of staking"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "unstake_ts",
+            "docs": [
+              "Timestamp when unstake was requested, will be used in case `unstake_period` is set"
+            ],
             "type": "u64"
           },
           {
             "name": "_buffer",
-            "docs": ["Buffer for additional fields"],
+            "docs": [
+              "Buffer for additional fields"
+            ],
             "type": {
-              "array": ["u8", 64]
+              "array": [
+                "u8",
+                40
+              ]
             }
           }
         ]
@@ -437,27 +844,37 @@
         "fields": [
           {
             "name": "bump",
-            "docs": ["Bump Seed used to sign transactions"],
+            "docs": [
+              "Bump Seed used to sign transactions"
+            ],
             "type": "u8"
           },
           {
             "name": "nonce",
-            "docs": ["Nonce to differentiate pools for the same mint"],
+            "docs": [
+              "Nonce to differentiate pools for the same mint"
+            ],
             "type": "u8"
           },
           {
             "name": "mint",
-            "docs": ["Mint of the Stake Pool"],
+            "docs": [
+              "Mint of the Stake Pool"
+            ],
             "type": "pubkey"
           },
           {
             "name": "creator",
-            "docs": ["Initial Creator"],
+            "docs": [
+              "Initial Creator"
+            ],
             "type": "pubkey"
           },
           {
             "name": "authority",
-            "docs": ["Current authority"],
+            "docs": [
+              "Current authority"
+            ],
             "type": "pubkey"
           },
           {
@@ -482,32 +899,44 @@
           },
           {
             "name": "min_duration",
-            "docs": ["Min Duration of stake in seconds"],
+            "docs": [
+              "Min Duration of stake in seconds"
+            ],
             "type": "u64"
           },
           {
             "name": "max_duration",
-            "docs": ["Max Duration of stake in seconds, the more duration, the more weight the stake has"],
+            "docs": [
+              "Max Duration of stake in seconds, the more duration, the more weight the stake has"
+            ],
             "type": "u64"
           },
           {
             "name": "permissionless",
-            "docs": ["Whether anyone can add Reward Pools or just admin"],
+            "docs": [
+              "Whether anyone can add Reward Pools or just admin"
+            ],
             "type": "bool"
           },
           {
             "name": "vault",
-            "docs": ["Escrow Account that stores staked tokens"],
+            "docs": [
+              "Escrow Account that stores staked tokens"
+            ],
             "type": "pubkey"
           },
           {
             "name": "stake_mint",
-            "docs": ["Stake Mint, will be returned in exchange for stake tokens"],
+            "docs": [
+              "Stake Mint, will be returned in exchange for stake tokens"
+            ],
             "type": "pubkey"
           },
           {
             "name": "total_stake",
-            "docs": ["Total number of Staked tokens"],
+            "docs": [
+              "Total number of Staked tokens"
+            ],
             "type": "u64"
           },
           {
@@ -519,10 +948,29 @@
             "type": "u128"
           },
           {
+            "name": "freeze_stake_mint",
+            "docs": [
+              "Whether we should freeze stake mint token accounts"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "unstake_period",
+            "docs": [
+              "Period for unstaking, if set unstake at first should be requested, and the real unstake can only happen after this period"
+            ],
+            "type": "u64"
+          },
+          {
             "name": "_buffer",
-            "docs": ["Buffer for additional fields"],
+            "docs": [
+              "Buffer for additional fields"
+            ],
             "type": {
-              "array": ["u8", 64]
+              "array": [
+                "u8",
+                55
+              ]
             }
           }
         ]
