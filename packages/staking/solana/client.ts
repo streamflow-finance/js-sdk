@@ -10,7 +10,15 @@ import {
   translateError,
 } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { Commitment, Connection, ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import {
+  Commitment,
+  Connection,
+  ConnectionConfig,
+  PublicKey,
+  TransactionInstruction,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from "@solana/web3.js";
 import { ContractError, ICluster, ITransactionResult, invariant } from "@streamflow/common";
 import {
   buildSendThrottler,
@@ -89,6 +97,8 @@ interface IInitOptions {
 export class SolanaStakingClient {
   connection: Connection;
 
+  private readonly cluster: ICluster;
+
   private readonly commitment: Commitment | ConnectionConfig;
 
   private readonly sendThrottler: PQueue;
@@ -103,6 +113,7 @@ export class SolanaStakingClient {
     sendRate = 1,
     sendThrottler,
   }: IInitOptions) {
+    this.cluster = cluster;
     this.commitment = commitment;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
@@ -272,6 +283,20 @@ export class SolanaStakingClient {
         payer: staker,
       })
       .instruction();
+    if (this.cluster == ICluster.Mainnet) {
+      // TODO: remove when staking on mainnet is upgraded
+      instruction.keys.pop();
+      instruction.keys.push({
+        pubkey: SYSVAR_RENT_PUBKEY,
+        isSigner: false,
+        isWritable: false,
+      });
+      instruction.keys.push({
+        pubkey: SystemProgram.programId,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
 
     return { ixs: [instruction] };
   }
