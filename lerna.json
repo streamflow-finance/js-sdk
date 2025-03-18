@@ -2,6 +2,6 @@
   "packages": [
     "packages/*"
   ],
-  "version": "7.4.16",
+  "version": "7.4.17",
   "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 }
