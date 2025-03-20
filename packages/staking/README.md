@@ -152,12 +152,18 @@ const rewardMint = REWARD_MINT_ADDRESS; // rewarding token
 */
 const permissionless = true;
 
+/*
+  Whether to create stake mint token accounts in frozen state by default - in this case stakers won't be able to send or burn these tokens
+ */
+const freezeStakeMint = true;
+
 client.createRewardPool({
       nonce,
       rewardAmount,
       rewardPeriod,
       rewardMint,
-      permissionless = false,
+      permissionless,
+      freezeStakeMint,
       stakePool: stakePoolPda,
       stakePoolMint: MINT_ADDRESS,
     })
