@@ -10,15 +10,7 @@ import {
   translateError,
 } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import {
-  Commitment,
-  Connection,
-  ConnectionConfig,
-  PublicKey,
-  TransactionInstruction,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-} from "@solana/web3.js";
+import { Commitment, Connection, ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { ContractError, ICluster, ITransactionResult, invariant } from "@streamflow/common";
 import {
   buildSendThrottler,
@@ -283,20 +275,6 @@ export class SolanaStakingClient {
         payer: staker,
       })
       .instruction();
-    if (this.cluster == ICluster.Mainnet) {
-      // TODO: remove when staking on mainnet is upgraded
-      instruction.keys.pop();
-      instruction.keys.push({
-        pubkey: SYSVAR_RENT_PUBKEY,
-        isSigner: false,
-        isWritable: false,
-      });
-      instruction.keys.push({
-        pubkey: SystemProgram.programId,
-        isSigner: false,
-        isWritable: false,
-      });
-    }
 
     return { ixs: [instruction] };
   }
