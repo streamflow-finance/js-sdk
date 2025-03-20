@@ -220,6 +220,8 @@ export class SolanaStakingClient {
       minDuration,
       mint,
       permissionless = false,
+      freezeStakeMint = null,
+      unstakePeriod = null,
       nonce,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateStakePoolArgs,
@@ -229,7 +231,7 @@ export class SolanaStakingClient {
     const creator = extParams.invoker.publicKey;
     invariant(creator, "Undefined invoker publicKey");
     const createInstruction = await stakePoolProgram.methods
-      .createPool(nonce, maxWeight, minDuration, maxDuration, permissionless, null, null)
+      .createPool(nonce, maxWeight, minDuration, maxDuration, permissionless, freezeStakeMint, unstakePeriod)
       .accounts({
         creator,
         mint,
