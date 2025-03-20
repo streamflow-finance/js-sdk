@@ -30,7 +30,13 @@ import {
 } from "@solana/spl-token";
 import bs58 from "bs58";
 
-import { DISTRIBUTOR_ADMIN_OFFSET, DISTRIBUTOR_MINT_OFFSET, DISTRIBUTOR_PROGRAM_ID } from "../constants";
+import {
+  AIRDROP_CLAIM_FEE,
+  DISTRIBUTOR_ADMIN_OFFSET,
+  DISTRIBUTOR_MINT_OFFSET,
+  DISTRIBUTOR_PROGRAM_ID,
+  STREAMFLOW_TREASURY_PUBLIC_KEY,
+} from "../constants";
 import {
   IClaimData,
   IClawbackData,
@@ -298,6 +304,8 @@ export default abstract class BaseDistributorClient {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
+    ixs.push(this.prepareClaimFeeInstruction(extParams.invoker.publicKey));
+
     return ixs;
   }
 
@@ -460,6 +468,14 @@ export default abstract class BaseDistributorClient {
       publicKey: pubkey,
       account: MerkleDistributor.decode(account.data),
     }));
+  }
+
+  protected prepareClaimFeeInstruction(payer: PublicKey): TransactionInstruction {
+    return SystemProgram.transfer({
+      fromPubkey: payer,
+      toPubkey: STREAMFLOW_TREASURY_PUBLIC_KEY,
+      lamports: AIRDROP_CLAIM_FEE,
+    });
   }
 
   protected getNewDistributorArgs(data: ICreateDistributorData): NewDistributorArgs {

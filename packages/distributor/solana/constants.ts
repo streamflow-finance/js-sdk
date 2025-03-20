@@ -1,3 +1,4 @@
+import { PublicKey } from "@solana/web3.js";
 import { ICluster } from "@streamflow/common";
 
 export const ANCHOR_DISCRIMINATOR_OFFSET = 8;
@@ -9,6 +10,9 @@ export const ALIGNED_DISTRIBUTOR_PREFIX = Buffer.from("aligned-distributor", "ut
 export const TEST_ORACLE_PREFIX = Buffer.from("test-oracle", "utf-8");
 export const CLAIM_STATUS_PREFIX = Buffer.from("ClaimStatus", "utf-8");
 export const ALIGNED_PRECISION_FACTOR_POW = 9;
+
+export const AIRDROP_CLAIM_FEE = BigInt(5_200_000);
+export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 
 export const ONE_IN_BASIS_POINTS = BigInt(10_000);
 
