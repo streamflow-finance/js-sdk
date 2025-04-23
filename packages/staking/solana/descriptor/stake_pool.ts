@@ -8,7 +8,7 @@ export type StakePool = {
   address: "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH";
   metadata: {
     name: "stakePool";
-    version: "1.0.0";
+    version: "2.1.1";
     spec: "0.1.0";
     description: "Program to manage Stake Pools and stake/unstake tokens";
   };
@@ -33,6 +33,72 @@ export type StakePool = {
         },
       ];
       args: [];
+    },
+    {
+      name: "createLookupTable";
+      discriminator: [74, 26, 45, 214, 23, 155, 143, 153];
+      accounts: [
+        {
+          name: "stakePool";
+          docs: ["Stake Pool"];
+        },
+        {
+          name: "lookupTableLink";
+          docs: ["Link that will store address of the actual Lookup Table"];
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [108, 111, 111, 107, 117, 112, 45, 116, 97, 98, 108, 101];
+              },
+              {
+                kind: "account";
+                path: "stakePool";
+              },
+              {
+                kind: "account";
+                path: "authority";
+              },
+              {
+                kind: "arg";
+                path: "nonce";
+              },
+            ];
+          };
+        },
+        {
+          name: "lookupTable";
+          writable: true;
+        },
+        {
+          name: "lookupTableProgram";
+          address: "AddressLookupTab1e1111111111111111111111111";
+        },
+        {
+          name: "payer";
+          docs: ["Payer of the transaction"];
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "authority";
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        },
+      ];
+      args: [
+        {
+          name: "nonce";
+          type: "u32";
+        },
+        {
+          name: "recentSlot";
+          type: "u64";
+        },
+      ];
     },
     {
       name: "createPool";
@@ -144,6 +210,131 @@ export type StakePool = {
           type: {
             option: "u64";
           };
+        },
+      ];
+    },
+    {
+      name: "migrateEntry";
+      discriminator: [239, 154, 55, 173, 110, 36, 188, 214];
+      accounts: [
+        {
+          name: "stakePoolFrom";
+          docs: ["Stake Pool"];
+          writable: true;
+          address: "Cja9f8JFS6sTgBqSRZGBrA2HDbUj4MZUGdtRYruKTeJp";
+        },
+        {
+          name: "stakePoolTo";
+          docs: ["Stake Pool"];
+          writable: true;
+          address: "BXRBbWMkscNBZoBL4fgRk77GBUX9eVP4AendQEumtPi8";
+        },
+        {
+          name: "stakeEntryFrom";
+          docs: ["Entry that will store Stake Metadata"];
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [115, 116, 97, 107, 101, 45, 101, 110, 116, 114, 121];
+              },
+              {
+                kind: "account";
+                path: "stakePoolFrom";
+              },
+              {
+                kind: "account";
+                path: "authority";
+              },
+              {
+                kind: "arg";
+                path: "nonce";
+              },
+            ];
+          };
+        },
+        {
+          name: "stakeEntryTo";
+          docs: ["Entry that will store Stake Metadata"];
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [115, 116, 97, 107, 101, 45, 101, 110, 116, 114, 121];
+              },
+              {
+                kind: "account";
+                path: "stakePoolTo";
+              },
+              {
+                kind: "account";
+                path: "authority";
+              },
+              {
+                kind: "arg";
+                path: "newNonce";
+              },
+            ];
+          };
+        },
+        {
+          name: "vaultFrom";
+          docs: ["Stake Pool Vault that stores staked tokens"];
+          writable: true;
+        },
+        {
+          name: "vaultTo";
+          docs: ["Stake Pool Vault that stores staked tokens"];
+          writable: true;
+        },
+        {
+          name: "to";
+          docs: ["Token Account to transfer Stake Mint tokens to"];
+          writable: true;
+        },
+        {
+          name: "payer";
+          docs: ["Owner of the Token Account from which tokens will be staked"];
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "authority";
+        },
+        {
+          name: "mint";
+          docs: ["Original mint of staked tokens"];
+          writable: true;
+          relations: ["stakePoolFrom", "stakePoolTo"];
+        },
+        {
+          name: "stakeMintFrom";
+          docs: ["Mint of stake tokens that will be minted in return for staking"];
+          writable: true;
+        },
+        {
+          name: "stakeMintTo";
+          docs: ["Mint of stake tokens that will be minted in return for staking"];
+          writable: true;
+        },
+        {
+          name: "tokenProgram";
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        },
+      ];
+      args: [
+        {
+          name: "nonce";
+          type: "u32";
+        },
+        {
+          name: "newNonce";
+          type: "u32";
         },
       ];
     },
@@ -437,6 +628,10 @@ export type StakePool = {
   ];
   accounts: [
     {
+      name: "lookupTableLink";
+      discriminator: [133, 88, 187, 141, 1, 53, 72, 236];
+    },
+    {
       name: "stakeEntry";
       discriminator: [187, 127, 9, 35, 155, 68, 86, 40];
     },
@@ -538,6 +733,41 @@ export type StakePool = {
     },
   ];
   types: [
+    {
+      name: "lookupTableLink";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "nonce";
+            docs: ["Nonce to differentiate lookup tables for the same stake pool"];
+            type: "u32";
+          },
+          {
+            name: "stakePool";
+            docs: ["Stake Pool for which tokens were staked"];
+            type: "pubkey";
+          },
+          {
+            name: "authority";
+            docs: ["Authority of the Entry"];
+            type: "pubkey";
+          },
+          {
+            name: "lookupTable";
+            docs: ["Pubkey of the address lookup table"];
+            type: "pubkey";
+          },
+          {
+            name: "buffer";
+            docs: ["Buffer for additional fields"];
+            type: {
+              array: ["u8", 64];
+            };
+          },
+        ];
+      };
+    },
     {
       name: "stakeEntry";
       type: {
