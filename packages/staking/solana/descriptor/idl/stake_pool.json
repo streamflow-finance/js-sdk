@@ -2,7 +2,7 @@
   "address": "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
   "metadata": {
     "name": "stake_pool",
-    "version": "1.0.0",
+    "version": "2.1.1",
     "spec": "0.1.0",
     "description": "Program to manage Stake Pools and stake/unstake tokens"
   },
@@ -40,6 +40,100 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "create_lookup_table",
+      "discriminator": [
+        74,
+        26,
+        45,
+        214,
+        23,
+        155,
+        143,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "stake_pool",
+          "docs": [
+            "Stake Pool"
+          ]
+        },
+        {
+          "name": "lookup_table_link",
+          "docs": [
+            "Link that will store address of the actual Lookup Table"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  111,
+                  107,
+                  117,
+                  112,
+                  45,
+                  116,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_pool"
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "lookup_table",
+          "writable": true
+        },
+        {
+          "name": "lookup_table_program",
+          "address": "AddressLookupTab1e1111111111111111111111111"
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Payer of the transaction"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u32"
+        },
+        {
+          "name": "recent_slot",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "create_pool",
@@ -198,6 +292,189 @@
           "type": {
             "option": "u64"
           }
+        }
+      ]
+    },
+    {
+      "name": "migrate_entry",
+      "discriminator": [
+        239,
+        154,
+        55,
+        173,
+        110,
+        36,
+        188,
+        214
+      ],
+      "accounts": [
+        {
+          "name": "stake_pool_from",
+          "docs": [
+            "Stake Pool"
+          ],
+          "writable": true,
+          "address": "Cja9f8JFS6sTgBqSRZGBrA2HDbUj4MZUGdtRYruKTeJp"
+        },
+        {
+          "name": "stake_pool_to",
+          "docs": [
+            "Stake Pool"
+          ],
+          "writable": true,
+          "address": "BXRBbWMkscNBZoBL4fgRk77GBUX9eVP4AendQEumtPi8"
+        },
+        {
+          "name": "stake_entry_from",
+          "docs": [
+            "Entry that will store Stake Metadata"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_pool_from"
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_entry_to",
+          "docs": [
+            "Entry that will store Stake Metadata"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stake_pool_to"
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "new_nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_from",
+          "docs": [
+            "Stake Pool Vault that stores staked tokens"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_to",
+          "docs": [
+            "Stake Pool Vault that stores staked tokens"
+          ],
+          "writable": true
+        },
+        {
+          "name": "to",
+          "docs": [
+            "Token Account to transfer Stake Mint tokens to"
+          ],
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Owner of the Token Account from which tokens will be staked"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority"
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Original mint of staked tokens"
+          ],
+          "writable": true,
+          "relations": [
+            "stake_pool_from",
+            "stake_pool_to"
+          ]
+        },
+        {
+          "name": "stake_mint_from",
+          "docs": [
+            "Mint of stake tokens that will be minted in return for staking"
+          ],
+          "writable": true
+        },
+        {
+          "name": "stake_mint_to",
+          "docs": [
+            "Mint of stake tokens that will be minted in return for staking"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u32"
+        },
+        {
+          "name": "new_nonce",
+          "type": "u32"
         }
       ]
     },
@@ -621,6 +898,19 @@
   ],
   "accounts": [
     {
+      "name": "LookupTableLink",
+      "discriminator": [
+        133,
+        88,
+        187,
+        141,
+        1,
+        53,
+        72,
+        236
+      ]
+    },
+    {
       "name": "StakeEntry",
       "discriminator": [
         187,
@@ -740,6 +1030,54 @@
     }
   ],
   "types": [
+    {
+      "name": "LookupTableLink",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "docs": [
+              "Nonce to differentiate lookup tables for the same stake pool"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "stake_pool",
+            "docs": [
+              "Stake Pool for which tokens were staked"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Authority of the Entry"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "lookup_table",
+            "docs": [
+              "Pubkey of the address lookup table"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "_buffer",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "StakeEntry",
       "type": {
