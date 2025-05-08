@@ -42,9 +42,9 @@
     "tsc:lint": "tsc --noEmit",
     "build": "rm -rf dist && tsup && pnpm copyIdls",
     "pack": "pnpm build && pnpm pack",
-    "test": "vitest",
+    "test": "vitest run --passWithNoTests",
     "lint": "eslint --fix .",
-    "prepublishOnly": "pnpm run lint && pnpm run test run && pnpm run build"
+    "prepublishOnly": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {

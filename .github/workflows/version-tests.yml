@@ -22,9 +22,9 @@ jobs:
       - name: 📂 Install dependencies
         run: pnpm install
       - name: 📦 Build dependencies
-        run: npm run build
+        run: pnpm build
       - name: 🧪 Run Tests
-        run: npm test
+        run: pnpm test
       - name: Lint Types
         run: pnpm tsc:lint  
       - name: 🔍 Validate Packages
