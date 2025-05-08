@@ -33,6 +33,6 @@ jobs:
       - name: Lint Types
         run: pnpm tsc:lint  
       - name: 🔍 Validate Packages
-        run: pnpm validate
+        run: pnpm validate-packages
       - name: 📝 Validate Examples
-        run: pnpm validate-examples
+        run: pnpm examples

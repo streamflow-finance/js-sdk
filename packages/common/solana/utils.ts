@@ -23,7 +23,7 @@ import {
   type RpcResponseAndContext,
   type SimulatedTransactionResponse,
   SendTransactionError,
-  AccountInfo,
+  type AccountInfo,
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import PQueue from "p-queue";
