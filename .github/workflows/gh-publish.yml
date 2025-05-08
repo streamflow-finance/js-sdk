@@ -17,9 +17,16 @@ permissions:
 jobs:
   tests:
     uses: ./.github/workflows/version-tests.yml
+  
+  all-tests-pass:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - run: echo "All tests completed"
+  
 
   publish:
-    needs: tests
+    needs: all-tests-pass
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
