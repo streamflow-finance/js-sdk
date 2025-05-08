@@ -27,10 +27,10 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 9
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
@@ -45,8 +45,14 @@ jobs:
           echo "ALPHA_VERSION=$ALPHA_VERSION" >> $GITHUB_ENV
       - name: Version all packages
         run: pnpm version-all ${{ env.ALPHA_VERSION }} -y
+      - name: Commit version changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "chore: version bump to ${{ env.ALPHA_VERSION }} [skip ci]" || echo "No changes to commit"
       - name: Build packages
-        run: npm run build
+        run: pnpm build
       - name: Validate NPM Token
         run: |
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
@@ -55,7 +61,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
       - name: Publish Alpha
-        run: npm run publish -- --tag alpha
+        run: npm run publish -- --dist-tag alpha
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
