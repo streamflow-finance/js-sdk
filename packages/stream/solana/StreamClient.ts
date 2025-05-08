@@ -114,7 +114,7 @@ import type { IPartnerLayout } from "./instructionTypes.js";
 import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 import type { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
-import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json" assert { type: "json" };
+import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json" with { type: "json" };
 import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
