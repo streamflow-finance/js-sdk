@@ -15,7 +15,11 @@ permissions:
   packages: write # for publish
 
 jobs:
+  tests:
+    uses: ./.github/workflows/version-tests.yml
+
   publish:
+    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,8 +70,6 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Validate Packages
-        run: npm run validate
       - name: Publish
         if: steps.tag_check.outputs.exists_tag == 'false'
         run: |

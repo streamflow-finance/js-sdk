@@ -1,0 +1,49 @@
+name: Alpha Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    uses: ./.github/workflows/version-tests.yml
+
+  publish-alpha:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: pnpm install
+      - name: Set Alpha Version
+        id: set_alpha_version
+        run: |
+          BASE_VERSION=$(node -p 'require("./lerna.json").version')
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+          ALPHA_VERSION="${BASE_VERSION}-alpha.${SHORT_SHA}.${TIMESTAMP}"
+          echo "ALPHA_VERSION=$ALPHA_VERSION" >> $GITHUB_ENV
+      - name: Version all packages
+        run: pnpm version-all ${{ env.ALPHA_VERSION }} -y
+      - name: Build packages
+        run: npm run build
+      - name: Validate NPM Token
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          npm whoami
+          rm -f .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - name: Publish Alpha
+        run: npm run publish -- --tag alpha
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
