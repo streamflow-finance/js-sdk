@@ -40,8 +40,8 @@ jobs:
         run: |
           BASE_VERSION=$(node -p 'require("./lerna.json").version')
           SHORT_SHA=$(git rev-parse --short HEAD)
-          TIMESTAMP=$(date +'%Y%m%d%H%M%S')
-          ALPHA_VERSION="${BASE_VERSION}-alpha.${SHORT_SHA}.${TIMESTAMP}"
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
           echo "ALPHA_VERSION=$ALPHA_VERSION" >> $GITHUB_ENV
       - name: Version all packages
         run: pnpm version-all ${{ env.ALPHA_VERSION }} -y
@@ -69,3 +69,39 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/github-script@v4
+        continue-on-error: true
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const comments = await github.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.data.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('Alpha versions of packages are published')
+            );
+            
+            const commentBody = `Alpha versions of packages are published 📦\n\n` +
+              `PR: #${context.issue.number}\n` +
+              `Version: ${process.env.ALPHA_VERSION}\n` +
+              `NPM: https://www.npmjs.com/package/@streamflow/common/v/${process.env.ALPHA_VERSION}`;
+            
+            if (botComment) {
+              await github.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
