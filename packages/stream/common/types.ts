@@ -1,11 +1,11 @@
 import type { Address } from "@coral-xyz/anchor";
-import { type Commitment, type ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { IChain, ICluster } from "@streamflow/common";
-import BN from "bn.js";
+import type { PublicKey, TransactionInstruction, Commitment, ConnectionConfig } from "@solana/web3.js";
+import type { IChain, ICluster } from "@streamflow/common";
+import type BN from "bn.js";
 import type { Signer } from "ethers";
 import type { default as PQueue } from "p-queue";
 
-import { Types } from "aptos";
+import type { Types } from "aptos";
 
 import type { ISuiIdParameters } from "../sui/index.js";
 

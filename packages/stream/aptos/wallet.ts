@@ -1,6 +1,7 @@
 import { type WalletContextState } from "@manahippo/aptos-wallet-adapter";
 
-import { AptosAccount, AptosClient, Types, TransactionBuilderRemoteABI, type MaybeHexString } from "aptos";
+import { AptosAccount, TransactionBuilderRemoteABI } from "aptos";
+import type { AptosClient, Types, MaybeHexString } from "aptos";
 
 export class AptosWalletWrapper<T extends WalletContextState | AptosAccount> {
   wallet: T;

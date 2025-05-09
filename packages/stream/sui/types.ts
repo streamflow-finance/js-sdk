@@ -1,5 +1,5 @@
-import { Keypair } from "@mysten/sui/cryptography";
-import { Transaction } from "@mysten/sui/transactions";
+import type { Keypair } from "@mysten/sui/cryptography";
+import type { Transaction } from "@mysten/sui/transactions";
 import type { ExecuteTransactionRequestType, SuiTransactionBlockResponseOptions } from "@mysten/sui/client";
 import BN from "bn.js";
 import type { WalletContextState } from "@suiet/wallet-kit";

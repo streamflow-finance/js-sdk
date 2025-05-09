@@ -1,12 +1,5 @@
-import {
-  AnchorError,
-  Program,
-  type ProgramAccount,
-  ProgramError,
-  parseIdlErrors,
-  translateError,
-  type Address,
-} from "@coral-xyz/anchor";
+import { Program, parseIdlErrors, translateError } from "@coral-xyz/anchor";
+import type { AnchorError, ProgramError, ProgramAccount, Address } from "@coral-xyz/anchor";
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, createTransferCheckedInstruction } from "@solana/spl-token";
 import {
   type Commitment,
@@ -36,7 +29,7 @@ import {
   deriveEscrowPDA,
 } from "@streamflow/stream/solana";
 import BN from "bn.js";
-import PQueue from "p-queue";
+import type PQueue from "p-queue";
 
 import { LAUNCHPAD_BYTE_OFFSETS, PROGRAM_ID } from "./constants.js";
 import StreamflowLaunchpadIDL from "./descriptor/idl/streamflow_launchpad.json";

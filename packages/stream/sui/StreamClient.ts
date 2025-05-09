@@ -1,4 +1,4 @@
-import BN from "bn.js";
+import type BN from "bn.js";
 import { type CoinStruct, SuiClient } from "@mysten/sui/client";
 import { Transaction, type TransactionObjectArgument } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui/utils";
@@ -135,7 +135,7 @@ export default class SuiStreamClient extends BaseStreamClient {
           metadataToRecipient[metadataId] = recipient;
         });
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const errorInfo = extractSuiErrorInfo(e.toString() ?? "Unknown error!");
       multipleStreamData.recipients.forEach((recipient, index) => {

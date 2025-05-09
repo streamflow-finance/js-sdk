@@ -26,8 +26,8 @@ jobs:
       - name: 🧪 Run Tests
         run: pnpm test
       - name: Lint Types
-        run: pnpm tsc:lint  
+        run: pnpm tsc:lint
       - name: 🔍 Validate Packages
         run: pnpm validate-packages
       - name: 📝 Validate Examples
-        run: pnpm examples 
+        run: pnpm examples

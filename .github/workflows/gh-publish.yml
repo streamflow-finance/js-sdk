@@ -17,13 +17,12 @@ permissions:
 jobs:
   tests:
     uses: ./.github/workflows/version-tests.yml
-  
+
   all-tests-pass:
     runs-on: ubuntu-latest
     needs: tests
     steps:
       - run: echo "All tests completed"
-  
 
   publish:
     needs: all-tests-pass

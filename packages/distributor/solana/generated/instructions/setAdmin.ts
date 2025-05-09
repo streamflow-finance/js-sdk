@@ -1,4 +1,5 @@
-import { TransactionInstruction, PublicKey, type AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import type { PublicKey } from "@solana/web3.js";
+import { TransactionInstruction, type AccountMeta } from "@solana/web3.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Buffer } from "buffer";

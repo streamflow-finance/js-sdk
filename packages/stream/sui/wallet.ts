@@ -1,5 +1,5 @@
 import { Keypair } from "@mysten/sui/cryptography";
-import { SuiClient, type SuiTransactionBlockResponse } from "@mysten/sui/client";
+import type { SuiClient, SuiTransactionBlockResponse } from "@mysten/sui/client";
 import type { WalletContextState } from "@suiet/wallet-kit";
 
 import { type SuiSignAndExecuteTransactionBlockInput } from "./types.js";

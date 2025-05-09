@@ -1,9 +1,9 @@
 import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Keypair } from "@solana/web3.js";
+import type { Keypair } from "@solana/web3.js";
 import { type ITransactionSolanaExt } from "@streamflow/common/solana";
 import { type OracleTypeName } from "@streamflow/stream";
-import BN from "bn.js";
+import type BN from "bn.js";
 
 import type { StreamflowLaunchpad } from "./descriptor/streamflow_launchpad.js";
 

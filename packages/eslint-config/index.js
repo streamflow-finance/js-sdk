@@ -42,6 +42,10 @@ module.exports = {
     "@typescript-eslint/naming-convention": "warn",
     "@typescript-eslint/no-shadow": "warn",
     "@typescript-eslint/ban-types": "warn",
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      { prefer: "type-imports", fixStyle: "inline-type-imports" },
+    ],
     "@typescript-eslint/explicit-module-boundary-types": "warn",
     "import/no-extraneous-dependencies": "warn",
     "@typescript-eslint/no-unused-vars": "error",

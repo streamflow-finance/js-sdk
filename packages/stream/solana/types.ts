@@ -1,17 +1,11 @@
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { type AccountInfo, PublicKey, Keypair, VersionedTransaction, TransactionInstruction } from "@solana/web3.js";
+import type { PublicKey, Keypair, VersionedTransaction, TransactionInstruction, AccountInfo } from "@solana/web3.js";
 import type { ITransactionSolanaExt } from "@streamflow/common/solana";
-import BN from "bn.js";
+import type BN from "bn.js";
 import { type IdlAccounts, type IdlTypes } from "@coral-xyz/anchor";
 
 import { buildStreamType, calculateUnlockedAmount, decodeEndTime } from "../common/contractUtils.js";
-import {
-  type AlignedStream,
-  type IRecipient,
-  type LinearStream,
-  type OracleTypeName,
-  StreamType,
-} from "../common/types.js";
+import type { StreamType, AlignedStream, IRecipient, LinearStream, OracleTypeName } from "../common/types.js";
 import { getNumberFromBN } from "../common/utils.js";
 import type { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
 import { ALIGNED_PRECISION_FACTOR_POW } from "./constants.js";

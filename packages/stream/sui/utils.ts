@@ -1,4 +1,4 @@
-import { type GetTransactionBlockParams, SuiClient, type SuiTransactionBlockResponse } from "@mysten/sui/client";
+import type { SuiClient, GetTransactionBlockParams, SuiTransactionBlockResponse } from "@mysten/sui/client";
 import pRetry from "p-retry";
 
 import { SUI_ERROR_MATCH_REGEX, SUI_MODULE_ERROR_MAP } from "./constants.js";

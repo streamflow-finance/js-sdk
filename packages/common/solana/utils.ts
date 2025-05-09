@@ -7,26 +7,26 @@ import {
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import {
-  type BlockhashWithExpiryBlockHeight,
-  type Commitment,
-  ComputeBudgetProgram,
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-  type SignatureStatus,
-  TransactionMessage,
-  VersionedTransaction,
-  type Context,
-  type RpcResponseAndContext,
-  type SimulatedTransactionResponse,
-  SendTransactionError,
-  type AccountInfo,
-} from "@solana/web3.js";
 import bs58 from "bs58";
 import PQueue from "p-queue";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  type PublicKey,
+  SendTransactionError,
+  type Transaction,
+  type TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+  type AccountInfo,
+  type BlockhashWithExpiryBlockHeight,
+  type Commitment,
+  type Connection,
+  type Context,
+  type RpcResponseAndContext,
+  type SignatureStatus,
+  type SimulatedTransactionResponse,
+} from "@solana/web3.js";
 
 import {
   type Account,

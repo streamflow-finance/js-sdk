@@ -1,4 +1,5 @@
-import { AptosAccount, Types, AptosClient } from "aptos";
+import type { Types } from "aptos";
+import { AptosAccount, AptosClient } from "aptos";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
@@ -97,7 +98,7 @@ export default class AptosStreamClient extends BaseStreamClient {
         const hash = await wallet.signAndSubmitTransaction(payload);
 
         txs.push(hash);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         errors.push({
           error: e?.toString() ?? "Unknown error!",

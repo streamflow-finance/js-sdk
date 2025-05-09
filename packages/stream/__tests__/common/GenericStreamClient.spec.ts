@@ -11,7 +11,7 @@ import {
   type SolanaStreamClientOptions,
   type SuiStreamClientOptions,
 } from "../../common/types.js";
-import { BaseStreamClient } from "../../common/BaseStreamClient.js";
+import type { BaseStreamClient } from "../../common/BaseStreamClient.js";
 
 type StreamClientOptions =
   | SolanaStreamClientOptions

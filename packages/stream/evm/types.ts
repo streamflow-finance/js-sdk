@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { BigNumber as BigNumberEvm } from "ethers";
+import type { BigNumber as BigNumberEvm } from "ethers";
 
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
 import type { LinearStream, StreamType } from "../common/types.js";

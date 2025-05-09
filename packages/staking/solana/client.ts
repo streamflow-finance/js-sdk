@@ -1,14 +1,5 @@
-import {
-  type AccountsCoder,
-  AnchorError,
-  type Idl,
-  type IdlAccounts,
-  Program,
-  type ProgramAccount,
-  ProgramError,
-  parseIdlErrors,
-  translateError,
-} from "@coral-xyz/anchor";
+import { Program, parseIdlErrors, translateError } from "@coral-xyz/anchor";
+import type { AccountsCoder, AnchorError, Idl, IdlAccounts, ProgramAccount, ProgramError } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
   type Commitment,
@@ -27,7 +18,7 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
 } from "@streamflow/common/solana";
-import PQueue from "p-queue";
+import type PQueue from "p-queue";
 
 import {
   REWARD_ENTRY_BYTE_OFFSETS,

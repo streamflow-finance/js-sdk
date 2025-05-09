@@ -1,14 +1,7 @@
 import BN from "bn.js";
-import PQueue from "p-queue";
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-  type Commitment,
-  type ConnectionConfig,
-  type MemcmpFilter,
-} from "@solana/web3.js";
+import type PQueue from "p-queue";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
+import type { TransactionInstruction, Commitment, ConnectionConfig, MemcmpFilter } from "@solana/web3.js";
 import { ICluster, type ITransactionResult } from "@streamflow/common";
 import {
   ata,
@@ -37,18 +30,18 @@ import {
   DISTRIBUTOR_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "../constants.js";
-import {
-  type IClaimData,
-  type IClawbackData,
-  type ICreateDistributorResult,
-  type IGetClaimData,
-  type IGetDistributors,
-  type ICreateSolanaExt,
-  type IInteractSolanaExt,
-  type ICreateDistributorData,
-  type ICreateAlignedDistributorData,
-  type ISearchDistributors,
-  type ICloseClaimData,
+import type {
+  IClaimData,
+  IClawbackData,
+  ICreateDistributorResult,
+  IGetClaimData,
+  IGetDistributors,
+  ICreateSolanaExt,
+  IInteractSolanaExt,
+  ICreateDistributorData,
+  ICreateAlignedDistributorData,
+  ISearchDistributors,
+  ICloseClaimData,
 } from "../types.js";
 import {
   type ClaimLockedAccounts,

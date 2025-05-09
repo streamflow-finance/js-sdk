@@ -1,5 +1,6 @@
 import BN from "bn.js";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import type { TransactionInstruction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import { getBN, getNumberFromBN, invariant } from "@streamflow/common";
 

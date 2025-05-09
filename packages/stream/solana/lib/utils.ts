@@ -1,5 +1,6 @@
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { Connection, Keypair } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
   type ConfirmationParams,
   executeTransaction,
@@ -112,7 +113,7 @@ export async function sendAndConfirmStreamRawTransaction(
   try {
     const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationParams, throttleParams);
     return { ...batchItem, signature: completedTxSignature };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     throw {
       recipient: batchItem.recipient,

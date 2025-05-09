@@ -1,6 +1,7 @@
 import { Buffer } from "buffer";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import BN from "bn.js";
+import type { PublicKey } from "@solana/web3.js";
+import { TransactionInstruction } from "@solana/web3.js";
+import type BN from "bn.js";
 
 import * as Layout from "./layout.js";
 import type { IUpdateData } from "../common/types.js";

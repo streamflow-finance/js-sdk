@@ -3,7 +3,7 @@
 import BN from "bn.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
-import PQueue from "p-queue";
+import type PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
 import {
   Connection,
@@ -11,11 +11,11 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
-  type Commitment,
-  type ConnectionConfig,
   TransactionMessage,
   VersionedTransaction,
+  type TransactionInstruction,
+  type Commitment,
+  type ConnectionConfig,
   type MemcmpFilter,
   type DataSizeFilter,
 } from "@solana/web3.js";

@@ -1,4 +1,5 @@
-import { PublicKey, Connection } from "@solana/web3.js";
+import type { Connection } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as borsh from "@coral-xyz/borsh"; // eslint-disable-line @typescript-eslint/no-unused-vars
 

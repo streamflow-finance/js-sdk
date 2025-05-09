@@ -2,7 +2,7 @@ import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { type Keypair } from "@solana/web3.js";
 import { type ITransactionSolanaExt } from "@streamflow/common/solana";
-import BN from "bn.js";
+import type BN from "bn.js";
 
 import { type RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
 import { type StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
