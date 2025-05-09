@@ -1,5 +1,6 @@
 {
   "name": "root",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamflow-finance/js-sdk.git"
@@ -25,23 +26,38 @@
     "pack": "lerna run pack",
     "test": "lerna run test",
     "lint": "lerna run lint",
+    "tsc:lint": "lerna run tsc:lint",
+    "docs:build": "lerna exec -- typedoc",
+    "validate-types": "lerna exec -- attw --pack --profile node16 .",
+    "validate-packages": "lerna exec -- publint && pnpm validate-types",
     "version-all": "lerna version --force-publish --no-git-tag-version --no-push",
-    "publish": "lerna publish from-package --yes --loglevel=verbose",
+    "publish": "pnpm validate-packages && lerna publish from-package --yes --loglevel=verbose",
     "local-publish": "lerna publish --no-git-tag-version --no-push --registry=\"http://localhost:4873/\" from-package --yes",
     "local-unpublish": "lerna exec -- npm unpublish --registry=\"http://localhost:4873/\" \"\\${LERNA_PACKAGE_NAME}@\\$(npm view \\$LERNA_PACKAGE_NAME version)\"",
     "local-unpublish-all": "lerna exec -- npm unpublish -f --registry=\"http://localhost:4873/\" \"\\${LERNA_PACKAGE_NAME}\"",
     "prepare": "husky install",
-    "convert-bn": "./scripts/convertBN.sh"
+    "convert-bn": "./scripts/convertBN.sh",
+    "examples:verify": "pnpm --filter \"./examples/*\" run verify",
+    "examples:install": "pnpm --filter \"./examples/*\" install",
+    "examples:build": "pnpm --filter \"./examples/*\" --parallel run build",
+    "examples": "pnpm examples:install && pnpm examples:build && pnpm examples:verify"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.17.4",
     "@types/eslint": "^8.56.3",
     "eslint": "^8.56.0",
+    "eslint-import-resolver-typescript": "3.8.3",
     "husky": "^8.0.0",
     "lerna": "7.4.2",
     "lint-staged": "^13.1.0",
-    "typedoc": "0.25.11",
-    "typescript": "^5.3.3",
+    "publint": "0.3.8",
+    "tsup": "^8.0.2",
+    "typedoc": "0.27.8",
+    "typescript": "^5.4.0",
     "vitest": "^2.0.5"
   },
-  "version": "4.0.1"
+  "version": "4.0.1",
+  "engines": {
+    "node": ">=18"
+  }
 }

@@ -1,10 +1,11 @@
-import { AptosAccount } from "aptos";
-import { WalletContextState } from "@manahippo/aptos-wallet-adapter";
+import type { WalletContextState } from "@manahippo/aptos-wallet-adapter";
 import BN from "bn.js";
 import { Buffer } from "buffer";
 
+import type { AptosAccount } from "aptos";
+
 import { buildStreamType, calculateUnlockedAmount } from "../common/contractUtils.js";
-import { LinearStream, StreamType } from "../common/types.js";
+import type { StreamType, LinearStream } from "../common/types.js";
 import { normalizeAptosAddress } from "./utils.js";
 import { getNumberFromBN } from "../common/utils.js";
 

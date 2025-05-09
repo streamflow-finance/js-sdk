@@ -1,11 +1,11 @@
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Keypair, PublicKey } from "@solana/web3.js";
-import { ITransactionResult } from "@streamflow/common";
-import { ITransactionSolanaExt } from "@streamflow/common/solana";
-import BN from "bn.js";
-import { IdlTypes } from "@coral-xyz/anchor";
+import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import type { Keypair, PublicKey } from "@solana/web3.js";
+import { type ITransactionResult } from "@streamflow/common";
+import { type ITransactionSolanaExt } from "@streamflow/common/solana";
+import type BN from "bn.js";
+import { type IdlTypes } from "@coral-xyz/anchor";
 
-import { AlignedDistributor as AlignedDistributorIDL } from "./descriptor/aligned_distributor.js";
+import { type AlignedDistributor as AlignedDistributorIDL } from "./descriptor/aligned_distributor.js";
 
 export type OracleType = IdlTypes<AlignedDistributorIDL>["oracleType"];
 

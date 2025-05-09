@@ -1,18 +1,19 @@
 import BN from "bn.js";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import type { TransactionInstruction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import { getBN, getNumberFromBN, invariant } from "@streamflow/common";
 
 import {
-  ICreateAlignedDistributorData,
-  AlignedDistributorData,
-  NewAlignedDistributorArgs,
-  OracleType,
-  OracleTypeName,
-} from "../types";
-import { ClawbackAccounts, NewDistributorAccounts } from "../generated/instructions";
-import BaseDistributorClient, { IInitOptions } from "./BaseDistributorClient.js";
-import { AlignedDistributor as AlignedAirdropsProgramType } from "../descriptor/aligned_distributor.js";
+  type ICreateAlignedDistributorData,
+  type AlignedDistributorData,
+  type NewAlignedDistributorArgs,
+  type OracleType,
+  type OracleTypeName,
+} from "../types.js";
+import { type ClawbackAccounts, type NewDistributorAccounts } from "../generated/instructions/index.js";
+import BaseDistributorClient, { type IInitOptions } from "./BaseDistributorClient.js";
+import { type AlignedDistributor as AlignedAirdropsProgramType } from "../descriptor/aligned_distributor.js";
 import StreamflowAlignedAirdropsIDL from "../descriptor/idl/aligned_distributor.json";
 import { ALIGNED_PRECISION_FACTOR_POW } from "../constants.js";
 import { getAlignedDistributorPda, getTestOraclePda } from "../utils.js";

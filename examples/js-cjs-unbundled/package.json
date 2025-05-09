@@ -1,0 +1,17 @@
+{
+  "name": "js-cjs-unbundled",
+  "version": "1.0.0",
+  "description": "Example of using Streamflow SDK with JavaScript, CommonJS, and no bundler",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "verify": "node src/index.js"
+  },
+  "dependencies": {
+    "@streamflow/stream": "workspace:*",
+    "@streamflow/common": "workspace:*",
+    "@streamflow/staking": "workspace:*",
+    "@streamflow/distributor": "workspace:*",
+    "@streamflow/launchpad": "workspace:*"
+  }
+}

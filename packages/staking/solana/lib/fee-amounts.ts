@@ -1,6 +1,6 @@
-import { TransferFeeConfig } from "@solana/spl-token";
-import { Connection } from "@solana/web3.js";
-import BN from "bn.js";
+import type { TransferFeeConfig } from "@solana/spl-token";
+import type { Connection } from "@solana/web3.js";
+import type BN from "bn.js";
 import { divCeilN } from "@streamflow/common";
 
 import { DEFAULT_FEE_BN, FEE_PRECISION_FACTOR_BN, SCALE_PRECISION_FACTOR, U64_MAX } from "../constants.js";

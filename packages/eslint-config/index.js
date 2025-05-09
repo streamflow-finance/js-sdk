@@ -3,42 +3,37 @@ module.exports = {
   extends: [
     "airbnb-typescript",
     "plugin:import/recommended",
+    "plugin:import/typescript",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
   ],
   plugins: ["@typescript-eslint", "import"],
   env: {
     browser: true,
     es6: true,
   },
+  settings: {
+    "import/resolver": {
+      typescript: {
+        alwaysTryTypes: true,
+      },
+    },
+  },
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: "module",
-    project: ["./tsconfig.esm.json"],
+    project: ["./tsconfig.json", "./packages/*/tsconfig.json"],
   },
   ignorePatterns: ["**/dist/**/*"],
   rules: {
-    "prettier/prettier": [
-      "error",
-      {
-        parser: "typescript",
-        endOfLine: "auto",
-        printWidth: 120,
-        tabWidth: 2,
-        arrowParens: "always",
-        bracketSpacing: true,
-        importOrder: ["<THIRD_PARTY_MODULES>", "^[./]"],
-        importOrderSeparation: true,
-        importOrderSortSpecifiers: true,
-      },
-    ],
     "react/jsx-filename-extension": "off",
     "@typescript-eslint/no-throw-literal": "off",
     "no-debugger": "warn",
     "no-console": ["warn", { allow: ["warn"] }],
     "import/prefer-default-export": "off",
     "import/no-unresolved": "warn",
+    quotes: "off",
+    "@typescript-eslint/quotes": "off",
     "no-plusplus": "off",
     "import/named": "off",
     "@typescript-eslint/no-use-before-define": "off",
@@ -47,10 +42,15 @@ module.exports = {
     "@typescript-eslint/naming-convention": "warn",
     "@typescript-eslint/no-shadow": "warn",
     "@typescript-eslint/ban-types": "warn",
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      { prefer: "type-imports", fixStyle: "inline-type-imports" },
+    ],
     "@typescript-eslint/explicit-module-boundary-types": "warn",
     "import/no-extraneous-dependencies": "warn",
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/indent": "off",
     "import/newline-after-import": "error",
     "import/order": [
       "error",
@@ -74,5 +74,25 @@ module.exports = {
         next: ["expression", "const"],
       },
     ],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "": "never",
+        js: "never",
+        jsx: "never",
+        ts: "never",
+        tsx: "never",
+      },
+    ],
   },
+  overrides: [
+    {
+      // Disable specific TypeScript rules for test files
+      files: ["**/*.spec.ts", "**/*.test.ts", "**/__tests__/**/*.ts"],
+      rules: {
+        "@typescript-eslint/no-explicit-any": "off",
+      },
+    },
+  ],
 };

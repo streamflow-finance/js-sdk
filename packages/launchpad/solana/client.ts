@@ -1,23 +1,16 @@
-import {
-  AnchorError,
-  Program,
-  ProgramAccount,
-  ProgramError,
-  parseIdlErrors,
-  translateError,
-  Address,
-} from "@coral-xyz/anchor";
+import { Program, parseIdlErrors, translateError } from "@coral-xyz/anchor";
+import type { AnchorError, ProgramError, ProgramAccount, Address } from "@coral-xyz/anchor";
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, createTransferCheckedInstruction } from "@solana/spl-token";
 import {
-  Commitment,
+  type Commitment,
   Connection,
-  ConnectionConfig,
+  type ConnectionConfig,
   PublicKey,
   TransactionInstruction,
   Keypair,
   clusterApiUrl,
 } from "@solana/web3.js";
-import { ContractError, ICluster, invariant, getBN, ITransactionResult } from "@streamflow/common";
+import { ContractError, ICluster, invariant, getBN, type ITransactionResult } from "@streamflow/common";
 import {
   buildSendThrottler,
   checkOrCreateAtaBatch,
@@ -30,27 +23,27 @@ import {
 } from "@streamflow/common/solana";
 import {
   constants as streamConstants,
-  OracleType,
+  type OracleType,
   deriveTestOraclePDA,
   deriveContractPDA,
   deriveEscrowPDA,
 } from "@streamflow/stream/solana";
 import BN from "bn.js";
-import PQueue from "p-queue";
+import type PQueue from "p-queue";
 
 import { LAUNCHPAD_BYTE_OFFSETS, PROGRAM_ID } from "./constants.js";
 import StreamflowLaunchpadIDL from "./descriptor/idl/streamflow_launchpad.json";
-import { StreamflowLaunchpad } from "./descriptor/streamflow_launchpad.js";
+import type { StreamflowLaunchpad } from "./descriptor/streamflow_launchpad.js";
 import { deriveDepositPDA, deriveLaunchpadPDA } from "./lib/derive-accounts.js";
 import {
-  DepositAccount,
-  Launchpad,
-  IInteractSolanaExt,
-  ICreateLaunchpad,
-  IDeposit,
-  IClaimDeposits,
-  IClaimAllocatedVested,
-  IFundLaunchpad,
+  type DepositAccount,
+  type Launchpad,
+  type IInteractSolanaExt,
+  type ICreateLaunchpad,
+  type IDeposit,
+  type IClaimDeposits,
+  type IClaimAllocatedVested,
+  type IFundLaunchpad,
 } from "./types.js";
 
 interface IInitOptions {
@@ -451,7 +444,7 @@ export class SolanaLaunchpadClient {
         { sendThrottler: this.sendThrottler },
       );
       return { signature };
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof Error) {
         const parsed: AnchorError | ProgramError | typeof err = translateError(err, parseIdlErrors(this.program.idl));
         if (parsed) {

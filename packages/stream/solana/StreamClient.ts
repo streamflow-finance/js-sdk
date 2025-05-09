@@ -3,7 +3,7 @@
 import BN from "bn.js";
 import bs58 from "bs58";
 import { Buffer } from "buffer";
-import PQueue from "p-queue";
+import type PQueue from "p-queue";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT } from "@solana/spl-token";
 import {
   Connection,
@@ -11,13 +11,13 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
-  Commitment,
-  ConnectionConfig,
   TransactionMessage,
   VersionedTransaction,
-  MemcmpFilter,
-  DataSizeFilter,
+  type TransactionInstruction,
+  type Commitment,
+  type ConnectionConfig,
+  type MemcmpFilter,
+  type DataSizeFilter,
 } from "@solana/web3.js";
 import {
   ata,
@@ -31,28 +31,28 @@ import {
   executeTransaction,
   executeMultipleTransactions,
   buildSendThrottler,
-  IProgramAccount,
-  ThrottleParams,
+  type IProgramAccount,
+  type ThrottleParams,
   getMultipleAccountsInfoBatched,
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
 import { getBN } from "@streamflow/common";
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 
 import {
-  MetadataRecipientHashMap,
+  type MetadataRecipientHashMap,
   Contract,
-  BatchItem,
-  ICreateStreamSolanaExt,
-  IInteractStreamSolanaExt,
-  ITopUpStreamSolanaExt,
-  ITransactionSolanaExtWithInstructions,
-  ISearchStreams,
-  ICreateStreamInstructions,
+  type BatchItem,
+  type ICreateStreamSolanaExt,
+  type IInteractStreamSolanaExt,
+  type ITopUpStreamSolanaExt,
+  type ITransactionSolanaExtWithInstructions,
+  type ISearchStreams,
+  type ICreateStreamInstructions,
   AlignedContract,
-  DecodedStream,
-  OracleType,
+  type DecodedStream,
+  type OracleType,
 } from "./types.js";
 import {
   decodeStream,
@@ -87,34 +87,34 @@ import {
   updateStreamInstruction,
 } from "./instructions.js";
 import {
-  ICancelData,
+  type ICancelData,
   ICluster,
-  ICreateMultipleStreamData,
-  ICreateResult,
-  ICreateStreamData,
-  IGetAllData,
-  IGetFeesData,
-  IGetOneData,
-  IFees,
-  IMultiTransactionResult,
-  ITopUpData,
-  ITransactionResult,
-  ITransferData,
-  IUpdateData,
-  IWithdrawData,
+  type ICreateMultipleStreamData,
+  type ICreateResult,
+  type ICreateStreamData,
+  type IGetAllData,
+  type IGetFeesData,
+  type IGetOneData,
+  type IFees,
+  type IMultiTransactionResult,
+  type ITopUpData,
+  type ITransactionResult,
+  type ITransferData,
+  type IUpdateData,
+  type IWithdrawData,
   StreamDirection,
   StreamType,
-  Stream,
-  ICreateMultiError,
-  ICreateAlignedStreamData,
-  SolanaStreamClientOptions,
+  type Stream,
+  type ICreateMultiError,
+  type ICreateAlignedStreamData,
+  type SolanaStreamClientOptions,
 } from "../common/types.js";
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
-import { IPartnerLayout } from "./instructionTypes.js";
+import type { IPartnerLayout } from "./instructionTypes.js";
 import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
-import { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
-import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
+import type { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
+import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json" with { type: "json" };
 import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
@@ -326,6 +326,10 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const metadata = !metadataPubKeys ? Keypair.generate() : undefined;
     const metadataPubKey = metadata ? metadata.publicKey : metadataPubKeys![0];
+
+    if (!metadataPubKey) {
+      throw new Error("Metadata public key is required");
+    }
 
     let tokenProgramId = streamTokenProgramId ? new PublicKey(streamTokenProgramId) : undefined;
     if (!tokenProgramId) {

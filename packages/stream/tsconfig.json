@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noUncheckedIndexedAccess": false
+  },
+  "include": [".", "tsup.config.ts", "globals.d.ts"],
+  "exclude": ["dist", "node_modules"]
+}

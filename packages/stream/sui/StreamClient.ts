@@ -1,39 +1,39 @@
-import BN from "bn.js";
-import { CoinStruct, SuiClient } from "@mysten/sui/client";
-import { Transaction, TransactionObjectArgument } from "@mysten/sui/transactions";
+import type BN from "bn.js";
+import { type CoinStruct, SuiClient } from "@mysten/sui/client";
+import { Transaction, type TransactionObjectArgument } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID, SUI_TYPE_ARG } from "@mysten/sui/utils";
 import { bcs } from "@mysten/sui/bcs";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
-  ICancelData,
+  type ICancelData,
   ICluster,
-  ICreateMultiError,
-  ICreateMultipleStreamData,
-  ICreateResult,
-  ICreateStreamData,
-  IGetFeesData,
-  IGetOneData,
-  IFees,
-  IMultiTransactionResult,
-  IRecipient,
-  ITopUpData,
-  ITransactionResult,
-  ITransferData,
-  IUpdateData,
-  IWithdrawData,
+  type ICreateMultiError,
+  type ICreateMultipleStreamData,
+  type ICreateResult,
+  type ICreateStreamData,
+  type IGetFeesData,
+  type IGetOneData,
+  type IFees,
+  type IMultiTransactionResult,
+  type IRecipient,
+  type ITopUpData,
+  type ITransactionResult,
+  type ITransferData,
+  type IUpdateData,
+  type IWithdrawData,
 } from "../common/types.js";
 import { SUI_PROGRAM_IDS, SUI_FEE_TABLE_IDS, SUI_CONFIG_IDS } from "./constants.js";
 import {
   Contract,
-  IContractCreated,
-  ICreateStreamSuiExt,
-  ITransactionSuiExt,
-  ISuiIdParameters,
-  StreamResource,
-  ClassResource,
-  FeeTableResource,
-  FeeValueResource,
+  type IContractCreated,
+  type ICreateStreamSuiExt,
+  type ITransactionSuiExt,
+  type ISuiIdParameters,
+  type StreamResource,
+  type ClassResource,
+  type FeeTableResource,
+  type FeeValueResource,
 } from "./types.js";
 import { extractSuiErrorInfo, getTransactionBlock } from "./utils.js";
 import { SuiWalletWrapper } from "./wallet.js";
@@ -135,6 +135,7 @@ export default class SuiStreamClient extends BaseStreamClient {
           metadataToRecipient[metadataId] = recipient;
         });
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const errorInfo = extractSuiErrorInfo(e.toString() ?? "Unknown error!");
       multipleStreamData.recipients.forEach((recipient, index) => {

@@ -1,0 +1,26 @@
+{
+  "name": "ts-esm-bundled",
+  "version": "1.0.0",
+  "description": "Example of using Streamflow SDK with TypeScript, ESM, and Vite bundler",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "start": "node dist/index.js",
+    "verify": "npm run build && node dist/index.js",
+    "validate-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@streamflow/common": "workspace:*",
+    "@streamflow/distributor": "workspace:*",
+    "@streamflow/launchpad": "workspace:*",
+    "@streamflow/staking": "workspace:*",
+    "@streamflow/stream": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.6.4",
+    "vite-plugin-node-polyfills": "0.17.0"
+  }
+}

@@ -1,32 +1,33 @@
-import { AptosAccount, Types, AptosClient } from "aptos";
+import type { Types } from "aptos";
+import { AptosAccount, AptosClient } from "aptos";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
-  ICancelData,
+  type ICancelData,
   ICluster,
-  ICreateMultiError,
-  ICreateMultipleStreamData,
-  ICreateResult,
-  ICreateStreamData,
-  IGetFeesData,
-  IGetOneData,
-  IFees,
-  IMultiTransactionResult,
-  IRecipient,
-  ITopUpData,
-  ITransactionResult,
-  ITransferData,
-  IUpdateData,
-  IWithdrawData,
+  type ICreateMultiError,
+  type ICreateMultipleStreamData,
+  type ICreateResult,
+  type ICreateStreamData,
+  type IGetFeesData,
+  type IGetOneData,
+  type IFees,
+  type IMultiTransactionResult,
+  type IRecipient,
+  type ITopUpData,
+  type ITransactionResult,
+  type ITransferData,
+  type IUpdateData,
+  type IWithdrawData,
 } from "../common/types.js";
 import { APTOS_PROGRAM_IDS } from "./constants.js";
 import {
-  ConfigResource,
+  type ConfigResource,
   Contract,
-  FeeTableResource,
-  ICreateStreamAptosExt,
-  ITransactionAptosExt,
-  StreamResource,
+  type FeeTableResource,
+  type ICreateStreamAptosExt,
+  type ITransactionAptosExt,
+  type StreamResource,
 } from "./types.js";
 import { AptosWalletWrapper } from "./wallet.js";
 import { extractAptosErrorCode } from "./utils.js";
@@ -55,13 +56,19 @@ export default class AptosStreamClient extends BaseStreamClient {
   public async create(streamData: ICreateStreamData, { senderWallet }: ICreateStreamAptosExt): Promise<ICreateResult> {
     const wallet = new AptosWalletWrapper(senderWallet, this.client);
 
-    const [metadataId, payload] = this.generateMultiPayloads(
+    const result = this.generateMultiPayloads(
       {
         ...streamData,
         recipients: [{ ...streamData }],
       },
       wallet,
     )[0];
+
+    if (!result) {
+      throw new Error("Failed to generate payload");
+    }
+
+    const [metadataId, payload] = result;
 
     const hash = await wallet.signAndSubmitTransaction(payload);
 
@@ -85,12 +92,13 @@ export default class AptosStreamClient extends BaseStreamClient {
     const errors: ICreateMultiError[] = [];
 
     for (let i = 0; i < payloads.length; i++) {
-      const [metadataId, payload] = payloads[i];
+      const [metadataId, payload] = payloads[i]!;
       const recipient = multipleStreamData.recipients[i];
       try {
         const hash = await wallet.signAndSubmitTransaction(payload);
 
         txs.push(hash);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         errors.push({
           error: e?.toString() ?? "Unknown error!",
@@ -276,6 +284,7 @@ export default class AptosStreamClient extends BaseStreamClient {
   // Utility function to prepare transaction payloads for multiple recipients.
   private generateMultiPayloads(
     multipleStreamData: ICreateMultipleStreamData,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     wallet: AptosWalletWrapper<any>,
   ): [string, Types.TransactionPayload_EntryFunctionPayload][] {
     return multipleStreamData.recipients.map((recipient) => {

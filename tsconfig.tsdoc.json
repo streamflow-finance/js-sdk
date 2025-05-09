@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "Preserve",
+    "target": "es2022",
+    "moduleDetection": "force",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "lib": ["es2022"],
+    "noEmit": false,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "./**/*.d.ts", "*.ts"],
+  "exclude": ["dist", "node_modules", "examples"]
+}

@@ -4,31 +4,31 @@ import { toChecksumAddress } from "ethereum-checksum-address";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
 import {
-  ICancelData,
+  type ICancelData,
   IChain,
   ICluster,
-  ICreateMultipleStreamData,
-  ICreateResult,
-  ICreateStreamData,
-  IGetFeesData,
-  IGetAllData,
-  IGetOneData,
-  IFees,
-  IMultiTransactionResult,
-  IRecipient,
-  ITopUpData,
-  ITransactionResult,
-  ITransferData,
-  IUpdateData,
-  IWithdrawData,
-  Stream,
+  type ICreateMultipleStreamData,
+  type ICreateResult,
+  type ICreateStreamData,
+  type IGetFeesData,
+  type IGetAllData,
+  type IGetOneData,
+  type IFees,
+  type IMultiTransactionResult,
+  type IRecipient,
+  type ITopUpData,
+  type ITransactionResult,
+  type ITransferData,
+  type IUpdateData,
+  type IWithdrawData,
+  type Stream,
   StreamDirection,
 } from "../common/types.js";
 import { BNB_PROGRAM_IDS, ETHEREUM_PROGRAM_IDS, POLYGON_PROGRAM_IDS } from "./constants.js";
 import abi from "./abi.js";
 import ercAbi from "./ercAbi.js";
 import { BASE_FEE, WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
-import { EvmContract, FeesAbiResult, StreamAbiResult } from "./types.js";
+import { EvmContract, type FeesAbiResult, type StreamAbiResult } from "./types.js";
 import { extractEvmErrorCode } from "./utils.js";
 
 export default class EvmStreamClient extends BaseStreamClient {
@@ -128,10 +128,12 @@ export default class EvmStreamClient extends BaseStreamClient {
 
     const confirmations = await Promise.allSettled(results.map((result) => result.wait()));
     const successes = confirmations
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((el): el is PromiseFulfilledResult<any> => el.status === "fulfilled")
       .map((el) => el.value);
     signatures.push(...successes.map((el) => el.hash));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadatas = confirmations.map((result: PromiseSettledResult<any>) =>
       result.status === "fulfilled"
         ? this.formatMetadataId(
@@ -280,6 +282,7 @@ export default class EvmStreamClient extends BaseStreamClient {
   }
 
   // Utility function to prepare transaction payloads for multiple recipients.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async generateMultiPayloads(multipleStreamData: ICreateMultipleStreamData): Promise<any[]> {
     const sender = await this.signer.getAddress();
     return multipleStreamData.recipients.map((recipient) => {
@@ -308,6 +311,7 @@ export default class EvmStreamClient extends BaseStreamClient {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private getFeeParams(multipleStreamData: ICreateMultipleStreamData): any[] {
     return [
       multipleStreamData.recipients[0].amount.toString(),

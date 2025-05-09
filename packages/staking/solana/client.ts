@@ -1,17 +1,14 @@
-import {
-  AccountsCoder,
-  AnchorError,
-  Idl,
-  IdlAccounts,
-  Program,
-  ProgramAccount,
-  ProgramError,
-  parseIdlErrors,
-  translateError,
-} from "@coral-xyz/anchor";
+import { Program, parseIdlErrors, translateError } from "@coral-xyz/anchor";
+import type { AccountsCoder, AnchorError, Idl, IdlAccounts, ProgramAccount, ProgramError } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { Commitment, Connection, ConnectionConfig, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { ContractError, ICluster, ITransactionResult, invariant } from "@streamflow/common";
+import {
+  type Commitment,
+  Connection,
+  type ConnectionConfig,
+  PublicKey,
+  type TransactionInstruction,
+} from "@solana/web3.js";
+import { ContractError, ICluster, type ITransactionResult, invariant } from "@streamflow/common";
 import {
   buildSendThrottler,
   checkOrCreateAtaBatch,
@@ -21,7 +18,7 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
 } from "@streamflow/common/solana";
-import PQueue from "p-queue";
+import type PQueue from "p-queue";
 
 import {
   REWARD_ENTRY_BYTE_OFFSETS,
@@ -32,12 +29,12 @@ import {
   STAKE_POOL_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "./constants.js";
-import { FeeManager as FeeManagerProgramType } from "./descriptor/fee_manager.js";
+import { type FeeManager as FeeManagerProgramType } from "./descriptor/fee_manager.js";
 import FeeManagerIDL from "./descriptor/idl/fee_manager.json";
 import RewardPoolIDL from "./descriptor/idl/reward_pool.json";
 import StakePoolIDL from "./descriptor/idl/stake_pool.json";
-import { RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
-import { StakePool as StakePoolProgramType } from "./descriptor/stake_pool.js";
+import { type RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
+import { type StakePool as StakePoolProgramType } from "./descriptor/stake_pool.js";
 import {
   deriveConfigPDA,
   deriveFeeValuePDA,
@@ -47,7 +44,7 @@ import {
   deriveStakeMintPDA,
   deriveStakePoolPDA,
 } from "./lib/derive-accounts.js";
-import {
+import type {
   ClaimRewardPoolArgs,
   CreateRewardEntryArgs,
   CreateRewardPoolArgs,
@@ -549,7 +546,7 @@ export class SolanaStakingClient {
         { sendThrottler: this.sendThrottler },
       );
       return { signature };
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof Error) {
         const parsed: AnchorError | ProgramError | typeof err = translateError(
           err,

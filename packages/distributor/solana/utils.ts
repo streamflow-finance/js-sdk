@@ -1,11 +1,11 @@
-import { TransferFeeConfig } from "@solana/spl-token";
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import { type TransferFeeConfig } from "@solana/spl-token";
+import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Buffer } from "buffer";
-import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { Connection, Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { ContractError, divCeilN } from "@streamflow/common";
-import { ConfirmationParams, signAndExecuteTransaction, ThrottleParams } from "@streamflow/common/solana";
+import { type ConfirmationParams, signAndExecuteTransaction, type ThrottleParams } from "@streamflow/common/solana";
 
-import { fromTxError } from "./generated/errors/index.js";
 import {
   ONE_IN_BASIS_POINTS,
   ALIGNED_DISTRIBUTOR_PREFIX,
@@ -13,6 +13,7 @@ import {
   DISTRIBUTOR_PREFIX,
   CLAIM_STATUS_PREFIX,
 } from "./constants.js";
+import { fromTxError } from "./generated/errors/index.js";
 
 export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
@@ -59,7 +60,7 @@ export async function wrappedSignAndExecuteTransaction(
 ): Promise<string> {
   try {
     return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams, throttleParams);
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof Error) {
       const parsed = fromTxError(err);
       if (parsed) {

@@ -40,6 +40,7 @@ export async function handleContractError<T>(
 ): Promise<T> {
   try {
     return await func();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     if (err instanceof Error) {
       if (callback) {

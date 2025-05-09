@@ -1,8 +1,8 @@
-import { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 
-import { PROGRAM_ID } from "../programId";
-import * as anchor from "./anchor";
-import * as custom from "./custom";
+import { PROGRAM_ID } from "../programId.js";
+import * as anchor from "./anchor.js";
+import * as custom from "./custom.js";
 
 export function fromCode(code: number, logs?: string[]): custom.CustomError | anchor.AnchorError | null {
   return code >= 6000 ? custom.fromCode(code, logs) : anchor.fromCode(code, logs);
@@ -41,6 +41,7 @@ export function fromTxError(
 
   let errorCode: number;
   try {
+    // @ts-ignore undefined
     errorCode = parseInt(codeRaw, 16);
   } catch (parseErr) {
     return null;

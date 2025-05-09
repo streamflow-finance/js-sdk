@@ -1,12 +1,12 @@
-import { Address, type IdlAccounts } from "@coral-xyz/anchor";
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Keypair } from "@solana/web3.js";
-import { ITransactionSolanaExt } from "@streamflow/common/solana";
-import BN from "bn.js";
+import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
+import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import { type Keypair } from "@solana/web3.js";
+import { type ITransactionSolanaExt } from "@streamflow/common/solana";
+import type BN from "bn.js";
 
-import { RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
-import { StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
-import { FeeManager as FeeManagerIDL } from "./descriptor/fee_manager.js";
+import { type RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
+import { type StakePool as StakePoolIDL } from "./descriptor/stake_pool.js";
+import { type FeeManager as FeeManagerIDL } from "./descriptor/fee_manager.js";
 
 export type StakePool = IdlAccounts<StakePoolIDL>["stakePool"];
 export type StakeEntry = IdlAccounts<StakePoolIDL>["stakeEntry"];

@@ -2,13 +2,13 @@ import * as BufferLayout from "@solana/buffer-layout";
 
 import { CREATE_PARAMS_PADDING } from "./constants.js";
 import {
-  ICreateStreamLayout,
-  ICreateUncheckedStreamLayout,
-  IPartnerLayout,
-  IStreamLayout,
-  ITopupStreamLayout,
-  IUpdateStreamLayout,
-  IWithdrawStreamLayout,
+  type ICreateStreamLayout,
+  type ICreateUncheckedStreamLayout,
+  type IPartnerLayout,
+  type IStreamLayout,
+  type ITopupStreamLayout,
+  type IUpdateStreamLayout,
+  type IWithdrawStreamLayout,
 } from "./instructionTypes.js";
 
 /**
@@ -153,6 +153,7 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
   } else {
     structs.push(BufferLayout.u8("amount_per_period_exists"));
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return BufferLayout.struct<any>(structs).encode(
     {
       enable_automatic_withdrawal_exists: values.enable_automatic_withdrawal ? 1 : 0,
