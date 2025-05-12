@@ -40,6 +40,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: pnpm install
+      - name: 📦 Build packages
+        run: pnpm build
       - name: Git Identity
         run: |
           git config --global user.name 'github-actions[bot]'
