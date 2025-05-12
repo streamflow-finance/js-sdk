@@ -1,7 +1,12 @@
-import { TransactionInstruction } from "@solana/web3.js";
+import { type TransactionInstruction } from "@solana/web3.js";
 
-import { ICreateDistributorData } from "../types";
-import { ClawbackAccounts, NewDistributorAccounts, clawback, newDistributor } from "../generated/instructions";
+import { type ICreateDistributorData } from "../types.js";
+import {
+  type ClawbackAccounts,
+  type NewDistributorAccounts,
+  clawback,
+  newDistributor,
+} from "../generated/instructions/index.js";
 import BaseDistributorClient from "./BaseDistributorClient.js";
 
 export default class SolanaDistributorClient extends BaseDistributorClient {

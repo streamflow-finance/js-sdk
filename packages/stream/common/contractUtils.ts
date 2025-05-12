@@ -1,6 +1,12 @@
 import BN from "bn.js";
 
-import { AlignedStream, ICreateAlignedStreamData, ICreateStreamData, Stream, StreamType } from "./types.js";
+import {
+  type AlignedStream,
+  type ICreateAlignedStreamData,
+  type ICreateStreamData,
+  type Stream,
+  StreamType,
+} from "./types.js";
 import { MAX_SAFE_UNIX_TIME_VALUE } from "./constants.js";
 
 interface ICalculateUnlockedAmount {

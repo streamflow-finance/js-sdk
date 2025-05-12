@@ -1,16 +1,17 @@
-import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
+import type { Connection, Keypair } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
-  ConfirmationParams,
+  type ConfirmationParams,
   executeTransaction,
   isSignerKeypair,
   isSignerWallet,
-  ThrottleParams,
+  type ThrottleParams,
 } from "@streamflow/common/solana";
 import BN from "bn.js";
 
 import { streamLayout } from "../layout.js";
-import { DecodedStream, BatchItem, BatchItemResult } from "../types.js";
+import type { DecodedStream, BatchItem, BatchItemResult } from "../types.js";
 import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "../constants.js";
 
 const decoder = new TextDecoder("utf-8");
@@ -112,6 +113,7 @@ export async function sendAndConfirmStreamRawTransaction(
   try {
     const completedTxSignature = await executeTransaction(connection, batchItem.tx, confirmationParams, throttleParams);
     return { ...batchItem, signature: completedTxSignature };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     throw {
       recipient: batchItem.recipient,

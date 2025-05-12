@@ -1,4 +1,4 @@
-import { TransactionInstruction } from "@solana/web3.js";
+import { type TransactionInstruction } from "@solana/web3.js";
 
 export interface ITransactionResult {
   ixs: TransactionInstruction[];

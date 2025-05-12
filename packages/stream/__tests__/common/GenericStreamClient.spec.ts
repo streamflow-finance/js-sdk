@@ -4,14 +4,14 @@ import { describe, expect, test } from "vitest";
 import { StreamflowAptos, StreamflowEVM, StreamflowSolana, StreamflowSui } from "../../index.js";
 import { default as GenericStreamClient } from "../../common/GenericStreamClient.js";
 import {
-  AptosStreamClientOptions,
-  EvmStreamClientOptions,
+  type AptosStreamClientOptions,
+  type EvmStreamClientOptions,
   IChain,
   ICluster,
-  SolanaStreamClientOptions,
-  SuiStreamClientOptions,
+  type SolanaStreamClientOptions,
+  type SuiStreamClientOptions,
 } from "../../common/types.js";
-import { BaseStreamClient } from "../../common/BaseStreamClient.js";
+import type { BaseStreamClient } from "../../common/BaseStreamClient.js";
 
 type StreamClientOptions =
   | SolanaStreamClientOptions

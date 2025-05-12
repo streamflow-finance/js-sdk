@@ -1,0 +1,129 @@
+name: Alpha Release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  check-commit-message:
+    runs-on: ubuntu-latest
+    outputs:
+      skip_alpha: ${{ steps.check_commit.outputs.skip_alpha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Check PR head commit message
+        id: check_commit
+        run: |
+          message=$(git log -1 --pretty=%B | head -n 1)
+          echo "Checking commit message: \"$message\""
+          if [[ "$message" == *'[skip alpha]'* ]]; then
+            echo "Found '[skip alpha]'. Setting skip_alpha=true"
+            echo "skip_alpha=true" >> $GITHUB_OUTPUT
+          else
+            echo "Did not find '[skip alpha]'. Setting skip_alpha=false"
+            echo "skip_alpha=false" >> $GITHUB_OUTPUT
+          fi
+  tests:
+    if: startsWith(github.head_ref, 'alpha/') && needs.check-commit-message.outputs.skip_alpha != 'true'
+    needs: check-commit-message
+    uses: ./.github/workflows/version-tests.yml
+
+  all-tests-pass:
+    if: startsWith(github.head_ref, 'alpha/') && needs.check-commit-message.outputs.skip_alpha != 'true'
+    runs-on: ubuntu-latest
+    needs: [tests, check-commit-message]
+    steps:
+      - run: echo "All tests completed"
+
+  publish-alpha:
+    if: startsWith(github.head_ref, 'alpha/') && needs.check-commit-message.outputs.skip_alpha != 'true'
+    needs: [all-tests-pass, check-commit-message]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+          registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: pnpm install
+      - name: Set Alpha Version
+        id: set_alpha_version
+        run: |
+          BASE_VERSION=$(node -p 'require("./lerna.json").version')
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
+          echo "ALPHA_VERSION=$ALPHA_VERSION" >> $GITHUB_ENV
+      - name: Version all packages
+        run: pnpm version-all ${{ env.ALPHA_VERSION }} -y
+      - name: Git status
+        run: git status
+      - name: Commit version changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "chore: version bump to ${{ env.ALPHA_VERSION }} [skip ci]" --no-verify || echo "No changes to commit"
+      - name: Git status after
+        run: git status
+      - name: Build packages
+        run: pnpm build
+      - name: Validate NPM Token
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          npm whoami
+          rm -f .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - name: Publish Alpha
+        run: npm run publish -- --dist-tag alpha
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/github-script@v4
+        continue-on-error: true
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const comments = await github.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const botComment = comments.data.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('Alpha versions of packages are published')
+            );
+
+            const commentBody = `Alpha versions of packages are published 📦\n\n` +
+              `PR: #${context.issue.number}\n` +
+              `Version: ${process.env.ALPHA_VERSION}\n` +
+              `NPM: https://www.npmjs.com/package/@streamflow/common/v/${process.env.ALPHA_VERSION}`;
+
+            if (botComment) {
+              await github.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }

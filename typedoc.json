@@ -2,5 +2,10 @@
   "entryPoints": ["packages/*"],
   "name": "Streamflow SDK",
   "entryPointStrategy": "packages",
-  "includeVersion": false
+  "includeVersion": false,
+  "exclude": ["examples/*"],
+  "tsconfig": "./tsconfig.tsdoc.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true
+  }
 }

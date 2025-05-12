@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "change_authority",
-      "discriminator": [
-        50,
-        106,
-        66,
-        104,
-        99,
-        118,
-        145,
-        88
-      ],
+      "discriminator": [50, 106, 66, 104, 99, 118, 145, 88],
       "accounts": [
         {
           "name": "config",
@@ -27,23 +18,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
         },
         {
           "name": "authority",
-          "docs": [
-            "authority"
-          ],
+          "docs": ["authority"],
           "signer": true
         },
         {
@@ -54,16 +36,7 @@
     },
     {
       "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
       "accounts": [
         {
           "name": "config",
@@ -72,23 +45,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
         },
         {
           "name": "authority",
-          "docs": [
-            "authority"
-          ],
+          "docs": ["authority"],
           "writable": true,
           "signer": true,
           "address": "ACYtYsL4KYtJzD53wqyifqad2D8224kamcngYPgSy3t"
@@ -102,16 +66,7 @@
     },
     {
       "name": "remove_fee",
-      "discriminator": [
-        190,
-        227,
-        105,
-        10,
-        30,
-        161,
-        81,
-        212
-      ],
+      "discriminator": [190, 227, 105, 10, 30, 161, 81, 212],
       "accounts": [
         {
           "name": "fee_value",
@@ -120,17 +75,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  102,
-                  101,
-                  101,
-                  45,
-                  118,
-                  97,
-                  108,
-                  117,
-                  101
-                ]
+                "value": [102, 101, 101, 45, 118, 97, 108, 117, 101]
               },
               {
                 "kind": "account",
@@ -145,23 +90,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
         },
         {
           "name": "authority",
-          "docs": [
-            "authority"
-          ],
+          "docs": ["authority"],
           "writable": true,
           "signer": true
         },
@@ -177,16 +113,7 @@
     },
     {
       "name": "update_config",
-      "discriminator": [
-        29,
-        158,
-        252,
-        191,
-        10,
-        83,
-        219,
-        99
-      ],
+      "discriminator": [29, 158, 252, 191, 10, 83, 219, 99],
       "accounts": [
         {
           "name": "config",
@@ -195,23 +122,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
         },
         {
           "name": "authority",
-          "docs": [
-            "authority"
-          ],
+          "docs": ["authority"],
           "signer": true
         },
         {
@@ -230,16 +148,7 @@
     },
     {
       "name": "write_fee",
-      "discriminator": [
-        80,
-        12,
-        148,
-        143,
-        16,
-        120,
-        24,
-        48
-      ],
+      "discriminator": [80, 12, 148, 143, 16, 120, 24, 48],
       "accounts": [
         {
           "name": "fee_value",
@@ -248,17 +157,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  102,
-                  101,
-                  101,
-                  45,
-                  118,
-                  97,
-                  108,
-                  117,
-                  101
-                ]
+                "value": [102, 101, 101, 45, 118, 97, 108, 117, 101]
               },
               {
                 "kind": "account",
@@ -273,23 +172,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
         },
         {
           "name": "authority",
-          "docs": [
-            "authority"
-          ],
+          "docs": ["authority"],
           "writable": true,
           "signer": true
         },
@@ -312,29 +202,11 @@
   "accounts": [
     {
       "name": "Config",
-      "discriminator": [
-        155,
-        12,
-        170,
-        224,
-        30,
-        250,
-        204,
-        130
-      ]
+      "discriminator": [155, 12, 170, 224, 30, 250, 204, 130]
     },
     {
       "name": "FeeValue",
-      "discriminator": [
-        10,
-        188,
-        89,
-        64,
-        4,
-        183,
-        231,
-        0
-      ]
+      "discriminator": [10, 188, 89, 64, 4, 183, 231, 0]
     }
   ],
   "errors": [
@@ -357,52 +229,33 @@
         "fields": [
           {
             "name": "authority",
-            "docs": [
-              "Fee Manager authority"
-            ],
+            "docs": ["Fee Manager authority"],
             "type": "pubkey"
           },
           {
             "name": "streamflow_fee",
-            "docs": [
-              "Default fee"
-            ],
+            "docs": ["Default fee"],
             "type": "u64"
           },
           {
             "name": "_buffer_1",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           },
           {
             "name": "_buffer_2",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           },
           {
             "name": "_buffer_3",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           }
         ]
@@ -419,14 +272,9 @@
           },
           {
             "name": "_buffer",
-            "docs": [
-              "Buffer for additional fields"
-            ],
+            "docs": ["Buffer for additional fields"],
             "type": {
-              "array": [
-                "u8",
-                64
-              ]
+              "array": ["u8", 64]
             }
           }
         ]

@@ -1,8 +1,8 @@
-import { GetTransactionBlockParams, SuiClient, SuiTransactionBlockResponse } from "@mysten/sui/client";
+import type { SuiClient, GetTransactionBlockParams, SuiTransactionBlockResponse } from "@mysten/sui/client";
 import pRetry from "p-retry";
 
 import { SUI_ERROR_MATCH_REGEX, SUI_MODULE_ERROR_MAP } from "./constants.js";
-import { SuiErrorInfo } from "./types.js";
+import type { SuiErrorInfo } from "./types.js";
 
 export function extractSuiErrorInfo(errorText: string): SuiErrorInfo {
   const error: SuiErrorInfo = { text: errorText };

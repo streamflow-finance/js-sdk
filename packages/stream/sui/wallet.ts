@@ -1,8 +1,8 @@
 import { Keypair } from "@mysten/sui/cryptography";
-import { WalletContextState } from "@suiet/wallet-kit";
-import { SuiClient, SuiTransactionBlockResponse } from "@mysten/sui/client";
+import type { SuiClient, SuiTransactionBlockResponse } from "@mysten/sui/client";
+import type { WalletContextState } from "@suiet/wallet-kit";
 
-import { SuiSignAndExecuteTransactionBlockInput } from "./types.js";
+import { type SuiSignAndExecuteTransactionBlockInput } from "./types.js";
 
 /**
  * Utility function to check if the transaction initiator is a Wallet object
