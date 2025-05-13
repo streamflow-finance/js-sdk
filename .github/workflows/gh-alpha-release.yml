@@ -2,48 +2,64 @@ name: Alpha Release
 
 on:
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number (for manual runs)'
+        required: true
   pull_request:
     branches:
       - master
 
 jobs:
-  check-commit-message:
+  resolve-alpha:
     runs-on: ubuntu-latest
     outputs:
-      skip_alpha: ${{ steps.check_commit.outputs.skip_alpha }}
+      alpha_version: ${{ steps.set_alpha_version.outputs.alpha_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-      - name: Check PR head commit message
-        id: check_commit
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+      - name: Resolve alpha version
+        id: set_alpha_version
         run: |
-          message=$(git log -1 --pretty=%B | head -n 1)
-          echo "Checking commit message: \"$message\""
-          if [[ "$message" == *'[skip alpha]'* ]]; then
-            echo "Found '[skip alpha]'. Setting skip_alpha=true"
-            echo "skip_alpha=true" >> $GITHUB_OUTPUT
-          else
-            echo "Did not find '[skip alpha]'. Setting skip_alpha=false"
-            echo "skip_alpha=false" >> $GITHUB_OUTPUT
+          BASE_VERSION=$(node -p 'require("./lerna.json").version')
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          ALPHA_VERSION=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.head_ref }}"
+            if [[ "$BRANCH" == alpha/* ]]; then
+              message=$(git log -1 --pretty=%B | head -n 1)
+              if [[ "$message" != *'[skip alpha]'* ]]; then
+                PR_NUMBER="${{ github.event.pull_request.number }}"
+                ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
+              fi
+            fi
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            if [ -n "$PR_NUMBER" ]; then
+              ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
+            fi
           fi
+          echo "alpha_version=$ALPHA_VERSION" >> $GITHUB_OUTPUT
+          echo "ALPHA_VERSION=$ALPHA_VERSION"
+
   tests:
-    if: startsWith(github.head_ref, 'alpha/') && needs.check-commit-message.outputs.skip_alpha != 'true'
-    needs: check-commit-message
+    if: needs.resolve-alpha.outputs.alpha_version != ''
+    needs: resolve-alpha
     uses: ./.github/workflows/version-tests.yml
 
   all-tests-pass:
-    if: startsWith(github.head_ref, 'alpha/') && needs.check-commit-message.outputs.skip_alpha != 'true'
+    if: needs.resolve-alpha.outputs.alpha_version != ''
     runs-on: ubuntu-latest
-    needs: [tests, check-commit-message]
+    needs: [tests, resolve-alpha]
     steps:
       - run: echo "All tests completed"
 
   publish-alpha:
-    if: startsWith(github.head_ref, 'alpha/') && needs.check-commit-message.outputs.skip_alpha != 'true'
-    needs: [all-tests-pass, check-commit-message]
+    if: needs.resolve-alpha.outputs.alpha_version != ''
     runs-on: ubuntu-latest
+    needs: [all-tests-pass, resolve-alpha]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -57,16 +73,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: pnpm install
-      - name: Set Alpha Version
-        id: set_alpha_version
-        run: |
-          BASE_VERSION=$(node -p 'require("./lerna.json").version')
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
-          echo "ALPHA_VERSION=$ALPHA_VERSION" >> $GITHUB_ENV
       - name: Version all packages
-        run: pnpm version-all ${{ env.ALPHA_VERSION }} -y
+        run: pnpm version-all ${{ needs.resolve-alpha.outputs.alpha_version }} -y
       - name: Git status
         run: git status
       - name: Commit version changes
@@ -74,7 +82,7 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m "chore: version bump to ${{ env.ALPHA_VERSION }} [skip ci]" --no-verify || echo "No changes to commit"
+          git commit -m "chore: version bump to ${{ needs.resolve-alpha.outputs.alpha_version }} [skip ci]" --no-verify || echo "No changes to commit"
       - name: Git status after
         run: git status
       - name: Build packages
