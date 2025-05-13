@@ -428,7 +428,7 @@ export class SolanaLaunchpadClient {
       ixs,
       extParams.invoker.publicKey,
       this.getCommitment(),
-      ...partialSigners,
+      partialSigners,
     );
 
     try {

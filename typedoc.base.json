@@ -1,6 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "includeVersion": true,
+  "excludeInternal": true,
   "tsconfig": "./tsconfig.tsdoc.json",
   "compilerOptions": {
     "noUncheckedIndexedAccess": true

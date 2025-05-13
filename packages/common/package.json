@@ -24,6 +24,14 @@
       "import": "./dist/esm/solana/index.js",
       "require": "./dist/cjs/solana/index.cjs"
     },
+    "./solana/rpc": {
+      "types": {
+        "import": "./dist/esm/solana/rpc/index.d.ts",
+        "require": "./dist/cjs/solana/rpc/index.d.cts"
+      },
+      "import": "./dist/esm/solana/rpc/index.js",
+      "require": "./dist/cjs/solana/rpc/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

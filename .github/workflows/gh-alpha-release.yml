@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       alpha_version: ${{ steps.set_alpha_version.outputs.alpha_version }}
+      pr_number: ${{ steps.set_alpha_version.outputs.pr_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,6 +27,7 @@ jobs:
           BASE_VERSION=$(node -p 'require("./lerna.json").version')
           SHORT_SHA=$(git rev-parse --short HEAD)
           ALPHA_VERSION=""
+          PR_NUMBER=""
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BRANCH="${{ github.head_ref }}"
             if [[ "$BRANCH" == alpha/* ]]; then
@@ -42,7 +44,9 @@ jobs:
             fi
           fi
           echo "alpha_version=$ALPHA_VERSION" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "ALPHA_VERSION=$ALPHA_VERSION"
+          echo "PR_NUMBER=$PR_NUMBER"
 
   tests:
     if: needs.resolve-alpha.outputs.alpha_version != ''
@@ -99,15 +103,25 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/github-script@v4
+      - name: Add comment to PR
+        uses: actions/github-script@v4
         continue-on-error: true
+        env:
+          PR_NUMBER: ${{ needs.resolve-alpha.outputs.pr_number }}
+          ALPHA_VERSION: ${{ needs.resolve-alpha.outputs.alpha_version }}
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            const prNumber = process.env.PR_NUMBER || (context.issue && context.issue.number);
+            const alphaVersion = process.env.ALPHA_VERSION;
+            if (!prNumber) {
+              core.warning('No PR number available to comment on.');
+              return;
+            }
             const comments = await github.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number
+              issue_number: prNumber
             });
 
             const botComment = comments.data.find(comment => 
@@ -116,9 +130,9 @@ jobs:
             );
 
             const commentBody = `Alpha versions of packages are published 📦\n\n` +
-              `PR: #${context.issue.number}\n` +
-              `Version: ${process.env.ALPHA_VERSION}\n` +
-              `NPM: https://www.npmjs.com/package/@streamflow/common/v/${process.env.ALPHA_VERSION}`;
+              `PR: #${prNumber}\n` +
+              `Version: ${alphaVersion}\n` +
+              `NPM: https://www.npmjs.com/package/@streamflow/common/v/${alphaVersion}`;
 
             if (botComment) {
               await github.issues.updateComment({
@@ -131,7 +145,7 @@ jobs:
               await github.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: prNumber,
                 body: commentBody
               });
             }
