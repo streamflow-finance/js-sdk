@@ -20,6 +20,7 @@ dist/
 packages/.DS_Store
 *.tgz
 docs/
+!docs/CNAME
 
 # Bundlers
 vite.config.ts.timestamp-*
