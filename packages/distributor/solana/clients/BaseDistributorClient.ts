@@ -5,7 +5,7 @@ import {
   getTransferFeeConfig,
   NATIVE_MINT,
 } from "@solana/spl-token";
-import type { Commitment, ConnectionConfig, MemcmpFilter, TransactionInstruction } from "@solana/web3.js";
+import type { AccountInfo, Commitment, ConnectionConfig, MemcmpFilter, TransactionInstruction } from "@solana/web3.js";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import { ICluster, invariant, type ITransactionResult } from "@streamflow/common";
 import {
@@ -25,7 +25,10 @@ import {
 import BN from "bn.js";
 import bs58 from "bs58";
 import type PQueue from "p-queue";
+import { Program, type AccountsCoder, type Idl, type IdlAccounts } from "@coral-xyz/anchor";
 
+import MerkleDistributorIDL from "../descriptor/idl/merkle_distributor.json";
+import type { MerkleDistributor as MerkleDistributorProgramType } from "../descriptor/merkle_distributor.js";
 import {
   AIRDROP_CLAIM_FEE,
   DISTRIBUTOR_ADMIN_OFFSET,
@@ -33,7 +36,7 @@ import {
   DISTRIBUTOR_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "../constants.js";
-import { ClaimStatus, MerkleDistributor } from "../generated/accounts/index.js";
+import { MerkleDistributor } from "../generated/accounts/index.js";
 import { closeClaim, type CloseClaimAccounts, type CloseClaimArgs } from "../generated/instructions/closeClaim.js";
 import {
   claimLocked,
@@ -46,6 +49,8 @@ import {
   type NewDistributorArgs,
 } from "../generated/instructions/index.js";
 import type {
+  ClaimStatus,
+  CompressedClaimStatus,
   IClaimData,
   IClawbackData,
   ICloseClaimData,
@@ -57,6 +62,7 @@ import type {
   IGetDistributors,
   IInteractSolanaExt,
   ISearchDistributors,
+  MerkleDistributorAccountTypes,
 } from "../types.js";
 import {
   calculateAmountWithTransferFees,
@@ -84,6 +90,8 @@ export default abstract class BaseDistributorClient {
 
   protected sendThrottler: PQueue;
 
+  public merkleDistributorProgram: Program<MerkleDistributorProgramType>;
+
   public constructor({
     clusterUrl,
     cluster = ICluster.Mainnet,
@@ -96,6 +104,10 @@ export default abstract class BaseDistributorClient {
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
+    const merkleDistributorProgram = {
+      ...MerkleDistributorIDL,
+    } as MerkleDistributorProgramType;
+    this.merkleDistributorProgram = new Program(merkleDistributorProgram, { connection: this.connection });
   }
 
   protected abstract getNewDistributorInstruction(
@@ -317,7 +329,7 @@ export default abstract class BaseDistributorClient {
       extParams.invoker.publicKey,
     );
     const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
-    const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
+    const claimStatus = await this.getClaim(claimStatusPublicKey);
 
     const accounts: ClaimLockedAccounts | NewClaimAccounts = {
       distributor: distributorPublicKey,
@@ -494,11 +506,26 @@ export default abstract class BaseDistributorClient {
     return { ixs, txId: signature };
   }
 
-  public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | null)[]> {
+  public async getClaim(
+    claimStatus: string | PublicKey,
+  ): Promise<
+    MerkleDistributorAccountTypes["claimStatus"] | MerkleDistributorAccountTypes["compressedClaimStatus"] | null
+  > {
+    return this.connection.getAccountInfo(pk(claimStatus)).then((account) => this.decodeClaimStatus(account));
+  }
+
+  public async getClaims(
+    data: IGetClaimData[],
+  ): Promise<
+    (MerkleDistributorAccountTypes["claimStatus"] | MerkleDistributorAccountTypes["compressedClaimStatus"] | null)[]
+  > {
     const claimStatusPublicKeys = data.map(({ id, recipient }) => {
       return getClaimantStatusPda(this.programId, new PublicKey(id), new PublicKey(recipient));
     });
-    return ClaimStatus.fetchMultiple(this.connection, claimStatusPublicKeys, this.programId);
+
+    return this.connection.getMultipleAccountsInfo(claimStatusPublicKeys).then((accounts) => {
+      return accounts.map((account) => this.decodeClaimStatus(account));
+    });
   }
 
   public async getDistributors(data: IGetDistributors): Promise<(MerkleDistributor | null)[]> {
@@ -570,4 +597,39 @@ export default abstract class BaseDistributorClient {
   ): ReturnType<typeof unwrapExecutionParams<T>> {
     return unwrapExecutionParams(extParams, this.connection);
   }
+
+  private decodeClaimStatus(account: AccountInfo<Buffer> | null): ClaimStatus | CompressedClaimStatus | null {
+    if (!account) {
+      return account;
+    }
+
+    try {
+      return decode(this.merkleDistributorProgram, "claimStatus", account.data);
+    } catch (baseClaimStatusError) {
+      try {
+        return decode(this.merkleDistributorProgram, "compressedClaimStatus", account.data);
+      } catch (compressedClaimStatusError) {
+        throw new Error("Couldn't decode claim status");
+      }
+    }
+  }
+}
+
+/**
+ * Strictly typed decode function for Anchor accounts.
+ */
+function decode<T extends Idl, AccountName extends keyof IdlAccounts<T>>(
+  program: Program<T>,
+  accountName: AccountName,
+  accInfo: Parameters<AccountsCoder["decode"]>[1],
+  programKey?: string,
+): IdlAccounts<T>[AccountName] {
+  const programId = programKey ?? program.programId?.toBase58() ?? "N/A";
+  invariant(program, `Decoding program with key ${programId} is not available`);
+  const accountEntity = program.idl.accounts?.find((acc) => acc.name === accountName);
+  invariant(
+    !!accountEntity,
+    `Decoding program with key ${programId} doesn't specify account with name ${String(accountName)}`,
+  );
+  return program.coder.accounts.decode(accountName as string, accInfo) as IdlAccounts<T>[AccountName];
 }

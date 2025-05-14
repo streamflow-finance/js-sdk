@@ -2,7 +2,7 @@
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "aligned_distributor",
-    "version": "1.3.2",
+    "version": "1.5.0",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
@@ -147,6 +147,48 @@
       ]
     },
     {
+      "name": "migrate_test_oracle",
+      "discriminator": [203, 254, 19, 3, 172, 185, 85, 190],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "creator"
+        },
+        {
+          "name": "test_oracle",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [116, 101, 115, 116, 45, 111, 114, 97, 99, 108, 101]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "new_distributor",
       "discriminator": [32, 139, 112, 171, 0, 2, 225, 155],
       "accounts": [
@@ -230,6 +272,48 @@
           }
         }
       ]
+    },
+    {
+      "name": "realloc_test_oracle",
+      "discriminator": [234, 221, 116, 4, 198, 251, 244, 206],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "creator"
+        },
+        {
+          "name": "test_oracle",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [116, 101, 115, 116, 45, 111, 114, 97, 99, 108, 101]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "set_admin",
