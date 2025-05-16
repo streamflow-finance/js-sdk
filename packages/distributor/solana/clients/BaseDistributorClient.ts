@@ -62,7 +62,6 @@ import type {
   IGetDistributors,
   IInteractSolanaExt,
   ISearchDistributors,
-  MerkleDistributorAccountTypes,
 } from "../types.js";
 import {
   calculateAmountWithTransferFees,
@@ -506,19 +505,11 @@ export default abstract class BaseDistributorClient {
     return { ixs, txId: signature };
   }
 
-  public async getClaim(
-    claimStatus: string | PublicKey,
-  ): Promise<
-    MerkleDistributorAccountTypes["claimStatus"] | MerkleDistributorAccountTypes["compressedClaimStatus"] | null
-  > {
+  public async getClaim(claimStatus: string | PublicKey): Promise<ClaimStatus | CompressedClaimStatus | null> {
     return this.connection.getAccountInfo(pk(claimStatus)).then((account) => this.decodeClaimStatus(account));
   }
 
-  public async getClaims(
-    data: IGetClaimData[],
-  ): Promise<
-    (MerkleDistributorAccountTypes["claimStatus"] | MerkleDistributorAccountTypes["compressedClaimStatus"] | null)[]
-  > {
+  public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | CompressedClaimStatus | null)[]> {
     const claimStatusPublicKeys = data.map(({ id, recipient }) => {
       return getClaimantStatusPda(this.programId, new PublicKey(id), new PublicKey(recipient));
     });

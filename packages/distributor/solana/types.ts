@@ -11,6 +11,7 @@ import { type MerkleDistributor as MerkleDistributorIDL } from "./descriptor/mer
 export type MerkleDistributorAccountTypes = IdlTypes<MerkleDistributorIDL>;
 export type ClaimStatus = MerkleDistributorAccountTypes["claimStatus"];
 export type CompressedClaimStatus = MerkleDistributorAccountTypes["compressedClaimStatus"];
+export type AnyClaimStatus = ClaimStatus | CompressedClaimStatus;
 
 export type OracleType = IdlTypes<AlignedDistributorIDL>["oracleType"];
 

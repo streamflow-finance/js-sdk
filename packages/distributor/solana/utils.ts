@@ -12,6 +12,7 @@ import {
   TEST_ORACLE_PREFIX,
 } from "./constants.js";
 import { fromTxError } from "./generated/errors/index.js";
+import type { AnyClaimStatus, CompressedClaimStatus } from "./types.js";
 
 export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
@@ -48,6 +49,10 @@ export function getEventAuthorityPda(programId: PublicKey): PublicKey {
   // Finding the PDA
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
 }
+
+export const isCompressedClaimStatus = (status?: AnyClaimStatus | null): status is CompressedClaimStatus => {
+  return !!status && "state" in status;
+};
 
 export async function wrappedSignAndExecuteTransaction(
   ...args: Parameters<typeof signAndExecuteTransaction>
