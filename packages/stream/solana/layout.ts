@@ -178,6 +178,8 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
       transferable_by_sender: values.transferable_by_sender ?? 0,
       transferable_by_recipient_exists: values.transferable_by_recipient !== undefined ? 1 : 0,
       transferable_by_recipient: values.transferable_by_recipient ?? 0,
+      cancelable_by_sender_exists: values.cancelable_by_sender !== undefined ? 1 : 0,
+      cancelable_by_sender: values.cancelable_by_sender ?? 0,
     },
     data,
   );
