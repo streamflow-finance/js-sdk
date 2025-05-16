@@ -165,6 +165,12 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
   } else {
     structs.push(BufferLayout.u8("transferable_by_recipient_exists"));
   }
+  if (values.cancelable_by_sender !== undefined) {
+    structs.push(BufferLayout.u8("cancelable_by_sender_exists"));
+    structs.push(BufferLayout.u8("cancelable_by_sender"));
+  } else {
+    structs.push(BufferLayout.u8("cancelable_by_sender"));
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return BufferLayout.struct<any>(structs).encode(
     {
