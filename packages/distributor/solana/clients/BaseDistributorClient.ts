@@ -1,19 +1,3 @@
-import BN from "bn.js";
-import type PQueue from "p-queue";
-import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
-import type { TransactionInstruction, Commitment, ConnectionConfig, MemcmpFilter } from "@solana/web3.js";
-import { ICluster, type ITransactionResult } from "@streamflow/common";
-import {
-  ata,
-  checkOrCreateAtaBatch,
-  prepareBaseInstructions,
-  prepareTransaction,
-  getMintAndProgram,
-  buildSendThrottler,
-  prepareWrappedAccount,
-  type IProgramAccount,
-  pk,
-} from "@streamflow/common/solana";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferCheckedInstruction,
@@ -21,8 +5,30 @@ import {
   getTransferFeeConfig,
   NATIVE_MINT,
 } from "@solana/spl-token";
+import type { AccountInfo, Commitment, ConnectionConfig, MemcmpFilter, TransactionInstruction } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
+import { ICluster, invariant, type ITransactionResult } from "@streamflow/common";
+import {
+  ata,
+  buildSendThrottler,
+  checkOrCreateAtaBatch,
+  createAndEstimateTransaction,
+  getMintAndProgram,
+  pk,
+  prepareBaseInstructions,
+  prepareTransaction,
+  prepareWrappedAccount,
+  unwrapExecutionParams,
+  type IProgramAccount,
+  type ITransactionSolanaExtResolved,
+} from "@streamflow/common/solana";
+import BN from "bn.js";
 import bs58 from "bs58";
+import type PQueue from "p-queue";
+import { Program, type AccountsCoder, type Idl, type IdlAccounts } from "@coral-xyz/anchor";
 
+import MerkleDistributorIDL from "../descriptor/idl/merkle_distributor.json";
+import type { MerkleDistributor as MerkleDistributorProgramType } from "../descriptor/merkle_distributor.js";
 import {
   AIRDROP_CLAIM_FEE,
   DISTRIBUTOR_ADMIN_OFFSET,
@@ -30,30 +36,33 @@ import {
   DISTRIBUTOR_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "../constants.js";
-import type {
-  IClaimData,
-  IClawbackData,
-  ICreateDistributorResult,
-  IGetClaimData,
-  IGetDistributors,
-  ICreateSolanaExt,
-  IInteractSolanaExt,
-  ICreateDistributorData,
-  ICreateAlignedDistributorData,
-  ISearchDistributors,
-  ICloseClaimData,
-} from "../types.js";
+import { MerkleDistributor } from "../generated/accounts/index.js";
+import { closeClaim, type CloseClaimAccounts, type CloseClaimArgs } from "../generated/instructions/closeClaim.js";
 import {
+  claimLocked,
+  newClaim,
   type ClaimLockedAccounts,
   type ClawbackAccounts,
   type NewClaimAccounts,
   type NewClaimArgs,
   type NewDistributorAccounts,
   type NewDistributorArgs,
-  claimLocked,
-  newClaim,
 } from "../generated/instructions/index.js";
-import { ClaimStatus, MerkleDistributor } from "../generated/accounts/index.js";
+import type {
+  ClaimStatus,
+  CompressedClaimStatus,
+  IClaimData,
+  IClawbackData,
+  ICloseClaimData,
+  ICreateAlignedDistributorData,
+  ICreateDistributorData,
+  ICreateDistributorResult,
+  ICreateSolanaExt,
+  IGetClaimData,
+  IGetDistributors,
+  IInteractSolanaExt,
+  ISearchDistributors,
+} from "../types.js";
 import {
   calculateAmountWithTransferFees,
   getClaimantStatusPda,
@@ -61,7 +70,6 @@ import {
   getEventAuthorityPda,
   wrappedSignAndExecuteTransaction,
 } from "../utils.js";
-import { closeClaim, type CloseClaimAccounts, type CloseClaimArgs } from "../generated/instructions/closeClaim.js";
 
 export interface IInitOptions {
   clusterUrl: string;
@@ -81,6 +89,8 @@ export default abstract class BaseDistributorClient {
 
   protected sendThrottler: PQueue;
 
+  public merkleDistributorProgram: Program<MerkleDistributorProgramType>;
+
   public constructor({
     clusterUrl,
     cluster = ICluster.Mainnet,
@@ -93,11 +103,15 @@ export default abstract class BaseDistributorClient {
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
+    const merkleDistributorProgram = {
+      ...MerkleDistributorIDL,
+    } as MerkleDistributorProgramType;
+    this.merkleDistributorProgram = new Program(merkleDistributorProgram, { connection: this.connection });
   }
 
   protected abstract getNewDistributorInstruction(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    accounts: NewDistributorAccounts,
+    accounts: NewDistributorAccounts
   ): Promise<TransactionInstruction>;
   protected abstract getClawbackInstruction(account: ClawbackAccounts): Promise<TransactionInstruction>;
 
@@ -115,7 +129,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareCreateInstructions(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    extParams: ICreateSolanaExt,
+    extParams: ITransactionSolanaExtResolved<ICreateSolanaExt>,
   ): Promise<{ distributorPublicKey: PublicKey; ixs: TransactionInstruction[] }> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -193,7 +207,14 @@ export default abstract class BaseDistributorClient {
     data: ICreateDistributorData | ICreateAlignedDistributorData,
     extParams: ICreateSolanaExt,
   ): Promise<ICreateDistributorResult> {
-    const { ixs, distributorPublicKey } = await this.prepareCreateInstructions(data, extParams);
+    const invoker = extParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const { ixs, distributorPublicKey } = await createAndEstimateTransaction(
+      (params) => this.prepareCreateInstructions(data, params),
+      executionParams,
+      (q) => q.ixs,
+    );
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await wrappedSignAndExecuteTransaction(
       this.connection,
@@ -204,7 +225,7 @@ export default abstract class BaseDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
     );
 
     return {
@@ -214,27 +235,69 @@ export default abstract class BaseDistributorClient {
     };
   }
 
-  public async claim(data: IClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const ixs = await this.prepareClaimInstructions(data, extParams);
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+  /**
+   * @public
+   * @overload
+   */
+  public async claim(data: IClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult>;
+
+  /**
+   * @internal
+   */
+  public async claim(
+    data: IClaimData,
+    extParams: IInteractSolanaExt,
+    _serviceTransfer?: unknown
+  ): Promise<ITransactionResult>;
+  public async claim(
+    data: IClaimData,
+    extParams: IInteractSolanaExt,
+    _serviceTransfer?: unknown,
+  ): Promise<ITransactionResult> {
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareClaimInstructions(data, params, _serviceTransfer),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
     const signature = await wrappedSignAndExecuteTransaction(
       this.connection,
-      extParams.invoker,
+      executionParams.invoker,
       tx,
       {
         hash,
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
     );
 
     return { ixs, txId: signature };
   }
 
+  /**
+   * @public
+   * @overload
+   */
   public async prepareClaimInstructions(
     data: IClaimData,
-    extParams: IInteractSolanaExt,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>
+  ): Promise<TransactionInstruction[]>;
+
+  /**
+   * @internal
+   */
+  public async prepareClaimInstructions(
+    data: IClaimData,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    _serviceTransfer?: unknown
+  ): Promise<TransactionInstruction[]>;
+  public async prepareClaimInstructions(
+    data: IClaimData,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    _serviceTransfer?: unknown,
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -265,7 +328,7 @@ export default abstract class BaseDistributorClient {
       extParams.invoker.publicKey,
     );
     const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
-    const claimStatus = await ClaimStatus.fetch(this.connection, claimStatusPublicKey);
+    const claimStatus = await this.getClaim(claimStatusPublicKey);
 
     const accounts: ClaimLockedAccounts | NewClaimAccounts = {
       distributor: distributorPublicKey,
@@ -297,24 +360,35 @@ export default abstract class BaseDistributorClient {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
-    ixs.push(this.prepareClaimFeeInstruction(extParams.invoker.publicKey));
+    ixs.push(
+      this.prepareClaimFeeInstruction(
+        extParams.invoker.publicKey,
+        typeof _serviceTransfer === "bigint" ? _serviceTransfer : undefined,
+      ),
+    );
 
     return ixs;
   }
 
   public async closeClaim(data: ICloseClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const ixs = await this.prepareCloseClaimInstructions(data, extParams);
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareCloseClaimInstructions(data, params),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
     const signature = await wrappedSignAndExecuteTransaction(
       this.connection,
-      extParams.invoker,
+      executionParams.invoker,
       tx,
       {
         hash,
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
     );
 
     return { ixs, txId: signature };
@@ -322,7 +396,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareCloseClaimInstructions(
     data: ICloseClaimData,
-    extParams: IInteractSolanaExt,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -365,7 +439,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareClawbackInstructions(
     data: IClawbackData,
-    extParams: IInteractSolanaExt,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -408,28 +482,41 @@ export default abstract class BaseDistributorClient {
   }
 
   public async clawback(data: IClawbackData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const ixs = await this.prepareClawbackInstructions(data, extParams);
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareClawbackInstructions(data, params),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
     const signature = await wrappedSignAndExecuteTransaction(
       this.connection,
-      extParams.invoker,
+      executionParams.invoker,
       tx,
       {
         hash,
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
     );
 
     return { ixs, txId: signature };
   }
 
-  public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | null)[]> {
+  public async getClaim(claimStatus: string | PublicKey): Promise<ClaimStatus | CompressedClaimStatus | null> {
+    return this.connection.getAccountInfo(pk(claimStatus)).then((account) => this.decodeClaimStatus(account));
+  }
+
+  public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | CompressedClaimStatus | null)[]> {
     const claimStatusPublicKeys = data.map(({ id, recipient }) => {
       return getClaimantStatusPda(this.programId, new PublicKey(id), new PublicKey(recipient));
     });
-    return ClaimStatus.fetchMultiple(this.connection, claimStatusPublicKeys, this.programId);
+
+    return this.connection.getMultipleAccountsInfo(claimStatusPublicKeys).then((accounts) => {
+      return accounts.map((account) => this.decodeClaimStatus(account));
+    });
   }
 
   public async getDistributors(data: IGetDistributors): Promise<(MerkleDistributor | null)[]> {
@@ -463,11 +550,11 @@ export default abstract class BaseDistributorClient {
     }));
   }
 
-  protected prepareClaimFeeInstruction(payer: PublicKey): TransactionInstruction {
+  protected prepareClaimFeeInstruction(payer: PublicKey, fee = AIRDROP_CLAIM_FEE): TransactionInstruction {
     return SystemProgram.transfer({
       fromPubkey: payer,
       toPubkey: STREAMFLOW_TREASURY_PUBLIC_KEY,
-      lamports: AIRDROP_CLAIM_FEE,
+      lamports: fee,
     });
   }
 
@@ -495,4 +582,45 @@ export default abstract class BaseDistributorClient {
 
     return args;
   }
+
+  protected unwrapExecutionParams<T extends IInteractSolanaExt>(
+    extParams: T,
+  ): ReturnType<typeof unwrapExecutionParams<T>> {
+    return unwrapExecutionParams(extParams, this.connection);
+  }
+
+  private decodeClaimStatus(account: AccountInfo<Buffer> | null): ClaimStatus | CompressedClaimStatus | null {
+    if (!account) {
+      return account;
+    }
+
+    try {
+      return decode(this.merkleDistributorProgram, "claimStatus", account.data);
+    } catch (baseClaimStatusError) {
+      try {
+        return decode(this.merkleDistributorProgram, "compressedClaimStatus", account.data);
+      } catch (compressedClaimStatusError) {
+        throw new Error("Couldn't decode claim status");
+      }
+    }
+  }
+}
+
+/**
+ * Strictly typed decode function for Anchor accounts.
+ */
+function decode<T extends Idl, AccountName extends keyof IdlAccounts<T>>(
+  program: Program<T>,
+  accountName: AccountName,
+  accInfo: Parameters<AccountsCoder["decode"]>[1],
+  programKey?: string,
+): IdlAccounts<T>[AccountName] {
+  const programId = programKey ?? program.programId?.toBase58() ?? "N/A";
+  invariant(program, `Decoding program with key ${programId} is not available`);
+  const accountEntity = program.idl.accounts?.find((acc) => acc.name === accountName);
+  invariant(
+    !!accountEntity,
+    `Decoding program with key ${programId} doesn't specify account with name ${String(accountName)}`,
+  );
+  return program.coder.accounts.decode(accountName as string, accInfo) as IdlAccounts<T>[AccountName];
 }

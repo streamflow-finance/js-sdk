@@ -40,7 +40,10 @@
     "examples:verify": "pnpm --filter \"./examples/*\" run verify",
     "examples:install": "pnpm --filter \"./examples/*\" install",
     "examples:build": "pnpm --filter \"./examples/*\" --parallel run build",
-    "examples": "pnpm examples:install && pnpm examples:build && pnpm examples:verify"
+    "examples": "pnpm examples:install && pnpm examples:build && pnpm examples:verify",
+    "watch:docs": "typedoc --out dist/docs",
+    "watch:docs:serve": "pnpx serve dist/docs -p 51921",
+    "serve:docs": "pnpm run --stream \"/^watch:docs.*/\""
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.17.4",

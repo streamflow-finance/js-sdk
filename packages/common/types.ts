@@ -36,7 +36,7 @@ export class ContractError extends Error {
    * @param code extracted code from the error if managed to parse it
    */
   constructor(error: Error, code?: string | null, description?: string | null) {
-    super(error.message); // Call the base class constructor with the error message
+    super(error.message, { cause: error }); // Call the base class constructor with the error message
     this.contractErrorCode = code ?? null;
     this.description = description ?? null;
     // Copy properties from the original error

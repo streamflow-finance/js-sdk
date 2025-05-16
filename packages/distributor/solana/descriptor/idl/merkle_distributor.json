@@ -2,12 +2,70 @@
   "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",
   "metadata": {
     "name": "merkle_distributor",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "spec": "0.1.0",
     "description": "A Solana program for distributing tokens according to a Merkle root.",
     "repository": "https://github.com/streamflow-finance/distributor"
   },
   "instructions": [
+    {
+      "name": "_expose_claim",
+      "discriminator": [103, 233, 83, 69, 115, 199, 128, 249],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": ["The [MerkleDistributor]."]
+        },
+        {
+          "name": "claim_status",
+          "docs": ["Claim Status PDA"],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "compressed_claim_status",
+          "docs": ["Compress Claim Status PDA"],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "claimant",
+          "docs": ["Who is claiming the tokens."],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
     {
       "name": "claim_locked",
       "discriminator": [34, 206, 181, 23, 11, 207, 147, 90],
@@ -19,7 +77,6 @@
         },
         {
           "name": "claim_status",
-          "docs": ["Claim Status PDA"],
           "writable": true,
           "pda": {
             "seeds": [
@@ -163,11 +220,11 @@
           "signer": true
         },
         {
-          "name": "claimant"
+          "name": "claimant",
+          "writable": true
         },
         {
           "name": "claim_status",
-          "docs": ["Claim Status PDA"],
           "writable": true,
           "pda": {
             "seeds": [
@@ -232,6 +289,52 @@
       ]
     },
     {
+      "name": "compress_claim",
+      "discriminator": [219, 45, 247, 134, 71, 119, 125, 89],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": ["The [MerkleDistributor]."],
+          "writable": true
+        },
+        {
+          "name": "claim_status",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "docs": ["Signer account"],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "claimant"
+        },
+        {
+          "name": "system_program",
+          "docs": ["The [System] program."],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "new_claim",
       "discriminator": [78, 177, 98, 123, 210, 21, 187, 83],
       "accounts": [
@@ -242,7 +345,6 @@
         },
         {
           "name": "claim_status",
-          "docs": ["Claim status PDA"],
           "writable": true,
           "pda": {
             "seeds": [
@@ -527,6 +629,57 @@
       ]
     },
     {
+      "name": "refund_claim",
+      "discriminator": [157, 23, 164, 146, 176, 53, 147, 143],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": ["The [MerkleDistributor]."],
+          "writable": true
+        },
+        {
+          "name": "claim_status",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "docs": ["Signer account"],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "claimant"
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        },
+        {
+          "name": "system_program",
+          "docs": ["The [System] program."],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "set_admin",
       "discriminator": [251, 163, 0, 52, 91, 194, 187, 92],
       "accounts": [
@@ -606,6 +759,10 @@
     {
       "name": "ClaimStatus",
       "discriminator": [22, 183, 249, 157, 247, 95, 150, 96]
+    },
+    {
+      "name": "CompressedClaimStatus",
+      "discriminator": [53, 68, 161, 131, 212, 106, 98, 48]
     },
     {
       "name": "MerkleDistributor",
@@ -856,6 +1013,23 @@
       }
     },
     {
+      "name": "CompressedClaimStatus",
+      "docs": ["Holds whether or not a claimant has claimed tokens."],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "State"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "MerkleDistributor",
       "docs": ["State for the account which distributes tokens."],
       "type": {
@@ -1022,6 +1196,20 @@
             "name": "timestamp",
             "docs": ["Timestamp."],
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "State",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Claimed"
+          },
+          {
+            "name": "Closed"
           }
         ]
       }

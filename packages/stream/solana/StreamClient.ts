@@ -31,6 +31,7 @@ import {
   executeTransaction,
   executeMultipleTransactions,
   buildSendThrottler,
+  createVersionedTransaction,
   type IProgramAccount,
   type ThrottleParams,
   getMultipleAccountsInfoBatched,
@@ -254,7 +255,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
 
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, metadata);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, [
+      metadata,
+    ]);
     const signature = await signAndExecuteTransaction(
       this.connection,
       extParams.sender,
@@ -521,7 +524,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       ixs,
       extParams.sender.publicKey,
       undefined,
-      metadata,
+      [metadata],
     );
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -719,16 +722,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
-      const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey,
-        recentBlockhash: hash.blockhash,
-        instructions: ixs,
-      }).compileToV0Message();
-      const tx = new VersionedTransaction(messageV0);
-      if (metadata) {
-        tx.sign([metadata]);
-      }
-      batch.push({ tx, recipient });
+      batch.push({ tx: createVersionedTransaction(ixs, sender.publicKey, hash.blockhash, [metadata]), recipient });
     }
 
     const prepareInstructions = await this.getCreateATAInstructions(
@@ -745,15 +739,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     if (prepareInstructions.length > 0) {
-      const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey,
-        recentBlockhash: hash.blockhash,
-        instructions: prepareInstructions,
-      }).compileToV0Message();
-      const tx = new VersionedTransaction(messageV0);
-
       batch.push({
-        tx,
+        tx: createVersionedTransaction(prepareInstructions, sender.publicKey, hash.blockhash),
         recipient: sender.publicKey.toBase58(),
       });
     }

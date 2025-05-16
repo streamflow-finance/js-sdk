@@ -1,19 +1,18 @@
 import { type TransferFeeConfig } from "@solana/spl-token";
-import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { Buffer } from "buffer";
-import type { Connection, Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
-import { PublicKey } from "@solana/web3.js";
+import { type Connection, PublicKey } from "@solana/web3.js";
 import { ContractError, divCeilN } from "@streamflow/common";
-import { type ConfirmationParams, signAndExecuteTransaction, type ThrottleParams } from "@streamflow/common/solana";
+import { signAndExecuteTransaction } from "@streamflow/common/solana";
+import { Buffer } from "buffer";
 
 import {
-  ONE_IN_BASIS_POINTS,
   ALIGNED_DISTRIBUTOR_PREFIX,
-  TEST_ORACLE_PREFIX,
-  DISTRIBUTOR_PREFIX,
   CLAIM_STATUS_PREFIX,
+  DISTRIBUTOR_PREFIX,
+  ONE_IN_BASIS_POINTS,
+  TEST_ORACLE_PREFIX,
 } from "./constants.js";
 import { fromTxError } from "./generated/errors/index.js";
+import type { AnyClaimStatus, CompressedClaimStatus } from "./types.js";
 
 export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
@@ -51,15 +50,15 @@ export function getEventAuthorityPda(programId: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
 }
 
+export const isCompressedClaimStatus = (status?: AnyClaimStatus | null): status is CompressedClaimStatus => {
+  return !!status && "state" in status;
+};
+
 export async function wrappedSignAndExecuteTransaction(
-  connection: Connection,
-  invoker: Keypair | SignerWalletAdapter,
-  tx: Transaction | VersionedTransaction,
-  confirmationParams: ConfirmationParams,
-  throttleParams: ThrottleParams,
+  ...args: Parameters<typeof signAndExecuteTransaction>
 ): Promise<string> {
   try {
-    return await signAndExecuteTransaction(connection, invoker, tx, confirmationParams, throttleParams);
+    return await signAndExecuteTransaction(...args);
   } catch (err: unknown) {
     if (err instanceof Error) {
       const parsed = fromTxError(err);
