@@ -302,6 +302,7 @@ interface UpdateAccounts {
   withdrawor: PublicKey;
   systemProgram: PublicKey;
 }
+
 export const updateStreamInstruction = async (
   params: IUpdateData,
   programId: PublicKey,
@@ -319,6 +320,9 @@ export const updateStreamInstruction = async (
     enable_automatic_withdrawal: Number(params.enableAutomaticWithdrawal),
     withdraw_frequency: params.withdrawFrequency ? params.withdrawFrequency.toArrayLike(Buffer, "le", 8) : undefined,
     amount_per_period: params.amountPerPeriod ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8) : undefined,
+    transferable_by_sender: params.transferableBySender !== undefined ? Number(params.transferableBySender) : undefined,
+    transferable_by_recipient: params.transferableByRecipient !== undefined ? Number(params.transferableByRecipient) : undefined,
+    cancelable_by_sender: params.cancelableBySender !== undefined ? Number(params.cancelableBySender) : undefined,
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);
