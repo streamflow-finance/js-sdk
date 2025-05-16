@@ -78,6 +78,7 @@ export interface IUpdateData extends IInteractData {
   // supported only on Solana
   transferableBySender?: boolean;
   transferableByRecipient?: boolean;
+  cancelableBySender?: boolean;
 }
 
 export type ICancelData = IInteractData;

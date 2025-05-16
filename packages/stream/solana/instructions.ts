@@ -322,6 +322,7 @@ export const updateStreamInstruction = async (
     amount_per_period: params.amountPerPeriod ? params.amountPerPeriod.toArrayLike(Buffer, "le", 8) : undefined,
     transferable_by_sender: params.transferableBySender !== undefined ? Number(params.transferableBySender) : undefined,
     transferable_by_recipient: params.transferableByRecipient !== undefined ? Number(params.transferableByRecipient) : undefined,
+    cancelable_by_sender: params.cancelableBySender !== undefined ? Number(params.cancelableBySender) : undefined,
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);

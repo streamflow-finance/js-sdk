@@ -96,6 +96,7 @@ export interface IUpdateStreamLayout {
   amount_per_period?: Uint8Array;
   transferable_by_sender?: number;
   transferable_by_recipient?: number;
+  cancelable_by_sender?: number;
 }
 
 export interface ITopupStreamLayout {
