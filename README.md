@@ -14,7 +14,11 @@ Protocol audits available [here](https://www.notion.so/streamflow/Streamflow-Sec
 Partner oracle audit available [here](https://github.com/streamflow-finance/rust-sdk/blob/main/partner_oracle_audit.pdf).
 
 ## Documentation
-API Documentation available here: [docs site →](https://js-sdk-docs.streamflow.finance/)
+
+Have an SDK question? Head over to the AI-powered Q&A platform. Just type your query or search the docs, and get instant answers [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/streamflow-finance/js-sdk)
+
+API Documentation available here:  
+[![Streamflow](https://img.shields.io/badge/Streamflow-Typedoc-white?labelColor=7187ff&style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTYuNDI0MzIgM0MzLjQyODU1IDMgMSA1LjQxODA1IDEgOC4zOTk5OUgxNy4yQzIwLjE4MjMgOC4zOTk5OSAyMi41OTk5IDUuOTgyMzQgMjIuNTk5OSAzTDYuNDI0MzIgM1oiIGZpbGw9IiMxOTNERjkiLz4KPHBhdGggZD0iTTYuNDI0MzIgMTUuNkMzLjQyODU0IDE1LjYgMSAxOC4wMTgxIDEgMjFINi4zOTk5OUM5LjM4MjMyIDIxIDExLjggMTguNTgyMyAxMS44IDE1LjZINi40MjQzMloiIGZpbGw9IiMxOTNERjkiLz4KPHBhdGggZD0iTTEgOS4yOTk5OEgxNy4zNTc0QzIwLjI1MjggOS4yOTk5OCAyMi41OTk5IDExLjc2NzMgMjIuNTk5OSAxNC43SDYuMjQyMkMzLjM0Njc4IDE0LjcgMSAxMi4yMzI2IDEgOS4yOTk5OFoiIGZpbGw9IiMxOTNERjkiLz4KPC9zdmc+Cg==&link=https://js-sdk-docs.streamflow.finance)](https://js-sdk-docs.streamflow.finance)
 
 ## JS SDK to interact with Streamflow protocols
 
