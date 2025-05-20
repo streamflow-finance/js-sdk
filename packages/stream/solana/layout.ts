@@ -153,6 +153,24 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
   } else {
     structs.push(BufferLayout.u8("amount_per_period_exists"));
   }
+  if (values.transferable_by_sender !== undefined) {
+    structs.push(BufferLayout.u8("transferable_by_sender_exists"));
+    structs.push(BufferLayout.u8("transferable_by_sender"));
+  } else {
+    structs.push(BufferLayout.u8("transferable_by_sender_exists"));
+  }
+  if (values.transferable_by_recipient !== undefined) {
+    structs.push(BufferLayout.u8("transferable_by_recipient_exists"));
+    structs.push(BufferLayout.u8("transferable_by_recipient"));
+  } else {
+    structs.push(BufferLayout.u8("transferable_by_recipient_exists"));
+  }
+  if (values.cancelable_by_sender !== undefined) {
+    structs.push(BufferLayout.u8("cancelable_by_sender_exists"));
+    structs.push(BufferLayout.u8("cancelable_by_sender"));
+  } else {
+    structs.push(BufferLayout.u8("cancelable_by_sender"));
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return BufferLayout.struct<any>(structs).encode(
     {
@@ -162,6 +180,12 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
       withdraw_frequency: values.withdraw_frequency ?? 0,
       amount_per_period_exists: values.amount_per_period ? 1 : 0,
       amount_per_period: values.amount_per_period ?? 0,
+      transferable_by_sender_exists: values.transferable_by_sender !== undefined ? 1 : 0,
+      transferable_by_sender: values.transferable_by_sender ?? 0,
+      transferable_by_recipient_exists: values.transferable_by_recipient !== undefined ? 1 : 0,
+      transferable_by_recipient: values.transferable_by_recipient ?? 0,
+      cancelable_by_sender_exists: values.cancelable_by_sender !== undefined ? 1 : 0,
+      cancelable_by_sender: values.cancelable_by_sender ?? 0,
     },
     data,
   );

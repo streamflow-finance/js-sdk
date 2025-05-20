@@ -94,6 +94,9 @@ export interface IUpdateStreamLayout {
   enable_automatic_withdrawal?: number;
   withdraw_frequency?: Uint8Array;
   amount_per_period?: Uint8Array;
+  transferable_by_sender?: number;
+  transferable_by_recipient?: number;
+  cancelable_by_sender?: number;
 }
 
 export interface ITopupStreamLayout {

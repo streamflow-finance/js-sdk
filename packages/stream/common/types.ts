@@ -74,6 +74,11 @@ export interface IUpdateData extends IInteractData {
   enableAutomaticWithdrawal?: boolean;
   withdrawFrequency?: BN;
   amountPerPeriod?: BN;
+
+  // supported only on Solana
+  transferableBySender?: boolean;
+  transferableByRecipient?: boolean;
+  cancelableBySender?: boolean;
 }
 
 export type ICancelData = IInteractData;
