@@ -6,6 +6,12 @@ import type BN from "bn.js";
 import { type IdlTypes } from "@coral-xyz/anchor";
 
 import { type AlignedDistributor as AlignedDistributorIDL } from "./descriptor/aligned_distributor.js";
+import { type MerkleDistributor as MerkleDistributorIDL } from "./descriptor/merkle_distributor.js";
+
+export type MerkleDistributorAccountTypes = IdlTypes<MerkleDistributorIDL>;
+export type ClaimStatus = MerkleDistributorAccountTypes["claimStatus"];
+export type CompressedClaimStatus = MerkleDistributorAccountTypes["compressedClaimStatus"];
+export type AnyClaimStatus = ClaimStatus | CompressedClaimStatus;
 
 export type OracleType = IdlTypes<AlignedDistributorIDL>["oracleType"];
 

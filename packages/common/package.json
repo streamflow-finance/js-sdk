@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/common",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "description": "Common utilities and types used by streamflow packages.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "type": "module",
@@ -23,6 +23,14 @@
       },
       "import": "./dist/esm/solana/index.js",
       "require": "./dist/cjs/solana/index.cjs"
+    },
+    "./solana/rpc": {
+      "types": {
+        "import": "./dist/esm/solana/rpc/index.d.ts",
+        "require": "./dist/cjs/solana/rpc/index.d.cts"
+      },
+      "import": "./dist/esm/solana/rpc/index.js",
+      "require": "./dist/cjs/solana/rpc/index.cjs"
     },
     "./package.json": "./package.json"
   },

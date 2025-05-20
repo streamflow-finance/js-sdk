@@ -34,9 +34,11 @@ import {
   type ConfirmationParams,
   type ITransactionSolanaExt,
   type ThrottleParams,
+  type TransactionExecutionParams,
   TransactionFailedError,
 } from "./types.js";
 import { sleep } from "../lib/utils.js";
+import { invariant } from "../lib/assertions.js";
 
 const SIMULATE_TRIES = 3;
 
@@ -117,7 +119,7 @@ export async function prepareTransaction(
   ixs: TransactionInstruction[],
   payer: PublicKey | undefined | null,
   commitment?: Commitment,
-  ...partialSigners: (Keypair | undefined)[]
+  partialSigners?: (Keypair | undefined)[],
 ): Promise<{
   tx: VersionedTransaction;
   hash: BlockhashWithExpiryBlockHeight;
@@ -128,16 +130,33 @@ export async function prepareTransaction(
   }
 
   const { value: hash, context } = await connection.getLatestBlockhashAndContext(commitment);
+
+  return {
+    tx: createVersionedTransaction(ixs, payer, hash.blockhash, partialSigners),
+    hash,
+    context,
+  };
+}
+
+export function createVersionedTransaction(
+  ixs: TransactionInstruction[],
+  payer: PublicKey | undefined | null,
+  recentBlockhash: BlockhashWithExpiryBlockHeight["blockhash"],
+  partialSigners?: (Keypair | undefined)[],
+): VersionedTransaction {
+  invariant(payer, "Payer public key is not provided!");
   const messageV0 = new TransactionMessage({
     payerKey: payer,
-    recentBlockhash: hash.blockhash,
+    recentBlockhash,
     instructions: ixs,
   }).compileToV0Message();
   const tx = new VersionedTransaction(messageV0);
-  const signers: Keypair[] = partialSigners.filter((item): item is Keypair => !!item);
-  tx.sign(signers);
+  const signers = partialSigners?.filter((item): item is Keypair => !!item) ?? undefined;
+  if (signers) {
+    tx.sign(signers);
+  }
 
-  return { tx, context, hash };
+  return tx;
 }
 
 export async function signTransaction<T extends Transaction | VersionedTransaction>(
@@ -164,7 +183,7 @@ export async function signTransaction<T extends Transaction | VersionedTransacti
  * @param invoker - Keypair used as signer
  * @param tx - Transaction instance
  * @param confirmationParams - Confirmation Params that will be used for execution
- * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param transactionExecutionParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much and solana execution params (eg. skipSimulation)
  * @returns Transaction signature
  */
 export async function signAndExecuteTransaction(
@@ -172,11 +191,11 @@ export async function signAndExecuteTransaction(
   invoker: Keypair | SignerWalletAdapter,
   tx: Transaction | VersionedTransaction,
   confirmationParams: ConfirmationParams,
-  throttleParams: ThrottleParams,
+  transactionExecutionParams: TransactionExecutionParams,
 ): Promise<string> {
   const signedTx = await signTransaction(invoker, tx);
 
-  return executeTransaction(connection, signedTx, confirmationParams, throttleParams);
+  return executeTransaction(connection, signedTx, confirmationParams, transactionExecutionParams);
 }
 
 /**
@@ -191,21 +210,22 @@ export async function signAndExecuteTransaction(
  * @param connection - Solana client connection
  * @param tx - Transaction instance
  * @param confirmationParams - Confirmation Params that will be used for execution
- * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
+ * @param transactionExecutionParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much and solana execution params (eg. skipSimulation)
  * @returns Transaction signature
  */
 export async function executeTransaction(
   connection: Connection,
   tx: Transaction | VersionedTransaction,
   confirmationParams: ConfirmationParams,
-  throttleParams: ThrottleParams,
+  transactionExecutionParams: TransactionExecutionParams,
 ): Promise<string> {
   if (tx.signatures.length === 0) {
     throw Error("Error with transaction parameters.");
   }
-  await simulateTransaction(connection, tx);
-
-  return sendAndConfirmTransaction(connection, tx, confirmationParams, throttleParams);
+  if (!transactionExecutionParams.skipSimulation) {
+    await simulateTransaction(connection, tx);
+  }
+  return sendAndConfirmTransaction(connection, tx, confirmationParams, transactionExecutionParams);
 }
 
 /**
@@ -335,7 +355,9 @@ export async function simulateTransaction(
         throw new SendTransactionError({
           action: "simulate",
           signature: "",
-          transactionMessage: `failed to simulate transaction: ${typeof res.value.err === "string" ? res.value.err : errMessage}`,
+          transactionMessage: `failed to simulate transaction: ${
+            typeof res.value.err === "string" ? res.value.err : errMessage
+          }`,
           logs: res.value.logs ?? undefined,
         });
       }
@@ -469,13 +491,7 @@ export async function generateCreateAtaBatchTx(
     }),
   );
   const { value: hash, context } = await connection.getLatestBlockhashAndContext({ commitment });
-  const messageV0 = new TransactionMessage({
-    payerKey: payer,
-    recentBlockhash: hash.blockhash,
-    instructions: ixs,
-  }).compileToV0Message();
-  const tx = new VersionedTransaction(messageV0);
-  return { tx, hash, context };
+  return { tx: createVersionedTransaction(ixs, payer, hash.blockhash), hash, context };
 }
 
 /**
@@ -539,8 +555,8 @@ export async function checkOrCreateAtaBatch(
 
 /**
  * Create Base instructions for Solana
- * - sets compute price if `computePrice` is provided
- * - sets compute limit if `computeLimit` is provided
+ * - sets compute price if `computePrice` is provided. If `computePrice` is a function, it will be ignored (the value must be resolved before calling this function).
+ * - sets compute limit if `computeLimit` is provided. If `computeLimit` is a function, it will be ignored (the value must be resolved before calling this function).
  */
 export function prepareBaseInstructions(
   connection: Connection,
@@ -548,10 +564,10 @@ export function prepareBaseInstructions(
 ): TransactionInstruction[] {
   const ixs: TransactionInstruction[] = [];
 
-  if (computePrice) {
+  if (computePrice && typeof computePrice !== "function") {
     ixs.push(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: computePrice }));
   }
-  if (computeLimit) {
+  if (computeLimit && typeof computeLimit === "number") {
     ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit }));
   }
 

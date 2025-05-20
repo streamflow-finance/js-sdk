@@ -1,5 +1,5 @@
 {
   "extends": ["../../typedoc.base.json"],
   "tsconfig": "./tsconfig.json",
-  "entryPoints": ["./index.ts", "./solana/index.ts"]
+  "entryPoints": ["./index.ts", "./solana/index.ts", "./solana/rpc/index.ts"]
 }

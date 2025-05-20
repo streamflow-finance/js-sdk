@@ -1,5 +1,5 @@
-import { Program, parseIdlErrors, translateError } from "@coral-xyz/anchor";
 import type { AccountsCoder, AnchorError, Idl, IdlAccounts, ProgramAccount, ProgramError } from "@coral-xyz/anchor";
+import { Program, parseIdlErrors, translateError } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
   type Commitment,
@@ -12,11 +12,13 @@ import { ContractError, ICluster, type ITransactionResult, invariant } from "@st
 import {
   buildSendThrottler,
   checkOrCreateAtaBatch,
+  createAndEstimateTransaction,
   getFilters,
   pk,
   prepareBaseInstructions,
   prepareTransaction,
   signAndExecuteTransaction,
+  unwrapExecutionParams,
 } from "@streamflow/common/solana";
 import type PQueue from "p-queue";
 
@@ -200,8 +202,18 @@ export class SolanaStakingClient {
   }
 
   async createStakePool(data: CreateStakePoolArgs, extParams: IInteractSolanaExt): Promise<CreationResult> {
-    const { ixs, publicKey } = await this.prepareCreateStakePoolInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const { ixs, publicKey } = await createAndEstimateTransaction(
+      async (params) =>
+        this.prepareCreateStakePoolInstructions(data, params).then((res) => ({
+          ixs: prepareBaseInstructions(this.connection, params).concat(res.ixs),
+          publicKey: res.publicKey,
+        })),
+      executionParams,
+      (res) => res.ixs,
+    );
+
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -242,8 +254,15 @@ export class SolanaStakingClient {
   }
 
   async stake(data: StakeArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareStakeInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const ixs = await createAndEstimateTransaction(
+      (params) =>
+        this.prepareStakeInstructions(data, params).then((res) =>
+          prepareBaseInstructions(this.connection, params).concat(res.ixs),
+        ),
+      executionParams,
+    );
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -279,8 +298,15 @@ export class SolanaStakingClient {
   }
 
   async unstake(data: UnstakeArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareUnstakeInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const ixs = await createAndEstimateTransaction(
+      (params) =>
+        this.prepareUnstakeInstructions(data, params).then((res) =>
+          prepareBaseInstructions(this.connection, params).concat(res.ixs),
+        ),
+      executionParams,
+    );
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -316,8 +342,17 @@ export class SolanaStakingClient {
   }
 
   async createRewardPool(data: CreateRewardPoolArgs, extParams: IInteractSolanaExt): Promise<CreationResult> {
-    const { ixs, publicKey } = await this.prepareCreateRewardPoolInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const { ixs, publicKey } = await createAndEstimateTransaction(
+      async (params) =>
+        this.prepareCreateRewardPoolInstructions(data, params).then((res) => ({
+          ixs: prepareBaseInstructions(this.connection, params).concat(res.ixs),
+          publicKey: res.publicKey,
+        })),
+      executionParams,
+      (res) => res.ixs,
+    );
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -358,8 +393,15 @@ export class SolanaStakingClient {
   }
 
   async claimRewards(data: ClaimRewardPoolArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareClaimRewardsInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const ixs = await createAndEstimateTransaction(
+      (params) =>
+        this.prepareClaimRewardsInstructions(data, params).then((res) =>
+          prepareBaseInstructions(this.connection, params).concat(res.ixs),
+        ),
+      executionParams,
+    );
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -389,8 +431,15 @@ export class SolanaStakingClient {
   }
 
   async fundPool(data: FundPoolArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareFundPoolInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const ixs = await createAndEstimateTransaction(
+      (params) =>
+        this.prepareFundPoolInstructions(data, params).then((res) =>
+          prepareBaseInstructions(this.connection, params).concat(res.ixs),
+        ),
+      executionParams,
+    );
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -436,8 +485,14 @@ export class SolanaStakingClient {
   }
 
   async createRewardEntry(data: CreateRewardEntryArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
-    const { ixs } = await this.prepareCreateRewardEntryInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const ixs = await createAndEstimateTransaction(async (params) => {
+      return this.prepareCreateRewardEntryInstructions(data, params).then((res) =>
+        prepareBaseInstructions(this.connection, params).concat(res.ixs),
+      );
+    }, executionParams);
+
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -466,8 +521,13 @@ export class SolanaStakingClient {
   }
 
   async updateRewardPool(data: UpdateRewardPoolArgs, extParams: IInteractSolanaExt) {
-    const { ixs } = await this.prepareUpdateRewardPoolInstructions(data, extParams);
-    const { signature } = await this.execute(ixs, extParams);
+    const executionParams = unwrapExecutionParams(extParams, this.connection);
+    const ixs = await createAndEstimateTransaction(async (params) => {
+      return this.prepareUpdateRewardPoolInstructions(data, params).then((res) =>
+        prepareBaseInstructions(this.connection, params).concat(res.ixs),
+      );
+    }, executionParams);
+    const { signature } = await this.execute(ixs, extParams.invoker, executionParams.skipSimulation);
 
     return {
       ixs,
@@ -526,24 +586,20 @@ export class SolanaStakingClient {
     return accountEntity.discriminator;
   }
 
-  private async execute(ixs: TransactionInstruction[], extParams: IInteractSolanaExt) {
-    const { tx, hash, context } = await prepareTransaction(
-      this.connection,
-      prepareBaseInstructions(this.connection, extParams).concat(ixs),
-      extParams.invoker.publicKey,
-    );
+  private async execute(ixs: TransactionInstruction[], invoker: IInteractSolanaExt["invoker"], skipSimulation = false) {
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker.publicKey);
 
     try {
       const signature = await signAndExecuteTransaction(
         this.connection,
-        extParams.invoker,
+        invoker,
         tx,
         {
           hash,
           context,
           commitment: this.getCommitment(),
         },
-        { sendThrottler: this.sendThrottler },
+        { sendThrottler: this.sendThrottler, skipSimulation },
       );
       return { signature };
     } catch (err: unknown) {
