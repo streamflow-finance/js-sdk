@@ -1,3 +1,4 @@
+import { Program, type AccountsCoder, type Idl, type IdlAccounts } from "@coral-xyz/anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferCheckedInstruction,
@@ -25,10 +26,7 @@ import {
 import BN from "bn.js";
 import bs58 from "bs58";
 import type PQueue from "p-queue";
-import { Program, type AccountsCoder, type Idl, type IdlAccounts } from "@coral-xyz/anchor";
 
-import MerkleDistributorIDL from "../descriptor/idl/merkle_distributor.json";
-import type { MerkleDistributor as MerkleDistributorProgramType } from "../descriptor/merkle_distributor.js";
 import {
   AIRDROP_CLAIM_FEE,
   DISTRIBUTOR_ADMIN_OFFSET,
@@ -36,6 +34,8 @@ import {
   DISTRIBUTOR_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "../constants.js";
+import MerkleDistributorIDL from "../descriptor/idl/merkle_distributor.json";
+import type { MerkleDistributor as MerkleDistributorProgramType } from "../descriptor/merkle_distributor.js";
 import { MerkleDistributor } from "../generated/accounts/index.js";
 import { closeClaim, type CloseClaimAccounts, type CloseClaimArgs } from "../generated/instructions/closeClaim.js";
 import {
@@ -49,8 +49,7 @@ import {
   type NewDistributorArgs,
 } from "../generated/instructions/index.js";
 import type {
-  ClaimStatus,
-  CompressedClaimStatus,
+  AnyClaimStatus,
   IClaimData,
   IClawbackData,
   ICloseClaimData,
@@ -129,7 +128,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareCreateInstructions(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    extParams: ITransactionSolanaExtResolved<ICreateSolanaExt>,
+    extParams: ITransactionSolanaExtResolved<ICreateSolanaExt>
   ): Promise<{ distributorPublicKey: PublicKey; ixs: TransactionInstruction[] }> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -157,7 +156,7 @@ export default abstract class BaseDistributorClient {
 
     if (extParams.isNative) {
       ixs.push(
-        ...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, new BN(data.maxTotalClaim))),
+        ...(await prepareWrappedAccount(this.connection, extParams.invoker.publicKey, new BN(data.maxTotalClaim)))
       );
     }
 
@@ -169,7 +168,7 @@ export default abstract class BaseDistributorClient {
       const { transferAmount, feeCharged } = await calculateAmountWithTransferFees(
         this.connection,
         transferFeeConfig,
-        BigInt(data.maxTotalClaim.toString()),
+        BigInt(data.maxTotalClaim.toString())
       );
 
       ixs.push(
@@ -182,8 +181,8 @@ export default abstract class BaseDistributorClient {
           mintAccount.decimals,
           feeCharged,
           undefined,
-          tokenProgramId,
-        ),
+          tokenProgramId
+        )
       );
     } else {
       ixs.push(
@@ -195,8 +194,8 @@ export default abstract class BaseDistributorClient {
           BigInt(data.maxTotalClaim.toString()),
           mintAccount.decimals,
           undefined,
-          tokenProgramId,
-        ),
+          tokenProgramId
+        )
       );
     }
 
@@ -205,7 +204,7 @@ export default abstract class BaseDistributorClient {
 
   public async create(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    extParams: ICreateSolanaExt,
+    extParams: ICreateSolanaExt
   ): Promise<ICreateDistributorResult> {
     const invoker = extParams.invoker.publicKey;
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -213,7 +212,7 @@ export default abstract class BaseDistributorClient {
     const { ixs, distributorPublicKey } = await createAndEstimateTransaction(
       (params) => this.prepareCreateInstructions(data, params),
       executionParams,
-      (q) => q.ixs,
+      (q) => q.ixs
     );
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await wrappedSignAndExecuteTransaction(
@@ -225,7 +224,7 @@ export default abstract class BaseDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation }
     );
 
     return {
@@ -252,14 +251,14 @@ export default abstract class BaseDistributorClient {
   public async claim(
     data: IClaimData,
     extParams: IInteractSolanaExt,
-    _serviceTransfer?: unknown,
+    _serviceTransfer?: unknown
   ): Promise<ITransactionResult> {
     const executionParams = this.unwrapExecutionParams(extParams);
     const invoker = executionParams.invoker.publicKey;
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
     const ixs = await createAndEstimateTransaction(
       (params) => this.prepareClaimInstructions(data, params, _serviceTransfer),
-      executionParams,
+      executionParams
     );
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
     const signature = await wrappedSignAndExecuteTransaction(
@@ -271,7 +270,7 @@ export default abstract class BaseDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation }
     );
 
     return { ixs, txId: signature };
@@ -297,7 +296,7 @@ export default abstract class BaseDistributorClient {
   public async prepareClaimInstructions(
     data: IClaimData,
     extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
-    _serviceTransfer?: unknown,
+    _serviceTransfer?: unknown
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -318,14 +317,14 @@ export default abstract class BaseDistributorClient {
         [extParams.invoker.publicKey],
         distributor.mint,
         extParams.invoker,
-        tokenProgramId,
-      )),
+        tokenProgramId
+      ))
     );
     const invokerTokens = await ata(distributor.mint, extParams.invoker.publicKey, tokenProgramId);
     const claimStatusPublicKey = getClaimantStatusPda(
       this.programId,
       distributorPublicKey,
-      extParams.invoker.publicKey,
+      extParams.invoker.publicKey
     );
     const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
     const claimStatus = await this.getClaim(claimStatusPublicKey);
@@ -363,8 +362,8 @@ export default abstract class BaseDistributorClient {
     ixs.push(
       this.prepareClaimFeeInstruction(
         extParams.invoker.publicKey,
-        typeof _serviceTransfer === "bigint" ? _serviceTransfer : undefined,
-      ),
+        typeof _serviceTransfer === "bigint" ? _serviceTransfer : undefined
+      )
     );
 
     return ixs;
@@ -376,7 +375,7 @@ export default abstract class BaseDistributorClient {
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
     const ixs = await createAndEstimateTransaction(
       (params) => this.prepareCloseClaimInstructions(data, params),
-      executionParams,
+      executionParams
     );
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
     const signature = await wrappedSignAndExecuteTransaction(
@@ -388,7 +387,7 @@ export default abstract class BaseDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation }
     );
 
     return { ixs, txId: signature };
@@ -396,7 +395,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareCloseClaimInstructions(
     data: ICloseClaimData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -439,7 +438,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareClawbackInstructions(
     data: IClawbackData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -460,8 +459,8 @@ export default abstract class BaseDistributorClient {
         [extParams.invoker.publicKey],
         distributor.mint,
         extParams.invoker,
-        tokenProgramId,
-      )),
+        tokenProgramId
+      ))
     );
 
     const accounts: ClawbackAccounts = {
@@ -487,7 +486,7 @@ export default abstract class BaseDistributorClient {
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
     const ixs = await createAndEstimateTransaction(
       (params) => this.prepareClawbackInstructions(data, params),
-      executionParams,
+      executionParams
     );
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
     const signature = await wrappedSignAndExecuteTransaction(
@@ -499,17 +498,17 @@ export default abstract class BaseDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation }
     );
 
     return { ixs, txId: signature };
   }
 
-  public async getClaim(claimStatus: string | PublicKey): Promise<ClaimStatus | CompressedClaimStatus | null> {
+  public async getClaim(claimStatus: string | PublicKey): Promise<AnyClaimStatus | null> {
     return this.connection.getAccountInfo(pk(claimStatus)).then((account) => this.decodeClaimStatus(account));
   }
 
-  public async getClaims(data: IGetClaimData[]): Promise<(ClaimStatus | CompressedClaimStatus | null)[]> {
+  public async getClaims(data: IGetClaimData[]): Promise<(AnyClaimStatus | null)[]> {
     const claimStatusPublicKeys = data.map(({ id, recipient }) => {
       return getClaimantStatusPda(this.programId, new PublicKey(id), new PublicKey(recipient));
     });
@@ -584,14 +583,14 @@ export default abstract class BaseDistributorClient {
   }
 
   protected unwrapExecutionParams<T extends IInteractSolanaExt>(
-    extParams: T,
+    extParams: T
   ): ReturnType<typeof unwrapExecutionParams<T>> {
     return unwrapExecutionParams(extParams, this.connection);
   }
 
-  private decodeClaimStatus(account: AccountInfo<Buffer> | null): ClaimStatus | CompressedClaimStatus | null {
+  private decodeClaimStatus(account: AccountInfo<Buffer> | null): AnyClaimStatus | null {
     if (!account) {
-      return account;
+      return null;
     }
 
     try {
@@ -613,14 +612,14 @@ function decode<T extends Idl, AccountName extends keyof IdlAccounts<T>>(
   program: Program<T>,
   accountName: AccountName,
   accInfo: Parameters<AccountsCoder["decode"]>[1],
-  programKey?: string,
+  programKey?: string
 ): IdlAccounts<T>[AccountName] {
   const programId = programKey ?? program.programId?.toBase58() ?? "N/A";
   invariant(program, `Decoding program with key ${programId} is not available`);
   const accountEntity = program.idl.accounts?.find((acc) => acc.name === accountName);
   invariant(
     !!accountEntity,
-    `Decoding program with key ${programId} doesn't specify account with name ${String(accountName)}`,
+    `Decoding program with key ${programId} doesn't specify account with name ${String(accountName)}`
   );
   return program.coder.accounts.decode(accountName as string, accInfo) as IdlAccounts<T>[AccountName];
 }

@@ -9,8 +9,22 @@ import { type AlignedDistributor as AlignedDistributorIDL } from "./descriptor/a
 import { type MerkleDistributor as MerkleDistributorIDL } from "./descriptor/merkle_distributor.js";
 
 export type MerkleDistributorAccountTypes = IdlTypes<MerkleDistributorIDL>;
+
+/**
+ * @inline
+ */
 export type ClaimStatus = MerkleDistributorAccountTypes["claimStatus"];
+
+/**
+ * @inline
+ */
 export type CompressedClaimStatus = MerkleDistributorAccountTypes["compressedClaimStatus"];
+/**
+ * @type
+ * @inheritdoc
+ * @extends {ClaimStatus}
+ * @extends {CompressedClaimStatus}
+ */
 export type AnyClaimStatus = ClaimStatus | CompressedClaimStatus;
 
 export type OracleType = IdlTypes<AlignedDistributorIDL>["oracleType"];
