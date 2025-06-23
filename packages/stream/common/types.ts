@@ -46,6 +46,8 @@ export type IAlignedStreamConfig = {
   priceOracle?: Address;
   skipInitial?: boolean;
   tickSize?: number;
+  expiryTime?: number;
+  expiryPercentage?: number | BN;
 };
 
 export type ICreateLinearStreamData = IBaseStreamConfig & IRecipient;
