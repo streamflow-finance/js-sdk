@@ -234,7 +234,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     const ixs: TransactionInstruction[] = await this.getCreateATAInstructions(
-      [STREAMFLOW_TREASURY_PUBLIC_KEY, partnerPublicKey],
+      [partnerPublicKey],
       mintPublicKey,
       sender,
       true,
@@ -726,7 +726,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     const prepareInstructions = await this.getCreateATAInstructions(
-      [STREAMFLOW_TREASURY_PUBLIC_KEY, partnerPublicKey],
+      [partnerPublicKey],
       mintPublicKey,
       sender,
       true,
@@ -878,7 +878,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     const prepareInstructions = await this.getCreateATAInstructions(
-      [STREAMFLOW_TREASURY_PUBLIC_KEY, partnerPublicKey],
+      [partnerPublicKey],
       mintPublicKey,
       sender,
       true,
