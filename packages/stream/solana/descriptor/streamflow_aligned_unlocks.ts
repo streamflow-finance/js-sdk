@@ -23,7 +23,7 @@ export type StreamflowAlignedUnlocks = {
         219,
         236,
         220,
-        190
+        190,
       ],
       "accounts": [
         {
@@ -34,7 +34,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "senderTokens",
           "docs": [
-            "Associated token account address of `sender`."
+            "Associated token account address of `sender`.",
           ],
           "writable": true,
           "pda": {
@@ -50,7 +50,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -86,7 +86,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -98,7 +98,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "recipientTokens",
           "docs": [
-            "CHECK; Associated token account address of `recipient`."
+            "CHECK; Associated token account address of `recipient`.",
           ],
           "writable": true,
           "pda": {
@@ -114,7 +114,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -150,7 +150,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -158,7 +158,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "proxyMetadata",
           "docs": [
-            "Proxy Contract"
+            "Proxy Contract",
           ],
           "writable": true,
           "pda": {
@@ -173,13 +173,13 @@ export type StreamflowAlignedUnlocks = {
                   114,
                   97,
                   99,
-                  116
+                  116,
                 ]
               },
               {
                 "kind": "account",
                 "path": "streamMetadata"
-              }
+              },
             ]
           }
         },
@@ -199,7 +199,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -235,7 +235,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -268,7 +268,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -304,7 +304,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -329,7 +329,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -365,7 +365,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -373,7 +373,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "mint",
           "docs": [
-            "The SPL token mint account."
+            "The SPL token mint account.",
           ],
           "writable": true
         },
@@ -385,9 +385,9 @@ export type StreamflowAlignedUnlocks = {
           "name": "tokenProgram",
           "docs": [
             "The SPL program needed in case an associated account",
-            "for the new recipient is being created."
+            "for the new recipient is being created.",
           ]
-        }
+        },
       ],
       "args": []
     },
@@ -401,7 +401,7 @@ export type StreamflowAlignedUnlocks = {
         13,
         72,
         141,
-        248
+        248,
       ],
       "accounts": [
         {
@@ -412,13 +412,13 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "proxyMetadata",
           "docs": [
-            "Proxy Contract"
+            "Proxy Contract",
           ],
           "writable": true
         },
         {
           "name": "newPriceOracle"
-        }
+        },
       ],
       "args": [
         {
@@ -428,7 +428,7 @@ export type StreamflowAlignedUnlocks = {
               "name": "changeOracleParams"
             }
           }
-        }
+        },
       ]
     },
     {
@@ -441,13 +441,13 @@ export type StreamflowAlignedUnlocks = {
         5,
         28,
         7,
-        119
+        119,
       ],
       "accounts": [
         {
           "name": "payer",
           "docs": [
-            "Rent payer"
+            "Rent payer",
           ],
           "writable": true,
           "signer": true
@@ -460,7 +460,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "senderTokens",
           "docs": [
-            "Associated token account address of `payer`."
+            "Associated token account address of `payer`.",
           ],
           "writable": true,
           "pda": {
@@ -476,7 +476,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -512,7 +512,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -535,7 +535,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -571,7 +571,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -591,13 +591,13 @@ export type StreamflowAlignedUnlocks = {
                   114,
                   97,
                   99,
-                  116
+                  116,
                 ]
               },
               {
                 "kind": "account",
                 "path": "streamMetadata"
-              }
+              },
             ]
           }
         },
@@ -617,7 +617,7 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -653,7 +653,7 @@ export type StreamflowAlignedUnlocks = {
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -701,7 +701,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": [
         {
@@ -711,7 +711,7 @@ export type StreamflowAlignedUnlocks = {
               "name": "createParams"
             }
           }
-        }
+        },
       ]
     },
     {
@@ -724,7 +724,7 @@ export type StreamflowAlignedUnlocks = {
         131,
         220,
         84,
-        12
+        12,
       ],
       "accounts": [
         {
@@ -753,7 +753,7 @@ export type StreamflowAlignedUnlocks = {
                   97,
                   99,
                   108,
-                  101
+                  101,
                 ]
               },
               {
@@ -763,14 +763,14 @@ export type StreamflowAlignedUnlocks = {
               {
                 "kind": "account",
                 "path": "creator"
-              }
+              },
             ]
           }
         },
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": [
         {
@@ -780,7 +780,7 @@ export type StreamflowAlignedUnlocks = {
               "name": "createTestOracleParams"
             }
           }
-        }
+        },
       ]
     },
     {
@@ -793,7 +793,7 @@ export type StreamflowAlignedUnlocks = {
         38,
         118,
         181,
-        247
+        247,
       ],
       "accounts": [
         {
@@ -807,7 +807,7 @@ export type StreamflowAlignedUnlocks = {
         },
         {
           "name": "newAuthority"
-        }
+        },
       ],
       "args": []
     },
@@ -821,13 +821,13 @@ export type StreamflowAlignedUnlocks = {
         251,
         180,
         212,
-        71
+        71,
       ],
       "accounts": [
         {
           "name": "authority",
           "docs": [
-            "Wallet authorised to call this method"
+            "Wallet authorised to call this method",
           ],
           "writable": true,
           "signer": true
@@ -847,13 +847,13 @@ export type StreamflowAlignedUnlocks = {
                   114,
                   97,
                   99,
-                  116
+                  116,
                 ]
               },
               {
                 "kind": "account",
                 "path": "streamMetadata"
-              }
+              },
             ]
           }
         },
@@ -868,7 +868,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "priceOracle",
           "relations": [
-            "proxyMetadata"
+            "proxyMetadata",
           ]
         },
         {
@@ -878,7 +878,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": []
     },
@@ -892,7 +892,7 @@ export type StreamflowAlignedUnlocks = {
         34,
         123,
         80,
-        76
+        76,
       ],
       "accounts": [
         {
@@ -903,7 +903,7 @@ export type StreamflowAlignedUnlocks = {
         {
           "name": "testOracle",
           "writable": true
-        }
+        },
       ],
       "args": [
         {
@@ -913,9 +913,9 @@ export type StreamflowAlignedUnlocks = {
               "name": "updateTestOracleParams"
             }
           }
-        }
+        },
       ]
-    }
+    },
   ],
   "accounts": [
     {
@@ -928,7 +928,7 @@ export type StreamflowAlignedUnlocks = {
         121,
         67,
         183,
-        26
+        26,
       ]
     },
     {
@@ -941,9 +941,9 @@ export type StreamflowAlignedUnlocks = {
         232,
         251,
         168,
-        28
+        28,
       ]
-    }
+    },
   ],
   "errors": [
     {
@@ -1020,7 +1020,7 @@ export type StreamflowAlignedUnlocks = {
       "code": 6014,
       "name": "dynamicScheduleExpired",
       "msg": "Dynamic schedule expired, updates are not allowed"
-    }
+    },
   ],
   "types": [
     {
@@ -1035,7 +1035,7 @@ export type StreamflowAlignedUnlocks = {
                 "name": "oracleType"
               }
             }
-          }
+          },
         ]
       }
     },
@@ -1047,35 +1047,35 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "bump",
             "docs": [
-              "Bump Seed used to sign transactions"
+              "Bump Seed used to sign transactions",
             ],
             "type": "u8"
           },
           {
             "name": "sender",
             "docs": [
-              "Original Contract sender"
+              "Original Contract sender",
             ],
             "type": "pubkey"
           },
           {
             "name": "senderTokens",
             "docs": [
-              "Original Contract sender tokens address"
+              "Original Contract sender tokens address",
             ],
             "type": "pubkey"
           },
           {
             "name": "stream",
             "docs": [
-              "Vesting Stream address"
+              "Vesting Stream address",
             ],
             "type": "pubkey"
           },
           {
             "name": "priceOracleType",
             "docs": [
-              "Type of the Oracle used to derive Token Price"
+              "Type of the Oracle used to derive Token Price",
             ],
             "type": {
               "defined": {
@@ -1086,141 +1086,141 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "priceOracle",
             "docs": [
-              "Address of the Price Oracle"
+              "Address of the Price Oracle",
             ],
             "type": "pubkey"
           },
           {
             "name": "minPrice",
             "docs": [
-              "Min price boundary"
+              "Min price boundary",
             ],
             "type": "u64"
           },
           {
             "name": "maxPrice",
             "docs": [
-              "Max price boundary"
+              "Max price boundary",
             ],
             "type": "u64"
           },
           {
             "name": "minPercentage",
             "docs": [
-              "Min percentage boundary, can be 0 that equals 1 Raw Token"
+              "Min percentage boundary, can be 0 that equals 1 Raw Token",
             ],
             "type": "u64"
           },
           {
             "name": "maxPercentage",
             "docs": [
-              "Max percentage boundary"
+              "Max percentage boundary",
             ],
             "type": "u64"
           },
           {
             "name": "tickSize",
             "docs": [
-              "Ticket size for percentage boundaries"
+              "Ticket size for percentage boundaries",
             ],
             "type": "u64"
           },
           {
             "name": "startTime",
             "docs": [
-              "unlock_start from Stream contract for our worker to be able to fetch it in one call with the proxy contract"
+              "unlock_start from Stream contract for our worker to be able to fetch it in one call with the proxy contract",
             ],
             "type": "u64"
           },
           {
             "name": "endTime",
             "docs": [
-              "Copy end_time from Stream contract for our worker to be able to fetch it in one call with the proxy contract"
+              "Copy end_time from Stream contract for our worker to be able to fetch it in one call with the proxy contract",
             ],
             "type": "u64"
           },
           {
             "name": "period",
             "docs": [
-              "Copy period from Stream contract for our worker to be able to fetch it in one call with the proxy contract"
+              "Copy period from Stream contract for our worker to be able to fetch it in one call with the proxy contract",
             ],
             "type": "u64"
           },
           {
             "name": "lastAmountUpdateTime",
             "docs": [
-              "Copy last_rate_change_time from Stream contract for our worker to be able to fetch it in one call with the proxy contract"
+              "Copy last_rate_change_time from Stream contract for our worker to be able to fetch it in one call with the proxy contract",
             ],
             "type": "u64"
           },
           {
             "name": "lastPrice",
             "docs": [
-              "Price used on last amount calculation"
+              "Price used on last amount calculation",
             ],
             "type": "u64"
           },
           {
             "name": "streamCanceledTime",
             "docs": [
-              "Timestamp when stream was cancelled"
+              "Timestamp when stream was cancelled",
             ],
             "type": "u64"
           },
           {
             "name": "initialAmountPerPeriod",
             "docs": [
-              "Amount per period to use as base for calculations"
+              "Amount per period to use as base for calculations",
             ],
             "type": "u64"
           },
           {
             "name": "initialPrice",
             "docs": [
-              "Initial token price at the time of Contract creation"
+              "Initial token price at the time of Contract creation",
             ],
             "type": "u64"
           },
           {
             "name": "initialNetAmount",
             "docs": [
-              "Initial deposited amount"
+              "Initial deposited amount",
             ],
             "type": "u64"
           },
           {
             "name": "mint",
             "docs": [
-              "Mint for which the contract was created"
+              "Mint for which the contract was created",
             ],
             "type": "pubkey"
           },
           {
             "name": "expiryTime",
             "docs": [
-              "Time when contract expires, `expiry_percentage` will be set in this case"
+              "Time when contract expires, `expiry_percentage` will be set in this case",
             ],
             "type": "u64"
           },
           {
             "name": "expiryPercentage",
             "docs": [
-              "Percentage to set when contract expires, won't be updated after it"
+              "Percentage to set when contract expires, won't be updated after it",
             ],
             "type": "u64"
           },
           {
             "name": "buffer",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                16
+                16,
               ]
             }
-          }
+          },
         ]
       }
     },
@@ -1232,89 +1232,89 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "startTime",
             "docs": [
-              "Timestamp when the tokens start vesting"
+              "Timestamp when the tokens start vesting",
             ],
             "type": "u64"
           },
           {
             "name": "netAmountDeposited",
             "docs": [
-              "Deposited amount of tokens"
+              "Deposited amount of tokens",
             ],
             "type": "u64"
           },
           {
             "name": "period",
             "docs": [
-              "Time step (period) in seconds per which the vesting/release occurs"
+              "Time step (period) in seconds per which the vesting/release occurs",
             ],
             "type": "u64"
           },
           {
             "name": "amountPerPeriod",
             "docs": [
-              "Base Amount released per period. Combined with `period`, we get a release rate."
+              "Base Amount released per period. Combined with `period`, we get a release rate.",
             ],
             "type": "u64"
           },
           {
             "name": "cliff",
             "docs": [
-              "Vesting contract \"cliff\" timestamp"
+              "Vesting contract \"cliff\" timestamp",
             ],
             "type": "u64"
           },
           {
             "name": "cliffAmount",
             "docs": [
-              "Amount unlocked at the \"cliff\" timestamp"
+              "Amount unlocked at the \"cliff\" timestamp",
             ],
             "type": "u64"
           },
           {
             "name": "cancelableBySender",
             "docs": [
-              "Whether a stream can be canceled by a sender"
+              "Whether a stream can be canceled by a sender",
             ],
             "type": "bool"
           },
           {
             "name": "cancelableByRecipient",
             "docs": [
-              "Whether a stream can be canceled by a recipient"
+              "Whether a stream can be canceled by a recipient",
             ],
             "type": "bool"
           },
           {
             "name": "transferableBySender",
             "docs": [
-              "Whether the sender can transfer the stream"
+              "Whether the sender can transfer the stream",
             ],
             "type": "bool"
           },
           {
             "name": "transferableByRecipient",
             "docs": [
-              "Whether the recipient can transfer the stream"
+              "Whether the recipient can transfer the stream",
             ],
             "type": "bool"
           },
           {
             "name": "canTopup",
             "docs": [
-              "Whether topup is enabled"
+              "Whether topup is enabled",
             ],
             "type": "bool"
           },
           {
             "name": "streamName",
             "docs": [
-              "The name of this stream"
+              "The name of this stream",
             ],
             "type": {
               "array": [
                 "u8",
-                64
+                64,
               ]
             }
           },
@@ -1341,14 +1341,14 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "skipInitial",
             "docs": [
-              "Whether to skip initial calculation of amount per period"
+              "Whether to skip initial calculation of amount per period",
             ],
             "type": "bool"
           },
           {
             "name": "oracleType",
             "docs": [
-              "Type of Oracle to use to derive Token Price"
+              "Type of Oracle to use to derive Token Price",
             ],
             "type": {
               "defined": {
@@ -1359,17 +1359,17 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "expiryTime",
             "docs": [
-              "Time when contract expires, `expiry_percentage` will be set in this case"
+              "Time when contract expires, `expiry_percentage` will be set in this case",
             ],
             "type": "u64"
           },
           {
             "name": "expiryPercentage",
             "docs": [
-              "Percentage to set when contract expires, won't be updated after it"
+              "Percentage to set when contract expires, won't be updated after it",
             ],
             "type": "u64"
-          }
+          },
         ]
       }
     },
@@ -1393,7 +1393,7 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "publishTime",
             "type": "i64"
-          }
+          },
         ]
       }
     },
@@ -1413,7 +1413,7 @@ export type StreamflowAlignedUnlocks = {
           },
           {
             "name": "switchboard"
-          }
+          },
         ]
       }
     },
@@ -1449,7 +1449,7 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "mint",
             "type": "pubkey"
-          }
+          },
         ]
       }
     },
@@ -1473,9 +1473,9 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "publishTime",
             "type": "i64"
-          }
+          },
         ]
       }
-    }
+    },
   ]
 };
