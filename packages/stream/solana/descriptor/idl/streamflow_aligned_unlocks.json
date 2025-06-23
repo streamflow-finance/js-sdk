@@ -2,7 +2,7 @@
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflow_aligned_unlocks",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -977,33 +977,43 @@
     },
     {
       "code": 6007,
+      "name": "InvalidExpiryDuration",
+      "msg": "Provided expiry time/percentage configuration is invalid"
+    },
+    {
+      "code": 6008,
       "name": "UnsupportedOracle",
       "msg": "Unsupported price oracle"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvalidOracleAccount",
       "msg": "Invalid oracle account"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidOraclePrice",
       "msg": "Invalid oracle price"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "InvalidStreamMetadata",
       "msg": "Invalid Stream Metadata"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "AmountAlreadyUpdated",
       "msg": "Release amount has already been updated in this period"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "AllFundsUnlocked",
       "msg": "All funds are already unlocked"
+    },
+    {
+      "code": 6014,
+      "name": "DynamicScheduleExpired",
+      "msg": "Dynamic schedule expired, updates are not allowed"
     }
   ],
   "types": [
