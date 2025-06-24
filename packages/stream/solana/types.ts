@@ -245,6 +245,10 @@ export class AlignedContract extends Contract implements AlignedStream {
 
   initialNetAmount: BN;
 
+  expiryTime: number;
+
+  expiryPercentage: number;
+
   constructor(stream: DecodedStream, alignedProxy: AlignedUnlocksContract) {
     super(stream);
     this.minPrice = getNumberFromBN(alignedProxy.minPrice, ALIGNED_PRECISION_FACTOR_POW);
@@ -262,6 +266,8 @@ export class AlignedContract extends Contract implements AlignedStream {
     this.lastPrice = getNumberFromBN(alignedProxy.lastPrice, ALIGNED_PRECISION_FACTOR_POW);
     this.lastAmountUpdateTime = alignedProxy.lastAmountUpdateTime.toNumber();
     this.initialNetAmount = alignedProxy.initialNetAmount;
+    this.expiryTime = alignedProxy.expiryTime.toNumber();
+    this.expiryPercentage = getNumberFromBN(alignedProxy.expiryPercentage, ALIGNED_PRECISION_FACTOR_POW);
     // need to call this again since minPrice and maxPrice are used in determining the type
     this.type = buildStreamType(this);
     this.isAligned = true;
