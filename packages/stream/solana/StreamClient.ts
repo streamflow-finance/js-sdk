@@ -313,6 +313,8 @@ export class SolanaStreamClient extends BaseStreamClient {
       priceOracle,
       oracleType,
       tokenProgramId: streamTokenProgramId,
+      expiryTime,
+      expiryPercentage,
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
@@ -380,6 +382,8 @@ export class SolanaStreamClient extends BaseStreamClient {
         maxPercentage: maxPercentage instanceof BN ? maxPercentage : getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW),
         tickSize: new BN(tickSize || 1),
         skipInitial: skipInitial ?? false,
+        expiryTime: new BN(expiryTime ?? 0),
+        expiryPercentage: expiryPercentage instanceof BN ? expiryPercentage : getBN(expiryPercentage ?? 0, ALIGNED_PRECISION_FACTOR_POW),
       })
       .accountsPartial({
         payer: sender.publicKey,
