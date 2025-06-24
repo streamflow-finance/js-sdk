@@ -254,6 +254,8 @@ export type AlignedStreamData = {
   lastPrice: number;
   lastAmountUpdateTime: number;
   initialNetAmount: BN;
+  expiryTime: number;
+  expiryPercentage: number;
 };
 
 export type AlignedStream = LinearStream & AlignedStreamData;
