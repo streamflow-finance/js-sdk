@@ -177,10 +177,10 @@ export class Contract implements LinearStream {
     this.streamflowTreasuryTokens = stream.streamflowTreasuryTokens.toBase58();
     this.streamflowFeeTotal = stream.streamflowFeeTotal;
     this.streamflowFeeWithdrawn = stream.streamflowFeeWithdrawn;
-    this.streamflowFeePercent = stream.streamflowFeePercent.toNumber();
+    this.streamflowFeePercent = stream.streamflowFeePercent;
     this.partnerFeeTotal = stream.partnerFeeTotal;
     this.partnerFeeWithdrawn = stream.partnerFeeWithdrawn;
-    this.partnerFeePercent = stream.partnerFeePercent.toNumber();
+    this.partnerFeePercent = stream.partnerFeePercent;
     this.partner = stream.partner.toBase58();
     this.partnerTokens = stream.partnerTokens?.toBase58();
     this.start = stream.start.toNumber();
@@ -292,10 +292,10 @@ export interface DecodedStream {
   streamflowTreasuryTokens: PublicKey;
   streamflowFeeTotal: BN;
   streamflowFeeWithdrawn: BN;
-  streamflowFeePercent: BN;
+  streamflowFeePercent: number;
   partnerFeeTotal: BN;
   partnerFeeWithdrawn: BN;
-  partnerFeePercent: BN;
+  partnerFeePercent: number;
   partner: PublicKey;
   partnerTokens: PublicKey;
   start: BN;
