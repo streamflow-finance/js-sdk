@@ -29,6 +29,45 @@ export const getNumberFromBN = (value: BN, decimals: number): number =>
   value.gt(new BN(2 ** 53 - 1)) ? value.div(new BN(10 ** decimals)).toNumber() : value.toNumber() / 10 ** decimals;
 
 /**
+ * Type guard to check if a value is an Error instance
+ * @param value - The value to check
+ * @returns true if the value is an Error
+ */
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error ||
+    (typeof value === 'object' &&
+      value !== null &&
+      'message' in value &&
+      typeof (value as any).message === 'string');
+}
+
+/**
+ * Converts unknown error values to Error instances
+ * @param err - The unknown error value
+ * @returns An Error instance
+ */
+function toError(err: unknown): Error {
+  if (isError(err)) {
+    return err;
+  }
+
+  // Handle different types of thrown values
+  if (typeof err === 'string') {
+    return new Error(err);
+  }
+  if (typeof err === 'object' && err !== null) {
+    try {
+      return new Error(JSON.stringify(err));
+    } catch {
+      return new Error('Unknown object error');
+    }
+  }
+
+  return new Error(`Unknown error: ${String(err)}`);
+}
+
+/**
  * Used to make on chain calls to the contract and wrap raised errors if any
  * @param func function that interacts with the contract
  * @param callback callback that may be used to extract error code
@@ -41,14 +80,13 @@ export async function handleContractError<T>(
   try {
     return await func();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    if (err instanceof Error) {
-      if (callback) {
-        throw new ContractError(err, callback(err));
-      }
-      throw new ContractError(err);
+  } catch (err: unknown) {
+    const errorInstance = toError(err);
+
+    if (callback) {
+      throw new ContractError(errorInstance, callback(errorInstance));
     }
-    throw err;
+    throw new ContractError(errorInstance);
   }
 }
 
