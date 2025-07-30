@@ -193,6 +193,9 @@ export type RewardPoolDynamic = {
           "name": "stakePool",
           "docs": [
             "Stake Pool",
+          ],
+          "relations": [
+            "rewardPool",
           ]
         },
         {

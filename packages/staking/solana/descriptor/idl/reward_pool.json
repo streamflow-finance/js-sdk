@@ -164,6 +164,9 @@
           "name": "stake_pool",
           "docs": [
             "Stake Pool"
+          ],
+          "relations": [
+            "reward_pool"
           ]
         },
         {

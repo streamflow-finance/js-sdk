@@ -170,6 +170,9 @@ export type RewardPool = {
           "name": "stakePool",
           "docs": [
             "Stake Pool",
+          ],
+          "relations": [
+            "rewardPool",
           ]
         },
         {

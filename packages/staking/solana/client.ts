@@ -705,7 +705,6 @@ export class SolanaStakingClient {
       .closeEntry(depositNonce)
       .accounts({
         authority: staker,
-        stakePool: stakePool,
         rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(rewardMint), rewardPoolNonce),
       })
       .instruction();
