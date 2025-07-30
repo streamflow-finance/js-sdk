@@ -987,10 +987,46 @@ export type StakePool = {
           ]
         },
         {
+          "name": "rentSponsor",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  110,
+                  116,
+                  45,
+                  115,
+                  112,
+                  111,
+                  110,
+                  115,
+                  111,
+                  114,
+                ]
+              },
+            ]
+          }
+        },
+        {
           "name": "tokenProgram"
         },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
       ],
-      "args": []
+      "args": [
+        {
+          "name": "shouldClose",
+          "type": {
+            "option": "bool"
+          }
+        },
+      ]
     },
   ],
   "accounts": [

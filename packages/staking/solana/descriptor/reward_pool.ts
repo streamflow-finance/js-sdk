@@ -167,6 +167,12 @@ export type RewardPool = {
       ],
       "accounts": [
         {
+          "name": "stakePool",
+          "docs": [
+            "Stake Pool",
+          ]
+        },
+        {
           "name": "rewardPool",
           "docs": [
             "Reward Pool",
@@ -174,9 +180,75 @@ export type RewardPool = {
         },
         {
           "name": "stakeEntry",
-          "docs": [
-            "Stake Entry for which rewards are being claimed",
-          ]
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stakePool"
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "stakeNonce"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                6,
+                133,
+                25,
+                160,
+                130,
+                0,
+                119,
+                110,
+                227,
+                8,
+                28,
+                85,
+                214,
+                116,
+                67,
+                41,
+                155,
+                152,
+                181,
+                139,
+                124,
+                208,
+                85,
+                71,
+                175,
+                40,
+                123,
+                71,
+                139,
+                170,
+                201,
+                178,
+              ]
+            }
+          }
         },
         {
           "name": "rewardEntry",
@@ -249,7 +321,12 @@ export type RewardPool = {
           "address": "11111111111111111111111111111111"
         },
       ],
-      "args": []
+      "args": [
+        {
+          "name": "stakeNonce",
+          "type": "u32"
+        },
+      ]
     },
     {
       "name": "createEntry",

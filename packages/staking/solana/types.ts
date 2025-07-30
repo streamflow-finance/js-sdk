@@ -60,7 +60,9 @@ export interface StakeAndCreateEntriesArgs extends StakeArgs {
   rewardPools: RewardPoolArgs[];
 }
 
-export type UnstakeArgs = StakeBaseArgs;
+export interface UnstakeArgs extends StakeBaseArgs {
+  shouldClose?: boolean;
+}
 
 export interface UnstakeAndCloseArgs extends UnstakeArgs {
   rewardPools: (RewardPoolArgs & GovernorWithVoteArgs)[];
