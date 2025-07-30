@@ -224,7 +224,7 @@ await client.stake({ nonce, amount, duration, stakePool, stakePoolMint }, extPar
 await client.createRewardEntry({ stakePool, rewardPoolNonce, depositNonce: nonce, rewardMint }, extParams);
 ```
 
-> ![WARNING]
+> [!WARNING]
 > For every Reward Pool a Reward entry should be created prior to claim and ideally at the same time when user stakes. Without a Reward Entry pool won't be able to properly track reward distribution.
 
 You can also bundle multiple instructions with `prepare` calls to stake and create entries in one transaction:
@@ -240,7 +240,8 @@ const reward2Ixs = await this.prepareCreateRewardEntryInstructions({ stakePool, 
 await client.execute([...stakeIxs, ...reward1Ixs, ...reward2Ixs, ], extParams);
 ```
 
-`execute` method will bundle instructions in a transaction, estimate compute price and execute the transaction.
+> [!NOTE]
+> `execute` method will bundle instructions in a transaction, estimate compute price and execute the transaction.
 
 #### Unstake/Withdraw to a stake pool
 ```typescript
@@ -335,7 +336,8 @@ Client also exposes methods to group staking/unstaking with reward pool actions.
 }
 ```
 
-Please note that transactions can become quite large if you have many rewards pools.
+> [!Note]
+> Transactions can become quite large if you have many rewards pools, that can make it impossible to do all actions in 1 transaction - in this case please stick with `prepare` methods to build custom instructions and execute them with `execute`.
 
 ### Set Token Metadata
 
