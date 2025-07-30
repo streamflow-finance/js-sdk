@@ -61,3 +61,5 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export const divCeilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigInt(1) : BigInt(0));
+
+export const flattenArray = <T>(arr: T[][]): T[] => arr.reduce((acc, item) => acc.concat(item), []);
