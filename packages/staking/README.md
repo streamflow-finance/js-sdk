@@ -303,8 +303,8 @@ Client also exposes methods to group staking/unstaking with reward pool actions.
 // Performs multiple actions needed to fully unstake:
 // 1. Claims all unclaimed rewards from all passed pools
 // 2. Unstakes from a Stake Pool
-// 3. Close Reward Entries, returning the rent fee back
-// 4. Clsoe Stake Entry to return the rent fee back
+// 3. Closes Reward Entries, returning the rent fee back
+// 4. Closes Stake Entry to return the rent fee back
 {
    const { txId } = await client.unstakeAndClaim({
       stakePool,

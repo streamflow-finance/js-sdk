@@ -48,8 +48,10 @@ interface RewardPoolArgs extends TokenProgram, RewardPoolProgram {
   mint: Address;
 }
 
+/**
+ * Used only with dynamic reward pools
+ */
 interface GovernorWithVoteArgs {
-  // used only with dynamic reward pools
   governor?: Address;
   vote?: Address;
 }
