@@ -584,7 +584,7 @@ export class SolanaStakingClient {
       to: getAssociatedTokenAddressSync(pk(rewardMint), staker, true, pk(tokenProgramId)),
     });
 
-    if (this.isDynamicProgram(rewardPoolProgram)) {
+    if (this.isDynamicRewardProgram(rewardPoolProgram)) {
       if (governor === undefined) {
         governor = (await rewardPoolProgram.account.rewardPool.fetch(rewardPoolKey)).governor;
       }
@@ -825,7 +825,7 @@ export class SolanaStakingClient {
     }
   }
 
-  private isDynamicProgram = (
+  private isDynamicRewardProgram = (
     program: Program<RewardPoolProgramType> | Program<RewardPoolDynamicProgramType>,
   ): program is Program<RewardPoolDynamicProgramType> => {
     return program.programId.equals(this.programs.rewardPoolDynamicProgram.programId);
