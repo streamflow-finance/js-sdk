@@ -26,6 +26,7 @@ const populateRewardEntry = (
     new BN(0),
     new BN(0),
     new BN(0),
+    false,
     [],
   );
   if (effectiveStakedAmount && rewardAmount && rewardPeriod) {

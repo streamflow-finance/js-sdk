@@ -77,7 +77,6 @@ await client.searchStakeEntries({ payer, stakePool }) // returns all stake entri
 await client.searchRewardPools({ stakePool, mint })
 
 await client.searchRewardEntries({ stakeEntry, rewardPool })
-
 ```
 
 #### Create a staking pool
@@ -87,6 +86,11 @@ const client = new SolanaStakingClient({
   clusterUrl: "https://api.mainnet-beta.solana.com",
   cluster: ICluster.Mainnet
 });
+/*
+  invoker should be of type SignerWalletAdapter | Keypair
+  computePrice and computeLimit are optional
+ */
+const extParams = { invoker, computePrice: 10_000, computeLimit: 'autoSimulate' };
 /*
   Rewards Multiplier powered by 10^9.  
   Example: if multiplier is 2_000_000_000 than stakes for maxDuration will have 2x more rewards than stakes for minDuration
@@ -116,8 +120,8 @@ const { metadataId: stakePoolPda } = await client.createStakePool({
     minDuration,
     mint: MINT_ADDRESS,
     permissionless,
-    nonce: 
-})
+    nonce,
+}, extParams)
 
 ```
 
@@ -158,17 +162,16 @@ const permissionless = true;
 const freezeStakeMint = true;
 
 client.createRewardPool({
-      nonce,
-      rewardAmount,
-      rewardPeriod,
-      rewardMint,
-      permissionless,
-      freezeStakeMint,
-      stakePool: stakePoolPda,
-      stakePoolMint: MINT_ADDRESS,
-    })
+    nonce,
+    rewardAmount,
+    rewardPeriod,
+    rewardMint,
+    permissionless,
+    freezeStakeMint,
+    stakePool: stakePoolPda,
+    stakePoolMint: MINT_ADDRESS,
+}, extParams)
 ```
-
 
 #### Reward Amount configuration (in-depth)
 
@@ -215,8 +218,30 @@ We recommend to use the `calculateRewardAmountFromRate` function exposed by the 
 const nonce = 0; 
 const amount = new BN(1000); // tokens to stake
 const duration = new BN(86400 * 2) // 2 days, must be in the range of stakePool's min and max durations
-await client.stake({ nonce, amount, duration, stakePool, stakePoolMint });
+await client.stake({ nonce, amount, duration, stakePool, stakePoolMint }, extParams);
+
+// Create Reward Entry to track rewards, call instruction for every reward pool on `stake`
+await client.createRewardEntry({ stakePool, rewardPoolNonce, depositNonce: nonce, rewardMint }, extParams);
 ```
+
+> [!WARNING]
+> For every Reward Pool a Reward entry should be created prior to claim and ideally at the same time when user stakes. Without a Reward Entry pool won't be able to properly track reward distribution.
+
+You can also bundle multiple instructions with `prepare` calls to stake and create entries in one transaction:
+
+```typescript
+const nonce = 1; 
+const stakeIxs = await client.prepareStakeInstructions({ nonce, amount, duration, stakePool, stakePoolMint }, extParams);
+const rewardPoolNonce1 = 0;
+const rewardPoolNonce2 = 1;
+const reward1Ixs = await this.prepareCreateRewardEntryInstructions({ stakePool, rewardPoolNonce: rewardPoolNonce1, depositNonce: nonce, rewardMint }, extParams);
+const reward2Ixs = await this.prepareCreateRewardEntryInstructions({ stakePool, rewardPoolNonce: rewardPoolNonce2, depositNonce: nonce, rewardMint }, extParams);
+
+await client.execute([...stakeIxs, ...reward1Ixs, ...reward2Ixs, ], extParams);
+```
+
+> [!NOTE]
+> `execute` method will bundle instructions in a transaction, estimate compute price and execute the transaction.
 
 #### Unstake/Withdraw to a stake pool
 ```typescript
@@ -231,6 +256,9 @@ await client.stake({ nonce, amount, duration, stakePool, stakePoolMint });
  */ 
 const nonce = 0; // 
 await client.unstake({ stakePool, stakePoolMint, nonce });
+
+// Done separately, returns rent fee back to the user
+await client.closeStakeEntry({ stakePool, nonce })
 ```
 
 #### Claim a reward
@@ -250,6 +278,65 @@ await client.claimRewards({
 > All operations have accompanying APIs for manual transaction building. Consult with API docs to find respective calls.  
 > For instance, prepareClaimRewardsInstructions.  
 > These APIs allow to aggregate multiple operations in a single transaction according to the app needs.  
+
+### Grouped actions
+
+Client also exposes methods to group staking/unstaking with reward pool actions.
+
+```typescript
+/// Will stake into a Stake Pool and create Reward Entries for every passed pool - reward entries are used to track rewards, ideally should be created right after staking.
+{
+   const { txId } = await client.stakeAndCreateEntries({
+      stakePool,
+      stakePoolMint: mint,
+      amount: new BN(1),
+      duration: new BN(0),
+      nonce: stakeNonce,
+      rewardPools: [{
+         nonce: 0,
+         mint,
+         rewardPoolType: "fixed",
+      }]
+   }, extParams);
+   console.log("Stake signature: ", txId);
+}
+
+// Performs multiple actions needed to fully unstake:
+// 1. Claims all unclaimed rewards from all passed pools
+// 2. Unstakes from a Stake Pool and closes the stake entry
+// 3. Closes Reward Entries, returning the rent fee back
+{
+   const { txId } = await client.unstakeAndClaim({
+      stakePool,
+      stakePoolMint: mint,
+      nonce: stakeNonce,
+      rewardPools: [{
+         nonce: 0,
+         mint,
+         rewardPoolType: "fixed"
+      }]
+   }, extParams);
+   console.log("Unstake signature: ", txId);
+}
+
+// Useful when user can't claim rewards, but wants to unstake and close all created entries.
+{
+   const { txId } = await client.unstakeAndClose({
+      stakePool,
+      stakePoolMint: mint,
+      nonce: stakeNonce,
+      rewardPools: [{
+         nonce: 0,
+         mint,
+         rewardPoolType: "fixed"
+      }]
+   }, extParams);
+   console.log("Unstake signature: ", txId);
+}
+```
+
+> [!Note]
+> Transactions can become quite large if you have many rewards pools, that can make it impossible to do all actions in 1 transaction - in this case please stick with `prepare` methods to build custom instructions and execute them with `execute`.
 
 ### Set Token Metadata
 
@@ -274,9 +361,8 @@ ix = await program.methods.setTokenMetadataT22("sToken", "sTST", "https://arweav
    authority: keypair.publicKey
 }).instruction();
 
-const { tx, hash, context } = await prepareTransaction(client.connection, [ix], keypair.publicKey);
-const sig = await signAndExecuteTransaction(client.connection, keypair, tx, { hash, context }, {});
-console.log(sig);
+const { signature } = await client.execute([ix], {invoker: keypair});
+console.log(signature);
  ```
 
 ## Appendix

@@ -1,10 +1,10 @@
 {
-  "address": "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
+  "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
-    "name": "reward_pool",
+    "name": "reward_pool_dynamic",
     "version": "2.2.0",
     "spec": "0.1.0",
-    "description": "Program to manage Reward Pools for Stake Pools and claim rewards from them"
+    "description": "Reward pools with dynamic rewards distribution"
   },
   "instructions": [
     {
@@ -54,6 +54,15 @@
         80
       ],
       "accounts": [
+        {
+          "name": "stake_pool",
+          "docs": [
+            "Original Stake Pool"
+          ],
+          "relations": [
+            "reward_pool"
+          ]
+        },
         {
           "name": "reward_pool",
           "docs": [
@@ -136,6 +145,20 @@
           "relations": [
             "reward_pool"
           ]
+        },
+        {
+          "name": "governor",
+          "docs": [
+            "Reward Pool governor"
+          ],
+          "optional": true
+        },
+        {
+          "name": "vote",
+          "docs": [
+            "Vote for the active proposal"
+          ],
+          "optional": true
         },
         {
           "name": "token_program"
@@ -352,7 +375,8 @@
           "name": "reward_pool",
           "docs": [
             "Reward Pool"
-          ]
+          ],
+          "writable": true
         },
         {
           "name": "stake_entry",
@@ -536,6 +560,13 @@
           }
         },
         {
+          "name": "governor",
+          "docs": [
+            "Governor to be set for the RewardPool"
+          ],
+          "optional": true
+        },
+        {
           "name": "creator",
           "docs": [
             "Reward Pool creator"
@@ -557,22 +588,16 @@
           "type": "u8"
         },
         {
-          "name": "reward_amount",
-          "type": "u64"
-        },
-        {
-          "name": "reward_period",
-          "type": "u64"
-        },
-        {
           "name": "permissionless",
           "type": "bool"
         },
         {
-          "name": "last_claim_period_opt",
-          "type": {
-            "option": "u64"
-          }
+          "name": "claim_period",
+          "type": "u64"
+        },
+        {
+          "name": "claim_start_ts",
+          "type": "u64"
         }
       ]
     },
@@ -624,9 +649,18 @@
           ]
         },
         {
+          "name": "stake_pool",
+          "docs": [
+            "Original Stake Pool"
+          ],
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
           "name": "reward_pool",
           "docs": [
-            "Stake Pool"
+            "Reward Pool"
           ],
           "writable": true
         },
@@ -766,6 +800,53 @@
       ]
     },
     {
+      "name": "set_governor",
+      "discriminator": [
+        47,
+        75,
+        9,
+        199,
+        215,
+        187,
+        161,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "stake_pool",
+          "docs": [
+            "Stake Pool - to verify the governor belongs to the same stake pool"
+          ],
+          "relations": [
+            "reward_pool",
+            "governor"
+          ]
+        },
+        {
+          "name": "reward_pool",
+          "docs": [
+            "Reward Pool - to be updated with new governor"
+          ],
+          "writable": true
+        },
+        {
+          "name": "governor",
+          "docs": [
+            "New Governor to be set for the RewardPool"
+          ]
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Current Authority - only authority can set the governor"
+          ],
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "update_pool",
       "discriminator": [
         239,
@@ -784,19 +865,7 @@
             "Current Authority"
           ],
           "writable": true,
-          "signer": true,
-          "relations": [
-            "reward_pool"
-          ]
-        },
-        {
-          "name": "stake_pool",
-          "docs": [
-            "Stake Pool to Which Reward Pool belongs"
-          ],
-          "relations": [
-            "reward_pool"
-          ]
+          "signer": true
         },
         {
           "name": "reward_pool",
@@ -808,15 +877,15 @@
       ],
       "args": [
         {
-          "name": "reward_amount",
+          "name": "claim_period",
           "type": {
             "option": "u64"
           }
         },
         {
-          "name": "reward_period",
+          "name": "permissionless",
           "type": {
-            "option": "u64"
+            "option": "bool"
           }
         }
       ]
@@ -847,6 +916,19 @@
         183,
         231,
         0
+      ]
+    },
+    {
+      "name": "Governor",
+      "discriminator": [
+        37,
+        136,
+        44,
+        80,
+        68,
+        85,
+        213,
+        178
       ]
     },
     {
@@ -900,6 +982,19 @@
         255,
         28
       ]
+    },
+    {
+      "name": "Vote",
+      "discriminator": [
+        96,
+        91,
+        104,
+        57,
+        145,
+        35,
+        172,
+        155
+      ]
     }
   ],
   "errors": [
@@ -910,73 +1005,83 @@
     },
     {
       "code": 6001,
-      "name": "InvalidRewardAmount",
-      "msg": "Reward amount should be more than 0"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidRewardPeriod",
-      "msg": "Reward period should be more than 0"
-    },
-    {
-      "code": 6003,
       "name": "Unauthorized",
       "msg": "Account is not authorized to execute this instruction"
     },
     {
-      "code": 6004,
+      "code": 6002,
       "name": "OwnerMismatch",
       "msg": "Token account owner did not match intended owner"
     },
     {
-      "code": 6005,
-      "name": "InvalidRewardVault",
-      "msg": "Provided Reward Vault is Invalid"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidRewardEntry",
-      "msg": "Provided Reward Entry is Invalid"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidStakeEntry",
-      "msg": "Provided Stake Entry is Invalid"
-    },
-    {
-      "code": 6008,
+      "code": 6003,
       "name": "InvalidRewardPool",
       "msg": "Provided Reward Pool is Invalid"
     },
     {
-      "code": 6009,
-      "name": "InvalidMint",
-      "msg": "Invalid Mint"
+      "code": 6004,
+      "name": "InvalidRewardVault",
+      "msg": "Incorrect vault for RewardPool"
     },
     {
-      "code": 6010,
+      "code": 6005,
+      "name": "InvalidRewardEntry",
+      "msg": "Provided Reward Entry is Invalid"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidStakeEntry",
+      "msg": "Provided Stake Entry is Invalid"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidStakePool",
+      "msg": "Provided Stake Pool does not equal the Governor Stake Pool"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidMint",
+      "msg": "Provided Mint does not equal the Pool Mint"
+    },
+    {
+      "code": 6009,
       "name": "StakeEntryClosed",
       "msg": "Stake Entry is closed, rewards are not claimable anymore"
     },
     {
-      "code": 6011,
+      "code": 6010,
       "name": "StakeEntryOpened",
       "msg": "Stake Entry is still opened, closing is not possible"
     },
     {
+      "code": 6011,
+      "name": "InvalidClaimStartTs",
+      "msg": "Invalid claim start ts provided"
+    },
+    {
       "code": 6012,
+      "name": "ClaimTooEarly",
+      "msg": "Claiming is not possible until claim period has passed"
+    },
+    {
+      "code": 6013,
       "name": "RewardPoolDrained",
       "msg": "Reward Pool does not have enough Rewards for Claiming"
     },
     {
-      "code": 6013,
-      "name": "UpdateTooSoon",
-      "msg": "Repeated update can not happen sooner than the stake pool max duration"
+      "code": 6014,
+      "name": "InvalidGovernor",
+      "msg": "Provided governor is invalid"
     },
     {
-      "code": 6014,
-      "name": "InvalidLastClaimPeriod",
-      "msg": "Invalid last claim period provided"
+      "code": 6015,
+      "name": "InvalidVote",
+      "msg": "Provided vote is invalid"
+    },
+    {
+      "code": 6016,
+      "name": "VoteRequired",
+      "msg": "Vote is required for claiming"
     }
   ],
   "types": [
@@ -1063,6 +1168,68 @@
       }
     },
     {
+      "name": "Governor",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump Seed used to sign transactions"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "Nonce to support multiple governors for the same pool"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "stake_pool",
+            "docs": [
+              "Stake Pool for which Reward Pool was added"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Authority of the Governor that can add proposals and set the current one"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "current_proposal",
+            "docs": [
+              "Address of the current proposal"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_proposals",
+            "docs": [
+              "Total number of created proposals"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "_buffer",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "RewardEntry",
       "type": {
         "kind": "struct",
@@ -1089,9 +1256,9 @@
             "type": "u64"
           },
           {
-            "name": "accounted_amount",
+            "name": "rewards_state",
             "docs": [
-              "Sum of accounted amounts, used to correctly issue rewards in case of precision loss"
+              "State of the reward disitrbution, accounts for the last state in the reward pool"
             ],
             "type": "u128"
           },
@@ -1103,23 +1270,9 @@
             "type": "u64"
           },
           {
-            "name": "last_accounted_ts",
+            "name": "last_claimed_ts",
             "docs": [
               "Timestamp when rewards have been claimed last time"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_reward_amount",
-            "docs": [
-              "Reward amount used on last claim or entry creation"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_reward_period",
-            "docs": [
-              "Reward Period used on last claim or entry creation"
             ],
             "type": "u64"
           },
@@ -1172,6 +1325,13 @@
             "type": "pubkey"
           },
           {
+            "name": "governor",
+            "docs": [
+              "Governor of the Stake Pool, should be passed at claiming if set"
+            ],
+            "type": "pubkey"
+          },
+          {
             "name": "mint",
             "docs": [
               "Mint of Reward Pool"
@@ -1193,23 +1353,6 @@
             "type": "pubkey"
           },
           {
-            "name": "reward_amount",
-            "docs": [
-              "Amount of rewards that will be distributed per effective stake",
-              "",
-              "Should be a fraction of a raw token amount which is 1 / 10^9,",
-              "i.e. `reward_amount` of `1_000_000_000` equals one raw token per effective stake"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "reward_period",
-            "docs": [
-              "Period of Rewards distribution in seconds"
-            ],
-            "type": "u64"
-          },
-          {
             "name": "permissionless",
             "docs": [
               "Whether anyone can fund the Pool"
@@ -1217,30 +1360,16 @@
             "type": "bool"
           },
           {
-            "name": "last_reward_amount",
+            "name": "claim_period",
             "docs": [
-              "`reward_amount` used before the last update"
+              "Period of claims, may be used to block consecutive claims within the same period"
             ],
             "type": "u64"
           },
           {
-            "name": "last_reward_period",
+            "name": "claim_start_ts",
             "docs": [
-              "`reward_period` used before the last update"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_amount_update_ts",
-            "docs": [
-              "Time when `reward_amount` was updated the last time"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_period_update_ts",
-            "docs": [
-              "Time when `reward_period` was updated the last time"
+              "Time when claiming starts, will be used as a base timestamp if claim_period is set"
             ],
             "type": "u64"
           },
@@ -1266,16 +1395,23 @@
             "type": "u64"
           },
           {
-            "name": "created_ts",
+            "name": "rewards_state",
             "docs": [
-              "Time when Reward Pool was created"
+              "Ever increasing accumulator of the amount of rewards per effective stake.\n    Said another way, if a user deposited before any rewards were added to the\n    `vault`, then this would be the token amount per effective stake they could\n    claim."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "last_amount",
+            "docs": [
+              "latest amount of tokens in the vault"
             ],
             "type": "u64"
           },
           {
-            "name": "last_claim_period",
+            "name": "created_ts",
             "docs": [
-              "For how much seconds after unstake user should be able to claim rewards"
+              "Time when Reward Pool was created"
             ],
             "type": "u64"
           },
@@ -1287,7 +1423,7 @@
             "type": {
               "array": [
                 "u8",
-                48
+                128
               ]
             }
           }
@@ -1531,6 +1667,54 @@
               "array": [
                 "u8",
                 55
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vote",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal",
+            "docs": [
+              "Question to which vote was provided"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "voter",
+            "docs": [
+              "Voter that voted on the proposal"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "option_index",
+            "docs": [
+              "Index of the option used for voting"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "weight",
+            "docs": [
+              "Weight of the vote, correspond to number of sTokens used"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "_buffer",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64
               ]
             }
           }

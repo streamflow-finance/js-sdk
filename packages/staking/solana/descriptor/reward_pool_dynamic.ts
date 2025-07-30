@@ -1,14 +1,20 @@
-{
-  "address": "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/reward_pool_dynamic.json`.
+ */
+export type RewardPoolDynamic = {
+  "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
-    "name": "reward_pool",
+    "name": "rewardPoolDynamic",
     "version": "2.2.0",
     "spec": "0.1.0",
-    "description": "Program to manage Reward Pools for Stake Pools and claim rewards from them"
+    "description": "Reward pools with dynamic rewards distribution"
   },
   "instructions": [
     {
-      "name": "change_authority",
+      "name": "changeAuthority",
       "discriminator": [
         50,
         106,
@@ -17,32 +23,32 @@
         99,
         118,
         145,
-        88
+        88,
       ],
       "accounts": [
         {
-          "name": "reward_pool",
+          "name": "rewardPool",
           "docs": [
-            "Reward Pool"
+            "Reward Pool",
           ],
           "writable": true
         },
         {
           "name": "authority",
           "docs": [
-            "Current Authority"
+            "Current Authority",
           ],
           "writable": true,
           "signer": true
         },
         {
-          "name": "new_authority"
-        }
+          "name": "newAuthority"
+        },
       ],
       "args": []
     },
     {
-      "name": "claim_rewards",
+      "name": "claimRewards",
       "discriminator": [
         4,
         144,
@@ -51,26 +57,35 @@
         116,
         23,
         151,
-        80
+        80,
       ],
       "accounts": [
         {
-          "name": "reward_pool",
+          "name": "stakePool",
           "docs": [
-            "Reward Pool"
+            "Original Stake Pool",
+          ],
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "rewardPool",
+          "docs": [
+            "Reward Pool",
           ],
           "writable": true
         },
         {
-          "name": "stake_entry",
+          "name": "stakeEntry",
           "docs": [
-            "Stake Entry for which rewards are being claimed"
+            "Stake Entry for which rewards are being claimed",
           ]
         },
         {
-          "name": "reward_entry",
+          "name": "rewardEntry",
           "docs": [
-            "Reward Entry that stores metadata about claimed rewards"
+            "Reward Entry that stores metadata about claimed rewards",
           ],
           "writable": true,
           "pda": {
@@ -89,41 +104,41 @@
                   110,
                   116,
                   114,
-                  121
+                  121,
                 ]
               },
               {
                 "kind": "account",
-                "path": "reward_pool"
+                "path": "rewardPool"
               },
               {
                 "kind": "account",
-                "path": "stake_entry"
-              }
+                "path": "stakeEntry"
+              },
             ]
           }
         },
         {
           "name": "vault",
           "docs": [
-            "Reward Pool Vault that stores tokens"
+            "Reward Pool Vault that stores tokens",
           ],
           "writable": true,
           "relations": [
-            "reward_pool"
+            "rewardPool",
           ]
         },
         {
           "name": "to",
           "docs": [
-            "Account to send the reward tokens to."
+            "Account to send the reward tokens to.",
           ],
           "writable": true
         },
         {
           "name": "claimant",
           "docs": [
-            "Who is claiming the tokens."
+            "Who is claiming the tokens.",
           ],
           "writable": true,
           "signer": true
@@ -131,24 +146,38 @@
         {
           "name": "mint",
           "docs": [
-            "The mint to claim."
+            "The mint to claim.",
           ],
           "relations": [
-            "reward_pool"
+            "rewardPool",
           ]
         },
         {
-          "name": "token_program"
+          "name": "governor",
+          "docs": [
+            "Reward Pool governor",
+          ],
+          "optional": true
         },
         {
-          "name": "system_program",
+          "name": "vote",
+          "docs": [
+            "Vote for the active proposal",
+          ],
+          "optional": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": []
     },
     {
-      "name": "close_entry",
+      "name": "closeEntry",
       "discriminator": [
         132,
         26,
@@ -157,26 +186,26 @@
         190,
         37,
         114,
-        67
+        67,
       ],
       "accounts": [
         {
-          "name": "stake_pool",
+          "name": "stakePool",
           "docs": [
-            "Stake Pool"
+            "Stake Pool",
           ],
           "relations": [
-            "reward_pool"
+            "rewardPool",
           ]
         },
         {
-          "name": "reward_pool",
+          "name": "rewardPool",
           "docs": [
-            "Reward Pool"
+            "Reward Pool",
           ]
         },
         {
-          "name": "stake_entry",
+          "name": "stakeEntry",
           "pda": {
             "seeds": [
               {
@@ -192,12 +221,12 @@
                   110,
                   116,
                   114,
-                  121
+                  121,
                 ]
               },
               {
                 "kind": "account",
-                "path": "stake_pool"
+                "path": "stakePool"
               },
               {
                 "kind": "account",
@@ -205,8 +234,8 @@
               },
               {
                 "kind": "arg",
-                "path": "stake_nonce"
-              }
+                "path": "stakeNonce"
+              },
             ],
             "program": {
               "kind": "const",
@@ -242,15 +271,15 @@
                 139,
                 170,
                 201,
-                178
+                178,
               ]
             }
           }
         },
         {
-          "name": "reward_entry",
+          "name": "rewardEntry",
           "docs": [
-            "Reward Entry that stores metadata about claimed rewards"
+            "Reward Entry that stores metadata about claimed rewards",
           ],
           "writable": true,
           "pda": {
@@ -269,17 +298,17 @@
                   110,
                   116,
                   114,
-                  121
+                  121,
                 ]
               },
               {
                 "kind": "account",
-                "path": "reward_pool"
+                "path": "rewardPool"
               },
               {
                 "kind": "account",
-                "path": "stake_entry"
-              }
+                "path": "stakeEntry"
+              },
             ]
           }
         },
@@ -289,7 +318,7 @@
           "signer": true
         },
         {
-          "name": "rent_sponsor",
+          "name": "rentSponsor",
           "writable": true,
           "pda": {
             "seeds": [
@@ -307,26 +336,26 @@
                   110,
                   115,
                   111,
-                  114
+                  114,
                 ]
-              }
+              },
             ]
           }
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": [
         {
-          "name": "stake_nonce",
+          "name": "stakeNonce",
           "type": "u32"
-        }
+        },
       ]
     },
     {
-      "name": "create_entry",
+      "name": "createEntry",
       "discriminator": [
         248,
         207,
@@ -335,35 +364,36 @@
         66,
         162,
         150,
-        16
+        16,
       ],
       "accounts": [
         {
-          "name": "stake_pool",
+          "name": "stakePool",
           "docs": [
-            "Original Stake Pool"
+            "Original Stake Pool",
           ],
           "relations": [
-            "reward_pool",
-            "stake_entry"
+            "rewardPool",
+            "stakeEntry",
           ]
         },
         {
-          "name": "reward_pool",
+          "name": "rewardPool",
           "docs": [
-            "Reward Pool"
+            "Reward Pool",
+          ],
+          "writable": true
+        },
+        {
+          "name": "stakeEntry",
+          "docs": [
+            "Stake Entry for which rewards are being claimed",
           ]
         },
         {
-          "name": "stake_entry",
+          "name": "rewardEntry",
           "docs": [
-            "Stake Entry for which rewards are being claimed"
-          ]
-        },
-        {
-          "name": "reward_entry",
-          "docs": [
-            "Reward Entry that stores metadata about claimed rewards"
+            "Reward Entry that stores metadata about claimed rewards",
           ],
           "writable": true,
           "pda": {
@@ -382,24 +412,24 @@
                   110,
                   116,
                   114,
-                  121
+                  121,
                 ]
               },
               {
                 "kind": "account",
-                "path": "reward_pool"
+                "path": "rewardPool"
               },
               {
                 "kind": "account",
-                "path": "stake_entry"
-              }
+                "path": "stakeEntry"
+              },
             ]
           }
         },
         {
           "name": "payer",
           "docs": [
-            "Rent payer"
+            "Rent payer",
           ],
           "writable": true,
           "signer": true
@@ -408,7 +438,7 @@
           "name": "authority"
         },
         {
-          "name": "rent_sponsor",
+          "name": "rentSponsor",
           "writable": true,
           "pda": {
             "seeds": [
@@ -426,21 +456,21 @@
                   110,
                   115,
                   111,
-                  114
+                  114,
                 ]
-              }
+              },
             ]
           }
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": []
     },
     {
-      "name": "create_pool",
+      "name": "createPool",
       "discriminator": [
         233,
         146,
@@ -449,19 +479,19 @@
         207,
         104,
         64,
-        188
+        188,
       ],
       "accounts": [
         {
-          "name": "stake_pool",
+          "name": "stakePool",
           "docs": [
-            "Stake Pool to Which Reward Pool is being added"
+            "Stake Pool to Which Reward Pool is being added",
           ]
         },
         {
-          "name": "reward_pool",
+          "name": "rewardPool",
           "docs": [
-            "Reward Pool to add"
+            "Reward Pool to add",
           ],
           "writable": true,
           "pda": {
@@ -479,12 +509,12 @@
                   112,
                   111,
                   111,
-                  108
+                  108,
                 ]
               },
               {
                 "kind": "account",
-                "path": "stake_pool"
+                "path": "stakePool"
               },
               {
                 "kind": "account",
@@ -493,20 +523,20 @@
               {
                 "kind": "arg",
                 "path": "nonce"
-              }
+              },
             ]
           }
         },
         {
           "name": "mint",
           "docs": [
-            "Mint used for rewards"
+            "Mint used for rewards",
           ]
         },
         {
           "name": "vault",
           "docs": [
-            "Escrow Account that will store the tokens"
+            "Escrow Account that will store the tokens",
           ],
           "writable": true,
           "pda": {
@@ -525,31 +555,38 @@
                   97,
                   117,
                   108,
-                  116
+                  116,
                 ]
               },
               {
                 "kind": "account",
-                "path": "reward_pool"
-              }
+                "path": "rewardPool"
+              },
             ]
           }
         },
         {
+          "name": "governor",
+          "docs": [
+            "Governor to be set for the RewardPool",
+          ],
+          "optional": true
+        },
+        {
           "name": "creator",
           "docs": [
-            "Reward Pool creator"
+            "Reward Pool creator",
           ],
           "writable": true,
           "signer": true
         },
         {
-          "name": "token_program"
+          "name": "tokenProgram"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        }
+        },
       ],
       "args": [
         {
@@ -557,27 +594,21 @@
           "type": "u8"
         },
         {
-          "name": "reward_amount",
-          "type": "u64"
-        },
-        {
-          "name": "reward_period",
-          "type": "u64"
-        },
-        {
           "name": "permissionless",
           "type": "bool"
         },
         {
-          "name": "last_claim_period_opt",
-          "type": {
-            "option": "u64"
-          }
-        }
+          "name": "claimPeriod",
+          "type": "u64"
+        },
+        {
+          "name": "claimStartTs",
+          "type": "u64"
+        },
       ]
     },
     {
-      "name": "fund_pool",
+      "name": "fundPool",
       "discriminator": [
         36,
         57,
@@ -586,13 +617,13 @@
         181,
         20,
         87,
-        159
+        159,
       ],
       "accounts": [
         {
           "name": "funder",
           "docs": [
-            "Reward Pool funder"
+            "Reward Pool funder",
           ],
           "writable": true,
           "signer": true
@@ -600,58 +631,67 @@
         {
           "name": "from",
           "docs": [
-            "Token Account from which tokens will be transferred"
+            "Token Account from which tokens will be transferred",
           ],
           "writable": true
         },
         {
           "name": "vault",
           "docs": [
-            "Reward Pool Vault that stores tokens"
+            "Reward Pool Vault that stores tokens",
           ],
           "writable": true,
           "relations": [
-            "reward_pool"
+            "rewardPool",
           ]
         },
         {
           "name": "mint",
           "docs": [
-            "Mint of reward tokens"
+            "Mint of reward tokens",
           ],
           "relations": [
-            "reward_pool"
+            "rewardPool",
           ]
         },
         {
-          "name": "reward_pool",
+          "name": "stakePool",
           "docs": [
-            "Stake Pool"
+            "Original Stake Pool",
+          ],
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "rewardPool",
+          "docs": [
+            "Reward Pool",
           ],
           "writable": true
         },
         {
-          "name": "streamflow_treasury",
+          "name": "streamflowTreasury",
           "writable": true,
           "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
         },
         {
-          "name": "streamflow_treasury_tokens",
+          "name": "streamflowTreasuryTokens",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "streamflow_treasury"
+                "path": "streamflowTreasury"
               },
               {
                 "kind": "account",
-                "path": "token_program"
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
                 "path": "mint"
-              }
+              },
             ],
             "program": {
               "kind": "const",
@@ -687,7 +727,7 @@
                 219,
                 233,
                 248,
-                89
+                89,
               ]
             }
           }
@@ -695,7 +735,7 @@
         {
           "name": "config",
           "docs": [
-            "Fee Configuration"
+            "Fee Configuration",
           ],
           "pda": {
             "seeds": [
@@ -707,20 +747,20 @@
                   110,
                   102,
                   105,
-                  103
+                  103,
                 ]
-              }
+              },
             ],
             "program": {
               "kind": "account",
-              "path": "fee_program"
+              "path": "feeProgram"
             }
           }
         },
         {
-          "name": "fee_value",
+          "name": "feeValue",
           "docs": [
-            "Fee Value for the funder account"
+            "Fee Value for the funder account",
           ],
           "optional": true,
           "pda": {
@@ -736,37 +776,84 @@
                   97,
                   108,
                   117,
-                  101
+                  101,
                 ]
               },
               {
                 "kind": "account",
                 "path": "funder"
-              }
+              },
             ],
             "program": {
               "kind": "account",
-              "path": "fee_program"
+              "path": "feeProgram"
             }
           }
         },
         {
-          "name": "fee_program",
+          "name": "feeProgram",
           "address": "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V"
         },
         {
-          "name": "token_program"
-        }
+          "name": "tokenProgram"
+        },
       ],
       "args": [
         {
           "name": "amount",
           "type": "u64"
-        }
+        },
       ]
     },
     {
-      "name": "update_pool",
+      "name": "setGovernor",
+      "discriminator": [
+        47,
+        75,
+        9,
+        199,
+        215,
+        187,
+        161,
+        161,
+      ],
+      "accounts": [
+        {
+          "name": "stakePool",
+          "docs": [
+            "Stake Pool - to verify the governor belongs to the same stake pool",
+          ],
+          "relations": [
+            "rewardPool",
+            "governor",
+          ]
+        },
+        {
+          "name": "rewardPool",
+          "docs": [
+            "Reward Pool - to be updated with new governor",
+          ],
+          "writable": true
+        },
+        {
+          "name": "governor",
+          "docs": [
+            "New Governor to be set for the RewardPool",
+          ]
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Current Authority - only authority can set the governor",
+          ],
+          "writable": true,
+          "signer": true
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "updatePool",
       "discriminator": [
         239,
         214,
@@ -775,56 +862,44 @@
         36,
         35,
         30,
-        34
+        34,
       ],
       "accounts": [
         {
           "name": "authority",
           "docs": [
-            "Current Authority"
+            "Current Authority",
           ],
           "writable": true,
-          "signer": true,
-          "relations": [
-            "reward_pool"
-          ]
+          "signer": true
         },
         {
-          "name": "stake_pool",
+          "name": "rewardPool",
           "docs": [
-            "Stake Pool to Which Reward Pool belongs"
-          ],
-          "relations": [
-            "reward_pool"
-          ]
-        },
-        {
-          "name": "reward_pool",
-          "docs": [
-            "Reward Pool"
+            "Reward Pool",
           ],
           "writable": true
-        }
+        },
       ],
       "args": [
         {
-          "name": "reward_amount",
+          "name": "claimPeriod",
           "type": {
             "option": "u64"
           }
         },
         {
-          "name": "reward_period",
+          "name": "permissionless",
           "type": {
-            "option": "u64"
+            "option": "bool"
           }
-        }
+        },
       ]
-    }
+    },
   ],
   "accounts": [
     {
-      "name": "Config",
+      "name": "config",
       "discriminator": [
         155,
         12,
@@ -833,11 +908,11 @@
         30,
         250,
         204,
-        130
+        130,
       ]
     },
     {
-      "name": "FeeValue",
+      "name": "feeValue",
       "discriminator": [
         10,
         188,
@@ -846,11 +921,24 @@
         4,
         183,
         231,
-        0
+        0,
       ]
     },
     {
-      "name": "RewardEntry",
+      "name": "governor",
+      "discriminator": [
+        37,
+        136,
+        44,
+        80,
+        68,
+        85,
+        213,
+        178,
+      ]
+    },
+    {
+      "name": "rewardEntry",
       "discriminator": [
         208,
         191,
@@ -859,11 +947,11 @@
         213,
         84,
         179,
-        162
+        162,
       ]
     },
     {
-      "name": "RewardPool",
+      "name": "rewardPool",
       "discriminator": [
         134,
         121,
@@ -872,11 +960,11 @@
         133,
         154,
         82,
-        32
+        32,
       ]
     },
     {
-      "name": "StakeEntry",
+      "name": "stakeEntry",
       "discriminator": [
         187,
         127,
@@ -885,11 +973,11 @@
         155,
         68,
         86,
-        40
+        40,
       ]
     },
     {
-      "name": "StakePool",
+      "name": "stakePool",
       "discriminator": [
         121,
         34,
@@ -898,644 +986,746 @@
         79,
         127,
         255,
-        28
+        28,
       ]
-    }
+    },
+    {
+      "name": "vote",
+      "discriminator": [
+        96,
+        91,
+        104,
+        57,
+        145,
+        35,
+        172,
+        155,
+      ]
+    },
   ],
   "errors": [
     {
       "code": 6000,
-      "name": "ArithmeticError",
+      "name": "arithmeticError",
       "msg": "Arithmetic Error (overflow/underflow)"
     },
     {
       "code": 6001,
-      "name": "InvalidRewardAmount",
-      "msg": "Reward amount should be more than 0"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidRewardPeriod",
-      "msg": "Reward period should be more than 0"
-    },
-    {
-      "code": 6003,
-      "name": "Unauthorized",
+      "name": "unauthorized",
       "msg": "Account is not authorized to execute this instruction"
     },
     {
-      "code": 6004,
-      "name": "OwnerMismatch",
+      "code": 6002,
+      "name": "ownerMismatch",
       "msg": "Token account owner did not match intended owner"
     },
     {
-      "code": 6005,
-      "name": "InvalidRewardVault",
-      "msg": "Provided Reward Vault is Invalid"
-    },
-    {
-      "code": 6006,
-      "name": "InvalidRewardEntry",
-      "msg": "Provided Reward Entry is Invalid"
-    },
-    {
-      "code": 6007,
-      "name": "InvalidStakeEntry",
-      "msg": "Provided Stake Entry is Invalid"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidRewardPool",
+      "code": 6003,
+      "name": "invalidRewardPool",
       "msg": "Provided Reward Pool is Invalid"
     },
     {
-      "code": 6009,
-      "name": "InvalidMint",
-      "msg": "Invalid Mint"
+      "code": 6004,
+      "name": "invalidRewardVault",
+      "msg": "Incorrect vault for RewardPool"
     },
     {
-      "code": 6010,
-      "name": "StakeEntryClosed",
+      "code": 6005,
+      "name": "invalidRewardEntry",
+      "msg": "Provided Reward Entry is Invalid"
+    },
+    {
+      "code": 6006,
+      "name": "invalidStakeEntry",
+      "msg": "Provided Stake Entry is Invalid"
+    },
+    {
+      "code": 6007,
+      "name": "invalidStakePool",
+      "msg": "Provided Stake Pool does not equal the Governor Stake Pool"
+    },
+    {
+      "code": 6008,
+      "name": "invalidMint",
+      "msg": "Provided Mint does not equal the Pool Mint"
+    },
+    {
+      "code": 6009,
+      "name": "stakeEntryClosed",
       "msg": "Stake Entry is closed, rewards are not claimable anymore"
     },
     {
-      "code": 6011,
-      "name": "StakeEntryOpened",
+      "code": 6010,
+      "name": "stakeEntryOpened",
       "msg": "Stake Entry is still opened, closing is not possible"
     },
     {
+      "code": 6011,
+      "name": "invalidClaimStartTs",
+      "msg": "Invalid claim start ts provided"
+    },
+    {
       "code": 6012,
-      "name": "RewardPoolDrained",
-      "msg": "Reward Pool does not have enough Rewards for Claiming"
+      "name": "claimTooEarly",
+      "msg": "Claiming is not possible until claim period has passed"
     },
     {
       "code": 6013,
-      "name": "UpdateTooSoon",
-      "msg": "Repeated update can not happen sooner than the stake pool max duration"
+      "name": "rewardPoolDrained",
+      "msg": "Reward Pool does not have enough Rewards for Claiming"
     },
     {
       "code": 6014,
-      "name": "InvalidLastClaimPeriod",
-      "msg": "Invalid last claim period provided"
-    }
+      "name": "invalidGovernor",
+      "msg": "Provided governor is invalid"
+    },
+    {
+      "code": 6015,
+      "name": "invalidVote",
+      "msg": "Provided vote is invalid"
+    },
+    {
+      "code": 6016,
+      "name": "voteRequired",
+      "msg": "Vote is required for claiming"
+    },
   ],
   "types": [
     {
-      "name": "Config",
+      "name": "config",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "authority",
             "docs": [
-              "Fee Manager authority"
+              "Fee Manager authority",
             ],
             "type": "pubkey"
           },
           {
-            "name": "streamflow_fee",
+            "name": "streamflowFee",
             "docs": [
-              "Default fee"
+              "Default fee",
             ],
             "type": "u64"
           },
           {
-            "name": "_buffer_1",
+            "name": "buffer1",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                64
+                64,
               ]
             }
           },
           {
-            "name": "_buffer_2",
+            "name": "buffer2",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                64
+                64,
               ]
             }
           },
           {
-            "name": "_buffer_3",
+            "name": "buffer3",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                64
+                64,
               ]
             }
-          }
+          },
         ]
       }
     },
     {
-      "name": "FeeValue",
+      "name": "feeValue",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "streamflow_fee",
+            "name": "streamflowFee",
             "type": "u64"
           },
           {
-            "name": "_buffer",
+            "name": "buffer",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                64
+                64,
               ]
             }
-          }
+          },
         ]
       }
     },
     {
-      "name": "RewardEntry",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "reward_pool",
-            "docs": [
-              "Reward Pool"
-            ],
-            "type": "pubkey"
-          },
-          {
-            "name": "stake_entry",
-            "docs": [
-              "Stake Entry for which reward entry was initialized"
-            ],
-            "type": "pubkey"
-          },
-          {
-            "name": "created_ts",
-            "docs": [
-              "Timestamp when reward entry has been created"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "accounted_amount",
-            "docs": [
-              "Sum of accounted amounts, used to correctly issue rewards in case of precision loss"
-            ],
-            "type": "u128"
-          },
-          {
-            "name": "claimed_amount",
-            "docs": [
-              "Sum of already claimed rewards"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_accounted_ts",
-            "docs": [
-              "Timestamp when rewards have been claimed last time"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_reward_amount",
-            "docs": [
-              "Reward amount used on last claim or entry creation"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_reward_period",
-            "docs": [
-              "Reward Period used on last claim or entry creation"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "is_sponsored",
-            "docs": [
-              "Whether the entry rent has been sponsored by the rent vault"
-            ],
-            "type": "bool"
-          },
-          {
-            "name": "_buffer",
-            "docs": [
-              "Buffer for additional fields"
-            ],
-            "type": {
-              "array": [
-                "u8",
-                31
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "RewardPool",
+      "name": "governor",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "bump",
             "docs": [
-              "Bump Seed used to sign transactions"
+              "Bump Seed used to sign transactions",
             ],
             "type": "u8"
           },
           {
             "name": "nonce",
             "docs": [
-              "Nonce to differentiate pools for the same mint"
+              "Nonce to support multiple governors for the same pool",
             ],
             "type": "u8"
           },
           {
-            "name": "stake_pool",
+            "name": "stakePool",
             "docs": [
-              "Stake Pool for which Reward Pool was added"
-            ],
-            "type": "pubkey"
-          },
-          {
-            "name": "mint",
-            "docs": [
-              "Mint of Reward Pool"
-            ],
-            "type": "pubkey"
-          },
-          {
-            "name": "creator",
-            "docs": [
-              "Creator of the Pool"
+              "Stake Pool for which Reward Pool was added",
             ],
             "type": "pubkey"
           },
           {
             "name": "authority",
             "docs": [
-              "Current authority"
+              "Authority of the Governor that can add proposals and set the current one",
             ],
             "type": "pubkey"
           },
           {
-            "name": "reward_amount",
+            "name": "currentProposal",
             "docs": [
-              "Amount of rewards that will be distributed per effective stake",
-              "",
-              "Should be a fraction of a raw token amount which is 1 / 10^9,",
-              "i.e. `reward_amount` of `1_000_000_000` equals one raw token per effective stake"
+              "Address of the current proposal",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "totalProposals",
+            "docs": [
+              "Total number of created proposals",
             ],
             "type": "u64"
           },
           {
-            "name": "reward_period",
+            "name": "buffer",
             "docs": [
-              "Period of Rewards distribution in seconds"
+              "Buffer for additional fields",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                128,
+              ]
+            }
+          },
+        ]
+      }
+    },
+    {
+      "name": "rewardEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardPool",
+            "docs": [
+              "Reward Pool",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "stakeEntry",
+            "docs": [
+              "Stake Entry for which reward entry was initialized",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "createdTs",
+            "docs": [
+              "Timestamp when reward entry has been created",
             ],
             "type": "u64"
           },
           {
-            "name": "permissionless",
+            "name": "rewardsState",
             "docs": [
-              "Whether anyone can fund the Pool"
+              "State of the reward disitrbution, accounts for the last state in the reward pool",
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "claimedAmount",
+            "docs": [
+              "Sum of already claimed rewards",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "lastClaimedTs",
+            "docs": [
+              "Timestamp when rewards have been claimed last time",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "isSponsored",
+            "docs": [
+              "Whether the entry rent has been sponsored by the rent vault",
             ],
             "type": "bool"
           },
           {
-            "name": "last_reward_amount",
+            "name": "buffer",
             "docs": [
-              "`reward_amount` used before the last update"
+              "Buffer for additional fields",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                31,
+              ]
+            }
+          },
+        ]
+      }
+    },
+    {
+      "name": "rewardPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump Seed used to sign transactions",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "Nonce to differentiate pools for the same mint",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "stakePool",
+            "docs": [
+              "Stake Pool for which Reward Pool was added",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "governor",
+            "docs": [
+              "Governor of the Stake Pool, should be passed at claiming if set",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "Mint of Reward Pool",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "docs": [
+              "Creator of the Pool",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Current authority",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "permissionless",
+            "docs": [
+              "Whether anyone can fund the Pool",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "claimPeriod",
+            "docs": [
+              "Period of claims, may be used to block consecutive claims within the same period",
             ],
             "type": "u64"
           },
           {
-            "name": "last_reward_period",
+            "name": "claimStartTs",
             "docs": [
-              "`reward_period` used before the last update"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_amount_update_ts",
-            "docs": [
-              "Time when `reward_amount` was updated the last time"
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "last_period_update_ts",
-            "docs": [
-              "Time when `reward_period` was updated the last time"
+              "Time when claiming starts, will be used as a base timestamp if claim_period is set",
             ],
             "type": "u64"
           },
           {
             "name": "vault",
             "docs": [
-              "Escrow Account that stores reward tokens"
+              "Escrow Account that stores reward tokens",
             ],
             "type": "pubkey"
           },
           {
-            "name": "funded_amount",
+            "name": "fundedAmount",
             "docs": [
-              "Total funded amount"
+              "Total funded amount",
             ],
             "type": "u64"
           },
           {
-            "name": "claimed_amount",
+            "name": "claimedAmount",
             "docs": [
-              "Total number of rewards claimed"
+              "Total number of rewards claimed",
             ],
             "type": "u64"
           },
           {
-            "name": "created_ts",
+            "name": "rewardsState",
             "docs": [
-              "Time when Reward Pool was created"
+              "Ever increasing accumulator of the amount of rewards per effective stake.\n    Said another way, if a user deposited before any rewards were added to the\n    `vault`, then this would be the token amount per effective stake they could\n    claim.",
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "lastAmount",
+            "docs": [
+              "latest amount of tokens in the vault",
             ],
             "type": "u64"
           },
           {
-            "name": "last_claim_period",
+            "name": "createdTs",
             "docs": [
-              "For how much seconds after unstake user should be able to claim rewards"
+              "Time when Reward Pool was created",
             ],
             "type": "u64"
           },
           {
-            "name": "_buffer",
+            "name": "buffer",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                48
+                128,
               ]
             }
-          }
+          },
         ]
       }
     },
     {
-      "name": "StakeEntry",
+      "name": "stakeEntry",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "nonce",
             "docs": [
-              "Nonce to differentiate stakes for the same pool"
+              "Nonce to differentiate stakes for the same pool",
             ],
             "type": "u32"
           },
           {
-            "name": "stake_pool",
+            "name": "stakePool",
             "docs": [
-              "Stake Pool for which tokens were staked"
+              "Stake Pool for which tokens were staked",
             ],
             "type": "pubkey"
           },
           {
             "name": "payer",
             "docs": [
-              "Original Owner of Staked tokens"
+              "Original Owner of Staked tokens",
             ],
             "type": "pubkey"
           },
           {
             "name": "authority",
             "docs": [
-              "Authority of the Entry"
+              "Authority of the Entry",
             ],
             "type": "pubkey"
           },
           {
             "name": "amount",
             "docs": [
-              "Amount of deposited funds"
+              "Amount of deposited funds",
             ],
             "type": "u64"
           },
           {
             "name": "duration",
             "docs": [
-              "Duration of the lockup"
+              "Duration of the lockup",
             ],
             "type": "u64"
           },
           {
-            "name": "effective_amount",
+            "name": "effectiveAmount",
             "docs": [
-              "Effective Amount staked, does not equal to deposited amount, accounts for Stake Weight"
+              "Effective Amount staked, does not equal to deposited amount, accounts for Stake Weight",
             ],
             "type": "u128"
           },
           {
-            "name": "created_ts",
+            "name": "createdTs",
             "docs": [
-              "Timestamp when Deposit was made"
+              "Timestamp when Deposit was made",
             ],
             "type": "u64"
           },
           {
-            "name": "closed_ts",
+            "name": "closedTs",
             "docs": [
-              "Timestamp when entry has been closed"
+              "Timestamp when entry has been closed",
             ],
             "type": "u64"
           },
           {
-            "name": "prior_total_effective_stake",
+            "name": "priorTotalEffectiveStake",
             "docs": [
-              "Total effective stake at the time of staking"
+              "Total effective stake at the time of staking",
             ],
             "type": "u128"
           },
           {
-            "name": "unstake_ts",
+            "name": "unstakeTs",
             "docs": [
-              "Timestamp when unstake was requested, will be used in case `unstake_period` is set"
+              "Timestamp when unstake was requested, will be used in case `unstake_period` is set",
             ],
             "type": "u64"
           },
           {
-            "name": "is_sponsored",
+            "name": "isSponsored",
             "docs": [
-              "Whether the entry rent has been sponsored by the rent vault"
+              "Whether the entry rent has been sponsored by the rent vault",
             ],
             "type": "bool"
           },
           {
-            "name": "_buffer",
+            "name": "buffer",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                39
+                39,
               ]
             }
-          }
+          },
         ]
       }
     },
     {
-      "name": "StakePool",
+      "name": "stakePool",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "bump",
             "docs": [
-              "Bump Seed used to sign transactions"
+              "Bump Seed used to sign transactions",
             ],
             "type": "u8"
           },
           {
             "name": "nonce",
             "docs": [
-              "Nonce to differentiate pools for the same mint"
+              "Nonce to differentiate pools for the same mint",
             ],
             "type": "u8"
           },
           {
             "name": "mint",
             "docs": [
-              "Mint of the Stake Pool"
+              "Mint of the Stake Pool",
             ],
             "type": "pubkey"
           },
           {
             "name": "creator",
             "docs": [
-              "Initial Creator"
+              "Initial Creator",
             ],
             "type": "pubkey"
           },
           {
             "name": "authority",
             "docs": [
-              "Current authority"
+              "Current authority",
             ],
             "type": "pubkey"
           },
           {
-            "name": "min_weight",
+            "name": "minWeight",
             "docs": [
               "The lowest weight awarded for staking, measured as a fraction of `1 / SCALE_FACTOR_BASE`.",
               "For instance:",
               "* `min_weight = 1 x SCALE_FACTOR_BASE` signifies a minimum multiplier of 1x for min staking duration",
-              "* `min_weight = 2 x SCALE_FACTOR_BASE` indicates a minimum multiplier of 2x for min staking duration"
+              "* `min_weight = 2 x SCALE_FACTOR_BASE` indicates a minimum multiplier of 2x for min staking duration",
             ],
             "type": "u64"
           },
           {
-            "name": "max_weight",
+            "name": "maxWeight",
             "docs": [
               "The highest weight awarded for staking, measured as a fraction of `1 / SCALE_FACTOR_BASE`.",
               "For instance:",
               "* `max_weight = 1 x SCALE_FACTOR_BASE` signifies a max multiplier of 1x for max staking duration",
-              "* `max_weight = 2 x SCALE_FACTOR_BASE` indicates a max multiplier of 2x for max staking duration"
+              "* `max_weight = 2 x SCALE_FACTOR_BASE` indicates a max multiplier of 2x for max staking duration",
             ],
             "type": "u64"
           },
           {
-            "name": "min_duration",
+            "name": "minDuration",
             "docs": [
-              "Min Duration of stake in seconds"
+              "Min Duration of stake in seconds",
             ],
             "type": "u64"
           },
           {
-            "name": "max_duration",
+            "name": "maxDuration",
             "docs": [
-              "Max Duration of stake in seconds, the more duration, the more weight the stake has"
+              "Max Duration of stake in seconds, the more duration, the more weight the stake has",
             ],
             "type": "u64"
           },
           {
             "name": "permissionless",
             "docs": [
-              "Whether anyone can add Reward Pools or just admin"
+              "Whether anyone can add Reward Pools or just admin",
             ],
             "type": "bool"
           },
           {
             "name": "vault",
             "docs": [
-              "Escrow Account that stores staked tokens"
+              "Escrow Account that stores staked tokens",
             ],
             "type": "pubkey"
           },
           {
-            "name": "stake_mint",
+            "name": "stakeMint",
             "docs": [
-              "Stake Mint, will be returned in exchange for stake tokens"
+              "Stake Mint, will be returned in exchange for stake tokens",
             ],
             "type": "pubkey"
           },
           {
-            "name": "total_stake",
+            "name": "totalStake",
             "docs": [
-              "Total number of Staked tokens"
+              "Total number of Staked tokens",
             ],
             "type": "u64"
           },
           {
-            "name": "total_effective_stake",
+            "name": "totalEffectiveStake",
             "docs": [
               "Total staked tokens accounting for each stake weight, does not equal `total_stake`,",
-              "represents a sum of effective stake multiplied by 10^9 for precision"
+              "represents a sum of effective stake multiplied by 10^9 for precision",
             ],
             "type": "u128"
           },
           {
-            "name": "freeze_stake_mint",
+            "name": "freezeStakeMint",
             "docs": [
-              "Whether we should freeze stake mint token accounts"
+              "Whether we should freeze stake mint token accounts",
             ],
             "type": "bool"
           },
           {
-            "name": "unstake_period",
+            "name": "unstakePeriod",
             "docs": [
-              "Period for unstaking, if set unstake at first should be requested, and the real unstake can only happen after this period"
+              "Period for unstaking, if set unstake at first should be requested, and the real unstake can only happen after this period",
             ],
             "type": "u64"
           },
           {
-            "name": "_buffer",
+            "name": "buffer",
             "docs": [
-              "Buffer for additional fields"
+              "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                55
+                55,
               ]
             }
-          }
+          },
         ]
       }
-    }
+    },
+    {
+      "name": "vote",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal",
+            "docs": [
+              "Question to which vote was provided",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "voter",
+            "docs": [
+              "Voter that voted on the proposal",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "optionIndex",
+            "docs": [
+              "Index of the option used for voting",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "weight",
+            "docs": [
+              "Weight of the vote, correspond to number of sTokens used",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer for additional fields",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64,
+              ]
+            }
+          },
+        ]
+      }
+    },
   ]
-}
+};

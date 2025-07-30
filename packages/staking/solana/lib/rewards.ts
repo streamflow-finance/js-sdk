@@ -24,6 +24,8 @@ export class RewardEntryAccumulator implements RewardEntry {
 
   lastRewardPeriod: BN;
 
+  isSponsored: boolean;
+
   buffer: number[];
 
   constructor(
@@ -35,6 +37,7 @@ export class RewardEntryAccumulator implements RewardEntry {
     createdTs: BN,
     lastRewardAmount: BN,
     lastRewardPeriod: BN,
+    isSponsored: boolean,
     buffer: number[],
   ) {
     this.lastAccountedTs = lastAccountedTs;
@@ -43,6 +46,7 @@ export class RewardEntryAccumulator implements RewardEntry {
     this.rewardPool = rewardPool;
     this.stakeEntry = stakeEntry;
     this.createdTs = createdTs;
+    this.isSponsored = isSponsored;
     this.buffer = buffer;
     this.lastRewardAmount = lastRewardAmount;
     this.lastRewardPeriod = lastRewardPeriod;
@@ -58,6 +62,7 @@ export class RewardEntryAccumulator implements RewardEntry {
       entry.createdTs,
       entry.lastRewardAmount,
       entry.lastRewardPeriod,
+      entry.isSponsored,
       entry.buffer,
     );
   }
@@ -124,6 +129,7 @@ const createDefaultRewardEntry = (
     lastRewardPeriod: new BN(0),
     accountedAmount: new BN(0),
     claimedAmount: new BN(0),
+    isSponsored: false,
     buffer: [],
   };
 };

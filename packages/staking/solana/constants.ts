@@ -67,6 +67,12 @@ export const REWARD_POOL_PROGRAM_ID: Record<ICluster, string> = {
   [ICluster.Testnet]: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
   [ICluster.Local]: "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
 };
+export const REWARD_POOL_DYNAMIC_PROGRAM_ID: Record<ICluster, string> = {
+  [ICluster.Mainnet]: "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
+  [ICluster.Devnet]: "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
+  [ICluster.Testnet]: "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
+  [ICluster.Local]: "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
+};
 export const FEE_PROGRAM_ID: Record<ICluster, string> = {
   [ICluster.Mainnet]: "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V",
   [ICluster.Devnet]: "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V",

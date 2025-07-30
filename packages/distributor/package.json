@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/distributor",
-  "version": "8.2.2",
+  "version": "8.3.0",
   "description": "JavaScript SDK to interact with Streamflow Airdrop protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/cjs/index.cjs",
@@ -75,8 +75,8 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1",
-    "@coral-xyz/borsh": "0.30.1",
+    "@coral-xyz/anchor": "^0.31.1",
+    "@coral-xyz/borsh": "0.31.1",
     "@solana/buffer-layout": "4.0.1",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-base": "0.9.19",

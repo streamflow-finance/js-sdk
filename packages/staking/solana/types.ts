@@ -28,11 +28,13 @@ interface TokenProgram {
   tokenProgramId?: Address;
 }
 
+interface RewardPoolProgram {
+  rewardPoolType?: "fixed" | "dynamic";
+}
+
 interface StakeBaseArgs extends BaseStakePoolArgs, TokenProgram {
   nonce: number;
 }
-
-export type UnstakeArgs = StakeBaseArgs;
 
 export interface StakeArgs extends StakeBaseArgs {
   amount: BN;
@@ -41,14 +43,43 @@ export interface StakeArgs extends StakeBaseArgs {
   authority?: Address;
 }
 
-export interface FundPoolArgs extends BaseStakePoolArgs, TokenProgram {
+interface RewardPoolArgs extends TokenProgram, RewardPoolProgram {
+  nonce: number;
+  mint: Address;
+}
+
+/**
+ * Used only with dynamic reward pools
+ */
+interface GovernorWithVoteArgs {
+  governor?: Address;
+  vote?: Address;
+}
+
+export interface StakeAndCreateEntriesArgs extends StakeArgs {
+  rewardPools: RewardPoolArgs[];
+}
+
+export interface UnstakeArgs extends StakeBaseArgs {
+  shouldClose?: boolean;
+}
+
+export interface UnstakeAndCloseArgs extends UnstakeArgs {
+  rewardPools: (RewardPoolArgs & GovernorWithVoteArgs)[];
+}
+
+export type UnstakeAndClaimArgs = UnstakeAndCloseArgs;
+
+export type CloseStakeEntryArgs = Omit<StakeBaseArgs, "stakePoolMint" | "tokenProgramId">;
+
+export interface FundPoolArgs extends BaseStakePoolArgs, TokenProgram, RewardPoolProgram {
   amount: BN;
   nonce: number;
   rewardMint: Address;
   feeValue: Address | null;
 }
 
-export interface CreateRewardEntryArgs extends BaseStakePoolArgs, TokenProgram {
+export interface CreateRewardEntryArgs extends BaseStakePoolArgs, TokenProgram, RewardPoolProgram {
   depositNonce: number;
   rewardPoolNonce: number;
   rewardMint: Address;
@@ -71,11 +102,9 @@ export interface UpdateRewardPoolArgs {
   rewardPool: Address;
 }
 
-export interface ClaimRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
-  depositNonce: number;
-  rewardMint: Address;
-  rewardPoolNonce: number;
-}
+export type ClaimRewardPoolArgs = CreateRewardEntryArgs & GovernorWithVoteArgs;
+
+export type CloseRewardEntryArgs = CreateRewardEntryArgs;
 
 export interface CreateStakePoolArgs extends TokenProgram {
   mint: Address;
