@@ -294,7 +294,7 @@ Client also exposes methods to group staking/unstaking with reward pool actions.
       rewardPools: [{
          nonce: 0,
          mint,
-         rewardPoolType: "dynamic",
+         rewardPoolType: "fixed",
       }]
    }, extParams);
    console.log("Stake signature: ", txId);
@@ -313,7 +313,7 @@ Client also exposes methods to group staking/unstaking with reward pool actions.
       rewardPools: [{
          nonce: 0,
          mint,
-         rewardPoolType: "dynamic"
+         rewardPoolType: "fixed"
       }]
    }, extParams);
    console.log("Unstake signature: ", txId);
@@ -328,7 +328,7 @@ Client also exposes methods to group staking/unstaking with reward pool actions.
       rewardPools: [{
          nonce: 0,
          mint,
-         rewardPoolType: "dynamic"
+         rewardPoolType: "fixed"
       }]
    }, extParams);
    console.log("Unstake signature: ", txId);
