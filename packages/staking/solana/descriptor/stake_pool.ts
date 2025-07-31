@@ -106,10 +106,6 @@ export type StakePool = {
             ]
           }
         },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        },
       ],
       "args": []
     },
@@ -1013,10 +1009,6 @@ export type StakePool = {
         },
         {
           "name": "tokenProgram"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
         },
       ],
       "args": [
