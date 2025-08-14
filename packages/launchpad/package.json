@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/launchpad",
-  "version": "8.3.1",
+  "version": "8.4.0",
   "description": "JavaScript SDK to interact with Streamflow Launchpad protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/cjs/index.cjs",
