@@ -315,6 +315,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       tokenProgramId: streamTokenProgramId,
       expiryTime,
       expiryPercentage,
+      floorPrice,
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
@@ -384,6 +385,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         skipInitial: skipInitial ?? false,
         expiryTime: new BN(expiryTime ?? 0),
         expiryPercentage: expiryPercentage instanceof BN ? expiryPercentage : getBN(expiryPercentage ?? 0, ALIGNED_PRECISION_FACTOR_POW),
+        floorPrice: floorPrice instanceof BN ? floorPrice : getBN(floorPrice ?? 0, ALIGNED_PRECISION_FACTOR_POW),
       })
       .accountsPartial({
         payer: sender.publicKey,
