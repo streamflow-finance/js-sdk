@@ -384,7 +384,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         tickSize: new BN(tickSize || 1),
         skipInitial: skipInitial ?? false,
         expiryTime: new BN(expiryTime ?? 0),
-        expiryPercentage: expiryPercentage instanceof BN ? expiryPercentage : getBN(expiryPercentage ?? 0, ALIGNED_PRECISION_FACTOR_POW),
+        expiryPercentage: typeof expiryPercentage === 'number' ? getBN(expiryPercentage, ALIGNED_PRECISION_FACTOR_POW) : expiryPercentage ?? new BN(0),
         floorPrice: typeof floorPrice === 'number' ? getBN(floorPrice, ALIGNED_PRECISION_FACTOR_POW) : floorPrice ?? new BN(0),
       })
       .accountsPartial({
