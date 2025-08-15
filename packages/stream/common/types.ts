@@ -48,6 +48,7 @@ export type IAlignedStreamConfig = {
   tickSize?: number;
   expiryTime?: number;
   expiryPercentage?: number | BN;
+  floorPrice?: number | BN;
 };
 
 export type ICreateLinearStreamData = IBaseStreamConfig & IRecipient;
@@ -256,6 +257,7 @@ export type AlignedStreamData = {
   initialNetAmount: BN;
   expiryTime: number;
   expiryPercentage: number;
+  floorPrice: number;
 };
 
 export type AlignedStream = LinearStream & AlignedStreamData;

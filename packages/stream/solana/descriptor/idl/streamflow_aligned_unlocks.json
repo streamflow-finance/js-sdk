@@ -2,7 +2,7 @@
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflow_aligned_unlocks",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -1014,6 +1014,16 @@
       "code": 6014,
       "name": "DynamicScheduleExpired",
       "msg": "Dynamic schedule expired, updates are not allowed"
+    },
+    {
+      "code": 6015,
+      "name": "FloorPriceReached",
+      "msg": "Floor price has already been reached, updates are not allowed"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidFloorPrice",
+      "msg": "Provided floor price is invalid, should be less than minimum price"
     }
   ],
   "types": [
@@ -1204,6 +1214,13 @@
             "type": "u64"
           },
           {
+            "name": "floor_price",
+            "docs": [
+              "Floor price boundary, if the price is below this boundary, the contract will be unlocked"
+            ],
+            "type": "u64"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields"
@@ -1211,7 +1228,7 @@
             "type": {
               "array": [
                 "u8",
-                16
+                8
               ]
             }
           }
@@ -1361,6 +1378,13 @@
             "name": "expiry_percentage",
             "docs": [
               "Percentage to set when contract expires, won't be updated after it"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "floor_price",
+            "docs": [
+              "Floor price boundary, if the price is below this boundary, the contract will be unlocked"
             ],
             "type": "u64"
           }

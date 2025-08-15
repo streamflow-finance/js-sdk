@@ -315,6 +315,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       tokenProgramId: streamTokenProgramId,
       expiryTime,
       expiryPercentage,
+      floorPrice,
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
@@ -376,14 +377,15 @@ export class SolanaStreamClient extends BaseStreamClient {
         canTopup,
         oracleType: (!!oracleType ? { [oracleType]: {} } : { none: {} }) as OracleType,
         streamName: streamNameArray,
-        minPrice: minPrice instanceof BN ? minPrice : getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW),
-        maxPrice: maxPrice instanceof BN ? maxPrice : getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW),
-        minPercentage: minPercentage instanceof BN ? minPercentage : getBN(minPercentage, ALIGNED_PRECISION_FACTOR_POW),
-        maxPercentage: maxPercentage instanceof BN ? maxPercentage : getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW),
+        minPrice: typeof minPrice === 'number' ? getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW) : minPrice,
+        maxPrice: typeof maxPrice === 'number' ? getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW) : maxPrice,
+        minPercentage: typeof minPercentage === 'number' ? getBN(minPercentage, ALIGNED_PRECISION_FACTOR_POW) : minPercentage,
+        maxPercentage: typeof maxPercentage === 'number' ? getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW) : maxPercentage,
         tickSize: new BN(tickSize || 1),
         skipInitial: skipInitial ?? false,
         expiryTime: new BN(expiryTime ?? 0),
-        expiryPercentage: expiryPercentage instanceof BN ? expiryPercentage : getBN(expiryPercentage ?? 0, ALIGNED_PRECISION_FACTOR_POW),
+        expiryPercentage: typeof expiryPercentage === 'number' ? getBN(expiryPercentage, ALIGNED_PRECISION_FACTOR_POW) : expiryPercentage ?? new BN(0),
+        floorPrice: typeof floorPrice === 'number' ? getBN(floorPrice, ALIGNED_PRECISION_FACTOR_POW) : floorPrice ?? new BN(0),
       })
       .accountsPartial({
         payer: sender.publicKey,

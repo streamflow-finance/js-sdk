@@ -8,7 +8,7 @@ export type StreamflowAlignedUnlocks = {
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflowAlignedUnlocks",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -1021,6 +1021,16 @@ export type StreamflowAlignedUnlocks = {
       "name": "dynamicScheduleExpired",
       "msg": "Dynamic schedule expired, updates are not allowed"
     },
+    {
+      "code": 6015,
+      "name": "floorPriceReached",
+      "msg": "Floor price has already been reached, updates are not allowed"
+    },
+    {
+      "code": 6016,
+      "name": "invalidFloorPrice",
+      "msg": "Provided floor price is invalid, should be less than minimum price"
+    },
   ],
   "types": [
     {
@@ -1210,6 +1220,13 @@ export type StreamflowAlignedUnlocks = {
             "type": "u64"
           },
           {
+            "name": "floorPrice",
+            "docs": [
+              "Floor price boundary, if the price is below this boundary, the contract will be unlocked",
+            ],
+            "type": "u64"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1217,7 +1234,7 @@ export type StreamflowAlignedUnlocks = {
             "type": {
               "array": [
                 "u8",
-                16,
+                8,
               ]
             }
           },
@@ -1367,6 +1384,13 @@ export type StreamflowAlignedUnlocks = {
             "name": "expiryPercentage",
             "docs": [
               "Percentage to set when contract expires, won't be updated after it",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "floorPrice",
+            "docs": [
+              "Floor price boundary, if the price is below this boundary, the contract will be unlocked",
             ],
             "type": "u64"
           },
