@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/eslint-config",
-  "version": "8.4.0",
+  "version": "8.5.0",
   "description": "ESLint configuration for Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "engines": {

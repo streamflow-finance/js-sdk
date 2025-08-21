@@ -48,6 +48,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.17.4",
     "@types/eslint": "^8.56.3",
+    "@types/node": "^24.3.0",
     "eslint": "^8.56.0",
     "eslint-import-resolver-typescript": "3.8.3",
     "husky": "^8.0.0",
