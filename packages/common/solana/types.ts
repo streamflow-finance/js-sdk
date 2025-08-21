@@ -11,9 +11,24 @@ import type PQueue from "p-queue";
 export type ComputePriceEstimate = (tx: string | (string | PublicKey)[]) => Promise<number>;
 export type ComputeLimitEstimate = (tx: VersionedTransaction) => Promise<number>;
 
+/**
+ * Additional parameter for Solana Transaction processing.
+ *
+ * computePrice - compute price per CU in micro-lamports to be set in a transaction - priority fee, accepts:
+ *  - a constant number;
+ *  - a callable that returns a price for a built transaction;
+ * computeLimit - compute limit in CUs to set for a transaction, `computePrice` is paid per every allocated CU, accepts:
+ *  - a constant number;
+ *  - a callable that returns a CU limit for a built transaction;
+ *  - `autoSimulate` - will be unwrapped by `unwrapExecutionParams` and converted to a callable that runs a simulation to estimate CUs and set a limit with some margin;
+ * feePayer - account that will be set as sol fee payer in instructions that accept such account, i.e. ATA creation:
+ *  - should be only when building instructions via `prepare` methods, as tx executing methods will fail without a signer;
+ *  - currently supported only when claiming an Airdrop;
+ */
 export interface ITransactionSolanaExt {
   computePrice?: number | ComputePriceEstimate;
   computeLimit?: number | ComputeLimitEstimate | "autoSimulate";
+  feePayer?: PublicKey;
 }
 
 /**
@@ -23,6 +38,7 @@ export interface ITransactionSolanaExt {
 type ITransactionSolanaExtResolvedValues = {
   computePrice?: number | ComputePriceEstimate;
   computeLimit?: number | ComputeLimitEstimate;
+  feePayer?: PublicKey;
 };
 
 type KeysNotOfA<T, ToExclude> = Pick<T, Exclude<keyof T, keyof ToExclude>>;

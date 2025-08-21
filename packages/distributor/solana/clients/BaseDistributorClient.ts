@@ -318,6 +318,7 @@ export default abstract class BaseDistributorClient {
         distributor.mint,
         extParams.invoker,
         tokenProgramId,
+        extParams.feePayer,
       )),
     );
     const invokerTokens = await ata(distributor.mint, extParams.invoker.publicKey, tokenProgramId);
@@ -361,7 +362,7 @@ export default abstract class BaseDistributorClient {
 
     ixs.push(
       this.prepareClaimFeeInstruction(
-        extParams.invoker.publicKey,
+        extParams.feePayer ?? extParams.invoker.publicKey,
         typeof _serviceTransfer === "bigint" ? _serviceTransfer : undefined,
       ),
     );
@@ -460,6 +461,7 @@ export default abstract class BaseDistributorClient {
         distributor.mint,
         extParams.invoker,
         tokenProgramId,
+        extParams.feePayer,
       )),
     );
 

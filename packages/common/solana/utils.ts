@@ -26,6 +26,7 @@ import {
   type RpcResponseAndContext,
   type SignatureStatus,
   type SimulatedTransactionResponse,
+  type AddressLookupTableAccount,
 } from "@solana/web3.js";
 
 import {
@@ -112,6 +113,7 @@ export function isTransactionVersioned(tx: Transaction | VersionedTransaction): 
  * @param payer - PublicKey of payer
  * @param commitment - optional Commitment that will be used to fetch latest blockhash
  * @param partialSigners - optional signers that will be used to partially sign a Transaction
+ * @param lookupTables - lookup table accounts to use in the transaction
  * @returns Transaction and Blockhash
  */
 export async function prepareTransaction(
@@ -120,6 +122,7 @@ export async function prepareTransaction(
   payer: PublicKey | undefined | null,
   commitment?: Commitment,
   partialSigners?: (Keypair | undefined)[],
+  lookupTables?: AddressLookupTableAccount[],
 ): Promise<{
   tx: VersionedTransaction;
   hash: BlockhashWithExpiryBlockHeight;
@@ -132,7 +135,7 @@ export async function prepareTransaction(
   const { value: hash, context } = await connection.getLatestBlockhashAndContext(commitment);
 
   return {
-    tx: createVersionedTransaction(ixs, payer, hash.blockhash, partialSigners),
+    tx: createVersionedTransaction(ixs, payer, hash.blockhash, partialSigners, lookupTables),
     hash,
     context,
   };
@@ -143,13 +146,14 @@ export function createVersionedTransaction(
   payer: PublicKey | undefined | null,
   recentBlockhash: BlockhashWithExpiryBlockHeight["blockhash"],
   partialSigners?: (Keypair | undefined)[],
+  lookupTables?: AddressLookupTableAccount[],
 ): VersionedTransaction {
   invariant(payer, "Payer public key is not provided!");
   const messageV0 = new TransactionMessage({
     payerKey: payer,
     recentBlockhash,
     instructions: ixs,
-  }).compileToV0Message();
+  }).compileToV0Message(lookupTables);
   const tx = new VersionedTransaction(messageV0);
   const signers = partialSigners?.filter((item): item is Keypair => !!item) ?? undefined;
   if (signers) {
@@ -526,6 +530,7 @@ export async function createAtaBatch(
  * @param mint - Mint for which ATA will be checked
  * @param invoker - Transaction invoker and payer
  * @param programId - Program ID of the Mint
+ * @param payer - optional payer account, will be used instead of invoker as `source`
  * @returns Array of Transaction Instructions that should be added to a transaction
  */
 export async function checkOrCreateAtaBatch(
@@ -534,6 +539,7 @@ export async function checkOrCreateAtaBatch(
   mint: PublicKey,
   invoker: SignerWalletAdapter | Keypair,
   programId?: PublicKey,
+  payer?: PublicKey,
 ): Promise<TransactionInstruction[]> {
   const ixs: TransactionInstruction[] = [];
   if (!programId) {
@@ -547,7 +553,9 @@ export async function checkOrCreateAtaBatch(
   const response = await connection.getMultipleAccountsInfo(atas);
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
-      ixs.push(createAssociatedTokenAccountInstruction(invoker.publicKey!, atas[i]!, owners[i]!, mint, programId));
+      ixs.push(
+        createAssociatedTokenAccountInstruction(payer ?? invoker.publicKey!, atas[i]!, owners[i]!, mint, programId),
+      );
     }
   }
   return ixs;
