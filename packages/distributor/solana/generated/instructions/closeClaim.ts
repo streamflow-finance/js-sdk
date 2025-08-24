@@ -15,6 +15,8 @@ export interface CloseClaimAccounts {
   distributor: PublicKey;
   /** Admin signer */
   adminOrClaimant: PublicKey;
+  /** Optional payer for the account creation in case it doesn't exist */
+  payer: PublicKey;
   claimant: PublicKey;
   /** Claim Status PDA */
   claimStatus: PublicKey;
@@ -34,7 +36,8 @@ export function closeClaim(args: CloseClaimArgs, accounts: CloseClaimAccounts, p
   const keys: Array<AccountMeta> = [
     { pubkey: accounts.distributor, isSigner: false, isWritable: true },
     { pubkey: accounts.adminOrClaimant, isSigner: true, isWritable: true },
-    { pubkey: accounts.claimant, isSigner: false, isWritable: false },
+    { pubkey: accounts.payer, isSigner: true, isWritable: true },
+    { pubkey: accounts.claimant, isSigner: false, isWritable: true },
     { pubkey: accounts.claimStatus, isSigner: false, isWritable: true },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.eventAuthority, isSigner: false, isWritable: false },
