@@ -8,7 +8,7 @@ export type MerkleDistributor = {
   "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",
   "metadata": {
     "name": "merkleDistributor",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "spec": "0.1.0",
     "description": "A Solana program for distributing tokens according to a Merkle root.",
     "repository": "https://github.com/streamflow-finance/distributor"
@@ -377,6 +377,14 @@ export type MerkleDistributor = {
           "name": "adminOrClaimant",
           "docs": [
             "Admin signer",
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Optional payer for the account creation in case it doesn't exist",
           ],
           "writable": true,
           "signer": true

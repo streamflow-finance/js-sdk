@@ -418,6 +418,7 @@ export default abstract class BaseDistributorClient {
 
     const closeClaimAccounts: CloseClaimAccounts = {
       adminOrClaimant: extParams.invoker.publicKey,
+      payer: extParams.invoker.publicKey,
       distributor: distributorPublicKey,
       claimStatus: claimStatusPublicKey,
       claimant: claimantPublicKey,

@@ -2,7 +2,7 @@
   "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",
   "metadata": {
     "name": "merkle_distributor",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "spec": "0.1.0",
     "description": "A Solana program for distributing tokens according to a Merkle root.",
     "repository": "https://github.com/streamflow-finance/distributor"
@@ -10,21 +10,46 @@
   "instructions": [
     {
       "name": "_expose_claim",
-      "discriminator": [103, 233, 83, 69, 115, 199, 128, 249],
+      "discriminator": [
+        103,
+        233,
+        83,
+        69,
+        115,
+        199,
+        128,
+        249
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."]
+          "docs": [
+            "The [MerkleDistributor]."
+          ]
         },
         {
           "name": "claim_status",
-          "docs": ["Claim Status PDA"],
+          "docs": [
+            "Claim Status PDA"
+          ],
           "optional": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -39,13 +64,27 @@
         },
         {
           "name": "compressed_claim_status",
-          "docs": ["Compress Claim Status PDA"],
+          "docs": [
+            "Compress Claim Status PDA"
+          ],
           "optional": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -60,7 +99,9 @@
         },
         {
           "name": "claimant",
-          "docs": ["Who is claiming the tokens."],
+          "docs": [
+            "Who is claiming the tokens."
+          ],
           "signer": true
         }
       ],
@@ -68,11 +109,22 @@
     },
     {
       "name": "claim_locked",
-      "discriminator": [34, 206, 181, 23, 11, 207, 147, 90],
+      "discriminator": [
+        34,
+        206,
+        181,
+        23,
+        11,
+        207,
+        147,
+        90
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
@@ -82,7 +134,19 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -97,7 +161,9 @@
         },
         {
           "name": "from",
-          "docs": ["Distributor ATA containing the tokens to distribute."],
+          "docs": [
+            "Distributor ATA containing the tokens to distribute."
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -118,8 +184,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
-                132, 4, 142, 123, 216, 219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -134,18 +230,26 @@
         },
         {
           "name": "claimant",
-          "docs": ["Who is claiming the tokens."],
+          "docs": [
+            "Who is claiming the tokens."
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "mint",
-          "docs": ["The mint to claim."],
-          "relations": ["distributor"]
+          "docs": [
+            "The mint to claim."
+          ],
+          "relations": [
+            "distributor"
+          ]
         },
         {
           "name": "token_program",
-          "docs": ["SPL [Token] program."]
+          "docs": [
+            "SPL [Token] program."
+          ]
         },
         {
           "name": "event_authority",
@@ -153,7 +257,25 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
               }
             ]
           }
@@ -166,26 +288,43 @@
     },
     {
       "name": "clawback",
-      "discriminator": [111, 92, 142, 79, 33, 234, 82, 27],
+      "discriminator": [
+        111,
+        92,
+        142,
+        79,
+        33,
+        234,
+        82,
+        27
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
           "name": "from",
-          "docs": ["Distributor ATA containing the tokens to distribute."],
+          "docs": [
+            "Distributor ATA containing the tokens to distribute."
+          ],
           "writable": true
         },
         {
           "name": "to",
-          "docs": ["The Clawback token account."],
+          "docs": [
+            "The Clawback token account."
+          ],
           "writable": true
         },
         {
           "name": "admin",
-          "docs": ["Only Admin can trigger the clawback of funds"],
+          "docs": [
+            "Only Admin can trigger the clawback of funds"
+          ],
           "writable": true,
           "signer": true
         },
@@ -194,28 +333,53 @@
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         },
         {
           "name": "token_program",
-          "docs": ["SPL [Token] program."]
+          "docs": [
+            "SPL [Token] program."
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "close_claim",
-      "discriminator": [42, 177, 165, 35, 213, 179, 211, 19],
+      "discriminator": [
+        42,
+        177,
+        165,
+        35,
+        213,
+        179,
+        211,
+        19
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
           "name": "admin_or_claimant",
-          "docs": ["Admin signer"],
+          "docs": [
+            "Admin signer"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Optional payer for the account creation in case it doesn't exist"
+          ],
           "writable": true,
           "signer": true
         },
@@ -230,7 +394,19 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -245,7 +421,9 @@
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         },
         {
@@ -254,7 +432,25 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
               }
             ]
           }
@@ -281,7 +477,10 @@
           "type": {
             "option": {
               "vec": {
-                "array": ["u8", 32]
+                "array": [
+                  "u8",
+                  32
+                ]
               }
             }
           }
@@ -290,11 +489,22 @@
     },
     {
       "name": "compress_claim",
-      "discriminator": [219, 45, 247, 134, 71, 119, 125, 89],
+      "discriminator": [
+        219,
+        45,
+        247,
+        134,
+        71,
+        119,
+        125,
+        89
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
@@ -304,7 +514,19 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -319,7 +541,9 @@
         },
         {
           "name": "signer",
-          "docs": ["Signer account"],
+          "docs": [
+            "Signer account"
+          ],
           "writable": true,
           "signer": true
         },
@@ -328,7 +552,9 @@
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -336,11 +562,22 @@
     },
     {
       "name": "new_claim",
-      "discriminator": [78, 177, 98, 123, 210, 21, 187, 83],
+      "discriminator": [
+        78,
+        177,
+        98,
+        123,
+        210,
+        21,
+        187,
+        83
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
@@ -350,7 +587,19 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -365,7 +614,9 @@
         },
         {
           "name": "from",
-          "docs": ["Distributor ATA containing the tokens to distribute."],
+          "docs": [
+            "Distributor ATA containing the tokens to distribute."
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -386,35 +637,77 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
-                132, 4, 142, 123, 216, 219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
         },
         {
           "name": "to",
-          "docs": ["Account to send the claimed tokens to."],
+          "docs": [
+            "Account to send the claimed tokens to."
+          ],
           "writable": true
         },
         {
           "name": "claimant",
-          "docs": ["Who is claiming the tokens."],
+          "docs": [
+            "Who is claiming the tokens."
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "mint",
-          "docs": ["The mint to claim."],
-          "relations": ["distributor"]
+          "docs": [
+            "The mint to claim."
+          ],
+          "relations": [
+            "distributor"
+          ]
         },
         {
           "name": "token_program",
-          "docs": ["SPL [Token] program."]
+          "docs": [
+            "SPL [Token] program."
+          ]
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         },
         {
@@ -423,7 +716,25 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
               }
             ]
           }
@@ -445,7 +756,10 @@
           "name": "proof",
           "type": {
             "vec": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         }
@@ -473,17 +787,46 @@
         "assert the parameters are what you expect, most importantly the clawback_receiver and admin.",
         "- If your transaction fails, double check the value on-chain matches what you expect."
       ],
-      "discriminator": [32, 139, 112, 171, 0, 2, 225, 155],
+      "discriminator": [
+        32,
+        139,
+        112,
+        171,
+        0,
+        2,
+        225,
+        155
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["[MerkleDistributor]."],
+          "docs": [
+            "[MerkleDistributor]."
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [77, 101, 114, 107, 108, 101, 68, 105, 115, 116, 114, 105, 98, 117, 116, 111, 114]
+                "value": [
+                  77,
+                  101,
+                  114,
+                  107,
+                  108,
+                  101,
+                  68,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114
+                ]
               },
               {
                 "kind": "account",
@@ -498,16 +841,22 @@
         },
         {
           "name": "clawback_receiver",
-          "docs": ["Clawback receiver token account"],
+          "docs": [
+            "Clawback receiver token account"
+          ],
           "writable": true
         },
         {
           "name": "mint",
-          "docs": ["The mint to distribute."]
+          "docs": [
+            "The mint to distribute."
+          ]
         },
         {
           "name": "token_vault",
-          "docs": ["Token vault"],
+          "docs": [
+            "Token vault"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -527,8 +876,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
-                132, 4, 142, 123, 216, 219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -544,17 +923,23 @@
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         },
         {
           "name": "associated_token_program",
-          "docs": ["The [Associated Token] program."],
+          "docs": [
+            "The [Associated Token] program."
+          ],
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "token_program",
-          "docs": ["The [Token] program."]
+          "docs": [
+            "The [Token] program."
+          ]
         }
       ],
       "args": [
@@ -565,7 +950,10 @@
         {
           "name": "root",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         },
         {
@@ -630,11 +1018,22 @@
     },
     {
       "name": "refund_claim",
-      "discriminator": [157, 23, 164, 146, 176, 53, 147, 143],
+      "discriminator": [
+        157,
+        23,
+        164,
+        146,
+        176,
+        53,
+        147,
+        143
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
@@ -644,7 +1043,19 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [67, 108, 97, 105, 109, 83, 116, 97, 116, 117, 115]
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
               },
               {
                 "kind": "account",
@@ -659,7 +1070,9 @@
         },
         {
           "name": "signer",
-          "docs": ["Signer account"],
+          "docs": [
+            "Signer account"
+          ],
           "writable": true,
           "signer": true
         },
@@ -673,7 +1086,9 @@
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -681,22 +1096,37 @@
     },
     {
       "name": "set_admin",
-      "discriminator": [251, 163, 0, 52, 91, 194, 187, 92],
+      "discriminator": [
+        251,
+        163,
+        0,
+        52,
+        91,
+        194,
+        187,
+        92
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
           "name": "admin",
-          "docs": ["Admin signer"],
+          "docs": [
+            "Admin signer"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "new_admin",
-          "docs": ["New admin account"],
+          "docs": [
+            "New admin account"
+          ],
           "writable": true
         }
       ],
@@ -704,20 +1134,35 @@
     },
     {
       "name": "set_clawback_receiver",
-      "discriminator": [153, 217, 34, 20, 19, 29, 229, 75],
+      "discriminator": [
+        153,
+        217,
+        34,
+        20,
+        19,
+        29,
+        229,
+        75
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
           "name": "new_clawback_account",
-          "docs": ["New clawback account"]
+          "docs": [
+            "New clawback account"
+          ]
         },
         {
           "name": "admin",
-          "docs": ["Admin signer"],
+          "docs": [
+            "Admin signer"
+          ],
           "writable": true,
           "signer": true
         }
@@ -726,22 +1171,37 @@
     },
     {
       "name": "update",
-      "discriminator": [219, 200, 88, 176, 158, 63, 253, 127],
+      "discriminator": [
+        219,
+        200,
+        88,
+        176,
+        158,
+        63,
+        253,
+        127
+      ],
       "accounts": [
         {
           "name": "distributor",
-          "docs": ["The [MerkleDistributor]."],
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
           "writable": true
         },
         {
           "name": "admin",
-          "docs": ["Only Admin can trigger the clawback of funds"],
+          "docs": [
+            "Only Admin can trigger the clawback of funds"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "system_program",
-          "docs": ["The [System] program."],
+          "docs": [
+            "The [System] program."
+          ],
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -758,29 +1218,83 @@
   "accounts": [
     {
       "name": "ClaimStatus",
-      "discriminator": [22, 183, 249, 157, 247, 95, 150, 96]
+      "discriminator": [
+        22,
+        183,
+        249,
+        157,
+        247,
+        95,
+        150,
+        96
+      ]
     },
     {
       "name": "CompressedClaimStatus",
-      "discriminator": [53, 68, 161, 131, 212, 106, 98, 48]
+      "discriminator": [
+        53,
+        68,
+        161,
+        131,
+        212,
+        106,
+        98,
+        48
+      ]
     },
     {
       "name": "MerkleDistributor",
-      "discriminator": [77, 119, 139, 70, 84, 247, 12, 26]
+      "discriminator": [
+        77,
+        119,
+        139,
+        70,
+        84,
+        247,
+        12,
+        26
+      ]
     }
   ],
   "events": [
     {
       "name": "ClaimClosedEvent",
-      "discriminator": [139, 166, 215, 195, 184, 233, 26, 217]
+      "discriminator": [
+        139,
+        166,
+        215,
+        195,
+        184,
+        233,
+        26,
+        217
+      ]
     },
     {
       "name": "ClaimedEvent",
-      "discriminator": [144, 172, 209, 86, 144, 87, 84, 115]
+      "discriminator": [
+        144,
+        172,
+        209,
+        86,
+        144,
+        87,
+        84,
+        115
+      ]
     },
     {
       "name": "NewClaimEvent",
-      "discriminator": [244, 3, 231, 151, 60, 101, 55, 55]
+      "discriminator": [
+        244,
+        3,
+        231,
+        151,
+        60,
+        101,
+        55,
+        55
+      ]
     }
   ],
   "errors": [
@@ -908,18 +1422,24 @@
   "types": [
     {
       "name": "ClaimClosedEvent",
-      "docs": ["Emitted when a new claim is created."],
+      "docs": [
+        "Emitted when a new claim is created."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "claimant",
-            "docs": ["User that claimed."],
+            "docs": [
+              "User that claimed."
+            ],
             "type": "pubkey"
           },
           {
             "name": "timestamp",
-            "docs": ["Timestamp."],
+            "docs": [
+              "Timestamp."
+            ],
             "type": "u64"
           }
         ]
@@ -927,43 +1447,59 @@
     },
     {
       "name": "ClaimStatus",
-      "docs": ["Holds whether or not a claimant has claimed tokens."],
+      "docs": [
+        "Holds whether or not a claimant has claimed tokens."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "claimant",
-            "docs": ["Authority that claimed the tokens."],
+            "docs": [
+              "Authority that claimed the tokens."
+            ],
             "type": "pubkey"
           },
           {
             "name": "locked_amount",
-            "docs": ["Locked amount"],
+            "docs": [
+              "Locked amount"
+            ],
             "type": "u64"
           },
           {
             "name": "locked_amount_withdrawn",
-            "docs": ["Locked amount withdrawn"],
+            "docs": [
+              "Locked amount withdrawn"
+            ],
             "type": "u64"
           },
           {
             "name": "unlocked_amount",
-            "docs": ["Unlocked amount"],
+            "docs": [
+              "Unlocked amount"
+            ],
             "type": "u64"
           },
           {
             "name": "last_claim_ts",
-            "docs": ["Last claim time"],
+            "docs": [
+              "Last claim time"
+            ],
             "type": "u64"
           },
           {
             "name": "last_amount_per_unlock",
-            "docs": ["Track amount per unlock, can be useful for non-linear vesting"],
+            "docs": [
+              "Track amount per unlock, can be useful for non-linear vesting"
+            ],
             "type": "u64"
           },
           {
             "name": "closed",
-            "docs": ["Whether claim is closed"],
+            "docs": [
+              "Whether claim is closed"
+            ],
             "type": "bool"
           },
           {
@@ -975,19 +1511,28 @@
           },
           {
             "name": "claims_count",
-            "docs": ["Number of time amount has been claimed"],
+            "docs": [
+              "Number of time amount has been claimed"
+            ],
             "type": "u16"
           },
           {
             "name": "closed_ts",
-            "docs": ["Time when claim has been closed"],
+            "docs": [
+              "Time when claim has been closed"
+            ],
             "type": "u64"
           },
           {
             "name": "buffer_2",
-            "docs": ["Buffer for additional fields"],
+            "docs": [
+              "Buffer for additional fields"
+            ],
             "type": {
-              "array": ["u8", 22]
+              "array": [
+                "u8",
+                22
+              ]
             }
           }
         ]
@@ -995,18 +1540,24 @@
     },
     {
       "name": "ClaimedEvent",
-      "docs": ["Emitted when tokens are claimed."],
+      "docs": [
+        "Emitted when tokens are claimed."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "claimant",
-            "docs": ["User that claimed."],
+            "docs": [
+              "User that claimed."
+            ],
             "type": "pubkey"
           },
           {
             "name": "amount",
-            "docs": ["Amount of tokens to distribute."],
+            "docs": [
+              "Amount of tokens to distribute."
+            ],
             "type": "u64"
           }
         ]
@@ -1014,7 +1565,9 @@
     },
     {
       "name": "CompressedClaimStatus",
-      "docs": ["Holds whether or not a claimant has claimed tokens."],
+      "docs": [
+        "Holds whether or not a claimant has claimed tokens."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1031,115 +1584,162 @@
     },
     {
       "name": "MerkleDistributor",
-      "docs": ["State for the account which distributes tokens."],
+      "docs": [
+        "State for the account which distributes tokens."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "bump",
-            "docs": ["Bump seed."],
+            "docs": [
+              "Bump seed."
+            ],
             "type": "u8"
           },
           {
             "name": "version",
-            "docs": ["Version of the airdrop"],
+            "docs": [
+              "Version of the airdrop"
+            ],
             "type": "u64"
           },
           {
             "name": "root",
-            "docs": ["The 256-bit merkle root."],
+            "docs": [
+              "The 256-bit merkle root."
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "mint",
-            "docs": ["[Mint] of the token to be distributed."],
+            "docs": [
+              "[Mint] of the token to be distributed."
+            ],
             "type": "pubkey"
           },
           {
             "name": "token_vault",
-            "docs": ["Token Address of the vault"],
+            "docs": [
+              "Token Address of the vault"
+            ],
             "type": "pubkey"
           },
           {
             "name": "max_total_claim",
-            "docs": ["Maximum number of tokens that can ever be claimed from this [MerkleDistributor]."],
+            "docs": [
+              "Maximum number of tokens that can ever be claimed from this [MerkleDistributor]."
+            ],
             "type": "u64"
           },
           {
             "name": "max_num_nodes",
-            "docs": ["Maximum number of nodes in [MerkleDistributor]."],
+            "docs": [
+              "Maximum number of nodes in [MerkleDistributor]."
+            ],
             "type": "u64"
           },
           {
             "name": "unlock_period",
-            "docs": ["Time step (period) in seconds per which the unlock occurs"],
+            "docs": [
+              "Time step (period) in seconds per which the unlock occurs"
+            ],
             "type": "u64"
           },
           {
             "name": "total_amount_claimed",
-            "docs": ["Total amount of tokens that have been claimed."],
+            "docs": [
+              "Total amount of tokens that have been claimed."
+            ],
             "type": "u64"
           },
           {
             "name": "num_nodes_claimed",
-            "docs": ["Number of nodes that have been claimed."],
+            "docs": [
+              "Number of nodes that have been claimed."
+            ],
             "type": "u64"
           },
           {
             "name": "start_ts",
-            "docs": ["Lockup time start (Unix Timestamp)"],
+            "docs": [
+              "Lockup time start (Unix Timestamp)"
+            ],
             "type": "u64"
           },
           {
             "name": "end_ts",
-            "docs": ["Lockup time end (Unix Timestamp)"],
+            "docs": [
+              "Lockup time end (Unix Timestamp)"
+            ],
             "type": "u64"
           },
           {
             "name": "clawback_start_ts",
-            "docs": ["Clawback start (Unix Timestamp)"],
+            "docs": [
+              "Clawback start (Unix Timestamp)"
+            ],
             "type": "u64"
           },
           {
             "name": "clawback_receiver",
-            "docs": ["Clawback receiver"],
+            "docs": [
+              "Clawback receiver"
+            ],
             "type": "pubkey"
           },
           {
             "name": "admin",
-            "docs": ["Admin wallet"],
+            "docs": [
+              "Admin wallet"
+            ],
             "type": "pubkey"
           },
           {
             "name": "clawed_back",
-            "docs": ["Whether or not the distributor has been clawed back"],
+            "docs": [
+              "Whether or not the distributor has been clawed back"
+            ],
             "type": "bool"
           },
           {
             "name": "claims_closable_by_admin",
-            "docs": ["Whether claims are closable by the admin or not"],
+            "docs": [
+              "Whether claims are closable by the admin or not"
+            ],
             "type": "bool"
           },
           {
             "name": "can_update_duration",
-            "docs": ["Whether admin can update vesting duration"],
+            "docs": [
+              "Whether admin can update vesting duration"
+            ],
             "type": "bool"
           },
           {
             "name": "total_amount_unlocked",
-            "docs": ["Total amount of funds unlocked (cliff/instant)"],
+            "docs": [
+              "Total amount of funds unlocked (cliff/instant)"
+            ],
             "type": "u64"
           },
           {
             "name": "total_amount_locked",
-            "docs": ["Total amount of funds locked (vested)"],
+            "docs": [
+              "Total amount of funds locked (vested)"
+            ],
             "type": "u64"
           },
           {
             "name": "last_duration_update_ts",
-            "docs": ["Timestamp when update was last called"],
+            "docs": [
+              "Timestamp when update was last called"
+            ],
             "type": "u64"
           },
           {
@@ -1151,31 +1751,47 @@
           },
           {
             "name": "clawed_back_ts",
-            "docs": ["Timestamp when funds were clawed back"],
+            "docs": [
+              "Timestamp when funds were clawed back"
+            ],
             "type": "u64"
           },
           {
             "name": "claims_closable_by_claimant",
-            "docs": ["Whether claims are closable by claimant or not"],
+            "docs": [
+              "Whether claims are closable by claimant or not"
+            ],
             "type": "bool"
           },
           {
             "name": "claims_limit",
-            "docs": ["Limit number of claims"],
+            "docs": [
+              "Limit number of claims"
+            ],
             "type": "u16"
           },
           {
             "name": "buffer_2",
-            "docs": ["Buffer for additional fields"],
+            "docs": [
+              "Buffer for additional fields"
+            ],
             "type": {
-              "array": ["u8", 20]
+              "array": [
+                "u8",
+                20
+              ]
             }
           },
           {
             "name": "buffer_3",
-            "docs": ["Buffer for additional fields"],
+            "docs": [
+              "Buffer for additional fields"
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         ]
@@ -1183,18 +1799,24 @@
     },
     {
       "name": "NewClaimEvent",
-      "docs": ["Emitted when a new claim is created."],
+      "docs": [
+        "Emitted when a new claim is created."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "claimant",
-            "docs": ["User that claimed."],
+            "docs": [
+              "User that claimed."
+            ],
             "type": "pubkey"
           },
           {
             "name": "timestamp",
-            "docs": ["Timestamp."],
+            "docs": [
+              "Timestamp."
+            ],
             "type": "u64"
           }
         ]

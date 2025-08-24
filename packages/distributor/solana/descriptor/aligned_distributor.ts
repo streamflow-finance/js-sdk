@@ -8,7 +8,7 @@ export type AlignedDistributor = {
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "alignedDistributor",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
@@ -156,6 +156,160 @@ export type AlignedDistributor = {
           "docs": [
             "SPL [Token] program.",
           ]
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "closeClaim",
+      "discriminator": [
+        42,
+        177,
+        165,
+        35,
+        213,
+        179,
+        211,
+        19,
+      ],
+      "accounts": [
+        {
+          "name": "alignedDistributor",
+          "docs": [
+            "The [AlignedDistributor].",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  108,
+                  105,
+                  103,
+                  110,
+                  101,
+                  100,
+                  45,
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              },
+            ]
+          }
+        },
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Only Admin can trigger the clawback of funds",
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "claimant",
+          "writable": true
+        },
+        {
+          "name": "claimStatus",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              },
+            ],
+            "program": {
+              "kind": "account",
+              "path": "distributorProgram"
+            }
+          }
+        },
+        {
+          "name": "distributorEventAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ]
+              },
+            ],
+            "program": {
+              "kind": "account",
+              "path": "distributorProgram"
+            }
+          }
+        },
+        {
+          "name": "distributorProgram",
+          "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N"
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "The [System] program.",
+          ],
+          "address": "11111111111111111111111111111111"
         },
       ],
       "args": []
