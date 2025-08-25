@@ -219,29 +219,45 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Creates a new stream/vesting contract.
+   * Builds transaction instructions for creating a new stream/vesting contract without creating a transaction.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
+   * @returns Transaction instructions and metadata ID
    */
-  public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
+  public async buildCreateTransactionInstructions(
+    data: ICreateStreamData,
+    extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
+  ): Promise<{
+    ixs: TransactionInstruction[];
+    metadataId: string;
+    metadata?: Keypair;
+  }> {
     const { partner, amount, tokenProgramId } = data;
-    const { isNative, sender, customInstructions } = extParams;
+    const { isNative, senderPublicKey, customInstructions } = extParams;
 
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
     const mintPublicKey = new PublicKey(data.tokenId);
 
-    if (!sender.publicKey) {
-      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
-    }
+    // Create a temporary sender object for compatibility with existing methods
+    const tempSender = { publicKey: senderPublicKey } as SignerWalletAdapter;
 
     const ixs: TransactionInstruction[] = await this.getCreateATAInstructions(
       [partnerPublicKey],
       mintPublicKey,
-      sender,
+      tempSender,
       true,
       tokenProgramId ? new PublicKey(tokenProgramId) : undefined,
     );
 
-    const { ixs: createIxs, metadata, metadataPubKey } = await this.prepareCreateInstructions(data, extParams);
+    const {
+      ixs: createIxs,
+      metadata,
+      metadataPubKey,
+    } = await this.prepareCreateInstructions(data, {
+      ...extParams,
+      sender: tempSender,
+    });
 
     ixs.push(...createIxs);
 
@@ -250,17 +266,78 @@ export class SolanaStreamClient extends BaseStreamClient {
         address: partnerPublicKey.toString(),
       });
       const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
+      ixs.push(...(await prepareWrappedAccount(this.connection, tempSender.publicKey!, totalAmount)));
     }
 
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
 
+    return {
+      ixs,
+      metadataId: metadataPubKey.toBase58(),
+      metadata,
+    };
+  }
+
+  /**
+   * Builds a transaction for creating a new stream/vesting contract without signing or executing it.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
+   * @returns Transaction and metadata information
+   */
+  public async buildCreateTransaction(
+    data: ICreateStreamData,
+    extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
+  ): Promise<{
+    tx: VersionedTransaction;
+    metadataId: string;
+    metadata?: Keypair;
+    hash: string;
+    context: any;
+  }> {
+    const { senderPublicKey } = extParams;
+
+    const { ixs, metadataId, metadata } = await this.buildCreateTransactionInstructions(data, extParams);
+
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, senderPublicKey, undefined, [
+      metadata,
+    ]);
+
+    return {
+      tx,
+      metadataId,
+      metadata,
+      hash: hash.blockhash,
+      context,
+    };
+  }
+
+  /**
+   * Creates a new stream/vesting contract.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
+   * @param {ICreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, native token handling, and compute settings
+   * @returns Create result
+   */
+  public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
+    const { sender } = extParams;
+
+    if (!sender.publicKey) {
+      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const { ixs, metadataId, metadata } = await this.buildCreateTransactionInstructions(data, {
+      ...extParams,
+      senderPublicKey: sender.publicKey,
+    });
+
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, [
       metadata,
     ]);
+
     const signature = await signAndExecuteTransaction(
       this.connection,
-      extParams.sender,
+      sender,
       tx,
       {
         hash,
@@ -270,7 +347,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       this.schedulingParams,
     );
 
-    return { ixs, txId: signature, metadataId: metadataPubKey.toBase58() };
+    return { ixs, txId: signature, metadataId };
   }
 
   async prepareCreateInstructions(
@@ -377,15 +454,21 @@ export class SolanaStreamClient extends BaseStreamClient {
         canTopup,
         oracleType: (!!oracleType ? { [oracleType]: {} } : { none: {} }) as OracleType,
         streamName: streamNameArray,
-        minPrice: typeof minPrice === 'number' ? getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW) : minPrice,
-        maxPrice: typeof maxPrice === 'number' ? getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW) : maxPrice,
-        minPercentage: typeof minPercentage === 'number' ? getBN(minPercentage, ALIGNED_PRECISION_FACTOR_POW) : minPercentage,
-        maxPercentage: typeof maxPercentage === 'number' ? getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW) : maxPercentage,
+        minPrice: typeof minPrice === "number" ? getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW) : minPrice,
+        maxPrice: typeof maxPrice === "number" ? getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW) : maxPrice,
+        minPercentage:
+          typeof minPercentage === "number" ? getBN(minPercentage, ALIGNED_PRECISION_FACTOR_POW) : minPercentage,
+        maxPercentage:
+          typeof maxPercentage === "number" ? getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW) : maxPercentage,
         tickSize: new BN(tickSize || 1),
         skipInitial: skipInitial ?? false,
         expiryTime: new BN(expiryTime ?? 0),
-        expiryPercentage: typeof expiryPercentage === 'number' ? getBN(expiryPercentage, ALIGNED_PRECISION_FACTOR_POW) : expiryPercentage ?? new BN(0),
-        floorPrice: typeof floorPrice === 'number' ? getBN(floorPrice, ALIGNED_PRECISION_FACTOR_POW) : floorPrice ?? new BN(0),
+        expiryPercentage:
+          typeof expiryPercentage === "number"
+            ? getBN(expiryPercentage, ALIGNED_PRECISION_FACTOR_POW)
+            : expiryPercentage ?? new BN(0),
+        floorPrice:
+          typeof floorPrice === "number" ? getBN(floorPrice, ALIGNED_PRECISION_FACTOR_POW) : floorPrice ?? new BN(0),
       })
       .accountsPartial({
         payer: sender.publicKey,
@@ -411,6 +494,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
+   * @param {ICreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
+   * @returns Create stream instructions
    */
   public async prepareCreateStreamInstructions(
     {
@@ -522,6 +608,9 @@ export class SolanaStreamClient extends BaseStreamClient {
    * - initialized contract PDA off chain
    *
    * If you are not sure if you should use create or create_unchecked, go for create to be safer.
+   * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
+   * @param {ICreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
+   * @returns Create result
    */
   public async createUnchecked(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, extParams);
@@ -657,29 +746,31 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Creates multiple stream/vesting contracts.
+   * Builds transaction instructions for creating multiple stream/vesting contracts without creating transactions.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
+   * @returns Create multiple transaction instructions
    */
-  public async createMultiple(
+  public async buildCreateMultipleTransactionInstructions(
     data: ICreateMultipleStreamData,
-    extParams: ICreateStreamSolanaExt,
-  ): Promise<IMultiTransactionResult> {
+    extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
+  ): Promise<{
+    instructionsBatch: {
+      ixs: TransactionInstruction[];
+      metadata: Keypair | undefined;
+      recipient: string;
+    }[];
+    metadatas: string[];
+    metadataToRecipient: MetadataRecipientHashMap;
+    prepareInstructions: TransactionInstruction[];
+  }> {
     const { recipients, ...streamParams } = data;
 
-    const {
-      sender,
-      metadataPubKeys: metadataPubKeysExt,
-      isNative,
-      computePrice,
-      computeLimit,
-      customInstructions,
-    } = extParams;
+    const { senderPublicKey, metadataPubKeys: metadataPubKeysExt, isNative, customInstructions } = extParams;
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
-    const errors: ICreateMultiError[] = [];
-    const signatures: string[] = [];
-    const batch: BatchItem[] = [];
     const instructionsBatch: {
       ixs: TransactionInstruction[];
       metadata: Keypair | undefined;
@@ -694,19 +785,16 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Recipients array is empty!");
     }
 
-    if (!sender.publicKey) {
-      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
-    }
+    // Create a temporary sender object for compatibility with existing methods
+    const tempSender = { publicKey: senderPublicKey } as SignerWalletAdapter;
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
       const createStreamData = { ...streamParams, ...recipientData };
       const createStreamExtParams = {
-        sender,
+        sender: tempSender,
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-        computePrice,
-        computeLimit,
-        customInstructions,
+        ...extParams,
       };
 
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
@@ -725,23 +813,108 @@ export class SolanaStreamClient extends BaseStreamClient {
       });
     }
 
-    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
-
-    for (const { ixs, metadata, recipient } of instructionsBatch) {
-      batch.push({ tx: createVersionedTransaction(ixs, sender.publicKey, hash.blockhash, [metadata]), recipient });
-    }
-
     const prepareInstructions = await this.getCreateATAInstructions(
       [partnerPublicKey],
       mintPublicKey,
-      sender,
+      tempSender,
       true,
     );
 
     if (isNative) {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
+      const nativeInstructions = await prepareWrappedAccount(
+        this.connection,
+        tempSender.publicKey!,
+        totalDepositedAmount,
+      );
       prepareInstructions.push(...nativeInstructions);
+    }
+
+    return {
+      instructionsBatch,
+      metadatas,
+      metadataToRecipient,
+      prepareInstructions,
+    };
+  }
+
+  /**
+   * Builds multiple transactions for creating stream/vesting contracts without signing or executing them.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
+   * @returns Multiple transaction information
+   */
+  public async buildCreateMultipleTransactions(
+    data: ICreateMultipleStreamData,
+    extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
+  ): Promise<{
+    transactions: BatchItem[];
+    metadatas: string[];
+    metadataToRecipient: MetadataRecipientHashMap;
+    hash: Readonly<{ blockhash: string; lastValidBlockHeight: number }>;
+    context: any;
+    prepareTx?: VersionedTransaction;
+  }> {
+    const { senderPublicKey } = extParams;
+
+    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
+      await this.buildCreateMultipleTransactionInstructions(data, extParams);
+
+    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
+    const batch: BatchItem[] = [];
+
+    for (const { ixs, metadata, recipient } of instructionsBatch) {
+      batch.push({ tx: createVersionedTransaction(ixs, senderPublicKey, hash.blockhash, [metadata]), recipient });
+    }
+
+    let prepareTx: VersionedTransaction | undefined;
+    if (prepareInstructions.length > 0) {
+      prepareTx = createVersionedTransaction(prepareInstructions, senderPublicKey, hash.blockhash);
+    }
+
+    return {
+      transactions: batch,
+      metadatas,
+      metadataToRecipient,
+      hash,
+      context,
+      prepareTx,
+    };
+  }
+
+  /**
+   * Creates multiple stream/vesting contracts.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
+   * @param {ICreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
+   * @returns Multiple transaction information
+   */
+  public async createMultiple(
+    data: ICreateMultipleStreamData,
+    extParams: ICreateStreamSolanaExt,
+  ): Promise<IMultiTransactionResult> {
+    const { sender, metadataPubKeys: metadataPubKeysExt } = extParams;
+
+    if (!sender.publicKey) {
+      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
+      await this.buildCreateMultipleTransactionInstructions(data, {
+        ...extParams,
+        senderPublicKey: sender.publicKey,
+      });
+
+    const errors: ICreateMultiError[] = [];
+    const signatures: string[] = [];
+    const metadataPubKeys = metadataPubKeysExt || [];
+    const batch: BatchItem[] = [];
+
+    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
+
+    for (const { ixs, metadata, recipient } of instructionsBatch) {
+      batch.push({ tx: createVersionedTransaction(ixs, sender.publicKey, hash.blockhash, [metadata]), recipient });
     }
 
     if (prepareInstructions.length > 0) {
@@ -802,71 +975,29 @@ export class SolanaStreamClient extends BaseStreamClient {
    * Creates multiple stream/vesting contracts, and send all transactions sequentially.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * In most cases, createMultiple should be used instead.
+   * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
+   * @param {ICreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
+   * @returns Multiple transaction information
    */
   public async createMultipleSequential(
     data: ICreateMultipleStreamData,
     extParams: ICreateStreamSolanaExt,
   ): Promise<IMultiTransactionResult> {
-    const { recipients, ...streamParams } = data;
-
-    const {
-      sender,
-      metadataPubKeys: metadataPubKeysExt,
-      isNative,
-      computePrice,
-      computeLimit,
-      customInstructions,
-    } = extParams;
-
-    const metadatas: string[] = [];
-    const metadataToRecipient: MetadataRecipientHashMap = {};
-    const errors: ICreateMultiError[] = [];
-    const signatures: string[] = [];
-    const batch: BatchItem[] = [];
-    const instructionsBatch: {
-      ixs: TransactionInstruction[];
-      metadata: Keypair | undefined;
-      recipient: string;
-    }[] = [];
-    const metadataPubKeys = metadataPubKeysExt || [];
-
-    const partnerPublicKey = data.partner ? new PublicKey(data.partner) : WITHDRAWOR_PUBLIC_KEY;
-    const mintPublicKey = new PublicKey(data.tokenId);
-
-    if (recipients.length === 0) {
-      throw new Error("Recipients array is empty!");
-    }
+    const { sender } = extParams;
 
     if (!sender.publicKey) {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    for (let i = 0; i < recipients.length; i++) {
-      const recipientData = recipients[i];
-      const createStreamData = { ...streamParams, ...recipientData };
-      const createStreamExtParams = {
-        sender,
-        metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-        computePrice,
-        computeLimit,
-        customInstructions,
-      };
-
-      const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
-        createStreamData,
-        createStreamExtParams,
-      );
-
-      await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
-      metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
-
-      metadatas.push(metadataPubKey.toBase58());
-      instructionsBatch.push({
-        ixs,
-        metadata,
-        recipient: recipientData.recipient,
+    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
+      await this.buildCreateMultipleTransactionInstructions(data, {
+        ...extParams,
+        senderPublicKey: sender.publicKey,
       });
-    }
+
+    const errors: ICreateMultiError[] = [];
+    const signatures: string[] = [];
+    const batch: BatchItem[] = [];
 
     const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
 
@@ -881,19 +1012,6 @@ export class SolanaStreamClient extends BaseStreamClient {
         tx.sign([metadata]);
       }
       batch.push({ tx, recipient });
-    }
-
-    const prepareInstructions = await this.getCreateATAInstructions(
-      [partnerPublicKey],
-      mintPublicKey,
-      sender,
-      true,
-    );
-
-    if (isNative) {
-      const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
-      prepareInstructions.push(...nativeInstructions);
     }
 
     if (prepareInstructions.length > 0) {
@@ -944,6 +1062,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts withdrawing from the specified stream.
+   * @param {IWithdrawData} withdrawData - Withdrawal parameters including stream ID and amount to withdraw
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
+   * @returns Transaction result
    */
   public async withdraw(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
@@ -978,6 +1099,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Creates Transaction Instructions for withdrawal
+   * @param {IWithdrawData} withdrawData - Withdrawal parameters including stream ID and amount to withdraw
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
+   * @returns Transaction instructions
    */
   public async prepareWithdrawInstructions(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
@@ -1033,6 +1157,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts canceling the specified stream.
+   * @param {ICancelData} cancelData - Cancellation parameters including stream ID
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
+   * @returns Transaction result
    */
   public async cancel(cancelData: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareCancelInstructions(cancelData, extParams);
@@ -1052,6 +1179,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     return { ixs, txId: signature };
   }
 
+  /**
+   * Creates Transaction Instructions for cancel
+   * @param {ICancelData} cancelData - Cancellation parameters including stream ID
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
+   * @returns Transaction instructions
+   */
   public async prepareCancelInstructions(
     cancelData: ICancelData,
     extParams: IInteractStreamSolanaExt,
@@ -1071,6 +1204,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     return ixs;
   }
 
+  /**
+   * Creates Transaction Instructions for cancel
+   * @param {ICancelData} cancelData - Cancellation parameters including stream ID
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
+   * @returns Transaction instructions
+   */
   public async prepareCancelAlignedUnlockInstructions(
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
@@ -1121,6 +1260,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Creates Transaction Instructions for cancel
+   * @param {ICancelData} cancelData - Cancellation parameters including stream ID
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
+   * @returns Transaction instructions
    */
   public async prepareCancelStreamInstructions(
     { id }: ICancelData,
@@ -1180,6 +1322,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
+   * @param {ITransferData} transferData - Transfer parameters including stream ID and new recipient address
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction result
    */
   public async transfer(
     { id, newRecipient }: ITransferData,
@@ -1205,6 +1350,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
+   * @param {ITransferData} transferData - Transfer parameters including stream ID and new recipient address
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction instructions
    */
   public async prepareTransferInstructions(
     { id, newRecipient }: ITransferData,
@@ -1248,6 +1396,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Tops up stream account with specified amount.
+   * @param {ITopUpData} topupData - Top-up parameters including stream ID and amount to add
+   * @param {ITopUpStreamSolanaExt} extParams - Transaction configuration including invoker wallet, native token handling, and compute settings
+   * @returns Transaction result
    */
   public async topup({ id, amount }: ITopUpData, extParams: ITopUpStreamSolanaExt): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTopupInstructions({ id, amount }, extParams);
@@ -1269,6 +1420,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Create Transaction instructions for topup
+   * @param {ITopUpData} topupData - Top-up parameters including stream ID and amount to add
+   * @param {ITopUpStreamSolanaExt} extParams - Transaction configuration including invoker wallet, native token handling, and compute settings
+   * @returns Transaction instructions
    */
   public async prepareTopupInstructions(
     { id, amount }: ITopUpData,
@@ -1319,6 +1473,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Fetch stream data by its id (address).
+   * @param {IGetOneData} getData - Query parameters containing the stream ID to fetch
+   * @returns Stream data
    */
   public async getOne({ id }: IGetOneData): Promise<Stream> {
     const streamPublicKey = new PublicKey(id);
@@ -1342,6 +1498,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Fetch all aligned outgoing streams/contracts by the provided public key.
+   * @param {string} sender - Sender public key
+   * @returns Record of stream data
    */
   private async getOutgoingAlignedStreams(sender: string): Promise<Record<string, Stream>> {
     const streams: Record<string, Stream> = {};
@@ -1393,6 +1551,8 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch streams/contracts by providing direction.
    * Streams are sorted by start time in ascending order.
+   * @param {IGetAllData} getData - Query parameters including address, stream type filter, and direction filter
+   * @returns Record of stream data
    */
   public async get({
     address,
@@ -1454,6 +1614,11 @@ export class SolanaStreamClient extends BaseStreamClient {
     return sortedStreams.filter((stream) => stream[1].type === type);
   }
 
+  /**
+   * Searches for streams/contracts by providing filters.
+   * @param {ISearchStreams} data - Search by mint, sender, recipient or closed status
+   * @returns Record of stream data
+   */
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
     const filters: (MemcmpFilter | DataSizeFilter)[] = Object.entries(data)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1477,6 +1642,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts updating the stream auto withdrawal params and amount per period
+   * @param {IUpdateData} data - Update parameters including stream ID and new settings
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction result
    */
   public async update(data: IUpdateData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareUpdateInstructions(data, extParams);
@@ -1501,6 +1669,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Create Transaction instructions for update
+   * @param {IUpdateData} data - Update parameters including stream ID and new settings
+   * @param {IInteractStreamSolanaExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction instructions
    */
   public async prepareUpdateInstructions(
     data: IUpdateData,
@@ -1532,6 +1703,11 @@ export class SolanaStreamClient extends BaseStreamClient {
     return ixs;
   }
 
+  /**
+   * Gets fees for a given address
+   * @param {IGetFeesData} getData - Query parameters containing the partner address to check for custom fees
+   * @returns Fees
+   */
   public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
     const [metadataPubKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(FEES_METADATA_SEED)],
@@ -1552,10 +1728,19 @@ export class SolanaStreamClient extends BaseStreamClient {
     };
   }
 
+  /**
+   * Gets default streamflow fee
+   * @returns Default streamflow fee
+   */
   public async getDefaultStreamflowFee(): Promise<number> {
     return DEFAULT_STREAMFLOW_FEE;
   }
 
+  /**
+   * Extracts error code from an error
+   * @param {Error} err - Error
+   * @returns Error code
+   */
   public extractErrorCode(err: Error): string | null {
     const logs = "logs" in err && Array.isArray(err.logs) ? err.logs : undefined;
     return extractSolanaErrorCode(err.toString() ?? "Unknown error!", logs);

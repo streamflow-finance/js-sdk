@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "8.6.0",
+  "version": "8.7.0-alpha.0",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/cjs/index.cjs",
