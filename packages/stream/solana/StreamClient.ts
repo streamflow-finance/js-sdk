@@ -223,11 +223,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {ICreateStreamData} data - Stream creation data
    * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Extended parameters for the stream creation
-   * @returns {Promise<{
-   *   ixs: TransactionInstruction[];
-   *   metadataId: string; // metadata public key
-   *   metadata?: Keypair; // metadata keypair
-   * }>} - Transaction instructions and metadata ID
+   * @returns Transaction instructions and metadata ID
    */
   public async buildCreateTransactionInstructions(
     data: ICreateStreamData,
@@ -287,13 +283,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {ICreateStreamData} data - Stream creation data
    * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Extended parameters for the stream creation
-   * @returns {Promise<{
-   *   tx: VersionedTransaction;
-   *   metadataId: string;
-   *   metadata?: Keypair;
-   *   hash: string;
-   *   context: any;
-   * }>} - Transaction and metadata information
+   * @returns Transaction and metadata information
    */
   public async buildCreateTransaction(
     data: ICreateStreamData,
@@ -325,6 +315,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream creation data
+   * @param {ICreateStreamSolanaExt} extParams - Extended parameters for the stream creation
+   * @returns Create result
    */
   public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
     const { sender } = extParams;
@@ -501,6 +494,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream creation data
+   * @param {ICreateStreamSolanaExt} extParams - Extended parameters for the stream creation
+   * @returns Create stream instructions
    */
   public async prepareCreateStreamInstructions(
     {
@@ -612,6 +608,9 @@ export class SolanaStreamClient extends BaseStreamClient {
    * - initialized contract PDA off chain
    *
    * If you are not sure if you should use create or create_unchecked, go for create to be safer.
+   * @param {ICreateStreamData} data - Stream creation data
+   * @param {ICreateStreamSolanaExt} extParams - Extended parameters for the stream creation
+   * @returns Create result
    */
   public async createUnchecked(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, extParams);
@@ -749,6 +748,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Builds transaction instructions for creating multiple stream/vesting contracts without creating transactions.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateMultipleStreamData} data - Stream creation data
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Extended parameters for the stream creation
+   * @returns Create multiple transaction instructions
    */
   public async buildCreateMultipleTransactionInstructions(
     data: ICreateMultipleStreamData,
@@ -835,6 +837,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Builds multiple transactions for creating stream/vesting contracts without signing or executing them.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateMultipleStreamData} data - Stream creation data
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Extended parameters for the stream creation
+   * @returns Multiple transaction information
    */
   public async buildCreateMultipleTransactions(
     data: ICreateMultipleStreamData,
@@ -877,6 +882,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Creates multiple stream/vesting contracts.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateMultipleStreamData} data - Stream creation data
+   * @param {ICreateStreamSolanaExt} extParams - Extended parameters for the stream creation
+   * @returns Multiple transaction information
    */
   public async createMultiple(
     data: ICreateMultipleStreamData,
@@ -963,6 +971,9 @@ export class SolanaStreamClient extends BaseStreamClient {
    * Creates multiple stream/vesting contracts, and send all transactions sequentially.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * In most cases, createMultiple should be used instead.
+   * @param {ICreateMultipleStreamData} data - Stream creation data
+   * @param {ICreateStreamSolanaExt} extParams - Extended parameters for the stream creation
+   * @returns Multiple transaction information
    */
   public async createMultipleSequential(
     data: ICreateMultipleStreamData,
@@ -1047,6 +1058,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts withdrawing from the specified stream.
+   * @param {IWithdrawData} withdrawData - Withdraw data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the withdraw
+   * @returns Transaction result
    */
   public async withdraw(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
@@ -1081,6 +1095,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Creates Transaction Instructions for withdrawal
+   * @param {IWithdrawData} withdrawData - Withdraw data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the withdraw
+   * @returns Transaction instructions
    */
   public async prepareWithdrawInstructions(
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
@@ -1136,6 +1153,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts canceling the specified stream.
+   * @param {ICancelData} cancelData - Cancel data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the cancel
+   * @returns Transaction result
    */
   public async cancel(cancelData: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareCancelInstructions(cancelData, extParams);
@@ -1155,6 +1175,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     return { ixs, txId: signature };
   }
 
+  /**
+   * Creates Transaction Instructions for cancel
+   * @param {ICancelData} cancelData - Cancel data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the cancel
+   * @returns Transaction instructions
+   */
   public async prepareCancelInstructions(
     cancelData: ICancelData,
     extParams: IInteractStreamSolanaExt,
@@ -1174,6 +1200,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     return ixs;
   }
 
+  /**
+   * Creates Transaction Instructions for cancel
+   * @param {ICancelData} cancelData - Cancel data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the cancel
+   * @returns Transaction instructions
+   */
   public async prepareCancelAlignedUnlockInstructions(
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IInteractStreamSolanaExt,
@@ -1224,6 +1256,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Creates Transaction Instructions for cancel
+   * @param {ICancelData} cancelData - Cancel data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the cancel
+   * @returns Transaction instructions
    */
   public async prepareCancelStreamInstructions(
     { id }: ICancelData,
@@ -1283,6 +1318,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
+   * @param {ITransferData} transferData - Transfer data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the transfer
+   * @returns Transaction result
    */
   public async transfer(
     { id, newRecipient }: ITransferData,
@@ -1308,6 +1346,9 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Attempts changing the stream/vesting contract's recipient (effectively transferring the stream/vesting contract).
    * Potential associated token account rent fee (to make it rent-exempt) is paid by the transaction initiator.
+   * @param {ITransferData} transferData - Transfer data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the transfer
+   * @returns Transaction instructions
    */
   public async prepareTransferInstructions(
     { id, newRecipient }: ITransferData,
@@ -1351,6 +1392,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Tops up stream account with specified amount.
+   * @param {ITopUpData} topupData - Topup data
+   * @param {ITopUpStreamSolanaExt} extParams - Extended parameters for the topup
+   * @returns Transaction result
    */
   public async topup({ id, amount }: ITopUpData, extParams: ITopUpStreamSolanaExt): Promise<ITransactionResult> {
     const ixs: TransactionInstruction[] = await this.prepareTopupInstructions({ id, amount }, extParams);
@@ -1372,6 +1416,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Create Transaction instructions for topup
+   * @param {ITopUpData} topupData - Topup data
+   * @param {ITopUpStreamSolanaExt} extParams - Extended parameters for the topup
+   * @returns Transaction instructions
    */
   public async prepareTopupInstructions(
     { id, amount }: ITopUpData,
@@ -1422,6 +1469,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Fetch stream data by its id (address).
+   * @param {IGetOneData} getData - Get one data
+   * @returns Stream data
    */
   public async getOne({ id }: IGetOneData): Promise<Stream> {
     const streamPublicKey = new PublicKey(id);
@@ -1445,6 +1494,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Fetch all aligned outgoing streams/contracts by the provided public key.
+   * @param {string} sender - Sender public key
+   * @returns Record of stream data
    */
   private async getOutgoingAlignedStreams(sender: string): Promise<Record<string, Stream>> {
     const streams: Record<string, Stream> = {};
@@ -1496,6 +1547,8 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Fetch streams/contracts by providing direction.
    * Streams are sorted by start time in ascending order.
+   * @param {IGetAllData} getData - Get all data
+   * @returns Record of stream data
    */
   public async get({
     address,
@@ -1557,6 +1610,11 @@ export class SolanaStreamClient extends BaseStreamClient {
     return sortedStreams.filter((stream) => stream[1].type === type);
   }
 
+  /**
+   * Searches for streams/contracts by providing filters (mint, sender, recipient, closed).
+   * @param {ISearchStreams} data - Search data
+   * @returns Record of stream data
+   */
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
     const filters: (MemcmpFilter | DataSizeFilter)[] = Object.entries(data)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1580,6 +1638,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Attempts updating the stream auto withdrawal params and amount per period
+   * @param {IUpdateData} data - Update data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the update
+   * @returns Transaction result
    */
   public async update(data: IUpdateData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
     const ixs = await this.prepareUpdateInstructions(data, extParams);
@@ -1604,6 +1665,9 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Create Transaction instructions for update
+   * @param {IUpdateData} data - Update data
+   * @param {IInteractStreamSolanaExt} extParams - Extended parameters for the update
+   * @returns Transaction instructions
    */
   public async prepareUpdateInstructions(
     data: IUpdateData,
@@ -1635,6 +1699,11 @@ export class SolanaStreamClient extends BaseStreamClient {
     return ixs;
   }
 
+  /**
+   * Gets fees for a given address
+   * @param {IGetFeesData} getData - Get fees data
+   * @returns Fees
+   */
   public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
     const [metadataPubKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(FEES_METADATA_SEED)],
@@ -1655,10 +1724,19 @@ export class SolanaStreamClient extends BaseStreamClient {
     };
   }
 
+  /**
+   * Gets default streamflow fee
+   * @returns Default streamflow fee
+   */
   public async getDefaultStreamflowFee(): Promise<number> {
     return DEFAULT_STREAMFLOW_FEE;
   }
 
+  /**
+   * Extracts error code from an error
+   * @param {Error} err - Error
+   * @returns Error code
+   */
   public extractErrorCode(err: Error): string | null {
     const logs = "logs" in err && Array.isArray(err.logs) ? err.logs : undefined;
     return extractSolanaErrorCode(err.toString() ?? "Unknown error!", logs);
@@ -1666,6 +1744,8 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Utility function to generate metadata for a Contract or return existing Pubkey
+   * @param {PublicKey[]} metadataPubKeys - Metadata public keys
+   * @returns Metadata
    */
   private getOrCreateStreamMetadata(metadataPubKeys?: PublicKey[]) {
     let metadata;
