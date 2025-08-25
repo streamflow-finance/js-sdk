@@ -5,6 +5,34 @@ import { PublicKey, type VersionedTransaction } from "@solana/web3.js";
 import { SolanaStreamClient } from "../../solana/StreamClient.js";
 import { ICluster } from "../../common/types.js";
 
+// Mock Web Crypto API for Node.js test environment
+Object.defineProperty(globalThis, "crypto", {
+  value: {
+    subtle: {
+      digest: vi.fn().mockImplementation(async (algorithm: string, data: ArrayBuffer | Uint8Array) => {
+        // Simple mock that returns a consistent hash-like array
+        const input = new Uint8Array(data as ArrayBuffer);
+        const mockHash = new ArrayBuffer(32); // SHA-256 produces 32 bytes
+        const mockHashArray = new Uint8Array(mockHash);
+
+        // Fill with some deterministic but fake hash data
+        for (let i = 0; i < 32; i++) {
+          mockHashArray[i] = (input.length + i) % 256;
+        }
+
+        return mockHash;
+      }),
+    },
+    getRandomValues: vi.fn().mockImplementation((array: Uint8Array) => {
+      for (let i = 0; i < array.length; i++) {
+        array[i] = Math.floor(Math.random() * 256);
+      }
+      return array;
+    }),
+  },
+  writable: true,
+});
+
 // Mock external imports - move mock functions inside factory
 vi.mock("@streamflow/common/solana", () => ({
   ata: vi.fn(),
