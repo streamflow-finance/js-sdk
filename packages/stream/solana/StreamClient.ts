@@ -1611,8 +1611,8 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Searches for streams/contracts by providing filters (mint, sender, recipient, closed).
-   * @param {ISearchStreams} data - Search data
+   * Searches for streams/contracts by providing filters.
+   * @param {ISearchStreams} data - Search by mint, sender, recipient or closed status
    * @returns Record of stream data
    */
   public async searchStreams(data: ISearchStreams): Promise<IProgramAccount<Stream>[]> {
