@@ -266,7 +266,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         address: partnerPublicKey.toString(),
       });
       const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, senderPublicKey, totalAmount)));
+      ixs.push(...(await prepareWrappedAccount(this.connection, tempSender.publicKey!, totalAmount)));
     }
 
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
@@ -786,13 +786,13 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     // Create a temporary sender object for compatibility with existing methods
-    const tempSender = { publicKey: senderPublicKey };
+    const tempSender = { publicKey: senderPublicKey } as SignerWalletAdapter;
 
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
       const createStreamData = { ...streamParams, ...recipientData };
       const createStreamExtParams = {
-        sender: tempSender as any,
+        sender: tempSender,
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
         ...extParams,
       };
@@ -816,13 +816,17 @@ export class SolanaStreamClient extends BaseStreamClient {
     const prepareInstructions = await this.getCreateATAInstructions(
       [partnerPublicKey],
       mintPublicKey,
-      tempSender as any,
+      tempSender,
       true,
     );
 
     if (isNative) {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(this.connection, senderPublicKey, totalDepositedAmount);
+      const nativeInstructions = await prepareWrappedAccount(
+        this.connection,
+        tempSender.publicKey!,
+        totalDepositedAmount,
+      );
       prepareInstructions.push(...nativeInstructions);
     }
 
