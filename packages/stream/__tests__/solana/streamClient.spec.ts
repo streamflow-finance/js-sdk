@@ -14,6 +14,9 @@ vi.mock("@streamflow/common/solana", () => ({
   getMintAndProgram: vi.fn(),
   createVersionedTransaction: vi.fn(),
   prepareWrappedAccount: vi.fn(),
+  signAndExecuteTransaction: vi.fn(),
+  executeTransaction: vi.fn(),
+  executeMultipleTransactions: vi.fn(),
   buildSendThrottler: vi.fn(() => ({})),
   getMultipleAccountsInfoBatched: vi.fn(),
   getProgramAccounts: vi.fn(),
@@ -38,6 +41,13 @@ vi.mock("@coral-xyz/anchor", () => ({
   })),
 }));
 
+// Mock Solana-specific utils
+vi.mock("../../solana/lib/utils.js", () => ({
+  signAllTransactionWithRecipients: vi.fn(),
+  sendAndConfirmStreamRawTransaction: vi.fn(),
+  extractSolanaErrorCode: vi.fn(),
+}));
+
 describe("SolanaStreamClient Transaction Builders", async () => {
   let instance: SolanaStreamClient;
 
@@ -51,6 +61,20 @@ describe("SolanaStreamClient Transaction Builders", async () => {
     await import("@streamflow/common/solana"),
   ).createVersionedTransaction;
   const mockPrepareWrappedAccount = vi.mocked(await import("@streamflow/common/solana")).prepareWrappedAccount;
+  const mockSignAndExecuteTransaction = vi.mocked(await import("@streamflow/common/solana")).signAndExecuteTransaction;
+  const mockExecuteTransaction = vi.mocked(await import("@streamflow/common/solana")).executeTransaction;
+  const mockExecuteMultipleTransactions = vi.mocked(
+    await import("@streamflow/common/solana"),
+  ).executeMultipleTransactions;
+
+  // Access Solana-specific mocked functions
+  const mockSignAllTransactionWithRecipients = vi.mocked(
+    await import("../../solana/lib/utils.js"),
+  ).signAllTransactionWithRecipients;
+  const mockSendAndConfirmStreamRawTransaction = vi.mocked(
+    await import("../../solana/lib/utils.js"),
+  ).sendAndConfirmStreamRawTransaction;
+  const mockExtractSolanaErrorCode = vi.mocked(await import("../../solana/lib/utils.js")).extractSolanaErrorCode;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -93,6 +117,21 @@ describe("SolanaStreamClient Transaction Builders", async () => {
     mockCheckOrCreateAtaBatch.mockResolvedValue([]);
     mockPrepareBaseInstructions.mockReturnValue([]);
     mockPrepareWrappedAccount.mockResolvedValue([]);
+
+    // Mock execution functions
+    mockSignAndExecuteTransaction.mockResolvedValue("mock-signature");
+    mockExecuteTransaction.mockResolvedValue("mock-signature");
+    mockExecuteMultipleTransactions.mockResolvedValue([
+      { status: "fulfilled", value: "mock-signature-1" },
+      { status: "fulfilled", value: "mock-signature-2" },
+    ]);
+
+    // Mock Solana-specific functions
+    mockSignAllTransactionWithRecipients.mockResolvedValue([
+      { tx: mockTx, recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
+    ]);
+    mockSendAndConfirmStreamRawTransaction.mockResolvedValue(undefined as any);
+    mockExtractSolanaErrorCode.mockReturnValue("custom_error_code");
 
     // Mock connection on instance
     (instance as any).connection = mockConnection;
@@ -378,6 +417,515 @@ describe("SolanaStreamClient Transaction Builders", async () => {
 
       // Act & Assert
       await expect(instance.buildCreateMultipleTransactions(mockData, mockExtParams)).rejects.toThrow(
+        "Recipients array is empty!",
+      );
+    });
+  });
+
+  describe("create", () => {
+    test("should create a stream and return transaction signature", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        amount: new BN(1000),
+        tokenId: "So11111111111111111111111111111111111111112", // SOL mint
+        name: "Test Stream",
+        cliffAmount: new BN(100),
+        amountPerPeriod: new BN(50),
+        period: 86400, // 1 day
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7, // 7 days
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Act
+      const result = await instance.create(mockData, mockExtParams);
+
+      // Assert
+      expect(result).toHaveProperty("ixs");
+      expect(result).toHaveProperty("txId");
+      expect(result).toHaveProperty("metadataId");
+      expect(result.txId).toBe("mock-signature");
+      expect(typeof result.metadataId).toBe("string");
+
+      // Verify that signAndExecuteTransaction was called
+      expect(mockSignAndExecuteTransaction).toHaveBeenCalledWith(
+        expect.any(Object), // connection
+        mockSender,
+        expect.any(Object), // transaction
+        expect.any(Object), // transaction context
+        expect.any(Object), // scheduling params
+      );
+    });
+
+    test("should throw error when sender publicKey is not available", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: undefined,
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        amount: new BN(1000),
+        tokenId: "So11111111111111111111111111111111111111112",
+        name: "Test Stream",
+        cliffAmount: new BN(100),
+        amountPerPeriod: new BN(50),
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Act & Assert
+      await expect(instance.create(mockData, mockExtParams)).rejects.toThrow(
+        "Sender's PublicKey is not available, check passed wallet adapter!",
+      );
+    });
+  });
+
+  describe("createMultiple", () => {
+    test("should create multiple streams and return transaction signatures", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC mint
+        partner: undefined,
+        recipients: [
+          {
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            amount: new BN(1000),
+            name: "Stream 1",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+          },
+          {
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            amount: new BN(2000),
+            name: "Stream 2",
+            cliffAmount: new BN(200),
+            amountPerPeriod: new BN(100),
+          },
+        ],
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Mock executeMultipleTransactions to return multiple signatures
+      mockExecuteMultipleTransactions.mockResolvedValue([
+        { status: "fulfilled", value: "signature-1" },
+        { status: "fulfilled", value: "signature-2" },
+      ]);
+
+      // Act
+      const result = await instance.createMultiple(mockData, mockExtParams);
+
+      // Assert
+      expect(result).toHaveProperty("txs");
+      expect(result).toHaveProperty("metadatas");
+      expect(result).toHaveProperty("metadataToRecipient");
+      expect(result).toHaveProperty("errors");
+
+      expect(Array.isArray(result.txs)).toBe(true);
+      expect(Array.isArray(result.metadatas)).toBe(true);
+      expect(Array.isArray(result.errors)).toBe(true);
+      expect(typeof result.metadataToRecipient).toBe("object");
+
+      expect(result.txs).toHaveLength(2);
+      expect(result.txs).toEqual(["signature-1", "signature-2"]);
+      expect(result.errors).toHaveLength(0);
+
+      // Verify that signAllTransactionWithRecipients was called
+      expect(mockSignAllTransactionWithRecipients).toHaveBeenCalledWith(
+        mockSender,
+        expect.any(Array), // batch transactions
+      );
+    });
+
+    test("should handle transaction failures in createMultiple", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        partner: undefined,
+        recipients: [
+          {
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            amount: new BN(1000),
+            name: "Stream 1",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+          },
+        ],
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Mock executeMultipleTransactions to return a failure
+      mockExecuteMultipleTransactions.mockResolvedValue([
+        { status: "rejected", reason: new Error("Transaction failed") },
+      ]);
+
+      // Act
+      const result = await instance.createMultiple(mockData, mockExtParams);
+
+      // Assert
+      expect(result.txs).toHaveLength(0);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toHaveProperty("recipient");
+      expect(result.errors[0]).toHaveProperty("error");
+      expect(result.errors[0].recipient).toBe("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    });
+
+    test("should throw error when recipients array is empty in createMultiple", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        partner: undefined,
+        recipients: [], // Empty array
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Act & Assert
+      await expect(instance.createMultiple(mockData, mockExtParams)).rejects.toThrow("Recipients array is empty!");
+    });
+  });
+
+  describe("createMultipleSequential", () => {
+    test("should create multiple streams sequentially and return transaction signatures", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC mint
+        partner: undefined,
+        recipients: [
+          {
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            amount: new BN(1000),
+            name: "Stream 1",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+          },
+          {
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            amount: new BN(2000),
+            name: "Stream 2",
+            cliffAmount: new BN(200),
+            amountPerPeriod: new BN(100),
+          },
+        ],
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Mock the buildCreateMultipleTransactionInstructions to return no metadata
+      const buildInstructionsSpy = vi.spyOn(instance, "buildCreateMultipleTransactionInstructions");
+      buildInstructionsSpy.mockResolvedValue({
+        instructionsBatch: [
+          { ixs: [], metadata: undefined, recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
+          { ixs: [], metadata: undefined, recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" },
+        ],
+        metadatas: ["metadata-1", "metadata-2"],
+        metadataToRecipient: {
+          "metadata-1": {
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            amount: new BN(1000),
+            name: "Stream 1",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+          },
+          "metadata-2": {
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            amount: new BN(2000),
+            name: "Stream 2",
+            cliffAmount: new BN(200),
+            amountPerPeriod: new BN(100),
+          },
+        },
+        prepareInstructions: [],
+      });
+
+      // Mock executeTransaction to be called multiple times
+      let callCount = 0;
+      mockExecuteTransaction.mockImplementation(() => {
+        callCount++;
+        return Promise.resolve(`signature-${callCount}`);
+      });
+
+      // Act
+      const result = await instance.createMultipleSequential(mockData, mockExtParams);
+
+      // Assert
+      expect(result).toHaveProperty("txs");
+      expect(result).toHaveProperty("metadatas");
+      expect(result).toHaveProperty("metadataToRecipient");
+      expect(result).toHaveProperty("errors");
+
+      expect(Array.isArray(result.txs)).toBe(true);
+      expect(Array.isArray(result.metadatas)).toBe(true);
+      expect(Array.isArray(result.errors)).toBe(true);
+      expect(typeof result.metadataToRecipient).toBe("object");
+
+      // Basic functionality test - should have at least one transaction
+      expect(result.txs.length).toBeGreaterThan(0);
+      expect(result.metadatas).toEqual(["metadata-1", "metadata-2"]);
+
+      // Verify that signAllTransactionWithRecipients was called
+      expect(mockSignAllTransactionWithRecipients).toHaveBeenCalledWith(
+        mockSender,
+        expect.any(Array), // batch transactions
+      );
+
+      // Verify executeTransaction was called at least once
+      expect(mockExecuteTransaction).toHaveBeenCalled();
+    });
+
+    test("should handle transaction failures in createMultipleSequential", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        partner: undefined,
+        recipients: [
+          {
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            amount: new BN(1000),
+            name: "Stream 1",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+          },
+          {
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            amount: new BN(2000),
+            name: "Stream 2",
+            cliffAmount: new BN(200),
+            amountPerPeriod: new BN(100),
+          },
+        ],
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Mock the buildCreateMultipleTransactionInstructions to return no metadata
+      const buildInstructionsSpy = vi.spyOn(instance, "buildCreateMultipleTransactionInstructions");
+      buildInstructionsSpy.mockResolvedValue({
+        instructionsBatch: [
+          { ixs: [], metadata: undefined, recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
+          { ixs: [], metadata: undefined, recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" },
+        ],
+        metadatas: ["metadata-1", "metadata-2"],
+        metadataToRecipient: {
+          "metadata-1": {
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            amount: new BN(1000),
+            name: "Stream 1",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+          },
+          "metadata-2": {
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            amount: new BN(2000),
+            name: "Stream 2",
+            cliffAmount: new BN(200),
+            amountPerPeriod: new BN(100),
+          },
+        },
+        prepareInstructions: [],
+      });
+
+      // Mock executeTransaction to succeed first, then fail
+      let callCount = 0;
+      mockExecuteTransaction.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve("signature-1");
+        } else {
+          return Promise.reject(new Error("Transaction failed"));
+        }
+      });
+
+      // Act
+      const result = await instance.createMultipleSequential(mockData, mockExtParams);
+
+      // Assert
+      expect(result).toHaveProperty("txs");
+      expect(result).toHaveProperty("errors");
+      expect(Array.isArray(result.txs)).toBe(true);
+      expect(Array.isArray(result.errors)).toBe(true);
+
+      // Should have processed transactions and captured any errors
+      expect(result.txs.length + result.errors.length).toBeGreaterThan(0);
+    });
+
+    test("should throw error when recipients array is empty in createMultipleSequential", async () => {
+      // Arrange
+      const mockSender = {
+        publicKey: new PublicKey("11111111111111111111111111111112"),
+        signTransaction: vi.fn(),
+        signAllTransactions: vi.fn(),
+      };
+
+      const mockData = {
+        tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        partner: undefined,
+        recipients: [], // Empty array
+        period: 86400,
+        start: Math.floor(Date.now() / 1000),
+        cliff: 86400 * 7,
+        cancelableBySender: true,
+        cancelableByRecipient: false,
+        transferableBySender: true,
+        transferableByRecipient: false,
+        canTopup: true,
+        automaticWithdrawal: false,
+        withdrawalFrequency: 86400,
+        canPause: false,
+        canUpdateRate: false,
+      };
+
+      const mockExtParams = {
+        sender: mockSender as any,
+        isNative: false,
+      };
+
+      // Act & Assert
+      await expect(instance.createMultipleSequential(mockData, mockExtParams)).rejects.toThrow(
         "Recipients array is empty!",
       );
     });
