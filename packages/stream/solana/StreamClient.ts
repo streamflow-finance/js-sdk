@@ -1744,8 +1744,6 @@ export class SolanaStreamClient extends BaseStreamClient {
 
   /**
    * Utility function to generate metadata for a Contract or return existing Pubkey
-   * @param {PublicKey[]} metadataPubKeys - Metadata public keys
-   * @returns Metadata
    */
   private getOrCreateStreamMetadata(metadataPubKeys?: PublicKey[]) {
     let metadata;
