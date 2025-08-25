@@ -219,18 +219,23 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Builds a transaction for creating a new stream/vesting contract without signing or executing it.
+   * Builds transaction instructions for creating a new stream/vesting contract without creating a transaction.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream creation data
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Extended parameters for the stream creation
+   * @returns {Promise<{
+   *   ixs: TransactionInstruction[];
+   *   metadataId: string; // metadata public key
+   *   metadata?: Keypair; // metadata keypair
+   * }>} - Transaction instructions and metadata ID
    */
-  public async buildCreateTransaction(
+  public async buildCreateTransactionInstructions(
     data: ICreateStreamData,
     extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
   ): Promise<{
-    tx: VersionedTransaction;
+    ixs: TransactionInstruction[];
     metadataId: string;
     metadata?: Keypair;
-    hash: string;
-    context: any;
   }> {
     const { partner, amount, tokenProgramId } = data;
     const { isNative, senderPublicKey, customInstructions } = extParams;
@@ -270,13 +275,47 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
 
+    return {
+      ixs,
+      metadataId: metadataPubKey.toBase58(),
+      metadata,
+    };
+  }
+
+  /**
+   * Builds a transaction for creating a new stream/vesting contract without signing or executing it.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   * @param {ICreateStreamData} data - Stream creation data
+   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Extended parameters for the stream creation
+   * @returns {Promise<{
+   *   tx: VersionedTransaction;
+   *   metadataId: string;
+   *   metadata?: Keypair;
+   *   hash: string;
+   *   context: any;
+   * }>} - Transaction and metadata information
+   */
+  public async buildCreateTransaction(
+    data: ICreateStreamData,
+    extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
+  ): Promise<{
+    tx: VersionedTransaction;
+    metadataId: string;
+    metadata?: Keypair;
+    hash: string;
+    context: any;
+  }> {
+    const { senderPublicKey } = extParams;
+
+    const { ixs, metadataId, metadata } = await this.buildCreateTransactionInstructions(data, extParams);
+
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, senderPublicKey, undefined, [
       metadata,
     ]);
 
     return {
       tx,
-      metadataId: metadataPubKey.toBase58(),
+      metadataId,
       metadata,
       hash: hash.blockhash,
       context,
@@ -294,27 +333,27 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const { tx, metadataId, hash, context } = await this.buildCreateTransaction(data, {
+    const { ixs, metadataId, metadata } = await this.buildCreateTransactionInstructions(data, {
       ...extParams,
       senderPublicKey: sender.publicKey,
     });
+
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, [
+      metadata,
+    ]);
 
     const signature = await signAndExecuteTransaction(
       this.connection,
       sender,
       tx,
       {
-        hash: { blockhash: hash, lastValidBlockHeight: context.slot },
+        hash,
         context,
         commitment: this.getCommitment(),
       },
       this.schedulingParams,
     );
 
-    // Get the original instructions for return value
-    const ixs: TransactionInstruction[] = [];
-    // Since we can't easily extract the original instructions from the versioned transaction,
-    // we'll need to reconstruct them. For now, return an empty array as the primary value is the txId
     return { ixs, txId: signature, metadataId };
   }
 
@@ -708,34 +747,28 @@ export class SolanaStreamClient extends BaseStreamClient {
   }
 
   /**
-   * Builds multiple transactions for creating stream/vesting contracts without signing or executing them.
+   * Builds transaction instructions for creating multiple stream/vesting contracts without creating transactions.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    */
-  public async buildCreateMultipleTransactions(
+  public async buildCreateMultipleTransactionInstructions(
     data: ICreateMultipleStreamData,
     extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
   ): Promise<{
-    transactions: BatchItem[];
+    instructionsBatch: {
+      ixs: TransactionInstruction[];
+      metadata: Keypair | undefined;
+      recipient: string;
+    }[];
     metadatas: string[];
     metadataToRecipient: MetadataRecipientHashMap;
-    hash: Readonly<{ blockhash: string; lastValidBlockHeight: number }>;
-    context: any;
-    prepareTx?: VersionedTransaction;
+    prepareInstructions: TransactionInstruction[];
   }> {
     const { recipients, ...streamParams } = data;
 
-    const {
-      senderPublicKey,
-      metadataPubKeys: metadataPubKeysExt,
-      isNative,
-      computePrice,
-      computeLimit,
-      customInstructions,
-    } = extParams;
+    const { senderPublicKey, metadataPubKeys: metadataPubKeysExt, isNative, customInstructions } = extParams;
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
-    const batch: BatchItem[] = [];
     const instructionsBatch: {
       ixs: TransactionInstruction[];
       metadata: Keypair | undefined;
@@ -759,9 +792,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       const createStreamExtParams = {
         sender: tempSender as any,
         metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
-        computePrice,
-        computeLimit,
-        customInstructions,
+        ...extParams,
       };
 
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
@@ -780,12 +811,6 @@ export class SolanaStreamClient extends BaseStreamClient {
       });
     }
 
-    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
-
-    for (const { ixs, metadata, recipient } of instructionsBatch) {
-      batch.push({ tx: createVersionedTransaction(ixs, senderPublicKey, hash.blockhash, [metadata]), recipient });
-    }
-
     const prepareInstructions = await this.getCreateATAInstructions(
       [partnerPublicKey],
       mintPublicKey,
@@ -797,6 +822,41 @@ export class SolanaStreamClient extends BaseStreamClient {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
       const nativeInstructions = await prepareWrappedAccount(this.connection, senderPublicKey, totalDepositedAmount);
       prepareInstructions.push(...nativeInstructions);
+    }
+
+    return {
+      instructionsBatch,
+      metadatas,
+      metadataToRecipient,
+      prepareInstructions,
+    };
+  }
+
+  /**
+   * Builds multiple transactions for creating stream/vesting contracts without signing or executing them.
+   * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   */
+  public async buildCreateMultipleTransactions(
+    data: ICreateMultipleStreamData,
+    extParams: Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey },
+  ): Promise<{
+    transactions: BatchItem[];
+    metadatas: string[];
+    metadataToRecipient: MetadataRecipientHashMap;
+    hash: Readonly<{ blockhash: string; lastValidBlockHeight: number }>;
+    context: any;
+    prepareTx?: VersionedTransaction;
+  }> {
+    const { senderPublicKey } = extParams;
+
+    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
+      await this.buildCreateMultipleTransactionInstructions(data, extParams);
+
+    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
+    const batch: BatchItem[] = [];
+
+    for (const { ixs, metadata, recipient } of instructionsBatch) {
+      batch.push({ tx: createVersionedTransaction(ixs, senderPublicKey, hash.blockhash, [metadata]), recipient });
     }
 
     let prepareTx: VersionedTransaction | undefined;
@@ -828,8 +888,8 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const { transactions, metadatas, metadataToRecipient, hash, context, prepareTx } =
-      await this.buildCreateMultipleTransactions(data, {
+    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
+      await this.buildCreateMultipleTransactionInstructions(data, {
         ...extParams,
         senderPublicKey: sender.publicKey,
       });
@@ -837,26 +897,26 @@ export class SolanaStreamClient extends BaseStreamClient {
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
     const metadataPubKeys = metadataPubKeysExt || [];
+    const batch: BatchItem[] = [];
 
-    // Add prepareTx to batch if it exists
-    const batch = [...transactions];
-    if (prepareTx) {
+    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
+
+    for (const { ixs, metadata, recipient } of instructionsBatch) {
+      batch.push({ tx: createVersionedTransaction(ixs, sender.publicKey, hash.blockhash, [metadata]), recipient });
+    }
+
+    if (prepareInstructions.length > 0) {
       batch.push({
-        tx: prepareTx,
+        tx: createVersionedTransaction(prepareInstructions, sender.publicKey, hash.blockhash),
         recipient: sender.publicKey.toBase58(),
       });
     }
 
     const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
 
-    if (prepareTx) {
-      const prepareTxSigned = signedBatch.pop();
-      await sendAndConfirmStreamRawTransaction(
-        this.connection,
-        prepareTxSigned!,
-        { hash, context },
-        this.schedulingParams,
-      );
+    if (prepareInstructions.length > 0) {
+      const prepareTx = signedBatch.pop();
+      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, this.schedulingParams);
     }
 
     const responses: PromiseSettledResult<string>[] = [];
@@ -914,46 +974,50 @@ export class SolanaStreamClient extends BaseStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const { transactions, metadatas, metadataToRecipient, hash, context, prepareTx } =
-      await this.buildCreateMultipleTransactions(data, {
+    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
+      await this.buildCreateMultipleTransactionInstructions(data, {
         ...extParams,
         senderPublicKey: sender.publicKey,
       });
 
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
+    const batch: BatchItem[] = [];
 
-    // Add prepareTx to batch if it exists
-    const batch = [...transactions];
-    if (prepareTx) {
+    const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
+
+    for (const { ixs, metadata, recipient } of instructionsBatch) {
+      const messageV0 = new TransactionMessage({
+        payerKey: sender.publicKey,
+        recentBlockhash: hash.blockhash,
+        instructions: ixs,
+      }).compileToV0Message();
+      const tx = new VersionedTransaction(messageV0);
+      if (metadata) {
+        tx.sign([metadata]);
+      }
+      batch.push({ tx, recipient });
+    }
+
+    if (prepareInstructions.length > 0) {
+      const messageV0 = new TransactionMessage({
+        payerKey: sender.publicKey,
+        recentBlockhash: hash.blockhash,
+        instructions: prepareInstructions,
+      }).compileToV0Message();
+      const tx = new VersionedTransaction(messageV0);
+
       batch.push({
-        tx: prepareTx,
+        tx,
         recipient: sender.publicKey.toBase58(),
       });
     }
 
-    // Convert to the legacy transaction format expected by createMultipleSequential
-    const legacyBatch: BatchItem[] = [];
-    for (const { tx, recipient } of batch) {
-      const messageV0 = new TransactionMessage({
-        payerKey: sender.publicKey,
-        recentBlockhash: hash.blockhash,
-        instructions: tx.message.compiledInstructions as any, // Type assertion needed for legacy compat
-      }).compileToV0Message();
-      const legacyTx = new VersionedTransaction(messageV0);
-      legacyBatch.push({ tx: legacyTx, recipient });
-    }
+    const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
 
-    const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, legacyBatch);
-
-    if (prepareTx) {
-      const prepareTxSigned = signedBatch.shift();
-      await sendAndConfirmStreamRawTransaction(
-        this.connection,
-        prepareTxSigned!,
-        { hash, context },
-        this.schedulingParams,
-      );
+    if (prepareInstructions.length > 0) {
+      const prepareTx = signedBatch.shift();
+      await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, this.schedulingParams);
     }
 
     const responses: PromiseSettledResult<string>[] = [];
