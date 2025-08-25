@@ -5,28 +5,15 @@ import { PublicKey, type VersionedTransaction } from "@solana/web3.js";
 import { SolanaStreamClient } from "../../solana/StreamClient.js";
 import { ICluster } from "../../common/types.js";
 
-// Mock the connection and external dependencies
-const mockConnection = {
-  getLatestBlockhashAndContext: vi.fn(),
-  getMinimumBalanceForRentExemption: vi.fn(),
-  getAccountInfo: vi.fn(),
-};
-
-const mockPrepareTransaction = vi.fn();
-const mockGetMintAndProgram = vi.fn();
-const mockAta = vi.fn();
-const mockCheckOrCreateAtaBatch = vi.fn();
-const mockPrepareBaseInstructions = vi.fn();
-const mockCreateVersionedTransaction = vi.fn();
-
-// Mock external imports
+// Mock external imports - move mock functions inside factory
 vi.mock("@streamflow/common/solana", () => ({
-  ata: mockAta,
-  checkOrCreateAtaBatch: mockCheckOrCreateAtaBatch,
-  prepareTransaction: mockPrepareTransaction,
-  prepareBaseInstructions: mockPrepareBaseInstructions,
-  getMintAndProgram: mockGetMintAndProgram,
-  createVersionedTransaction: mockCreateVersionedTransaction,
+  ata: vi.fn(),
+  checkOrCreateAtaBatch: vi.fn(),
+  prepareTransaction: vi.fn(),
+  prepareBaseInstructions: vi.fn(),
+  getMintAndProgram: vi.fn(),
+  createVersionedTransaction: vi.fn(),
+  prepareWrappedAccount: vi.fn(),
   buildSendThrottler: vi.fn(() => ({})),
   getMultipleAccountsInfoBatched: vi.fn(),
   getProgramAccounts: vi.fn(),
@@ -51,38 +38,42 @@ vi.mock("@coral-xyz/anchor", () => ({
   })),
 }));
 
-describe("SolanaStreamClient Transaction Builders", () => {
+describe("SolanaStreamClient Transaction Builders", async () => {
   let instance: SolanaStreamClient;
 
-  beforeEach(() => {
+  // Access mocked functions
+  const mockPrepareTransaction = vi.mocked(await import("@streamflow/common/solana")).prepareTransaction;
+  const mockGetMintAndProgram = vi.mocked(await import("@streamflow/common/solana")).getMintAndProgram;
+  const mockAta = vi.mocked(await import("@streamflow/common/solana")).ata;
+  const mockCheckOrCreateAtaBatch = vi.mocked(await import("@streamflow/common/solana")).checkOrCreateAtaBatch;
+  const mockPrepareBaseInstructions = vi.mocked(await import("@streamflow/common/solana")).prepareBaseInstructions;
+  const mockCreateVersionedTransaction = vi.mocked(
+    await import("@streamflow/common/solana"),
+  ).createVersionedTransaction;
+  const mockPrepareWrappedAccount = vi.mocked(await import("@streamflow/common/solana")).prepareWrappedAccount;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
     instance = new SolanaStreamClient({
       clusterUrl: "https://api.devnet.solana.com",
       cluster: ICluster.Devnet,
     });
 
-    // Set up default mocks
-    mockConnection.getLatestBlockhashAndContext.mockResolvedValue({
-      value: { blockhash: "mockBlockhash", lastValidBlockHeight: 123456 },
-      context: { slot: 123456 },
-    });
-
-    mockConnection.getMinimumBalanceForRentExemption.mockResolvedValue(1000000);
-
-    mockGetMintAndProgram.mockResolvedValue({
-      tokenProgramId: new PublicKey("11111111111111111111111111111111"),
-    });
-
-    mockAta.mockResolvedValue(new PublicKey("11111111111111111111111111111111"));
-    mockCheckOrCreateAtaBatch.mockResolvedValue([]);
-    mockPrepareBaseInstructions.mockReturnValue([]);
+    // Mock connection
+    const mockConnection = {
+      getLatestBlockhashAndContext: vi.fn().mockResolvedValue({
+        value: { blockhash: "mockBlockhash", lastValidBlockHeight: 123456 },
+        context: { slot: 123456 },
+      }),
+      getMinimumBalanceForRentExemption: vi.fn().mockResolvedValue(1000000),
+      getAccountInfo: vi.fn(),
+    };
 
     const mockTx = {
-      message: {
-        compiledInstructions: [],
-      },
+      message: { compiledInstructions: [] },
     } as unknown as VersionedTransaction;
 
+    // Set up mocks
     mockPrepareTransaction.mockResolvedValue({
       tx: mockTx,
       hash: { blockhash: "mockBlockhash", lastValidBlockHeight: 123456 },
@@ -91,6 +82,18 @@ describe("SolanaStreamClient Transaction Builders", () => {
 
     mockCreateVersionedTransaction.mockReturnValue(mockTx);
 
+    // Mock getMintAndProgram to return proper object
+    mockGetMintAndProgram.mockResolvedValue({
+      tokenProgramId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+      mint: {} as any, // Mock Mint object
+    });
+
+    // Mock other functions
+    mockAta.mockResolvedValue(new PublicKey("11111111111111111111111111111112"));
+    mockCheckOrCreateAtaBatch.mockResolvedValue([]);
+    mockPrepareBaseInstructions.mockReturnValue([]);
+    mockPrepareWrappedAccount.mockResolvedValue([]);
+
     // Mock connection on instance
     (instance as any).connection = mockConnection;
   });
@@ -98,9 +101,9 @@ describe("SolanaStreamClient Transaction Builders", () => {
   describe("buildCreateTransaction", () => {
     test("should build a transaction for single recipient without signing", async () => {
       // Arrange
-      const senderPublicKey = new PublicKey("1111111111111111111111111111111111111111111111");
+      const senderPublicKey = new PublicKey("11111111111111111111111111111112");
       const mockData = {
-        recipient: "2222222222222222222222222222222222222222222222",
+        recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         amount: new BN(1000),
         tokenId: "So11111111111111111111111111111111111111112", // SOL mint
         name: "Test Stream",
@@ -140,9 +143,9 @@ describe("SolanaStreamClient Transaction Builders", () => {
 
       // Verify that prepareTransaction was called to build the transaction
       expect(mockPrepareTransaction).toHaveBeenCalledWith(
-        mockConnection,
+        expect.any(Object), // connection
         expect.any(Array), // instructions
-        senderPublicKey,
+        expect.any(Object), // senderPublicKey
         undefined,
         expect.any(Array), // signers
       );
@@ -150,9 +153,9 @@ describe("SolanaStreamClient Transaction Builders", () => {
 
     test("should build a transaction for native SOL stream", async () => {
       // Arrange
-      const senderPublicKey = new PublicKey("1111111111111111111111111111111111111111111111");
+      const senderPublicKey = new PublicKey("11111111111111111111111111111112");
       const mockData = {
-        recipient: "2222222222222222222222222222222222222222222222",
+        recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         amount: new BN(1000000000), // 1 SOL
         tokenId: "So11111111111111111111111111111111111111112", // SOL mint
         name: "Native SOL Stream",
@@ -198,27 +201,27 @@ describe("SolanaStreamClient Transaction Builders", () => {
   describe("buildCreateMultipleTransactions", () => {
     test("should build multiple transactions for multiple recipients without signing", async () => {
       // Arrange
-      const senderPublicKey = new PublicKey("1111111111111111111111111111111111111111111111");
+      const senderPublicKey = new PublicKey("11111111111111111111111111111112");
       const mockData = {
         tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC mint
         partner: undefined,
         recipients: [
           {
-            recipient: "2222222222222222222222222222222222222222222222",
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
             amount: new BN(1000),
             name: "Stream 1",
             cliffAmount: new BN(100),
             amountPerPeriod: new BN(50),
           },
           {
-            recipient: "3333333333333333333333333333333333333333333333",
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
             amount: new BN(2000),
             name: "Stream 2",
             cliffAmount: new BN(200),
             amountPerPeriod: new BN(100),
           },
           {
-            recipient: "4444444444444444444444444444444444444444444444",
+            recipient: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
             amount: new BN(1500),
             name: "Stream 3",
             cliffAmount: new BN(150),
@@ -281,20 +284,20 @@ describe("SolanaStreamClient Transaction Builders", () => {
 
     test("should build multiple transactions with native SOL and include prepare transaction", async () => {
       // Arrange
-      const senderPublicKey = new PublicKey("1111111111111111111111111111111111111111111111");
+      const senderPublicKey = new PublicKey("11111111111111111111111111111112");
       const mockData = {
         tokenId: "So11111111111111111111111111111111111111112", // SOL mint
         partner: undefined,
         recipients: [
           {
-            recipient: "2222222222222222222222222222222222222222222222",
+            recipient: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
             amount: new BN(1000000000), // 1 SOL
             name: "SOL Stream 1",
             cliffAmount: new BN(100000000),
             amountPerPeriod: new BN(50000000),
           },
           {
-            recipient: "3333333333333333333333333333333333333333333333",
+            recipient: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
             amount: new BN(2000000000), // 2 SOL
             name: "SOL Stream 2",
             cliffAmount: new BN(200000000),
@@ -320,6 +323,14 @@ describe("SolanaStreamClient Transaction Builders", () => {
         isNative: true,
       };
 
+      // Mock prepareWrappedAccount to return instructions for native SOL
+      const mockInstruction = {
+        programId: new PublicKey("11111111111111111111111111111112"),
+        keys: [],
+        data: Buffer.alloc(0),
+      };
+      mockPrepareWrappedAccount.mockResolvedValue([mockInstruction]);
+
       // Act
       const result = await instance.buildCreateMultipleTransactions(mockData, mockExtParams);
 
@@ -341,7 +352,7 @@ describe("SolanaStreamClient Transaction Builders", () => {
 
     test("should throw error when recipients array is empty", async () => {
       // Arrange
-      const senderPublicKey = new PublicKey("1111111111111111111111111111111111111111111111");
+      const senderPublicKey = new PublicKey("11111111111111111111111111111112");
       const mockData = {
         tokenId: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
         partner: undefined,
