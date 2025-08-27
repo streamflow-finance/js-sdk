@@ -221,6 +221,10 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Builds transaction instructions for creating a new stream/vesting contract without creating a transaction.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   *
+   * For native SOL (isNative: true), SOL wrapping instructions are automatically included in the correct order
+   * (before stream creation) to ensure the WSOL account exists when the stream creation instruction executes.
+   *
    * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
    * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
    * @returns Transaction instructions and metadata ID
@@ -250,6 +254,16 @@ export class SolanaStreamClient extends BaseStreamClient {
       tokenProgramId ? new PublicKey(tokenProgramId) : undefined,
     );
 
+    // CRITICAL: SOL wrapping must happen BEFORE stream creation instructions
+    // This ensures the WSOL account exists and has sufficient balance when stream creation executes
+    if (isNative) {
+      const totalFee = await this.getTotalFee({
+        address: partnerPublicKey.toString(),
+      });
+      const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
+      ixs.push(...(await prepareWrappedAccount(this.connection, tempSender.publicKey!, totalAmount)));
+    }
+
     const {
       ixs: createIxs,
       metadata,
@@ -260,14 +274,6 @@ export class SolanaStreamClient extends BaseStreamClient {
     });
 
     ixs.push(...createIxs);
-
-    if (isNative) {
-      const totalFee = await this.getTotalFee({
-        address: partnerPublicKey.toString(),
-      });
-      const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, tempSender.publicKey!, totalAmount)));
-    }
 
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
 
@@ -281,6 +287,10 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Builds a transaction for creating a new stream/vesting contract without signing or executing it.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   *
+   * For native SOL (isNative: true), SOL wrapping instructions are automatically included in the correct order
+   * (before stream creation) to ensure the WSOL account exists when the stream creation instruction executes.
+   *
    * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
    * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
    * @returns Transaction and metadata information
@@ -841,6 +851,25 @@ export class SolanaStreamClient extends BaseStreamClient {
   /**
    * Builds multiple transactions for creating stream/vesting contracts without signing or executing them.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
+   *
+   * IMPORTANT: When using native SOL (isNative: true), you MUST execute the prepareTx FIRST and wait for confirmation
+   * before executing the stream creation transactions. Otherwise, stream creation will fail with "InvalidAccountData".
+   *
+   * @example
+   * ```typescript
+   * const result = await streamClient.buildCreateMultipleTransactions(data, { isNative: true, senderPublicKey });
+   *
+   * // CRITICAL: Execute prepareTx first if it exists
+   * if (result.prepareTx) {
+   *   await connection.sendAndConfirmTransaction(result.prepareTx, [signer]);
+   * }
+   *
+   * // Only then execute stream creation transactions
+   * for (const item of result.transactions) {
+   *   await connection.sendAndConfirmTransaction(item.tx, [signer]);
+   * }
+   * ```
+   *
    * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
    * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
    * @returns Multiple transaction information
