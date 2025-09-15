@@ -115,5 +115,8 @@ export interface CreateStakePoolArgs extends TokenProgram {
   permissionless?: boolean;
   freezeStakeMint?: boolean | null;
   unstakePeriod?: BN | null;
+  maxTotalStakeCumulative?: BN;
+  expiryTs?: BN;
+  autoUnstake?: boolean;
   authority?: Keypair;
 }
