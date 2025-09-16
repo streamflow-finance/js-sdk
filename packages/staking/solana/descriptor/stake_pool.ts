@@ -550,7 +550,7 @@ export type StakePool = {
             "Stake Pool",
           ],
           "writable": true,
-          "address": "22LvhHuibHXSvxCmdo1J4vL6ALpP5AD4CjW3jdhV673Z"
+          "address": "Cja9f8JFS6sTgBqSRZGBrA2HDbUj4MZUGdtRYruKTeJp"
         },
         {
           "name": "stakePoolTo",
@@ -558,7 +558,7 @@ export type StakePool = {
             "Stake Pool",
           ],
           "writable": true,
-          "address": "SgbTXkmua6esmwv9FuftqWwaiWypiQmzK5P6s93G4wL"
+          "address": "BXRBbWMkscNBZoBL4fgRk77GBUX9eVP4AendQEumtPi8"
         },
         {
           "name": "stakeEntryFrom",
@@ -1762,7 +1762,7 @@ export type StakePool = {
           {
             "name": "autoUnstake",
             "docs": [
-              "Whether auto unstaking is enabled, copied from stake pool to be used instruction that don't require stake pool",
+              "Whether auto unstaking is enabled, copied from the stake pool for use in instructions that don't require the stake pool account",
             ],
             "type": "bool"
           },

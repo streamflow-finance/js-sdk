@@ -1644,7 +1644,7 @@ export type RewardPool = {
           {
             "name": "autoUnstake",
             "docs": [
-              "Whether auto unstaking is enabled, copied from stake pool to be used instruction that don't require stake pool",
+              "Whether auto unstaking is enabled, copied from the stake pool for use in instructions that don't require the stake pool account",
             ],
             "type": "bool"
           },
