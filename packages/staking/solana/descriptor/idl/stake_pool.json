@@ -1900,7 +1900,7 @@
             "type": "u64"
           },
           {
-            "name": "total_stake_capped",
+            "name": "is_total_stake_capped",
             "docs": [
               "Whether amount of total staked tokens is limited by `remaining_total_stake` - stored as separate flag to not deal with `Option`"
             ],

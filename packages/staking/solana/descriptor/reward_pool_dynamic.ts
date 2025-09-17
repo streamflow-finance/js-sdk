@@ -1668,7 +1668,7 @@ export type RewardPoolDynamic = {
             "type": "u64"
           },
           {
-            "name": "totalStakeCapped",
+            "name": "isTotalStakeCapped",
             "docs": [
               "Whether amount of total staked tokens is limited by `remaining_total_stake` - stored as separate flag to not deal with `Option`",
             ],
