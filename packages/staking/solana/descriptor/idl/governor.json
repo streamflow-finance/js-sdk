@@ -2,7 +2,7 @@
   "address": "GVERNASJFxi8vjjJtwCKYQTeN51XsV1y2B1ap1GtKrKR",
   "metadata": {
     "name": "governor",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Governor program to allow users to vote with stake tokens"
   },

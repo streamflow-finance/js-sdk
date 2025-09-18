@@ -8,7 +8,7 @@ export type RewardPool = {
   "address": "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
   "metadata": {
     "name": "rewardPool",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Program to manage Reward Pools for Stake Pools and claim rewards from them"
   },

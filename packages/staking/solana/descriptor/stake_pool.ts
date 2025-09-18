@@ -8,7 +8,7 @@ export type StakePool = {
   "address": "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
   "metadata": {
     "name": "stakePool",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Program to manage Stake Pools and stake/unstake tokens"
   },

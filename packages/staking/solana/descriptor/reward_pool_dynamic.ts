@@ -8,7 +8,7 @@ export type RewardPoolDynamic = {
   "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
     "name": "rewardPoolDynamic",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Reward pools with dynamic rewards distribution"
   },
