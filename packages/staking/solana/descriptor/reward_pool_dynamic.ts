@@ -8,7 +8,7 @@ export type RewardPoolDynamic = {
   "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
     "name": "rewardPoolDynamic",
-    "version": "2.2.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Reward pools with dynamic rewards distribution"
   },
@@ -1522,6 +1522,13 @@ export type RewardPoolDynamic = {
             "type": "bool"
           },
           {
+            "name": "autoUnstake",
+            "docs": [
+              "Whether auto unstaking is enabled, copied from the stake pool for use in instructions that don't require the stake pool account",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1529,7 +1536,7 @@ export type RewardPoolDynamic = {
             "type": {
               "array": [
                 "u8",
-                39,
+                38,
               ]
             }
           },
@@ -1661,6 +1668,34 @@ export type RewardPoolDynamic = {
             "type": "u64"
           },
           {
+            "name": "isTotalStakeCapped",
+            "docs": [
+              "Whether amount of total staked tokens is limited by `remaining_total_stake` - stored as separate flag to not deal with `Option`",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "remainingTotalStake",
+            "docs": [
+              "Remaining total amount of staked tokens (cumulative)",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "expiryTs",
+            "docs": [
+              "Time when stake pool expires, staking is not possible after expiration",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "autoUnstake",
+            "docs": [
+              "Whether auto unstaking is enabled, stake entries will be unstaked after duration",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1668,7 +1703,7 @@ export type RewardPoolDynamic = {
             "type": {
               "array": [
                 "u8",
-                55,
+                37,
               ]
             }
           },
@@ -1709,6 +1744,13 @@ export type RewardPoolDynamic = {
             "type": "u64"
           },
           {
+            "name": "isSponsored",
+            "docs": [
+              "Whether the vote rent has been sponsored by the rent vault",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1716,7 +1758,7 @@ export type RewardPoolDynamic = {
             "type": {
               "array": [
                 "u8",
-                64,
+                63,
               ]
             }
           },

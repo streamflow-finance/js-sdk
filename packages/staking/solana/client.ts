@@ -21,6 +21,7 @@ import {
   unwrapExecutionParams,
 } from "@streamflow/common/solana";
 import type PQueue from "p-queue";
+import BN from "bn.js";
 
 import {
   REWARD_ENTRY_BYTE_OFFSETS,
@@ -33,10 +34,12 @@ import {
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "./constants.js";
 import { type FeeManager as FeeManagerProgramType } from "./descriptor/fee_manager.js";
+import GovernorIDL from "./descriptor/idl/governor.json";
 import FeeManagerIDL from "./descriptor/idl/fee_manager.json";
 import RewardPoolIDL from "./descriptor/idl/reward_pool.json";
 import RewardPoolDynamicIDL from "./descriptor/idl/reward_pool_dynamic.json";
 import StakePoolIDL from "./descriptor/idl/stake_pool.json";
+import { type Governor as GovernorProgramType } from "./descriptor/governor.js";
 import { type RewardPool as RewardPoolProgramType } from "./descriptor/reward_pool.js";
 import { type RewardPoolDynamic as RewardPoolDynamicProgramType } from "./descriptor/reward_pool_dynamic.js";
 import { type StakePool as StakePoolProgramType } from "./descriptor/stake_pool.js";
@@ -46,7 +49,6 @@ import {
   deriveRewardPoolPDA,
   deriveRewardVaultPDA,
   deriveStakeEntryPDA,
-  deriveStakeMintPDA,
   deriveStakePoolPDA,
 } from "./lib/derive-accounts.js";
 import type {
@@ -77,6 +79,7 @@ interface Programs {
   rewardPoolProgram: Program<RewardPoolProgramType>;
   rewardPoolDynamicProgram: Program<RewardPoolDynamicProgramType>;
   feeManagerProgram: Program<FeeManagerProgramType>;
+  governor: Program<GovernorProgramType>;
 }
 
 type CreationResult = ITransactionResult & { metadataId: PublicKey };
@@ -90,6 +93,7 @@ interface IInitOptions {
     rewardPool?: string;
     rewardPoolDynamic?: string;
     feeManager?: string;
+    governor?: string;
   };
   sendRate?: number;
   sendThrottler?: PQueue;
@@ -134,6 +138,10 @@ export class SolanaStakingClient {
       ...FeeManagerIDL,
       address: programIds?.feeManager ?? FeeManagerIDL.address,
     } as FeeManagerProgramType;
+    const governorIdl = {
+      ...GovernorIDL,
+      address: programIds?.governor ?? GovernorIDL.address,
+    };
     this.programs = {
       stakePoolProgram: new Program(stakePoolIdl, {
         connection: this.connection,
@@ -147,6 +155,9 @@ export class SolanaStakingClient {
       feeManagerProgram: new Program(feeManagerIdl, {
         connection: this.connection,
       }) as Program<FeeManagerProgramType>,
+      governor: new Program(governorIdl, {
+        connection: this.connection,
+      }) as Program<GovernorProgramType>,
     };
   }
 
@@ -238,6 +249,9 @@ export class SolanaStakingClient {
       permissionless = false,
       freezeStakeMint = null,
       unstakePeriod = null,
+      maxTotalStakeCumulative,
+      expiryTs,
+      autoUnstake,
       nonce,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateStakePoolArgs,
@@ -245,9 +259,32 @@ export class SolanaStakingClient {
   ) {
     const { stakePoolProgram } = this.programs;
     const creator = extParams.invoker.publicKey;
+    const v2ParamsSet = maxTotalStakeCumulative !== undefined || expiryTs !== undefined || autoUnstake !== undefined;
     invariant(creator, "Undefined invoker publicKey");
-    const createInstruction = await stakePoolProgram.methods
-      .createPool(nonce, maxWeight, minDuration, maxDuration, permissionless, freezeStakeMint, unstakePeriod)
+    const createInstruction = await (
+      v2ParamsSet
+        ? stakePoolProgram.methods.createPoolV2(
+            nonce,
+            maxWeight,
+            minDuration,
+            maxDuration,
+            permissionless,
+            freezeStakeMint ?? false,
+            unstakePeriod ?? new BN(0),
+            maxTotalStakeCumulative ?? new BN(0),
+            expiryTs ?? new BN(0),
+            autoUnstake ?? false,
+          )
+        : stakePoolProgram.methods.createPool(
+            nonce,
+            maxWeight,
+            minDuration,
+            maxDuration,
+            permissionless,
+            freezeStakeMint,
+            unstakePeriod,
+          )
+    )
       .accounts({
         creator,
         mint,
@@ -327,8 +364,6 @@ export class SolanaStakingClient {
     const { stakePoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const mint = deriveStakeMintPDA(stakePoolProgram.programId, pk(stakePool));
-    const stakeMintAccountKey = getAssociatedTokenAddressSync(mint, staker, true, pk(tokenProgramId));
     const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
       .stake(nonce, amount, duration)
@@ -336,7 +371,6 @@ export class SolanaStakingClient {
         stakePool: stakePool,
         tokenProgram: tokenProgramId,
         from: poolMintAccountKey,
-        to: stakeMintAccountKey,
         authority: staker,
         payer: staker,
       })
@@ -458,16 +492,13 @@ export class SolanaStakingClient {
     const { stakePoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
-    const stakeMintKey = deriveStakeMintPDA(stakePoolProgram.programId, pk(stakePool));
     const stakeEntryKey = deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, nonce);
     const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
-    const stakeMintAccountKey = getAssociatedTokenAddressSync(stakeMintKey, staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
       .unstake(shouldClose)
       .accounts({
         stakeEntry: stakeEntryKey,
         to: poolMintAccountKey,
-        from: stakeMintAccountKey,
         authority: staker,
         tokenProgram: tokenProgramId,
       })

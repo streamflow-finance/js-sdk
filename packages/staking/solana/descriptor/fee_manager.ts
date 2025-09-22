@@ -8,7 +8,7 @@ export type FeeManager = {
   "address": "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V",
   "metadata": {
     "name": "feeManager",
-    "version": "2.2.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Stores Fees and other admin configuration for the Staking protocol"
   },

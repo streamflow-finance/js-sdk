@@ -8,7 +8,7 @@ export type RewardPool = {
   "address": "RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj",
   "metadata": {
     "name": "rewardPool",
-    "version": "2.2.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Program to manage Reward Pools for Stake Pools and claim rewards from them"
   },
@@ -133,6 +133,225 @@ export type RewardPool = {
           ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint to claim.",
+          ],
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "claimRewardsAsWorker",
+      "discriminator": [
+        120,
+        246,
+        117,
+        149,
+        120,
+        210,
+        52,
+        193,
+      ],
+      "accounts": [
+        {
+          "name": "rewardPool",
+          "docs": [
+            "Reward Pool",
+          ],
+          "writable": true
+        },
+        {
+          "name": "stakePool",
+          "docs": [
+            "Stake Pool",
+          ],
+          "writable": true,
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "stakeEntry",
+          "docs": [
+            "Stake Entry for which rewards are being claimed",
+          ],
+          "writable": true
+        },
+        {
+          "name": "rewardEntry",
+          "docs": [
+            "Reward Entry that stores metadata about claimed rewards",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  45,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "rewardPool"
+              },
+              {
+                "kind": "account",
+                "path": "stakeEntry"
+              },
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Reward Pool Vault that stores tokens",
+          ],
+          "writable": true,
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "stakeVault",
+          "writable": true
+        },
+        {
+          "name": "to",
+          "writable": true
+        },
+        {
+          "name": "stakeMintFrom",
+          "writable": true
+        },
+        {
+          "name": "claimant",
+          "writable": true
+        },
+        {
+          "name": "worker",
+          "docs": [
+            "Auto unstake worker",
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint to claim.",
+          ],
+          "writable": true,
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "stakeMint",
+          "docs": [
+            "Mint for sTokens issued by the stake pool",
+          ],
+          "writable": true
+        },
+        {
+          "name": "stakePoolProgram",
+          "address": "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "clawback",
+      "discriminator": [
+        111,
+        92,
+        142,
+        79,
+        33,
+        234,
+        82,
+        27,
+      ],
+      "accounts": [
+        {
+          "name": "rewardPool",
+          "docs": [
+            "Reward Pool",
+          ],
+          "writable": true
+        },
+        {
+          "name": "stakePool",
+          "docs": [
+            "Stake Pool to Which Reward Pool belongs",
+          ],
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Reward Pool Vault that stores tokens",
+          ],
+          "writable": true,
+          "relations": [
+            "rewardPool",
+          ]
+        },
+        {
+          "name": "to",
+          "docs": [
+            "Account to send the reward tokens to.",
+          ],
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Current Authority",
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "rewardPool",
+          ]
         },
         {
           "name": "mint",
@@ -918,7 +1137,7 @@ export type RewardPool = {
     {
       "code": 6002,
       "name": "invalidRewardPeriod",
-      "msg": "Reward period should be more than 0"
+      "msg": "Reward period should be more than 0 and less or equal than staking duration if auto unstake is enabled"
     },
     {
       "code": 6003,
@@ -979,6 +1198,36 @@ export type RewardPool = {
       "code": 6014,
       "name": "invalidLastClaimPeriod",
       "msg": "Invalid last claim period provided"
+    },
+    {
+      "code": 6015,
+      "name": "clawbackNotPossible",
+      "msg": "Clawback is not possible for the provided Stake Pool"
+    },
+    {
+      "code": 6016,
+      "name": "clawbackTooEarly",
+      "msg": "Clawback requested too early, wait for the Pool to expire and cooldown to pass"
+    },
+    {
+      "code": 6017,
+      "name": "updateNotPossible",
+      "msg": "Reward pool can not be updated"
+    },
+    {
+      "code": 6018,
+      "name": "entryCreationNotPossibleAfterUnlock",
+      "msg": "Reward entry can not be created after stake has been unlocked for this reward pool"
+    },
+    {
+      "code": 6019,
+      "name": "refundNotPossible",
+      "msg": "Refund not possible for this reward entry"
+    },
+    {
+      "code": 6020,
+      "name": "poolCreationLimited",
+      "msg": "Pool creation limited, use nonce 0"
     },
   ],
   "types": [
@@ -1282,6 +1531,13 @@ export type RewardPool = {
             "type": "u64"
           },
           {
+            "name": "clawedBackTs",
+            "docs": [
+              "Timestamp when reward pool was clawed back",
+            ],
+            "type": "u64"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1289,7 +1545,7 @@ export type RewardPool = {
             "type": {
               "array": [
                 "u8",
-                48,
+                40,
               ]
             }
           },
@@ -1386,6 +1642,13 @@ export type RewardPool = {
             "type": "bool"
           },
           {
+            "name": "autoUnstake",
+            "docs": [
+              "Whether auto unstaking is enabled, copied from the stake pool for use in instructions that don't require the stake pool account",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1393,7 +1656,7 @@ export type RewardPool = {
             "type": {
               "array": [
                 "u8",
-                39,
+                38,
               ]
             }
           },
@@ -1525,6 +1788,34 @@ export type RewardPool = {
             "type": "u64"
           },
           {
+            "name": "isTotalStakeCapped",
+            "docs": [
+              "Whether amount of total staked tokens is limited by `remaining_total_stake` - stored as separate flag to not deal with `Option`",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "remainingTotalStake",
+            "docs": [
+              "Remaining total amount of staked tokens (cumulative)",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "expiryTs",
+            "docs": [
+              "Time when stake pool expires, staking is not possible after expiration",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "autoUnstake",
+            "docs": [
+              "Whether auto unstaking is enabled, stake entries will be unstaked after duration",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1532,7 +1823,7 @@ export type RewardPool = {
             "type": {
               "array": [
                 "u8",
-                55,
+                37,
               ]
             }
           },

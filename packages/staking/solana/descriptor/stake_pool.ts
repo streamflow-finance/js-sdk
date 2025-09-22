@@ -8,7 +8,7 @@ export type StakePool = {
   "address": "STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH",
   "metadata": {
     "name": "stakePool",
-    "version": "2.2.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Program to manage Stake Pools and stake/unstake tokens"
   },
@@ -360,6 +360,174 @@ export type StakePool = {
           "type": {
             "option": "u64"
           }
+        },
+      ]
+    },
+    {
+      "name": "createPoolV2",
+      "discriminator": [
+        133,
+        27,
+        21,
+        38,
+        67,
+        86,
+        91,
+        132,
+      ],
+      "accounts": [
+        {
+          "name": "stakePool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  112,
+                  111,
+                  111,
+                  108,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              },
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Mint used for staking",
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stakePool"
+              },
+            ]
+          }
+        },
+        {
+          "name": "stakeMint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  45,
+                  109,
+                  105,
+                  110,
+                  116,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stakePool"
+              },
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "docs": [
+            "Stake Pool creator",
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        },
+        {
+          "name": "maxWeight",
+          "type": "u64"
+        },
+        {
+          "name": "minDuration",
+          "type": "u64"
+        },
+        {
+          "name": "maxDuration",
+          "type": "u64"
+        },
+        {
+          "name": "permissionless",
+          "type": "bool"
+        },
+        {
+          "name": "freezeStakeMint",
+          "type": "bool"
+        },
+        {
+          "name": "unstakePeriod",
+          "type": "u64"
+        },
+        {
+          "name": "maxTotalStakeCumulative",
+          "type": "u64"
+        },
+        {
+          "name": "expiryTs",
+          "type": "u64"
+        },
+        {
+          "name": "autoUnstake",
+          "type": "bool"
         },
       ]
     },
@@ -822,7 +990,60 @@ export type StakePool = {
           "docs": [
             "Token Account to transfer Stake Mint tokens to",
           ],
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "stakeMint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
         },
         {
           "name": "payer",
@@ -935,7 +1156,60 @@ export type StakePool = {
           "docs": [
             "Stake Mint Token account",
           ],
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "stakeMint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
         },
         {
           "name": "vault",
@@ -1020,6 +1294,154 @@ export type StakePool = {
         },
       ]
     },
+    {
+      "name": "unstakeAsWorker",
+      "discriminator": [
+        18,
+        36,
+        224,
+        241,
+        46,
+        185,
+        228,
+        142,
+      ],
+      "accounts": [
+        {
+          "name": "stakePool",
+          "writable": true,
+          "relations": [
+            "stakeEntry",
+          ]
+        },
+        {
+          "name": "stakeEntry",
+          "docs": [
+            "Entry that stores Stake Metadata",
+          ],
+          "writable": true
+        },
+        {
+          "name": "from",
+          "docs": [
+            "Stake Mint Token account",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "stakeMint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Escrow Account that stores Staked tokens",
+          ],
+          "writable": true,
+          "relations": [
+            "stakePool",
+          ]
+        },
+        {
+          "name": "to",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true
+        },
+        {
+          "name": "worker",
+          "docs": [
+            "Auto unstake worker",
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Original mint of staked tokens",
+          ],
+          "writable": true,
+          "relations": [
+            "stakePool",
+          ]
+        },
+        {
+          "name": "stakeMint",
+          "docs": [
+            "Stake Mint used to exchanged Staked tokens to",
+          ],
+          "writable": true,
+          "relations": [
+            "stakePool",
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+      ],
+      "args": []
+    },
   ],
   "accounts": [
     {
@@ -1066,7 +1488,7 @@ export type StakePool = {
     {
       "code": 6000,
       "name": "invalidDuration",
-      "msg": "Minimum duration must be less than the maximum"
+      "msg": "Minimum duration must be less than the maximum, maximum should be a realistic number of seconds"
     },
     {
       "code": 6001,
@@ -1161,7 +1583,42 @@ export type StakePool = {
     {
       "code": 6019,
       "name": "invalidMinDuration",
-      "msg": "Minimum duration should be at least 1"
+      "msg": "Minimum duration should be at least 1, for auto-unstake 7 days at least"
+    },
+    {
+      "code": 6020,
+      "name": "autoUnstakeNotPossible",
+      "msg": "Auto unstake is not possible with unstake period or with a permissionless pool"
+    },
+    {
+      "code": 6021,
+      "name": "invalidExpiry",
+      "msg": "Expiry can not be less than max duration"
+    },
+    {
+      "code": 6022,
+      "name": "stakePayerNotSupported",
+      "msg": "Separate payer account is not supported when staking in a pool with auto-unstake"
+    },
+    {
+      "code": 6023,
+      "name": "stakeAmountExceedsMax",
+      "msg": "Stake amount exceeds max total stake"
+    },
+    {
+      "code": 6024,
+      "name": "stakeDurationExceedsExpiry",
+      "msg": "Stake duration exceeds stake pool expiry"
+    },
+    {
+      "code": 6025,
+      "name": "accountDelegateRevoked",
+      "msg": "Token account delegate has been revoked by staker, can't burn tokens"
+    },
+    {
+      "code": 6026,
+      "name": "refundNotPossible",
+      "msg": "Refund not possible for this stake entry"
     },
   ],
   "types": [
@@ -1303,6 +1760,13 @@ export type StakePool = {
             "type": "bool"
           },
           {
+            "name": "autoUnstake",
+            "docs": [
+              "Whether auto unstaking is enabled, copied from the stake pool for use in instructions that don't require the stake pool account",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1310,7 +1774,7 @@ export type StakePool = {
             "type": {
               "array": [
                 "u8",
-                39,
+                38,
               ]
             }
           },
@@ -1442,6 +1906,34 @@ export type StakePool = {
             "type": "u64"
           },
           {
+            "name": "isTotalStakeCapped",
+            "docs": [
+              "Whether amount of total staked tokens is limited by `remaining_total_stake` - stored as separate flag to not deal with `Option`",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "remainingTotalStake",
+            "docs": [
+              "Remaining total amount of staked tokens (cumulative)",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "expiryTs",
+            "docs": [
+              "Time when stake pool expires, staking is not possible after expiration",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "autoUnstake",
+            "docs": [
+              "Whether auto unstaking is enabled, stake entries will be unstaked after duration",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1449,7 +1941,7 @@ export type StakePool = {
             "type": {
               "array": [
                 "u8",
-                55,
+                37,
               ]
             }
           },

@@ -2,7 +2,7 @@
   "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
     "name": "reward_pool_dynamic",
-    "version": "2.2.0",
+    "version": "2.4.0",
     "spec": "0.1.0",
     "description": "Reward pools with dynamic rewards distribution"
   },
@@ -1516,6 +1516,13 @@
             "type": "bool"
           },
           {
+            "name": "auto_unstake",
+            "docs": [
+              "Whether auto unstaking is enabled, copied from the stake pool for use in instructions that don't require the stake pool account"
+            ],
+            "type": "bool"
+          },
+          {
             "name": "_buffer",
             "docs": [
               "Buffer for additional fields"
@@ -1523,7 +1530,7 @@
             "type": {
               "array": [
                 "u8",
-                39
+                38
               ]
             }
           }
@@ -1655,6 +1662,34 @@
             "type": "u64"
           },
           {
+            "name": "is_total_stake_capped",
+            "docs": [
+              "Whether amount of total staked tokens is limited by `remaining_total_stake` - stored as separate flag to not deal with `Option`"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "remaining_total_stake",
+            "docs": [
+              "Remaining total amount of staked tokens (cumulative)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "expiry_ts",
+            "docs": [
+              "Time when stake pool expires, staking is not possible after expiration"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "auto_unstake",
+            "docs": [
+              "Whether auto unstaking is enabled, stake entries will be unstaked after duration"
+            ],
+            "type": "bool"
+          },
+          {
             "name": "_buffer",
             "docs": [
               "Buffer for additional fields"
@@ -1662,7 +1697,7 @@
             "type": {
               "array": [
                 "u8",
-                55
+                37
               ]
             }
           }
@@ -1703,6 +1738,13 @@
             "type": "u64"
           },
           {
+            "name": "is_sponsored",
+            "docs": [
+              "Whether the vote rent has been sponsored by the rent vault"
+            ],
+            "type": "bool"
+          },
+          {
             "name": "_buffer",
             "docs": [
               "Buffer for additional fields"
@@ -1710,7 +1752,7 @@
             "type": {
               "array": [
                 "u8",
-                64
+                63
               ]
             }
           }
