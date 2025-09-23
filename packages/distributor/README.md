@@ -6,6 +6,20 @@ Token Distributor essentially that allows you to Airdrop tokens to multiple (tho
 
 You can also use `getClaims` and `getDistributors` to fetch active claims and distributors respectively.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Documentation](#documentation)
+- [Import SDK](#import-sdk)
+- [Create DistributorClient instance](#create-distributorclient-instance)
+  - [Solana](#solana)
+- [Create an Airdrop (Distributor account)](#create-an-airdrop-distributor-account)
+- [Claim an Airdrop](#claim-an-airdrop)
+- [Close a Claim](#close-a-claim)
+- [Clawback an Airdrop](#clawback-an-airdrop)
+- [Search Airdrops](#search-airdrops)
+- [Additional notes](#additional-notes)
+
 ---
 
 ## Installation
@@ -18,6 +32,8 @@ or
 
 ## Documentation
 More Documentation available here: [docs site →](https://streamflow-finance.github.io/js-sdk/)
+
+Public API documentation: [API docs →](https://api-public.streamflow.finance/v2/docs#/)
 
 Automated Airdrop Creation: [notion doc →](https://streamflow.notion.site/Automated-Airdrop-Creation-45b84bfd2dda4d7196be5dd02eed29c8)
 
