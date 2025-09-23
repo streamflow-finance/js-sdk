@@ -660,7 +660,7 @@ export class SolanaStakingClient {
             this.connection,
             [STREAMFLOW_TREASURY_PUBLIC_KEY],
             rewardMintPk,
-            extParams.invoker,
+            staker,
             tokenProgramPk,
           )
         : null;

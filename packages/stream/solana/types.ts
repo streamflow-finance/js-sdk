@@ -53,9 +53,17 @@ export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSo
   partner?: string | null;
 }
 
+export interface IPrepareCreateStreamSolanaExt extends Omit<ICreateStreamSolanaExt, "sender"> {
+  sender: PublicKey;
+}
+
 export interface IInteractStreamSolanaExt extends ITransactionSolanaExtWithInstructions {
   invoker: SignerWalletAdapter | Keypair;
   checkTokenAccounts?: boolean;
+}
+
+export interface IPrepareStreamSolanaExt extends Omit<IInteractStreamSolanaExt, "invoker"> {
+  invoker: PublicKey;
 }
 
 export interface ITopUpStreamSolanaExt extends ITransactionSolanaExt {

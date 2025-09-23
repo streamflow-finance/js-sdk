@@ -537,7 +537,7 @@ export async function checkOrCreateAtaBatch(
   connection: Connection,
   owners: PublicKey[],
   mint: PublicKey,
-  invoker: SignerWalletAdapter | Keypair,
+  invoker: PublicKey,
   programId?: PublicKey,
   payer?: PublicKey,
 ): Promise<TransactionInstruction[]> {
@@ -554,7 +554,7 @@ export async function checkOrCreateAtaBatch(
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
       ixs.push(
-        createAssociatedTokenAccountInstruction(payer ?? invoker.publicKey!, atas[i]!, owners[i]!, mint, programId),
+        createAssociatedTokenAccountInstruction(payer ?? invoker, atas[i]!, owners[i]!, mint, programId),
       );
     }
   }

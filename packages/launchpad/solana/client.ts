@@ -254,7 +254,7 @@ export class SolanaLaunchpadClient {
           this.connection,
           [pk(launchpadKey)],
           pk(baseMintKey),
-          extParams.invoker,
+          authority,
           pk(tokenProgramId),
         )),
         createTransferCheckedInstruction(
