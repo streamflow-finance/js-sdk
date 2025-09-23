@@ -504,7 +504,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * Creates a new stream/vesting contract.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {ICreateStreamData} data - Stream parameters including recipient, token, amount, schedule, and permissions
-   * @param {ICreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
+   * @param {IPrepareCreateStreamSolanaExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
    * @returns Create stream instructions
    */
   public async prepareCreateStreamInstructions(
@@ -759,7 +759,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * Builds transaction instructions for creating multiple stream/vesting contracts without creating transactions.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
    * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
-   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
+   * @param {IPrepareCreateStreamSolanaExt} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
    * @returns Create multiple transaction instructions
    */
   public async buildCreateMultipleTransactionInstructions(
@@ -867,7 +867,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * ```
    *
    * @param {ICreateMultipleStreamData} data - Stream base parameters and array of recipients with individual amounts and settings
-   * @param {Omit<ICreateStreamSolanaExt, "sender"> & { senderPublicKey: PublicKey }} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
+   * @param {IPrepareCreateStreamSolanaExt} extParams - Transaction configuration including sender public key, native token handling, and custom instructions
    * @returns Multiple transaction information
    */
   public async buildCreateMultipleTransactions(
