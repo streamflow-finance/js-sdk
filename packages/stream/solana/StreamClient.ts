@@ -442,9 +442,14 @@ export class SolanaStreamClient extends BaseStreamClient {
       computeLimit: computeLimit ?? ALIGNED_COMPUTE_LIMIT,
     });
 
+    // Edge case when recipient is the same as sender and we are using WSOL
+    // We already have getCreateATAInstructions for WSOL and sender address
+    // This check avoids sending double create ATA instructions which would cause transaction to fail
+    if (recipientPublicKey.toString() !== sender.publicKey.toString() || !isNative) {
     ixs.push(
       ...(await this.getCreateATAInstructions([recipientPublicKey], mintPublicKey, sender, true, tokenProgramId)),
     );
+  }
 
     const encodedUIntArray = new TextEncoder().encode(streamName);
     const streamNameArray = Array.from(encodedUIntArray);
