@@ -38,7 +38,7 @@ import {
 } from "@streamflow/common/solana";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
-import { getBN } from "@streamflow/common";
+import { getBN, assertHasPublicKey, invariant } from "@streamflow/common";
 
 import {
   type MetadataRecipientHashMap,
@@ -241,6 +241,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     const { partner, amount, tokenProgramId } = data;
     const { isNative, sender, customInstructions } = extParams;
 
+    assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
+
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
     const mintPublicKey = new PublicKey(data.tokenId);
 
@@ -259,7 +261,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         address: partnerPublicKey.toString(),
       });
       const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, sender, totalAmount)));
+      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
     const {
@@ -307,7 +309,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     const { ixs, metadataId, metadata } = await this.buildCreateTransactionInstructions(data, extParams);
 
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender, undefined, [
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, [
       metadata,
     ]);
 
@@ -330,13 +332,11 @@ export class SolanaStreamClient extends BaseStreamClient {
   public async create(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
     const { sender } = extParams;
 
-    if (!sender.publicKey) {
-      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
-    }
+    assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
     const { ixs, metadataId, metadata } = await this.buildCreateTransactionInstructions(data, {
       ...extParams,
-      sender: sender.publicKey,
+      sender,
     });
 
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, sender.publicKey, undefined, [
@@ -404,9 +404,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
-    if (!priceOracle && oracleType && oracleType !== "none") {
-      throw new Error("Price oracle is required for the specified oracle type");
-    }
+    invariant(!priceOracle && oracleType && oracleType !== "none", "Price oracle is required for the specified oracle type" );
+    assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
     const recipientPublicKey = new PublicKey(recipient);
     const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
@@ -414,9 +413,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const metadata = !metadataPubKeys ? Keypair.generate() : undefined;
     const metadataPubKey = metadata ? metadata.publicKey : metadataPubKeys![0];
 
-    if (!metadataPubKey) {
-      throw new Error("Metadata public key is required");
-    }
+    invariant(metadataPubKey, "Metadata public key is required");
 
     let tokenProgramId = streamTokenProgramId ? new PublicKey(streamTokenProgramId) : undefined;
     if (!tokenProgramId) {
@@ -429,7 +426,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, metadataPubKey);
 
     const oracle =
-      priceOracle ?? deriveTestOraclePDA(this.alignedProxyProgram.programId, mintPublicKey, sender);
+      priceOracle ?? deriveTestOraclePDA(this.alignedProxyProgram.programId, mintPublicKey, sender.publicKey);
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
@@ -480,8 +477,8 @@ export class SolanaStreamClient extends BaseStreamClient {
           typeof floorPrice === "number" ? getBN(floorPrice, ALIGNED_PRECISION_FACTOR_POW) : floorPrice ?? new BN(0),
       })
       .accountsPartial({
-        payer: sender,
-        sender: sender,
+        payer: sender.publicKey,
+        sender: sender.publicKey,
         streamMetadata: metadataPubKey,
         escrowTokens: escrowPDA,
         mint: mintPublicKey,
@@ -533,6 +530,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: IPrepareCreateStreamSolanaExt,
   ): Promise<ICreateStreamInstructions> {
 
+    assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
+
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
@@ -550,7 +549,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     if (!tokenProgramId) {
       tokenProgramId = (await getMintAndProgram(this.connection, mintPublicKey)).tokenProgramId;
     }
-    const senderTokens = await ata(mintPublicKey, sender, tokenProgramId);
+    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
     const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
 
@@ -580,7 +579,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         },
         this.programId,
         {
-          sender,
+          sender: sender.publicKey,
           senderTokens,
           recipient: new PublicKey(recipient),
           metadata: metadataPubKey,
@@ -620,14 +619,10 @@ export class SolanaStreamClient extends BaseStreamClient {
    */
   public async createUnchecked(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
 
-    if (!extParams.sender.publicKey) {
-      throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
-    }
 
-    const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, {
-      ...extParams,
-      sender: extParams.sender.publicKey,
-    });
+    const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, 
+      extParams
+    );
     const { tx, hash, context } = await prepareTransaction(
       this.connection,
       ixs,
@@ -681,6 +676,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     metadata: Keypair | undefined;
     metadataPubKey: PublicKey;
   }> {
+    assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
+
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
     const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
@@ -690,7 +687,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       programId: this.programId,
       space: METADATA_ACC_SIZE,
       lamports: rentToExempt,
-      fromPubkey: sender,
+      fromPubkey: sender.publicKey,
       newAccountPubkey: metadataPubKey,
     });
 
@@ -700,7 +697,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     );
 
     const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
-    const senderTokens = await ata(mintPublicKey, sender, tokenProgramId);
+    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
 
     const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
 
@@ -711,7 +708,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     if (isNative) {
       const totalFee = await this.getTotalFee({ address: partnerPublicKey.toString() });
       const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
-      ixs.push(...(await prepareWrappedAccount(this.connection, sender, totalAmount)));
+      ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
     const createInstruction = await createUncheckedStreamInstruction(
@@ -737,7 +734,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       },
       this.programId,
       {
-        sender: sender,
+        sender: sender.publicKey,
         senderTokens,
         metadata: metadataPubKey,
         escrowTokens,
@@ -778,6 +775,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const { recipients, ...streamParams } = data;
 
     const { sender, metadataPubKeys: metadataPubKeysExt, isNative, customInstructions } = extParams;
+    assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
     const metadatas: string[] = [];
     const metadataToRecipient: MetadataRecipientHashMap = {};
@@ -830,7 +828,7 @@ export class SolanaStreamClient extends BaseStreamClient {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
       const nativeInstructions = await prepareWrappedAccount(
         this.connection,
-        sender,
+        sender.publicKey,
         totalDepositedAmount,
       );
       prepareInstructions.push(...nativeInstructions);
@@ -890,12 +888,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     const batch: BatchItem[] = [];
 
     for (const { ixs, metadata, recipient } of instructionsBatch) {
-      batch.push({ tx: createVersionedTransaction(ixs, sender, hash.blockhash, [metadata]), recipient });
+      batch.push({ tx: createVersionedTransaction(ixs, sender.publicKey, hash.blockhash, [metadata]), recipient });
     }
 
     let prepareTx: VersionedTransaction | undefined;
     if (prepareInstructions.length > 0) {
-      prepareTx = createVersionedTransaction(prepareInstructions, sender, hash.blockhash);
+      prepareTx = createVersionedTransaction(prepareInstructions, sender.publicKey, hash.blockhash);
     }
 
     return {
@@ -926,10 +924,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
-      await this.buildCreateMultipleTransactionInstructions(data, {
-        ...extParams,
-        sender: sender.publicKey,
-      });
+      await this.buildCreateMultipleTransactionInstructions(data, extParams);
 
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
@@ -1015,10 +1010,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
 
     const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
-      await this.buildCreateMultipleTransactionInstructions(data, {
-        ...extParams,
-        sender: sender.publicKey,
-      });
+      await this.buildCreateMultipleTransactionInstructions(data, extParams);
 
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
@@ -1097,15 +1089,10 @@ export class SolanaStreamClient extends BaseStreamClient {
   ): Promise<ITransactionResult> {
     const { invoker, customInstructions } = extParams;
 
-    if (!invoker.publicKey) {
-      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
-    }
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
     const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, 
-      {
-        ...extParams,
-        invoker: invoker.publicKey,
-      });
+extParams);
 
     const metadata = new PublicKey(id);
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadata);
@@ -1137,6 +1124,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
 
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
@@ -1144,9 +1133,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     const streamPublicKey = new PublicKey(id);
 
     const escrow = await this.connection.getAccountInfo(streamPublicKey);
-    if (!escrow?.data) {
-      throw new Error("Couldn't get account info");
-    }
+
+    invariant(escrow?.data, "Couldn't get account info");
 
     const data = decodeStream(escrow.data);
     const { sender, recipient, mint, streamflowTreasury, partner, recipientTokens, escrowTokens } = data;
@@ -1170,8 +1158,8 @@ export class SolanaStreamClient extends BaseStreamClient {
         streamflowTreasuryTokens,
         recipientTokens,
         escrowTokens,
-        authority: invoker,
-        recipient: invoker,
+        authority: invoker.publicKey,
+        recipient: invoker.publicKey,
         metadata: streamPublicKey,
         streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
         tokenProgram: tokenProgramId,
@@ -1188,13 +1176,8 @@ export class SolanaStreamClient extends BaseStreamClient {
    * @returns Transaction result
    */
   public async cancel(cancelData: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
-    if (!extParams.invoker.publicKey) {
-      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
-    }
-    const ixs = await this.prepareCancelInstructions(cancelData, {
-      ...extParams,
-      invoker: extParams.invoker.publicKey,
-    });
+
+    const ixs = await this.prepareCancelInstructions(cancelData, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -1247,11 +1230,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
 
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
     const streamPublicKey = new PublicKey(id);
     const escrowAcc = await this.connection.getAccountInfo(streamPublicKey);
-    if (!escrowAcc?.data) {
-      throw new Error("Couldn't get account info");
-    }
+
+    invariant(escrowAcc?.data, "Couldn't get account info");
 
     const streamData = decodeStream(escrowAcc.data);
     const { sender, recipient, mint, streamflowTreasury, partner, escrowTokens } = streamData;
@@ -1275,7 +1259,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         partner,
         recipient,
         escrowTokens,
-        sender: invoker,
+        sender: invoker.publicKey,
         streamMetadata: streamPublicKey,
         streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
         tokenProgram: tokenProgramId,
@@ -1299,11 +1283,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
 
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
     const streamPublicKey = new PublicKey(id);
     const escrowAcc = await this.connection.getAccountInfo(streamPublicKey);
-    if (!escrowAcc?.data) {
-      throw new Error("Couldn't get account info");
-    }
+
+    invariant(escrowAcc?.data, "Couldn't get account info");
 
     const data = decodeStream(escrowAcc.data);
     const { sender, recipient, partner, streamflowTreasury, mint, senderTokens, recipientTokens, escrowTokens } = data;
@@ -1336,7 +1321,7 @@ export class SolanaStreamClient extends BaseStreamClient {
         partnerTokens,
         mint,
         escrowTokens,
-        authority: invoker,
+        authority: invoker.publicKey,
         metadata: streamPublicKey,
         streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
         tokenProgram: tokenProgramId,
@@ -1357,13 +1342,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     { id, newRecipient }: ITransferData,
     extParams: IInteractStreamSolanaExt,
   ): Promise<ITransactionResult> {
-    if (!extParams.invoker.publicKey) {
-      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
-    }
-    const ixs: TransactionInstruction[] = await this.prepareTransferInstructions({ id, newRecipient }, {
-      ...extParams,
-      invoker: extParams.invoker.publicKey,
-    });
+    const ixs: TransactionInstruction[] = await this.prepareTransferInstructions({ id, newRecipient }, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -1392,6 +1371,8 @@ export class SolanaStreamClient extends BaseStreamClient {
     { invoker, computePrice, computeLimit = 100001 }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
 
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
@@ -1399,9 +1380,9 @@ export class SolanaStreamClient extends BaseStreamClient {
     const stream = new PublicKey(id);
     const newRecipientPublicKey = new PublicKey(newRecipient);
     const escrow = await this.connection.getAccountInfo(stream);
-    if (!escrow?.data) {
-      throw new Error("Couldn't get account info");
-    }
+
+    invariant(escrow?.data, "Couldn't get account info");
+
     const { mint } = decodeStream(escrow?.data);
     const { tokenProgramId } = await getMintAndProgram(this.connection, mint);
 
@@ -1409,7 +1390,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     ixs.push(
       await transferStreamInstruction(this.programId, {
-        authority: invoker,
+        authority: invoker.publicKey,
         newRecipient: newRecipientPublicKey,
         newRecipientTokens,
         metadata: stream,
@@ -1680,10 +1661,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
     }
-    const ixs = await this.prepareUpdateInstructions(data, {
-      ...extParams,
-      invoker: extParams.invoker.publicKey,
-    });
+    const ixs = await this.prepareUpdateInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -1714,19 +1692,20 @@ export class SolanaStreamClient extends BaseStreamClient {
     { invoker, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
 
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
     const streamPublicKey = new PublicKey(data.id);
     const escrow = await this.connection.getAccountInfo(streamPublicKey);
 
-    if (!escrow) {
-      throw new Error("Couldn't get account info");
-    }
+    invariant(escrow, "Couldn't get account info");
+
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
     ixs.push(
       await updateStreamInstruction(data, this.programId, {
-        authority: invoker,
+        authority: invoker.publicKey,
         metadata: streamPublicKey,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
         systemProgram: SystemProgram.programId,
@@ -1810,7 +1789,7 @@ export class SolanaStreamClient extends BaseStreamClient {
   private async getCreateATAInstructions(
     owners: PublicKey[],
     mint: PublicKey,
-    invoker: PublicKey,
+    invoker: { publicKey: PublicKey | null },
     checkTokenAccounts: boolean | undefined,
     programId?: PublicKey,
   ): Promise<TransactionInstruction[]> {
@@ -1841,3 +1820,5 @@ export class SolanaStreamClient extends BaseStreamClient {
     }
   }
 }
+
+

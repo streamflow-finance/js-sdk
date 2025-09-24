@@ -54,7 +54,9 @@ export interface ICreateStreamSolanaExt extends ICreateSolanaExt, ITransactionSo
 }
 
 export interface IPrepareCreateStreamSolanaExt extends Omit<ICreateStreamSolanaExt, "sender"> {
-  sender: PublicKey;
+  sender: {
+    publicKey: PublicKey | null;
+  }
 }
 
 export interface IInteractStreamSolanaExt extends ITransactionSolanaExtWithInstructions {
@@ -63,7 +65,9 @@ export interface IInteractStreamSolanaExt extends ITransactionSolanaExtWithInstr
 }
 
 export interface IPrepareStreamSolanaExt extends Omit<IInteractStreamSolanaExt, "invoker"> {
-  invoker: PublicKey;
+  invoker: {
+    publicKey: PublicKey | null;
+  }
 }
 
 export interface ITopUpStreamSolanaExt extends ITransactionSolanaExt {
