@@ -619,9 +619,8 @@ export class SolanaStreamClient extends BaseStreamClient {
    */
   public async createUnchecked(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
 
-
     const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, 
-      extParams
+      extParams,
     );
     const { tx, hash, context } = await prepareTransaction(
       this.connection,
@@ -1820,5 +1819,4 @@ extParams);
     }
   }
 }
-
 
