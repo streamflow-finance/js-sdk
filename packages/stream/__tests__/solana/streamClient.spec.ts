@@ -191,7 +191,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       };
 
       const mockExtParams = {
-        senderPublicKey,
+        sender: { publicKey: senderPublicKey },
         isNative: false,
       };
 
@@ -243,7 +243,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       };
 
       const mockExtParams = {
-        senderPublicKey,
+        sender: { publicKey: senderPublicKey },
         isNative: true,
       };
 
@@ -310,7 +310,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       };
 
       const mockExtParams = {
-        senderPublicKey,
+        sender: { publicKey: senderPublicKey },
         isNative: false,
       };
 
@@ -386,7 +386,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       };
 
       const mockExtParams = {
-        senderPublicKey,
+        sender: { publicKey: senderPublicKey },
         isNative: true,
       };
 
@@ -439,7 +439,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       };
 
       const mockExtParams = {
-        senderPublicKey,
+        sender: { publicKey: senderPublicKey },
         isNative: false,
       };
 

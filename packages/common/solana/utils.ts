@@ -39,7 +39,7 @@ import {
   TransactionFailedError,
 } from "./types.js";
 import { sleep } from "../lib/utils.js";
-import { invariant } from "../lib/assertions.js";
+import { assertHasPublicKey, invariant } from "../lib/assertions.js";
 
 const SIMULATE_TRIES = 3;
 
@@ -537,10 +537,11 @@ export async function checkOrCreateAtaBatch(
   connection: Connection,
   owners: PublicKey[],
   mint: PublicKey,
-  invoker: SignerWalletAdapter | Keypair,
+  invoker: { publicKey: PublicKey | null },
   programId?: PublicKey,
   payer?: PublicKey,
 ): Promise<TransactionInstruction[]> {
+  assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
   const ixs: TransactionInstruction[] = [];
   if (!programId) {
     programId = (await getMintAndProgram(connection, mint)).tokenProgramId;
@@ -554,7 +555,7 @@ export async function checkOrCreateAtaBatch(
   for (let i = 0; i < response.length; i++) {
     if (!response[i]) {
       ixs.push(
-        createAssociatedTokenAccountInstruction(payer ?? invoker.publicKey!, atas[i]!, owners[i]!, mint, programId),
+        createAssociatedTokenAccountInstruction(payer ?? invoker.publicKey, atas[i]!, owners[i]!, mint, programId),
       );
     }
   }
