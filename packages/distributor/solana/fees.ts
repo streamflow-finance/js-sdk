@@ -1,6 +1,8 @@
-import { ICluster } from "@streamflow/common";
-import { fetchAirdropFee } from "./fetchAirdropFee.js";
+import { type ICluster } from "@streamflow/common";
 import type { Mint } from "@solana/spl-token";
+
+import { fetchAirdropFee } from "./fetchAirdropFee.js";
+
 export const MAXIMUM_FEE_FALLBACK = 9_900_000n; // 0.0099 SOL
 export const MINIMUM_FEE_FALLBACK = 5_000_000n; // 0.005 SOL
 export const FEE_ALLOCATION_FACTOR_FALLBACK_NUMERATOR = 90n; // 90%
