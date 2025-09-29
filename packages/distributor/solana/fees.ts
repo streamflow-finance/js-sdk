@@ -1,4 +1,4 @@
-import { type ICluster } from "@streamflow/common";
+import { type ICluster, multiplyBigIntByNumber } from "@streamflow/common";
 import type { Mint } from "@solana/spl-token";
 
 import { fetchAirdropFee } from "./fetchAirdropFee.js";
@@ -8,11 +8,25 @@ export const MINIMUM_FEE_FALLBACK = 5_000_000n; // 0.005 SOL
 export const FEE_ALLOCATION_FACTOR_FALLBACK_NUMERATOR = 90n; // 90%
 export const FEE_ALLOCATION_FACTOR_FALLBACK_DENOMINATOR = 100n;
 
+const LAMPORTS_PER_SOL = 1_000_000_000n;
+
 const lamportsToSolString = (lamports: bigint): string => {
-  const s = (Number(lamports) / 1e9).toFixed(9);
-  return s.replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+  const int = lamports / LAMPORTS_PER_SOL;
+  const frac = lamports % LAMPORTS_PER_SOL;
+  if (frac === 0n) return int.toString();
+  const fracStr = frac.toString().padStart(9, "0").replace(/0+$/, "");
+  return `${int.toString()}.${fracStr}`;
 };
-const allocationToString = (num: bigint, den: bigint): string => (Number(num) / Number(den)).toString();
+
+const allocationToString = (num: bigint, den: bigint): string => {
+  const SCALE = 1_000_000_000n; // 9 digits
+  const scaled = (num * SCALE) / den; // floor
+  const int = scaled / SCALE;
+  const frac = scaled % SCALE;
+  if (frac === 0n) return int.toString();
+  const fracStr = frac.toString().padStart(9, "0").replace(/0+$/, "");
+  return `${int.toString()}.${fracStr}`;
+};
 
 const defaultAPIFeesResponse: AirdropFeeServiceResponse = {
   isCustom: false,
@@ -47,9 +61,10 @@ export const toBigInt = (v: string | number | bigint | undefined): bigint | unde
   v === undefined ? undefined : BigInt(v);
 
 export const toLamportsSOL = (value: string | number | bigint, solDecimals = 9): bigint => {
-  const num = typeof value === "bigint" ? Number(value) : Number(value);
-  const scale = 10 ** solDecimals;
-  return BigInt(Math.floor(Math.max(0, num) * scale));
+  const y = typeof value === "bigint" ? Number(value) : typeof value === "string" ? Number(value) : value;
+  if (!Number.isFinite(y) || y <= 0) return 0n;
+  const scale = 10n ** BigInt(solDecimals);
+  return multiplyBigIntByNumber(scale, y);
 };
 
 export const applyFeeLogic = (baseLamports: bigint): bigint => {
@@ -80,7 +95,7 @@ export async function calculateAirdropFeeLamports(params: {
         const min = toLamportsSOL(data.claimFeeDynamic.minPrice);
         const max = toLamportsSOL(data.claimFeeDynamic.maxPrice);
         const factor = Math.max(0, Math.min(1, parseFloat(data.claimFeeDynamic.allocationFactor)));
-        const fee = BigInt(Math.floor(Number(claimableLamports) * factor));
+        const fee = multiplyBigIntByNumber(claimableLamports, factor);
         if (fee < min) return min;
         if (fee > max) return max;
         return fee;
@@ -110,19 +125,28 @@ export function calculateClaimableLamportsFromPrices(params: {
   solDecimals?: number; // default 9
 }): bigint {
   const {
-    claimableAmount: claimableAmountBaseUnits,
+    claimableAmount,
     tokenPriceUsd,
     solPriceUsd,
     tokenDecimals,
     solDecimals = 9,
   } = params;
   if (tokenPriceUsd <= 0 || solPriceUsd <= 0) return 0n;
-  const decimalsDiff = BigInt(Math.max(0, solDecimals - tokenDecimals));
-  const scaled = claimableAmountBaseUnits * BigInt(10) ** decimalsDiff;
-  const usdValueScaled = BigInt(Math.floor(Number(scaled) * tokenPriceUsd));
-  // divide by SOL price (avoid floating by scaling first)
-  const lamports = BigInt(Math.floor(Number(usdValueScaled) / solPriceUsd));
-  return lamports;
+
+  // Fixed-point scale uses tokenDecimals (capped) so precision matches token
+  const scaleDigits = Math.min(18, Math.max(0, tokenDecimals));
+  const SCALE = 10n ** BigInt(scaleDigits);
+  const pScaled = multiplyBigIntByNumber(SCALE, tokenPriceUsd, scaleDigits);
+  const sScaled = multiplyBigIntByNumber(SCALE, solPriceUsd, scaleDigits);
+  if (pScaled <= 0n || sScaled <= 0n) return 0n;
+
+  const pow10 = (n: number) => 10n ** BigInt(n);
+
+  // lamports = claimableAmount * 10^solDecimals * P / (10^tokenDecimals * S)
+  const numerator = claimableAmount * pow10(solDecimals) * pScaled;
+  const denominator = pow10(tokenDecimals) * sScaled;
+
+  return numerator / denominator; // floor division
 }
 
 /**
@@ -140,7 +164,7 @@ export function calculateDynamicFeeFromSolParams(params: {
   const minLamports = toLamportsSOL(minPrice, solDecimals);
   const maxLamports = toLamportsSOL(maxPrice, solDecimals);
   const factor = Math.max(0, Math.min(1, parseFloat(allocationFactor)));
-  const raw = BigInt(Math.floor(Number(claimableLamports) * factor));
+  const raw = multiplyBigIntByNumber(claimableLamports, factor);
   if (raw < minLamports) return minLamports;
   if (raw > maxLamports) return maxLamports;
   return raw;
