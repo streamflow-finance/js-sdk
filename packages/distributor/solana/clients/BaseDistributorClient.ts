@@ -370,10 +370,27 @@ export default abstract class BaseDistributorClient {
     if (!feeLamports) {
       try {
         const { mint: mintAccount } = await getMintAndProgram(this.connection, distributor.mint);
+        // Backward-compatible: compute claimable amount if not provided by the caller
+        // Prefer explicit field if present; otherwise default to unlocked + locked inputs
+        const claimableAmountRaw = (data as unknown as {
+          // optional for legacy callers
+          claimableAmount?: BN | bigint | number | string;
+        })?.claimableAmount;
+        // Default legacy fields to 0 when missing
+        const unlockedRaw = (data as unknown as { amountUnlocked?: BN | number | string })?.amountUnlocked;
+        const lockedRaw = (data as unknown as { amountLocked?: BN | number | string })?.amountLocked;
+        const unlocked = unlockedRaw != null ? new BN(unlockedRaw) : new BN(0);
+        const locked = lockedRaw != null ? new BN(lockedRaw) : new BN(0);
+        const computedFallback = unlocked.add(locked);
+        const claimableAmount =
+          claimableAmountRaw != null
+            ? BigInt(claimableAmountRaw.toString())
+            : BigInt(computedFallback.toString());
+
         feeLamports = await resolveAirdropFeeLamportsUsingApi({
           distributorAddress: distributorPublicKey.toBase58(),
           mintAccount,
-          claimableAmount: BigInt(data.claimableAmount.toString()),
+          claimableAmount,
           cluster: this.cluster,
         });
       } catch (_) {
