@@ -1,5 +1,6 @@
 import { type ICluster, multiplyBigIntByNumber, fetchTokenPrice } from "@streamflow/common";
 import type { Mint } from "@solana/spl-token";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 import { fetchAirdropFee } from "./fetchAirdropFee.js";
 
@@ -56,9 +57,6 @@ const defaultAPIFeesResponse: AirdropFeeServiceResponse = {
     ),
   },
 } as const;
-
-export const toBigInt = (v: string | number | bigint | undefined): bigint | undefined =>
-  v === undefined ? undefined : BigInt(v);
 
 export const toLamportsSOL = (value: string | number | bigint, solDecimals = 9): bigint => {
   const y = typeof value === "bigint" ? Number(value) : typeof value === "string" ? Number(value) : value;
@@ -183,7 +181,7 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
   let tokenPrice = null;
   try {
     [solPrice, tokenPrice] = await Promise.all([
-        fetchTokenPrice("So11111111111111111111111111111111111111112", cluster),
+        fetchTokenPrice(NATIVE_MINT.toBase58(), cluster),
         fetchTokenPrice(mintAccount.address.toBase58(), cluster),
     ]);
   } catch (_) {

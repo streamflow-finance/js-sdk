@@ -15,7 +15,7 @@ export interface AirdropFeeQueryOptionsOverrides {
   gcTimeMs?: number;
   retry?: number | boolean;
   refetchOnWindowFocus?: boolean;
-}
+}   
 
 export const fetchAirdropFee = async (
   distributorId: string,
