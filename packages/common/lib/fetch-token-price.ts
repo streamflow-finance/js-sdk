@@ -1,10 +1,10 @@
 import { ICluster } from "../types.js";
 
 export type TokensPricesResponse = {
-  data: Record<string, { id: string; value: number | undefined }>;
+  data: Record<string, TokenPriceResult>;
 };
 
-export type TokenPriceResult = { id: string; value: number | null };
+export type TokenPriceResult = { id: string; value: number | undefined };
 
 export interface FetchTokenPriceOptions {
   fetchImpl?: typeof fetch;
@@ -34,7 +34,7 @@ export const fetchTokenPrice = async (
     }
     const json = (await res.json()) as TokensPricesResponse;
     const entry = json?.data?.[mintId];
-    return { id: mintId, value: typeof entry?.value === "number" ? entry.value : null };
+    return { id: mintId, value: typeof entry?.value === "number" ? entry.value : undefined };
   } finally {
     if (timeout) clearTimeout(timeout);
   }

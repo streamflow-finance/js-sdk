@@ -1,7 +1,23 @@
-import { type ICluster, multiplyBigIntByNumber } from "@streamflow/common";
+import { type ICluster, multiplyBigIntByNumber, fetchTokenPrice } from "@streamflow/common";
 import type { Mint } from "@solana/spl-token";
 
 import { fetchAirdropFee } from "./fetchAirdropFee.js";
+
+export type AirdropFeeDynamic = {
+  minPrice: string;
+  maxPrice: string;
+  allocationFactor: string; // 0..1 in string
+};
+
+export type AirdropFeeServiceResponse = {
+  isCustom?: boolean;
+  claimFee?: string | number; // SOL units as string/number
+  claimFeeDynamic?: AirdropFeeDynamic;
+};
+
+export type AirdropFeeClient = {
+  getAirdropFee: (distributorAddress: string) => Promise<{ data?: AirdropFeeServiceResponse }>;
+};
 
 export const MAXIMUM_FEE_FALLBACK = 9_900_000n; // 0.0099 SOL
 export const MINIMUM_FEE_FALLBACK = 5_000_000n; // 0.005 SOL
@@ -40,22 +56,6 @@ const defaultAPIFeesResponse: AirdropFeeServiceResponse = {
     ),
   },
 } as const;
-
-export type AirdropFeeDynamic = {
-  minPrice: string;
-  maxPrice: string;
-  allocationFactor: string; // 0..1 in string
-};
-
-export type AirdropFeeServiceResponse = {
-  isCustom?: boolean;
-  claimFee?: string | number; // SOL units as string/number
-  claimFeeDynamic?: AirdropFeeDynamic;
-};
-
-export type AirdropFeeClient = {
-  getAirdropFee: (distributorAddress: string) => Promise<{ data?: AirdropFeeServiceResponse }>;
-};
 
 export const toBigInt = (v: string | number | bigint | undefined): bigint | undefined =>
   v === undefined ? undefined : BigInt(v);
@@ -124,13 +124,7 @@ export function calculateClaimableLamportsFromPrices(params: {
   tokenDecimals: number;
   solDecimals?: number; // default 9
 }): bigint {
-  const {
-    claimableAmount,
-    tokenPriceUsd,
-    solPriceUsd,
-    tokenDecimals,
-    solDecimals = 9,
-  } = params;
+  const { claimableAmount, tokenPriceUsd, solPriceUsd, tokenDecimals, solDecimals = 9 } = params;
   if (tokenPriceUsd <= 0 || solPriceUsd <= 0) return 0n;
 
   // Fixed-point scale uses tokenDecimals (capped) so precision matches token
@@ -170,27 +164,13 @@ export function calculateDynamicFeeFromSolParams(params: {
   return raw;
 }
 
-async function fetchTokenPriceUsd(
-  mintId: string,
-  cluster: ICluster,
-  fetchFn: typeof fetch = fetch,
-): Promise<number | null> {
-  const url = `https://token-api.streamflow.finance/price?ids=${encodeURIComponent(mintId)}&cluster=${encodeURIComponent(cluster)}`;
-  const res = await fetchFn(url, { headers: { "Content-Type": "application/json" } });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { data?: Record<string, { id: string; value?: number }> };
-  const val = json?.data?.[mintId]?.value;
-  return typeof val === "number" ? val : null;
-}
-
 export async function resolveAirdropFeeLamportsUsingApi(params: {
   distributorAddress: string;
   mintAccount: Mint;
   claimableAmount: bigint;
   cluster: ICluster;
-  fetchFn?: typeof fetch;
 }): Promise<bigint> {
-  const { distributorAddress, mintAccount, claimableAmount, cluster, fetchFn } = params;
+  const { distributorAddress, mintAccount, claimableAmount, cluster } = params;
   let apiFeesResponse = undefined;
 
   try {
@@ -203,8 +183,8 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
   let tokenPrice = null;
   try {
     [solPrice, tokenPrice] = await Promise.all([
-      fetchTokenPriceUsd("So11111111111111111111111111111111111111112", cluster, fetchFn),
-      fetchTokenPriceUsd(mintAccount.address.toBase58(), cluster, fetchFn),
+        fetchTokenPrice("So11111111111111111111111111111111111111112", cluster),
+        fetchTokenPrice(mintAccount.address.toBase58(), cluster),
     ]);
   } catch (_) {
     // ignore and fallback
@@ -218,14 +198,14 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
 
   const claimFeeDynamic = response?.claimFeeDynamic ?? defaultAPIFeesResponse.claimFeeDynamic;
 
-  if (!tokenPrice || !solPrice) {
+  if (!tokenPrice?.value || !solPrice?.value) {
     return MINIMUM_FEE_FALLBACK;
   }
 
   const baseLamports = calculateClaimableLamportsFromPrices({
     claimableAmount: claimableAmount,
-    tokenPriceUsd: tokenPrice,
-    solPriceUsd: solPrice,
+    tokenPriceUsd: tokenPrice.value,
+    solPriceUsd: solPrice.value,
     tokenDecimals: mintAccount.decimals,
   });
 
