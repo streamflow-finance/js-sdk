@@ -8,7 +8,15 @@
       "pattern": "./packages/*/"
     }
   ],
-  "cSpell.words": ["Blockhash", "merkle", "permissionless", "Solana", "Streamflow", "Unstake"],
+  "cSpell.words": [
+    "Blockhash",
+    "lamports",
+    "merkle",
+    "permissionless",
+    "Solana",
+    "Streamflow",
+    "Unstake"
+  ],
   "typescript.tsdk": "node_modules/typescript/lib",
   "javascript.preferences.importModuleSpecifierEnding": "js",
   "typescript.preferences.importModuleSpecifierEnding": "js",

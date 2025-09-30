@@ -61,3 +61,22 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export const divCeilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigInt(1) : BigInt(0));
+
+/**
+ * Multiply a bigint by a JS number using string-based fixed-point to avoid overflow/precision issues.
+ * Returns floor(x * y).
+ */
+export function multiplyBigIntByNumber(x: bigint, y: number, scaleDigits = 9): bigint {
+  if (!Number.isFinite(y) || y === 0) return 0n;
+  const isNegative = (x < 0n) !== (y < 0);
+  const absX = x < 0n ? -x : x;
+  const absY = Math.abs(y);
+
+  const s = absY.toFixed(scaleDigits);
+  const [intPart, fracPartRaw = ""] = s.split(".");
+  const fracPart = fracPartRaw.padEnd(scaleDigits, "0").slice(0, scaleDigits);
+  const yScaled = BigInt(intPart + fracPart); // absY * 10^scaleDigits
+  const scale = 10n ** BigInt(scaleDigits);
+  const product = (absX * yScaled) / scale;
+  return isNegative ? -product : product;
+}

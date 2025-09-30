@@ -34,6 +34,7 @@ import {
   DISTRIBUTOR_PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "../constants.js";
+import { MINIMUM_FEE_FALLBACK, resolveAirdropFeeLamportsUsingApi } from "../fees.js";
 import MerkleDistributorIDL from "../descriptor/idl/merkle_distributor.json";
 import type { MerkleDistributor as MerkleDistributorProgramType } from "../descriptor/merkle_distributor.js";
 import { MerkleDistributor } from "../generated/accounts/index.js";
@@ -90,6 +91,8 @@ export default abstract class BaseDistributorClient {
 
   public merkleDistributorProgram: Program<MerkleDistributorProgramType>;
 
+  protected cluster: ICluster;
+
   public constructor({
     clusterUrl,
     cluster = ICluster.Mainnet,
@@ -99,6 +102,7 @@ export default abstract class BaseDistributorClient {
     sendThrottler,
   }: IInitOptions) {
     this.commitment = commitment;
+    this.cluster = cluster;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
@@ -360,12 +364,40 @@ export default abstract class BaseDistributorClient {
       ixs.push(claimLocked(accounts, this.programId));
     }
 
-    ixs.push(
-      this.prepareClaimFeeInstruction(
-        extParams.feePayer ?? extParams.invoker.publicKey,
-        typeof _serviceTransfer === "bigint" ? _serviceTransfer : undefined,
-      ),
-    );
+    // Determine fee: prefer service internal (if provided by service), else fetch params from API
+    // and compute dynamically through resolver, else default minimum
+    let feeLamports = typeof _serviceTransfer === "bigint" ? _serviceTransfer : undefined;
+    if (!feeLamports) {
+      try {
+        const { mint: mintAccount } = await getMintAndProgram(this.connection, distributor.mint);
+        // Backward-compatible: compute claimable amount if not provided by the caller
+        // Prefer explicit field if present; otherwise default to unlocked + locked inputs
+        const claimableAmountRaw = (data as unknown as {
+          // optional for legacy callers
+          claimableAmount?: BN | bigint | number | string;
+        })?.claimableAmount;
+        // Default legacy fields to 0 when missing
+        const unlockedRaw = (data as unknown as { amountUnlocked?: BN | number | string })?.amountUnlocked;
+        const lockedRaw = (data as unknown as { amountLocked?: BN | number | string })?.amountLocked;
+        const unlocked = unlockedRaw != null ? new BN(unlockedRaw) : new BN(0);
+        const locked = lockedRaw != null ? new BN(lockedRaw) : new BN(0);
+        const computedFallback = unlocked.add(locked);
+        const claimableAmount =
+          claimableAmountRaw != null
+            ? BigInt(claimableAmountRaw.toString())
+            : BigInt(computedFallback.toString());
+
+        feeLamports = await resolveAirdropFeeLamportsUsingApi({
+          distributorAddress: distributorPublicKey.toBase58(),
+          mintAccount,
+          claimableAmount,
+          cluster: this.cluster,
+        });
+      } catch (_) {
+        feeLamports = MINIMUM_FEE_FALLBACK;
+      }
+    }
+    ixs.push(this.prepareClaimFeeInstruction(extParams.feePayer ?? extParams.invoker.publicKey, feeLamports));
 
     return ixs;
   }

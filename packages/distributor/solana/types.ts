@@ -102,6 +102,7 @@ export interface IClaimData {
 
   amountUnlocked: BN;
   amountLocked: BN;
+  claimableAmount: BN;
   proof: Array<Array<number>>;
 }
 
