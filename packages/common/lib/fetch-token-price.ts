@@ -39,29 +39,3 @@ export const fetchTokenPrice = async (
     if (timeout) clearTimeout(timeout);
   }
 };
-
-export interface TokenPriceQueryOptionsOverrides {
-  staleTimeMs?: number;
-  gcTimeMs?: number;
-  retry?: number | boolean;
-  refetchOnWindowFocus?: boolean;
-}
-
-export function getTokenPriceQueryOptions(
-  mintId: string,
-  cluster: ICluster = ICluster.Mainnet,
-  options?: FetchTokenPriceOptions & TokenPriceQueryOptionsOverrides,
-) {
-  const { staleTimeMs = 60_000, gcTimeMs = 300_000, retry = 2, refetchOnWindowFocus = false, ...rest } =
-    options ?? {};
-  const key = ["sf", "price", cluster, mintId];
-  return {
-    queryKey: key,
-    queryFn: () => fetchTokenPrice(mintId, cluster, rest),
-    staleTime: staleTimeMs,
-    gcTime: gcTimeMs,
-    retry,
-    refetchOnWindowFocus,
-  };
-}
-
