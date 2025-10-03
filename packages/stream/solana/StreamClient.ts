@@ -404,7 +404,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
-    invariant(!priceOracle && oracleType && oracleType !== "none", "Price oracle is required for the specified oracle type" );
+    invariant(priceOracle || !oracleType || oracleType === "none", "Price oracle is required for the specified oracle type" );
     assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
     const recipientPublicKey = new PublicKey(recipient);
