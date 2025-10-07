@@ -73,41 +73,12 @@ const solanaClient = new StreamflowSolana.SolanaStreamClient(
   "https://api.mainnet-beta.solana.com"
 );
 
-// Aptos
-import { StreamflowAptos } from "@streamflow/stream";
-const aptosClient = new StreamflowAptos.AptosStreamClient(
-  "https://fullnode.mainnet.aptoslabs.com/v1"
-);
-
-// Sui
-import { StreamflowSui } from "@streamflow/stream";
-const suiClient = new StreamflowSui.SuiStreamClient(
-  "https://fullnode.testnet.sui.io:443"
-);
-```
-
-### Generic Stream Client
-
-GenericStreamClient provides an isomorphic interface to work with streams agnostic of chain.
-
-```javascript
-import { GenericStreamClient } from "@streamflow/stream";
-
-const client = new GenericStreamClient<Types.IChain.Solana>({
-  chain: IChain.Solana, // Blockchain
-  clusterUrl: "https://api.mainnet-beta.solana.com", // RPC cluster URL
-  cluster: ICluster.Mainnet, // (optional) (default: Mainnet)
-  // ...rest chain specific params e.g. commitment for Solana
-});
-```
 
 ## Chain-specific Parameters
 
 Each method requires chain-specific parameters. Here are the common patterns:
 These are defined in:
 - [Solana Types](./solana/types.ts) 
-- [Aptos Types](./aptos/types.ts) 
-- [Sui Types](./sui/types.ts) 
 
 ```javascript
 // Solana parameters for Create 
@@ -120,18 +91,6 @@ const solanaCreateParams = {
 const solanaInteractParams = {
   invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction, can be only PublicKey if you are not using the client to initiate the signing and execution of the transaction
   isNative: false // [optional] Whether Stream should be paid with Solana native token (wSOL)
-};
-
-// Aptos parameters
-const aptosParams = {
-  senderWallet: wallet, // AptosWalletAdapter Wallet of sender
-  tokenId: "0x1::aptos_coin::AptosCoin" // Aptos Coin type
-};
-
-// Sui parameters
-const suiParams = {
-  senderWallet: wallet, // WalletContextState | Keypair
-  tokenId: "0x2::sui::SUI" // Sui token type
 };
 ```
 
@@ -517,16 +476,6 @@ Streamflow protocol program IDs
 | ------- | -------------------------------------------- |
 | Devet   | HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ |
 | Mainnet | strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m  |
-
-| Aptos   |                                                                    |
-| ------- | ------------------------------------------------------------------ |
-| Testnet | 0xc6737de143d91b2f99a7e490d4f8348fdfa3bdd1eb8737a27d0455f8a3625688 |
-| Mainnet | 0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0 |
-
-| Sui     |                                                                    |
-| ------- | ------------------------------------------------------------------ |
-| Testnet | 0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a |
-| Mainnet | 0xa283fd6b45f1103176e7ae27e870c89df7c8783b15345e2b13faa81ec25c4fa6 |
 
 **All BN amounts are denominated in their smallest units.**
 
