@@ -1,15 +1,12 @@
 import type { Address } from "@coral-xyz/anchor";
 import type { PublicKey, TransactionInstruction, Commitment, ConnectionConfig } from "@solana/web3.js";
-import type { IChain, ICluster } from "@streamflow/common";
+import type { ICluster } from "@streamflow/common";
 import type BN from "bn.js";
-import type { Signer } from "ethers";
 import type { default as PQueue } from "p-queue";
 
-import type { Types } from "aptos";
 
-import type { ISuiIdParameters } from "../sui/index.js";
 
-export { ContractError, IChain, ICluster } from "@streamflow/common";
+export { ContractError, ICluster } from "@streamflow/common";
 
 export interface IRecipient {
   recipient: string;
@@ -115,7 +112,7 @@ export interface ICreateMultiError {
 type MetadataId = string;
 
 export interface ITransactionResult {
-  ixs: (TransactionInstruction | Types.TransactionPayload)[];
+  ixs: TransactionInstruction[];
   txId: string;
 }
 
@@ -379,7 +376,6 @@ export interface SolanaTransactionSchedulingOptions {
  * @interface
  */
 export interface SolanaStreamClientOptions {
-  chain: IChain.Solana;
   clusterUrl: string;
   cluster?: ICluster;
   programId?: string;
@@ -387,36 +383,4 @@ export interface SolanaStreamClientOptions {
   sendRate?: number;
   sendThrottler?: PQueue;
   sendScheduler?: PQueue | SolanaTransactionSchedulingOptions;
-}
-
-/**
- * @interface
- */
-export interface AptosStreamClientOptions {
-  chain: IChain.Aptos;
-  clusterUrl: string;
-  cluster?: ICluster;
-  programId?: string;
-  maxGas?: string;
-}
-
-/**
- * @interface
- */
-export interface EvmStreamClientOptions {
-  chain: IChain.Ethereum | IChain.BNB | IChain.Polygon;
-  clusterUrl: string;
-  signer: Signer;
-  cluster?: ICluster;
-  programId?: string;
-}
-
-/**
- * @interface
- */
-export interface SuiStreamClientOptions {
-  chain: IChain.Sui;
-  clusterUrl: string;
-  cluster?: ICluster;
-  ids?: ISuiIdParameters;
 }

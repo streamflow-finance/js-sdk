@@ -13,15 +13,6 @@ export enum ICluster {
   Local = "local",
 }
 
-export enum IChain {
-  Solana = "Solana",
-  Aptos = "Aptos",
-  Ethereum = "Ethereum",
-  BNB = "BNB",
-  Polygon = "Polygon",
-  Sui = "Sui",
-}
-
 /**
  * Error wrapper for calls made to the contract on chain
  */
