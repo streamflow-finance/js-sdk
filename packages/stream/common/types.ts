@@ -4,8 +4,6 @@ import type { ICluster } from "@streamflow/common";
 import type BN from "bn.js";
 import type { default as PQueue } from "p-queue";
 
-
-
 export { ContractError, ICluster } from "@streamflow/common";
 
 export interface IRecipient {
@@ -183,8 +181,6 @@ export enum ContractErrorCode {
   EPAUSED = "EPAUSED",
   /** Contract is not paused */
   ENOTPAUSED = "ENOTPAUSED",
-  /** Aptos: user opt out from direct coin transfers feature and has not coin wallet registered */
-  ENO_RECIPIENT_COIN_ADDRESS = "ENO_RECIPIENT_COIN_ADDRESS",
 }
 
 // Base types, implemented by each chain package

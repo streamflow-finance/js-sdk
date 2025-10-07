@@ -10,7 +10,7 @@ import { getNumberFromBN } from "../common/utils.js";
 import type { StreamflowAlignedUnlocks as AlignedUnlocksIDL } from "./descriptor/streamflow_aligned_unlocks.js";
 import { ALIGNED_PRECISION_FACTOR_POW } from "./constants.js";
 
-export { IChain, ICluster, ContractError } from "@streamflow/common";
+export { ICluster, ContractError } from "@streamflow/common";
 
 type AlignedUnlocksTypes = IdlTypes<AlignedUnlocksIDL>;
 type AlignedUnlocksAccounts = IdlAccounts<AlignedUnlocksIDL>;
