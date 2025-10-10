@@ -140,7 +140,7 @@ const suiParams = {
 
 ## Create a Vesting Stream
 
-Vesting Streams are a type of Stream used to linearly unlock a given amount of tokens over a period of time. You can specify the amount, cliff, start time and releasePeriod along with other configuration that controls who can transfer or cancel the contract. For a Stream to be considered Vesting in the Streamflow App it has to match the criteria from the `isVesting` helper function (or `buildStreamType` returns `StreamType.Vesting`). The stream must not allow top-ups, the cliff amount must not be too close to the total amount and it must not be a Dynamic token lock.
+Vesting Streams are a type of Stream used to linearly unlock a given amount of tokens over a period of time. You can specify the amount, cliff, start time and releasePeriod along with other configuration that controls who can transfer or cancel the contract. For a Stream to be considered Vesting in the Streamflow App it has to match the criteria from the `isVesting` helper function (or `buildStreamType` returns `StreamType.Vesting`). The cliff amount must not be too close to the total amount and it must not be a Dynamic token lock.
 
 For more details creating a Stream with arbitrary configuration see [General Stream creation](#general-stream-creation).
 For creating multiple Streams at once see [Create Multiple Streams](#create-multiple-streams-at-once).
@@ -472,7 +472,7 @@ console.log(remaining);
 ```javascript
 const data: IGetAllData = {
   address: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99",
-  type: StreamType.All, // StreamType.Vesting, StreamType.Lock, StreamType.Payment
+  type: StreamType.All, // StreamType.Vesting, StreamType.Lock
   direction: StreamDirection.All, // StreamDirection.Outgoing, StreamDirection.Incoming
 };
 
