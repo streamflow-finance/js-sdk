@@ -1,13 +1,13 @@
 import type { Connection, VersionedTransaction } from "@solana/web3.js";
 
-import type { IInteractSolanaExt, ITransactionSolanaExtResolved, ComputeLimitEstimate } from "../types.js";
+import type { IInteractExt, ITransactionExtResolved, ComputeLimitEstimate } from "../types.js";
 import { estimateConsumeLimit } from "../rpc/consume-limit-estimate/estimate.js";
 
-type UnwrapAutoSimulate<T extends IInteractSolanaExt = IInteractSolanaExt> = Omit<T, "computeLimit"> & {
+type UnwrapAutoSimulate<T extends IInteractExt = IInteractExt> = Omit<T, "computeLimit"> & {
   skipSimulation: boolean;
-  computeLimit?: ITransactionSolanaExtResolved["computeLimit"];
+  computeLimit?: ITransactionExtResolved["computeLimit"];
 };
-export const unwrapExecutionParams = <T extends IInteractSolanaExt>(
+export const unwrapExecutionParams = <T extends IInteractExt>(
   { computeLimit, ...rest }: T,
   connection: Connection,
 ): UnwrapAutoSimulate<T> => {

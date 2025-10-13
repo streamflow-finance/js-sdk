@@ -4,7 +4,7 @@ import { TransactionInstruction } from "@solana/web3.js";
 import type BN from "bn.js";
 
 import * as Layout from "./layout.js";
-import type { IUpdateData } from "../common/types.js";
+import type { IUpdateData } from "./types.js";
 
 const sha256 = {
   digest: async (data: string): Promise<Uint8Array> => {

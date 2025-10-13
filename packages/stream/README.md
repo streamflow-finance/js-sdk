@@ -55,16 +55,16 @@ Most common imports:
 
 ```javascript
 import { BN } from "bn.js";
-import { GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
+import { getBN, getNumberFromBN } from "@streamflow/stream";
 ```
 
 _Check the SDK for other types and utility functions._
 
 ## Create StreamClient instance
 
-Before creating and manipulating streams, a chain-specific or generic StreamClient instance must be created. All stream functions are methods on this instance.
+Before creating and manipulating streams, a Solana client instance must be created. All stream functions are methods on this instance.
 
-### Chain-specific clients
+### Solana client
 
 ```javascript
 // Solana
@@ -74,9 +74,9 @@ const solanaClient = new StreamflowSolana.SolanaStreamClient(
 );
 
 
-## Chain-specific Parameters
+## Universal parameters
 
-Each method requires chain-specific parameters. Here are the common patterns:
+Each method requires some shared parameters. Here are the common patterns:
 These are defined in:
 - [Solana Types](./solana/types.ts) 
 
@@ -241,7 +241,6 @@ const createStreamParams: Types.ICreateStreamData = {
   partner: undefined, //  (optional) Partner's wallet address (string | undefined).
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { ixs, tx, metadata } = await client.create(createStreamParams, solanaCreateParams);
 } catch (exception) {
@@ -329,8 +328,7 @@ const topupStreamParams: ITopUpData = {
   amount: getBN(100, 9), // Specified amount to topup (increases deposited amount).
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
-// Note: For Solana, you can add isNative: true for wSOL streams
+// Note: You can add isNative: true for wSOL streams to the solanaInteractParams
 try {
   const { ixs, tx } = await client.topup(topupStreamParams, solanaInteractParams);
 } catch (exception) {
@@ -346,7 +344,6 @@ const data: ITransferData = {
   newRecipient: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier (address) of a stream to be transferred.
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { tx } = await client.transfer(data, solanaInteractParams);
 } catch (exception) {
@@ -361,7 +358,6 @@ const cancelStreamParams: ICancelData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { ixs, tx } = await client.cancel(cancelStreamParams, solanaInteractParams);
 } catch (exception) {
@@ -379,7 +375,6 @@ const updateStreamParams: IUpdateData = {
   amountPerPeriod: getBN(10, 9),  // [optional], allows to update release amount effective on next unlock
 }
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { ixs, tx } = await client.update(updateStreamParams, solanaInteractParams);
 } catch (exception) {

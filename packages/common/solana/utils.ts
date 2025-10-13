@@ -33,7 +33,7 @@ import {
   type Account,
   type AtaParams,
   type ConfirmationParams,
-  type ITransactionSolanaExt,
+  type ITransactionExt,
   type ThrottleParams,
   type TransactionExecutionParams,
   TransactionFailedError,
@@ -569,7 +569,7 @@ export async function checkOrCreateAtaBatch(
  */
 export function prepareBaseInstructions(
   connection: Connection,
-  { computePrice, computeLimit }: ITransactionSolanaExt,
+  { computePrice, computeLimit }: ITransactionExt,
 ): TransactionInstruction[] {
   const ixs: TransactionInstruction[] = [];
 

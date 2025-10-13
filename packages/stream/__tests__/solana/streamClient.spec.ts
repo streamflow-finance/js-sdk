@@ -3,7 +3,7 @@ import { describe, expect, test, beforeEach, vi } from "vitest";
 import { PublicKey, type VersionedTransaction } from "@solana/web3.js";
 
 import { SolanaStreamClient } from "../../solana/StreamClient.js";
-import { ICluster } from "../../common/types.js";
+import { ICluster } from "../../solana/types.js";
 
 // Mock Web Crypto API for Node.js test environment
 Object.defineProperty(globalThis, "crypto", {
@@ -74,6 +74,7 @@ vi.mock("../../solana/lib/utils.js", () => ({
   signAllTransactionWithRecipients: vi.fn(),
   sendAndConfirmStreamRawTransaction: vi.fn(),
   extractSolanaErrorCode: vi.fn(),
+  calculateTotalAmountToDeposit: vi.fn(),
 }));
 
 describe("SolanaStreamClient Transaction Builders", async () => {

@@ -7,7 +7,8 @@ import {
   type Stream,
   StreamType,
 } from "./types.js";
-import { MAX_SAFE_UNIX_TIME_VALUE } from "./constants.js";
+
+const MAX_SAFE_UNIX_TIME_VALUE = 8640000000000;
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;

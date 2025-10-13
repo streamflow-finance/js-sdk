@@ -1,7 +1,7 @@
 import type { TransactionInstruction } from "@solana/web3.js";
 
 import { invariant } from "../../lib/assertions.js";
-import type { ComputePriceEstimate, IInteractSolanaExt, ITransactionSolanaExtResolved } from "../types.js";
+import type { ComputePriceEstimate, IInteractExt, ITransactionExtResolved } from "../types.js";
 import { createVersionedTransaction } from "../utils.js";
 import { pk } from "./public-key.js";
 import { resolveTransactionAccounts } from "./deserialize-raw-transaction.js";
@@ -23,12 +23,12 @@ export async function estimateComputeUnitPrice(
 }
 
 export async function createAndEstimateTransaction<
-  ParamsT extends ITransactionSolanaExtResolved<IInteractSolanaExt>,
+  ParamsT extends ITransactionExtResolved<IInteractExt>,
   CreateFn extends (extParams: ParamsT) => Promise<TransactionInstruction[]>,
 >(createFn: CreateFn, extParams: ParamsT): Promise<Awaited<ReturnType<CreateFn>>>;
 
 export async function createAndEstimateTransaction<
-  ParamsT extends ITransactionSolanaExtResolved<IInteractSolanaExt>,
+  ParamsT extends ITransactionExtResolved<IInteractExt>,
   CreateFn extends (extParams: ParamsT) => Promise<any>,
 >(
   createFn: CreateFn,
@@ -37,7 +37,7 @@ export async function createAndEstimateTransaction<
 ): Promise<Awaited<ReturnType<CreateFn>>>;
 
 export async function createAndEstimateTransaction<
-  ParamsT extends ITransactionSolanaExtResolved<IInteractSolanaExt>,
+  ParamsT extends ITransactionExtResolved<IInteractExt>,
   CreateFn extends (extParams: ParamsT) => Promise<any>,
 >(
   createFn: CreateFn,

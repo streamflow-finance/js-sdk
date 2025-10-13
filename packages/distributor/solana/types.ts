@@ -1,7 +1,7 @@
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type { Keypair, PublicKey } from "@solana/web3.js";
 import { type ITransactionResult } from "@streamflow/common";
-import { type ITransactionSolanaExt } from "@streamflow/common/solana";
+import { type ITransactionExt } from "@streamflow/common/solana";
 import type BN from "bn.js";
 import { type IdlTypes } from "@coral-xyz/anchor";
 
@@ -31,11 +31,11 @@ export type OracleType = IdlTypes<AlignedDistributorIDL>["oracleType"];
 
 export type OracleTypeName = "none" | "pyth" | "switchboard" | "test";
 
-export interface IInteractSolanaExt extends ITransactionSolanaExt {
+export interface IInteractExt extends ITransactionExt {
   invoker: SignerWalletAdapter | Keypair;
 }
 
-export interface ICreateSolanaExt extends IInteractSolanaExt {
+export interface ICreateExt extends IInteractExt {
   isNative?: boolean;
 }
 
