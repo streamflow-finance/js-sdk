@@ -219,6 +219,10 @@ export class SolanaStreamClient extends BaseStreamClient {
     return this.programId.toBase58();
   }
 
+  public getAlignedProxyProgramId(): string {
+    return this.alignedProxyProgram.programId.toBase58();
+  }
+
   /**
    * Builds transaction instructions for creating a new stream/vesting contract without creating a transaction.
    * All fees are paid by sender (escrow metadata account rent, escrow token account rent, recipient's associated token account rent, Streamflow's service fee).
@@ -1757,6 +1761,14 @@ extParams);
     return extractSolanaErrorCode(err.toString() ?? "Unknown error!", logs);
   }
 
+    /**
+   * Utility function that checks whether the associated stream address is an aligned unlock contract, indicated by whether the sender/creator is a PDA
+   */
+    public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
+      const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
+      return senderPublicKey.equals(pda);
+    }
+
   /**
    * Utility function to generate metadata for a Contract or return existing Pubkey
    */
@@ -1772,14 +1784,6 @@ extParams);
     }
 
     return { metadata, metadataPubKey };
-  }
-
-  /**
-   * Utility function that checks whether the associated stream address is an aligned unlock contract, indicated by whether the sender/creator is a PDA
-   */
-  private isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
-    const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
-    return senderPublicKey.equals(pda);
   }
 
   /**
