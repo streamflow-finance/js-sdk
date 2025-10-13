@@ -1,7 +1,7 @@
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type { PublicKey, Keypair, VersionedTransaction, TransactionInstruction, AccountInfo, Commitment, ConnectionConfig } from "@solana/web3.js";
 import { getNumberFromBN } from "@streamflow/common";
-import type { ITransactionExt, type ICluster } from "@streamflow/common";
+import type { ITransactionExt, ICluster } from "@streamflow/common";
 import type BN from "bn.js";
 import { type IdlAccounts, type IdlTypes, type Address } from "@coral-xyz/anchor";
 import type { default as PQueue } from "p-queue";
