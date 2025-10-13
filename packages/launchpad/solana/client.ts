@@ -20,7 +20,7 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
   prepareBaseInstructions,
-} from "@streamflow/common/solana";
+} from "@streamflow/common";
 import {  
   type OracleType,
   deriveTestOraclePDA,
@@ -31,7 +31,7 @@ import {
   FEE_ORACLE_PUBLIC_KEY,
   WITHDRAWOR_PUBLIC_KEY,
   PROGRAM_ID as STREAM_PROGRAM_ID,
-} from "@streamflow/stream/solana";
+} from "@streamflow/stream";
 import BN from "bn.js";
 import type PQueue from "p-queue";
 

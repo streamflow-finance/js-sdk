@@ -22,7 +22,7 @@ import {
   unwrapExecutionParams,
   type IProgramAccount,
   type ITransactionExtResolved,
-} from "@streamflow/common/solana";
+} from "@streamflow/common";
 import BN from "bn.js";
 import bs58 from "bs58";
 import type PQueue from "p-queue";

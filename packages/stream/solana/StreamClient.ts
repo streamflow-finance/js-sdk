@@ -35,7 +35,7 @@ import {
   type IProgramAccount,
   type ThrottleParams,
   getMultipleAccountsInfoBatched,
-} from "@streamflow/common/solana";
+} from "@streamflow/common";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
 import { getBN, assertHasPublicKey, invariant } from "@streamflow/common";

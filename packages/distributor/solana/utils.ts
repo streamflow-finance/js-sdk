@@ -1,7 +1,7 @@
 import { type TransferFeeConfig } from "@solana/spl-token";
 import { type Connection, PublicKey } from "@solana/web3.js";
 import { ContractError, divCeilN } from "@streamflow/common";
-import { signAndExecuteTransaction } from "@streamflow/common/solana";
+import { signAndExecuteTransaction } from "@streamflow/common";
 import { Buffer } from "buffer";
 
 import {

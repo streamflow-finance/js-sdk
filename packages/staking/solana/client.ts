@@ -19,7 +19,7 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
   unwrapExecutionParams,
-} from "@streamflow/common/solana";
+} from "@streamflow/common";
 import type PQueue from "p-queue";
 import BN from "bn.js";
 

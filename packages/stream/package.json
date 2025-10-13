@@ -22,14 +22,6 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.cjs"
     },
-    "./solana": {
-      "types": {
-        "import": "./dist/esm/solana/index.d.ts",
-        "require": "./dist/cjs/solana/index.d.cts"
-      },
-      "import": "./dist/esm/solana/index.js",
-      "require": "./dist/cjs/solana/index.cjs"
-    },
     "./solana/idl/streamflow_aligned_unlocks.json": {
       "import": "./dist/esm/solana/descriptor/idl/streamflow_aligned_unlocks.json",
       "require": "./dist/esm/solana/descriptor/idl/streamflow_aligned_unlocks.json",

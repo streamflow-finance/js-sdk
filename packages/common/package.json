@@ -16,15 +16,7 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.cjs"
     },
-    "./solana": {
-      "types": {
-        "import": "./dist/esm/solana/index.d.ts",
-        "require": "./dist/cjs/solana/index.d.cts"
-      },
-      "import": "./dist/esm/solana/index.js",
-      "require": "./dist/cjs/solana/index.cjs"
-    },
-    "./solana/rpc": {
+    "./rpc": {
       "types": {
         "import": "./dist/esm/solana/rpc/index.d.ts",
         "require": "./dist/cjs/solana/rpc/index.d.cts"

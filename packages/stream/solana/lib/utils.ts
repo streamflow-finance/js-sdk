@@ -7,12 +7,14 @@ import {
   isSignerKeypair,
   isSignerWallet,
   type ThrottleParams,
-} from "@streamflow/common/solana";
+} from "@streamflow/common";
 import BN from "bn.js";
 
 import { streamLayout } from "../layout.js";
 import { type DecodedStream, type BatchItem, type BatchItemResult, ContractError } from "../types.js";
 import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "../constants.js";
+
+export { getBN, getNumberFromBN } from "@streamflow/common";
 
 const FEE_PRECISION = 4;
 const FEE_NORMALIZER = 10 ** FEE_PRECISION;
