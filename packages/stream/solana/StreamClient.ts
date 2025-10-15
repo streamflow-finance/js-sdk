@@ -1655,9 +1655,7 @@ extParams);
           const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
             deriveContractPDA(this.alignedProxyProgram.programId, pubkey),
           );
-          if (!alignedProxy) {
-            throw new Error("Couldn't get proxy account info.");
-          }
+invariant(alignedProxy, "Couldn't get aligned proxy account info");
           return { publicKey: pubkey, account: new AlignedContract(stream, alignedProxy) };
         }
         return { publicKey: pubkey, account: new Contract(stream) };
