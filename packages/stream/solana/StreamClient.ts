@@ -1648,10 +1648,22 @@ extParams);
       filters,
     });
 
-    return accounts.map(({ pubkey, account }) => ({
-      publicKey: pubkey,
-      account: new Contract(decodeStream(account.data)),
-    }));
+    const mapped = await Promise.all(
+      accounts.map(async ({ pubkey, account }) => {
+        const stream = decodeStream(account.data);
+        if (this.isAlignedUnlock(pubkey, stream.sender)) {
+          const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
+            deriveContractPDA(this.alignedProxyProgram.programId, pubkey),
+          );
+          if (!alignedProxy) {
+            throw new Error("Couldn't get proxy account info.");
+          }
+          return { publicKey: pubkey, account: new AlignedContract(stream, alignedProxy) };
+        }
+        return { publicKey: pubkey, account: new Contract(stream) };
+      }),
+    );
+    return mapped;
   }
 
   /**
