@@ -363,7 +363,7 @@ export class SolanaStreamClient {
   ): Promise<ICreateStreamInstructions> {
     const { ixs, metadata, metadataPubKey } = isCreateAlignedStreamData(streamParams)
       ? await this.prepareCreateAlignedUnlockInstructions(streamParams, extParams)
-      : await this.prepareCreateStreamInstructions(streamParams, extParams);
+      : await this.prepareCreateLinearStreamInstructions(streamParams, extParams);
 
     return { ixs, metadata, metadataPubKey };
   }
@@ -506,7 +506,7 @@ export class SolanaStreamClient {
    * @param {IPrepareCreateStreamExt} extParams - Transaction configuration including sender wallet, metadata keys, and compute settings
    * @returns Create stream instructions
    */
-  public async prepareCreateStreamInstructions(
+  public async prepareCreateLinearStreamInstructions(
     {
       recipient,
       tokenId: mint,
@@ -1199,7 +1199,7 @@ export class SolanaStreamClient {
 
     const ixs = isAlignedUnlock
       ? await this.prepareCancelAlignedUnlockInstructions(cancelData, extParams)
-      : await this.prepareCancelStreamInstructions(cancelData, extParams);
+      : await this.prepareCancelLinearStream(cancelData, extParams);
 
     return ixs;
   }
@@ -1262,7 +1262,7 @@ export class SolanaStreamClient {
    * @param {IPrepareStreamExt} extParams - Transaction configuration including invoker wallet, token account validation, and compute settings
    * @returns Transaction instructions
    */
-  public async prepareCancelStreamInstructions(
+  public async prepareCancelLinearStream(
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamExt,
   ): Promise<TransactionInstruction[]> {
