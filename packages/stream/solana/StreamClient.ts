@@ -408,7 +408,10 @@ export class SolanaStreamClient extends BaseStreamClient {
     } = streamParams;
     const { isNative, sender, computeLimit, computePrice, metadataPubKeys } = extParams;
 
-    invariant(priceOracle || !oracleType || oracleType === "none", "Price oracle is required for the specified oracle type" );
+    invariant(
+      priceOracle || !oracleType || oracleType === "none",
+      "Price oracle is required for the specified oracle type",
+    );
     assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
     const recipientPublicKey = new PublicKey(recipient);
@@ -441,10 +444,10 @@ export class SolanaStreamClient extends BaseStreamClient {
     // We already have getCreateATAInstructions for WSOL and sender address
     // This check avoids sending double create ATA instructions which would cause transaction to fail
     if (recipientPublicKey.toString() !== sender.toString() || !isNative) {
-    ixs.push(
-      ...(await this.getCreateATAInstructions([recipientPublicKey], mintPublicKey, sender, true, tokenProgramId)),
-    );
-  }
+      ixs.push(
+        ...(await this.getCreateATAInstructions([recipientPublicKey], mintPublicKey, sender, true, tokenProgramId)),
+      );
+    }
 
     const encodedUIntArray = new TextEncoder().encode(streamName);
     const streamNameArray = Array.from(encodedUIntArray);
@@ -533,7 +536,6 @@ export class SolanaStreamClient extends BaseStreamClient {
     }: ICreateStreamData,
     { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: IPrepareCreateStreamSolanaExt,
   ): Promise<ICreateStreamInstructions> {
-
     assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
@@ -622,10 +624,7 @@ export class SolanaStreamClient extends BaseStreamClient {
    * @returns Create result
    */
   public async createUnchecked(data: ICreateStreamData, extParams: ICreateStreamSolanaExt): Promise<ICreateResult> {
-
-    const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, 
-      extParams,
-    );
+    const { ixs, metadata, metadataPubKey } = await this.prepareCreateUncheckedInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(
       this.connection,
       ixs,
@@ -820,20 +819,11 @@ export class SolanaStreamClient extends BaseStreamClient {
       });
     }
 
-    const prepareInstructions = await this.getCreateATAInstructions(
-      [partnerPublicKey],
-      mintPublicKey,
-      sender,
-      true,
-    );
+    const prepareInstructions = await this.getCreateATAInstructions([partnerPublicKey], mintPublicKey, sender, true);
 
     if (isNative) {
       const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(
-        this.connection,
-        sender.publicKey,
-        totalDepositedAmount,
-      );
+      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
       prepareInstructions.push(...nativeInstructions);
     }
 
@@ -1094,8 +1084,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
-    const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, 
-extParams);
+    const ixs: TransactionInstruction[] = await this.prepareWithdrawInstructions({ id, amount }, extParams);
 
     const metadata = new PublicKey(id);
     await this.applyCustomAfterInstructions(ixs, customInstructions, metadata);
@@ -1126,7 +1115,6 @@ extParams);
     { id, amount = WITHDRAW_AVAILABLE_AMOUNT }: IWithdrawData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
-
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
@@ -1179,7 +1167,6 @@ extParams);
    * @returns Transaction result
    */
   public async cancel(cancelData: ICancelData, extParams: IInteractStreamSolanaExt): Promise<ITransactionResult> {
-
     const ixs = await this.prepareCancelInstructions(cancelData, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
@@ -1232,7 +1219,6 @@ extParams);
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
-
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
     const streamPublicKey = new PublicKey(id);
@@ -1285,7 +1271,6 @@ extParams);
     { id }: ICancelData,
     { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
-
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
     const streamPublicKey = new PublicKey(id);
@@ -1373,7 +1358,6 @@ extParams);
     { id, newRecipient }: ITransferData,
     { invoker, computePrice, computeLimit = 100001 }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
-
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
@@ -1655,7 +1639,7 @@ extParams);
           const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
             deriveContractPDA(this.alignedProxyProgram.programId, pubkey),
           );
-invariant(alignedProxy, "Couldn't get aligned proxy account info");
+          invariant(alignedProxy, "Couldn't get aligned proxy account info");
           return { publicKey: pubkey, account: new AlignedContract(stream, alignedProxy) };
         }
         return { publicKey: pubkey, account: new Contract(stream) };
@@ -1704,7 +1688,6 @@ invariant(alignedProxy, "Couldn't get aligned proxy account info");
     data: IUpdateData,
     { invoker, computePrice, computeLimit }: IPrepareStreamSolanaExt,
   ): Promise<TransactionInstruction[]> {
-
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
     const streamPublicKey = new PublicKey(data.id);
@@ -1712,17 +1695,34 @@ invariant(alignedProxy, "Couldn't get aligned proxy account info");
 
     invariant(escrow, "Couldn't get account info");
 
+    const { sender: senderPublicKey } = decodeStream(escrow.data);
+    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, senderPublicKey);
+
+    if (isAlignedUnlock && (data.enableAutomaticWithdrawal !== undefined || data.amountPerPeriod !== undefined)) {
+      throw new Error("Automatic withdrawal and rate update are not possible in price-based vesting!");
+    }
+
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
     });
     ixs.push(
-      await updateStreamInstruction(data, this.programId, {
-        authority: invoker.publicKey,
-        metadata: streamPublicKey,
-        withdrawor: WITHDRAWOR_PUBLIC_KEY,
-        systemProgram: SystemProgram.programId,
-      }),
+      await (isAlignedUnlock
+        ? this.alignedProxyProgram.methods
+            .updateContract({
+              transferableBySender: data.transferableBySender ?? null,
+              transferableByRecipient: data.transferableByRecipient ?? null,
+              cancelableBySender: data.cancelableBySender ?? null,
+            })
+            .accounts({ sender: invoker.publicKey, streamMetadata: streamPublicKey, withdrawor: WITHDRAWOR_PUBLIC_KEY })
+            .accountsPartial({ streamflowProgram: this.programId })
+            .instruction()
+        : updateStreamInstruction(data, this.programId, {
+            authority: invoker.publicKey,
+            metadata: streamPublicKey,
+            withdrawor: WITHDRAWOR_PUBLIC_KEY,
+            systemProgram: SystemProgram.programId,
+          })),
     );
 
     return ixs;
@@ -1771,13 +1771,13 @@ invariant(alignedProxy, "Couldn't get aligned proxy account info");
     return extractSolanaErrorCode(err.toString() ?? "Unknown error!", logs);
   }
 
-    /**
+  /**
    * Utility function that checks whether the associated stream address is an aligned unlock contract, indicated by whether the sender/creator is a PDA
    */
-    public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
-      const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
-      return senderPublicKey.equals(pda);
-    }
+  public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
+    const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
+    return senderPublicKey.equals(pda);
+  }
 
   /**
    * Utility function to generate metadata for a Contract or return existing Pubkey
@@ -1833,4 +1833,3 @@ invariant(alignedProxy, "Couldn't get aligned proxy account info");
     }
   }
 }
-
