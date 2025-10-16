@@ -1,6 +1,6 @@
 # Streamflow
 
-Streamflow is a token vesting platform.
+Streamflow is a token vesting and streaming payments platform.
 
 There are several ways to use **Streamflow**:
 
@@ -23,7 +23,7 @@ API Documentation available here:
 ## JS SDK to interact with Streamflow protocols
 
 This repo consists of js-sdk to interact with several protocol exposed by streamflow:
-- `packages/stream` - [Core Streamflow Protocol](packages/stream/README.md) that allows to create a vesting/lock Stream to a Recipient;
+- `packages/stream` - [Core Streamflow Protocol](packages/stream/README.md) that allows to create a vesting/payment/lock Stream to a Recipient;
 - `packages/distributor` - [Distributor Streamflow Protocol](packages/distributor/README.md) that allows to Airdrop tokens to large amount of Recipients (thousands or even millions);
 - `packages/common` - Common utilities and types used by Streamflow SDK;
 

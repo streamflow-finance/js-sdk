@@ -147,6 +147,7 @@ export enum StreamDirection {
 
 export enum StreamType {
   All = "all",
+  Payment = "payment",
   Vesting = "vesting",
   Lock = "lock",
 }
