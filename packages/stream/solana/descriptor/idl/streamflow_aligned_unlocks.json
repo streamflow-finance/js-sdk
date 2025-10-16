@@ -2,7 +2,7 @@
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflow_aligned_unlocks",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -877,6 +877,80 @@
       "args": []
     },
     {
+      "name": "update_contract",
+      "discriminator": [
+        78,
+        184,
+        162,
+        174,
+        233,
+        5,
+        40,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proxy_metadata",
+          "docs": [
+            "Proxy Contract"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "stream_metadata"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stream_metadata",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "streamflow_program",
+          "address": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateContractParams"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "update_test_oracle",
       "discriminator": [
         158,
@@ -1467,6 +1541,32 @@
           {
             "name": "mint",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateContractParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transferable_by_sender",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "transferable_by_recipient",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "cancelable_by_sender",
+            "type": {
+              "option": "bool"
+            }
           }
         ]
       }
