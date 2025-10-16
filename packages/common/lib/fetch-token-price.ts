@@ -1,4 +1,4 @@
-import { ICluster } from "../types.js";
+import { ICluster } from "../solana/types.js";
 
 export type TokensPricesResponse = {
   data: Record<string, TokenPriceResult>;

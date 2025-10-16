@@ -8,7 +8,7 @@
  * 4. Bundling with Vite
  */
 
-import { StreamflowSolana } from "@streamflow/stream";
+import { SolanaStreamClient } from "@streamflow/stream";
 import { StreamflowDistributorSolana } from "@streamflow/distributor";
 import { SolanaStakingClient } from "@streamflow/staking";
 import { SolanaLaunchpadClient } from "@streamflow/launchpad";
@@ -42,7 +42,7 @@ function verifyEnvironment() {
   // but we can check if the modules were loaded correctly
   try {
     // Verify StreamClient is loaded correctly
-    if (typeof StreamflowSolana.SolanaStreamClient !== "function") {
+    if (typeof SolanaStreamClient !== "function") {
       throw new Error("SolanaStreamClient is not a constructor function");
     }
     console.log("Verified: SolanaStreamClient loaded correctly");
@@ -135,7 +135,7 @@ async function main() {
     console.log("Initializing Streamflow clients...");
 
     // Stream client
-    const streamClient = new StreamflowSolana.SolanaStreamClient({
+    const streamClient = new SolanaStreamClient({
       clusterUrl,
       cluster,
     });
