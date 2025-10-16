@@ -8,7 +8,7 @@ export type StreamflowAlignedUnlocks = {
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflowAlignedUnlocks",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -883,6 +883,80 @@ export type StreamflowAlignedUnlocks = {
       "args": []
     },
     {
+      "name": "updateContract",
+      "discriminator": [
+        78,
+        184,
+        162,
+        174,
+        233,
+        5,
+        40,
+        82,
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "proxyMetadata",
+          "docs": [
+            "Proxy Contract",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "streamMetadata"
+              },
+            ]
+          }
+        },
+        {
+          "name": "streamMetadata",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "streamflowProgram",
+          "address": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "updateContractParams"
+            }
+          }
+        },
+      ]
+    },
+    {
       "name": "updateTestOracle",
       "discriminator": [
         158,
@@ -1473,6 +1547,32 @@ export type StreamflowAlignedUnlocks = {
           {
             "name": "mint",
             "type": "pubkey"
+          },
+        ]
+      }
+    },
+    {
+      "name": "updateContractParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transferableBySender",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "transferableByRecipient",
+            "type": {
+              "option": "bool"
+            }
+          },
+          {
+            "name": "cancelableBySender",
+            "type": {
+              "option": "bool"
+            }
           },
         ]
       }
