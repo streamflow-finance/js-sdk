@@ -82,7 +82,8 @@ import {
   extractSolanaErrorCode,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
- calculateTotalAmountToDeposit } from "./lib/utils.js";
+  calculateTotalAmountToDeposit,
+} from "./lib/utils.js";
 import {
   PROGRAM_ID,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
@@ -902,7 +903,7 @@ export class SolanaStreamClient {
    * @returns Multiple transaction information
    */
   public async createMultiple(
-    data: ICreateMultipleStreamData,
+    data: ICreateMultipleStreamData[] | ICreateMultipleStreamData,
     extParams: ICreateStreamExt,
   ): Promise<IMultiTransactionResult> {
     const { sender, metadataPubKeys: metadataPubKeysExt } = extParams;
@@ -911,8 +912,8 @@ export class SolanaStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
-      await this.buildCreateMultipleTransactionInstructions(data, extParams);
+    const { instructionsBatch, metadatas, prepareInstructions, metadataToRecipient } =
+      await this.flatBuildCreateMultipleTransactionInstructions(data, extParams);
 
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
@@ -988,7 +989,7 @@ export class SolanaStreamClient {
    * @returns Multiple transaction information
    */
   public async createMultipleSequential(
-    data: ICreateMultipleStreamData,
+    data: ICreateMultipleStreamData[] | ICreateMultipleStreamData,
     extParams: ICreateStreamExt,
   ): Promise<IMultiTransactionResult> {
     const { sender } = extParams;
@@ -997,8 +998,8 @@ export class SolanaStreamClient {
       throw new Error("Sender's PublicKey is not available, check passed wallet adapter!");
     }
 
-    const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
-      await this.buildCreateMultipleTransactionInstructions(data, extParams);
+    const { instructionsBatch, metadatas, prepareInstructions, metadataToRecipient } =
+      await this.flatBuildCreateMultipleTransactionInstructions(data, extParams);
 
     const errors: ICreateMultiError[] = [];
     const signatures: string[] = [];
@@ -1756,7 +1757,7 @@ export class SolanaStreamClient {
     return DEFAULT_STREAMFLOW_FEE;
   }
 
-    /**
+  /**
    * Returns total fee percent, streamflow fees + partner fees
    * @param getFeesData structure with address for which we need to derive fee, either sender or partner usually
    * @param chainSpecificParams additional parameters required by chain client
@@ -1787,6 +1788,27 @@ export class SolanaStreamClient {
   public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
     const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
     return senderPublicKey.equals(pda);
+  }
+
+  private async flatBuildCreateMultipleTransactionInstructions(
+    data: ICreateMultipleStreamData[] | ICreateMultipleStreamData,
+    extParams: IPrepareCreateStreamExt,
+  ) {
+    const dataArray = Array.isArray(data) ? data : [data];
+
+    const results = await Promise.all(
+      dataArray.map((item) => this.buildCreateMultipleTransactionInstructions(item, extParams)),
+    );
+
+    return {
+      instructionsBatch: results.flatMap((r) => r.instructionsBatch),
+      metadatas: results.flatMap((r) => r.metadatas),
+      prepareInstructions: results.flatMap((r) => r.prepareInstructions),
+      metadataToRecipient: results.reduce<MetadataRecipientHashMap>(
+        (acc, r) => Object.assign(acc, r.metadataToRecipient),
+        {},
+      ),
+    };
   }
 
   /**
