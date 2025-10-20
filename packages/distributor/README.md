@@ -250,5 +250,5 @@ Streamflow Distributor protocol program IDs
 
 | Solana  |                                              |
 | ------- | -------------------------------------------- |
-| Devet   | MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N |
-| Mainnet |   |
+| Devnet  |  MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N |
+| Mainnet |  MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N |
