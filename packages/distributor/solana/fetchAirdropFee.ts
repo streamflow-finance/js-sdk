@@ -23,7 +23,7 @@ export const fetchAirdropFee = async (
   fetchFn: typeof fetch = fetch,
 ): Promise<AirdropFeeResponse> => {
   const baseUrl =
-    cluster === ICluster.Mainnet ? "https://api.streamflow.finance" : "https://staging-api.streamflow.finance";
+    cluster === ICluster.Mainnet ? "https://api-public.streamflow.finance" : "https://staging-api-public.streamflow.finance";
   const url = `${baseUrl}/v2/api/airdrops/${encodeURIComponent(distributorId)}/fees`;
 
   const res = await fetchFn(url, {
