@@ -760,7 +760,7 @@ export class SolanaStreamClient {
   public async buildCreateMultipleTransactionInstructions(
     data: ICreateMultipleStreamData,
     extParams: IPrepareCreateStreamExt,
-    applyCustomAfterInstructions: boolean = true,
+    applyCustomAfterInstructions = true,
   ): Promise<{
     instructionsBatch: {
       ixs: TransactionInstruction[];
@@ -863,7 +863,7 @@ export class SolanaStreamClient {
   public async buildCreateMultipleTransactions(
     data: ICreateMultipleStreamData,
     extParams: IPrepareCreateStreamExt,
-    applyCustomAfterInstructions: boolean = true,
+    applyCustomAfterInstructions = true,
   ): Promise<{
     transactions: BatchItem[];
     metadatas: string[];
