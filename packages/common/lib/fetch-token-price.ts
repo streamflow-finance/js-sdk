@@ -16,7 +16,7 @@ export const fetchTokenPrice = async (
   cluster: ICluster = ICluster.Mainnet,
   options?: FetchTokenPriceOptions,
 ): Promise<TokenPriceResult> => {
-  const url = `https://token-api-public.streamflow.finance/price?ids=${encodeURIComponent(mintId)}&cluster=${encodeURIComponent(cluster)}`;
+  const url = `https://token-api.streamflow.finance/price?ids=${encodeURIComponent(mintId)}&cluster=${encodeURIComponent(cluster)}`;
 
   const impl = options?.fetchImpl ?? fetch;
   const controller = new AbortController();
