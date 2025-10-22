@@ -760,6 +760,7 @@ export class SolanaStreamClient {
   public async buildCreateMultipleTransactionInstructions(
     data: ICreateMultipleStreamData,
     extParams: IPrepareCreateStreamExt,
+    applyCustomAfterInstructions: boolean = true,
   ): Promise<{
     instructionsBatch: {
       ixs: TransactionInstruction[];
@@ -804,7 +805,9 @@ export class SolanaStreamClient {
         createStreamExtParams,
       );
 
-      await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
+      if (applyCustomAfterInstructions) {
+        await this.applyCustomAfterInstructions(ixs, customInstructions, metadataPubKey);
+      }
       metadataToRecipient[metadataPubKey.toBase58()] = recipientData;
 
       metadatas.push(metadataPubKey.toBase58());
@@ -860,6 +863,7 @@ export class SolanaStreamClient {
   public async buildCreateMultipleTransactions(
     data: ICreateMultipleStreamData,
     extParams: IPrepareCreateStreamExt,
+    applyCustomAfterInstructions: boolean = true,
   ): Promise<{
     transactions: BatchItem[];
     metadatas: string[];
@@ -871,7 +875,7 @@ export class SolanaStreamClient {
     const { sender } = extParams;
 
     const { instructionsBatch, metadatas, metadataToRecipient, prepareInstructions } =
-      await this.buildCreateMultipleTransactionInstructions(data, extParams);
+      await this.buildCreateMultipleTransactionInstructions(data, extParams, applyCustomAfterInstructions);
 
     const { value: hash, context } = await this.connection.getLatestBlockhashAndContext();
     const batch: BatchItem[] = [];
@@ -1797,7 +1801,7 @@ export class SolanaStreamClient {
     const dataArray = Array.isArray(data) ? data : [data];
 
     const results = await Promise.all(
-      dataArray.map((item) => this.buildCreateMultipleTransactionInstructions(item, extParams)),
+      dataArray.map((item, index) => this.buildCreateMultipleTransactionInstructions(item, extParams, index === 0)),
     );
 
     return {
