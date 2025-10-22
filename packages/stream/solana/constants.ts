@@ -1,7 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
+import BN from "bn.js";
 
-import { ICluster, SolanaContractErrorCode, SolanaAlignedProxyErrorCode } from "../common/types.js";
+import { ICluster, ContractErrorCode, AlignedProxyErrorCode } from "./types.js";
 import type { ISearchStreams } from "./types.js";
 
 export const TX_FINALITY_CONFIRMED = "confirmed";
@@ -12,6 +13,10 @@ export const STREAM_STRUCT_OFFSET_SENDER = 49;
 export const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 export const STREAM_STRUCT_OFFSET_MINT = 177;
 export const STREAM_STRUCT_OFFSET_CLOSED = 671;
+
+export const MAX_SAFE_UNIX_TIME_VALUE = 8640000000000;
+
+export const WITHDRAW_AVAILABLE_AMOUNT = new BN("18446744073709551615"); // Magical number to withdraw all available amount from a Contract
 
 export const ALIGNED_PRECISION_FACTOR_POW = 9;
 
@@ -76,40 +81,40 @@ export const PARTNERS_SCHEMA = { array: { type: PARTNER_SCHEMA } };
 export const SOLANA_ERROR_MATCH_REGEX = /custom program error: (0x\d{2})/;
 
 export const SOLANA_ERROR_MAP: { [key: number]: string } = {
-  0x60: SolanaContractErrorCode.AccountsNotWritable,
-  0x61: SolanaContractErrorCode.InvalidMetadata,
-  0x62: SolanaContractErrorCode.InvalidMetadataAccount,
-  0x63: SolanaContractErrorCode.MetadataAccountMismatch,
-  0x64: SolanaContractErrorCode.InvalidEscrowAccount,
-  0x65: SolanaContractErrorCode.NotAssociated,
-  0x66: SolanaContractErrorCode.MintMismatch,
-  0x67: SolanaContractErrorCode.TransferNotAllowed,
-  0x68: SolanaContractErrorCode.ContractClosed,
-  0x69: SolanaContractErrorCode.InvalidTreasury,
-  0x70: SolanaContractErrorCode.InvalidTimestamps,
-  0x71: SolanaContractErrorCode.InvalidDepositConfiguration,
-  0x72: SolanaContractErrorCode.AmountIsZero,
-  0x73: SolanaContractErrorCode.AmountMoreThanAvailable,
-  0x74: SolanaContractErrorCode.AmountAvailableIsZero,
-  0x80: SolanaContractErrorCode.ArithmeticError,
-  0x81: SolanaContractErrorCode.InvalidMetadataSize,
-  0x82: SolanaContractErrorCode.UninitializedMetadata,
-  0x83: SolanaContractErrorCode.Unauthorized,
-  0x84: SolanaContractErrorCode.SelfTransfer,
-  0x85: SolanaContractErrorCode.AlreadyPaused,
-  0x86: SolanaContractErrorCode.NotPaused,
-  0x87: SolanaContractErrorCode.MetadataNotRentExempt,
-  0x1770: SolanaAlignedProxyErrorCode.Unauthorized,
-  0x1771: SolanaAlignedProxyErrorCode.ArithmeticError,
-  0x1772: SolanaAlignedProxyErrorCode.UnsupportedTokenExtensions,
-  0x1773: SolanaAlignedProxyErrorCode.PeriodTooShort,
-  0x1774: SolanaAlignedProxyErrorCode.InvalidTickSize,
-  0x1775: SolanaAlignedProxyErrorCode.InvalidPercentageBoundaries,
-  0x1776: SolanaAlignedProxyErrorCode.InvalidPriceBoundaries,
-  0x1777: SolanaAlignedProxyErrorCode.UnsupportedOracle,
-  0x1778: SolanaAlignedProxyErrorCode.InvalidOracleAccount,
-  0x1779: SolanaAlignedProxyErrorCode.InvalidOraclePrice,
-  0x177a: SolanaAlignedProxyErrorCode.InvalidStreamMetadata,
-  0x177b: SolanaAlignedProxyErrorCode.AmountAlreadyUpdated,
-  0x177c: SolanaAlignedProxyErrorCode.AllFundsUnlocked,
+  0x60: ContractErrorCode.AccountsNotWritable,
+  0x61: ContractErrorCode.InvalidMetadata,
+  0x62: ContractErrorCode.InvalidMetadataAccount,
+  0x63: ContractErrorCode.MetadataAccountMismatch,
+  0x64: ContractErrorCode.InvalidEscrowAccount,
+  0x65: ContractErrorCode.NotAssociated,
+  0x66: ContractErrorCode.MintMismatch,
+  0x67: ContractErrorCode.TransferNotAllowed,
+  0x68: ContractErrorCode.ContractClosed,
+  0x69: ContractErrorCode.InvalidTreasury,
+  0x70: ContractErrorCode.InvalidTimestamps,
+  0x71: ContractErrorCode.InvalidDepositConfiguration,
+  0x72: ContractErrorCode.AmountIsZero,
+  0x73: ContractErrorCode.AmountMoreThanAvailable,
+  0x74: ContractErrorCode.AmountAvailableIsZero,
+  0x80: ContractErrorCode.ArithmeticError,
+  0x81: ContractErrorCode.InvalidMetadataSize,
+  0x82: ContractErrorCode.UninitializedMetadata,
+  0x83: ContractErrorCode.Unauthorized,
+  0x84: ContractErrorCode.SelfTransfer,
+  0x85: ContractErrorCode.AlreadyPaused,
+  0x86: ContractErrorCode.NotPaused,
+  0x87: ContractErrorCode.MetadataNotRentExempt,
+  0x1770: AlignedProxyErrorCode.Unauthorized,
+  0x1771: AlignedProxyErrorCode.ArithmeticError,
+  0x1772: AlignedProxyErrorCode.UnsupportedTokenExtensions,
+  0x1773: AlignedProxyErrorCode.PeriodTooShort,
+  0x1774: AlignedProxyErrorCode.InvalidTickSize,
+  0x1775: AlignedProxyErrorCode.InvalidPercentageBoundaries,
+  0x1776: AlignedProxyErrorCode.InvalidPriceBoundaries,
+  0x1777: AlignedProxyErrorCode.UnsupportedOracle,
+  0x1778: AlignedProxyErrorCode.InvalidOracleAccount,
+  0x1779: AlignedProxyErrorCode.InvalidOraclePrice,
+  0x177a: AlignedProxyErrorCode.InvalidStreamMetadata,
+  0x177b: AlignedProxyErrorCode.AmountAlreadyUpdated,
+  0x177c: AlignedProxyErrorCode.AllFundsUnlocked,
 };

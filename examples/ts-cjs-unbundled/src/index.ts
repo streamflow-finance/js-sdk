@@ -8,14 +8,14 @@
  */
 
 // Import specific exports from each package
-import { StreamflowSolana } from "@streamflow/stream";
+import { SolanaStreamClient } from "@streamflow/stream";
 import { ICluster, ContractError } from "@streamflow/common";
 import { StreamflowDistributorSolana } from "@streamflow/distributor";
 import { SolanaStakingClient } from "@streamflow/staking";
 import { SolanaLaunchpadClient } from "@streamflow/launchpad";
 // Other entrypoints to test that the package.json is correct
 import { MerkleDistributor } from "@streamflow/distributor/solana";
-import {prepareTransaction} from "@streamflow/common/solana";
+import {prepareTransaction} from "@streamflow/common";
 
 // Import IDL files to test import resolving
 // Note: Using require for JSON imports in CJS context
@@ -54,7 +54,7 @@ function verifyEnvironment(): void {
     }
 
     // Verify StreamClient is loaded correctly
-    if (typeof StreamflowSolana.SolanaStreamClient !== "function") {
+    if (typeof SolanaStreamClient !== "function") {
       throw new Error("SolanaStreamClient is not a constructor function");
     }
     console.log("Verified: SolanaStreamClient loaded correctly");
@@ -154,7 +154,7 @@ async function main() {
 
     // Initialize the Streamflow Solana client
     console.log("Initializing Streamflow Solana client...");
-    const streamClient = new StreamflowSolana.SolanaStreamClient({ clusterUrl, cluster });
+    const streamClient = new SolanaStreamClient({ clusterUrl, cluster });
 
     // Initialize the Distributor Solana client
     console.log("Initializing Distributor Solana client...");

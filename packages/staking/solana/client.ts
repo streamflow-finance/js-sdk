@@ -19,7 +19,7 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
   unwrapExecutionParams,
-} from "@streamflow/common/solana";
+} from "@streamflow/common";
 import type PQueue from "p-queue";
 import BN from "bn.js";
 
@@ -61,7 +61,7 @@ import type {
   DefaultFeeValueConfig,
   FeeValue,
   FundPoolArgs,
-  IInteractSolanaExt,
+  IInteractExt,
   RewardEntry,
   RewardPool,
   StakeAndCreateEntriesArgs,
@@ -229,7 +229,7 @@ export class SolanaStakingClient {
     return feeManagerProgram.account.feeValue.fetchNullable(feeValueKey);
   }
 
-  async createStakePool(data: CreateStakePoolArgs, extParams: IInteractSolanaExt): Promise<CreationResult> {
+  async createStakePool(data: CreateStakePoolArgs, extParams: IInteractExt): Promise<CreationResult> {
     const { ixs, publicKey } = await this.prepareCreateStakePoolInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -255,7 +255,7 @@ export class SolanaStakingClient {
       nonce,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateStakePoolArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const { stakePoolProgram } = this.programs;
     const creator = extParams.invoker.publicKey;
@@ -297,7 +297,7 @@ export class SolanaStakingClient {
     return { ixs: [createInstruction], publicKey: stakePoolPDA };
   }
 
-  async stake(data: StakeArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async stake(data: StakeArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareStakeInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -317,7 +317,7 @@ export class SolanaStakingClient {
    */
   async stakeAndCreateEntries(
     data: StakeAndCreateEntriesArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<ITransactionResult> {
     const { ixs } = await this.prepareStakeAndCreateEntriesInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
@@ -330,7 +330,7 @@ export class SolanaStakingClient {
 
   async prepareStakeAndCreateEntriesInstructions(
     data: StakeAndCreateEntriesArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -357,7 +357,7 @@ export class SolanaStakingClient {
 
   async prepareStakeInstructions(
     { nonce, amount, duration, stakePool, stakePoolMint, tokenProgramId = TOKEN_PROGRAM_ID }: StakeArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -379,7 +379,7 @@ export class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async unstake(data: UnstakeArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async unstake(data: UnstakeArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareUnstakeInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -397,7 +397,7 @@ export class SolanaStakingClient {
    * @param data - enriched unstake args with reward pools
    * @param extParams - parameter required for transaction execution
    */
-  async unstakeAndClaim(data: UnstakeAndClaimArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async unstakeAndClaim(data: UnstakeAndClaimArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareUnstakeAndClaimInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -409,7 +409,7 @@ export class SolanaStakingClient {
 
   async prepareUnstakeAndClaimInstructions(
     data: UnstakeAndClaimArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -446,7 +446,7 @@ export class SolanaStakingClient {
    * @param data - enriched unstake args with reward pools
    * @param extParams - parameter required for transaction execution
    */
-  async unstakeAndClose(data: UnstakeAndCloseArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async unstakeAndClose(data: UnstakeAndCloseArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareUnstakeAndCloseInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -458,7 +458,7 @@ export class SolanaStakingClient {
 
   async prepareUnstakeAndCloseInstructions(
     data: UnstakeAndCloseArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -485,7 +485,7 @@ export class SolanaStakingClient {
 
   async prepareUnstakeInstructions(
     { stakePool, stakePoolMint, nonce, tokenProgramId = TOKEN_PROGRAM_ID, shouldClose = false }: UnstakeArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -507,7 +507,7 @@ export class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async closeStakeEntry(data: CloseStakeEntryArgs, extParams: IInteractSolanaExt) {
+  async closeStakeEntry(data: CloseStakeEntryArgs, extParams: IInteractExt) {
     const { ixs } = await this.prepareCloseStakeEntryInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -517,7 +517,7 @@ export class SolanaStakingClient {
     };
   }
 
-  async prepareCloseStakeEntryInstructions({ stakePool, nonce }: CloseStakeEntryArgs, extParams: IInteractSolanaExt) {
+  async prepareCloseStakeEntryInstructions({ stakePool, nonce }: CloseStakeEntryArgs, extParams: IInteractExt) {
     const { stakePoolProgram } = this.programs;
     const staker = extParams.invoker.publicKey;
     invariant(staker, "Undefined invoker publicKey");
@@ -532,7 +532,7 @@ export class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async createRewardPool(data: CreateRewardPoolArgs, extParams: IInteractSolanaExt): Promise<CreationResult> {
+  async createRewardPool(data: CreateRewardPoolArgs, extParams: IInteractExt): Promise<CreationResult> {
     const { ixs, publicKey } = await this.prepareCreateRewardPoolInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -554,7 +554,7 @@ export class SolanaStakingClient {
       lastClaimPeriodOpt,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateRewardPoolArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const { rewardPoolProgram } = this.programs;
     const creator = extParams.invoker.publicKey;
@@ -574,7 +574,7 @@ export class SolanaStakingClient {
     return { publicKey: rewardPoolKey, ixs: [instruction] };
   }
 
-  async claimRewards(data: ClaimRewardPoolArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async claimRewards(data: ClaimRewardPoolArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareClaimRewardsInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -595,7 +595,7 @@ export class SolanaStakingClient {
       governor,
       vote,
     }: ClaimRewardPoolArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const { stakePoolProgram } = this.programs;
@@ -626,7 +626,7 @@ export class SolanaStakingClient {
     return { ixs: [await ixBuilder.instruction()] };
   }
 
-  async fundPool(data: FundPoolArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async fundPool(data: FundPoolArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareFundPoolInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -646,7 +646,7 @@ export class SolanaStakingClient {
       nonce,
       rewardPoolType = "fixed",
     }: FundPoolArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const staker = extParams.invoker.publicKey;
@@ -681,7 +681,7 @@ export class SolanaStakingClient {
     return { ixs: treasuryATA ? treasuryATA.concat([instruction]) : [instruction] };
   }
 
-  async createRewardEntry(data: CreateRewardEntryArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async createRewardEntry(data: CreateRewardEntryArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareCreateRewardEntryInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -693,7 +693,7 @@ export class SolanaStakingClient {
 
   async prepareCreateRewardEntryInstructions(
     { stakePool, rewardPoolNonce, depositNonce, rewardMint, rewardPoolType = "fixed" }: CreateRewardEntryArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const { stakePoolProgram } = this.programs;
@@ -715,7 +715,7 @@ export class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async closeRewardEntry(data: CloseRewardEntryArgs, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async closeRewardEntry(data: CloseRewardEntryArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareCloseRewardEntryInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -727,7 +727,7 @@ export class SolanaStakingClient {
 
   async prepareCloseRewardEntryInstructions(
     { stakePool, rewardPoolNonce, depositNonce, rewardMint, rewardPoolType = "fixed" }: CreateRewardEntryArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const staker = extParams.invoker.publicKey;
@@ -743,7 +743,7 @@ export class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async updateRewardPool(data: UpdateRewardPoolArgs, extParams: IInteractSolanaExt) {
+  async updateRewardPool(data: UpdateRewardPoolArgs, extParams: IInteractExt) {
     const { ixs } = await this.prepareUpdateRewardPoolInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -755,7 +755,7 @@ export class SolanaStakingClient {
 
   async prepareUpdateRewardPoolInstructions(
     { rewardPool, rewardAmount, rewardPeriod, stakePool }: UpdateRewardPoolArgs,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ) {
     const { rewardPoolProgram } = this.programs;
     const invoker = extParams.invoker.publicKey;
@@ -804,7 +804,7 @@ export class SolanaStakingClient {
     return accountEntity.discriminator;
   }
 
-  async execute(ixs: TransactionInstruction[], extParams: IInteractSolanaExt) {
+  async execute(ixs: TransactionInstruction[], extParams: IInteractExt) {
     const executionParams = unwrapExecutionParams(extParams, this.connection);
 
     ixs = await createAndEstimateTransaction(
