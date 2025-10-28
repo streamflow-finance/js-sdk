@@ -783,7 +783,6 @@ export class SolanaStreamClient {
       metadata: Keypair | undefined;
       recipient: string;
     }[] = [];
-    const metadataPubKeys = metadataPubKeysExt || [];
 
     const partnerPublicKey = data.partner ? new PublicKey(data.partner) : WITHDRAWOR_PUBLIC_KEY;
     const mintPublicKey = new PublicKey(data.tokenId);
@@ -796,8 +795,8 @@ export class SolanaStreamClient {
       const recipientData = recipients[i];
       const createStreamData = { ...streamParams, ...recipientData };
       const createStreamExtParams = {
-        metadataPubKeys: metadataPubKeys[i] ? [metadataPubKeys[i]] : undefined,
         ...extParams,
+        metadataPubKeys: metadataPubKeysExt?.[i] ? [metadataPubKeysExt[i]] : undefined,
       };
 
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
