@@ -344,7 +344,7 @@ SolanaStakingClient also exposes original IDL of all programs, so you can use so
 
 ```typescript
 // Stake Mint Token Program matches token program of the original token, program exposes separate methods depending on the program.
-import { signAndExecuteTransaction, prepareTransaction } from "@streamflow/common/solana";
+import { signAndExecuteTransaction, prepareTransaction } from "@streamflow/common";
 
 const program = client.programs.stakePoolProgram;
 
