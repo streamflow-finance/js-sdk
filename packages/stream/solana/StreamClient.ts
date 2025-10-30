@@ -247,7 +247,7 @@ export class SolanaStreamClient extends BaseStreamClient {
 
     assertHasPublicKey(sender, "Sender's PublicKey is not available, check passed wallet adapter!");
 
-    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+    const partnerPublicKey = partner ? new PublicKey(partner) : sender.publicKey;
     const mintPublicKey = new PublicKey(data.tokenId);
 
     const ixs: TransactionInstruction[] = await this.getCreateATAInstructions(
@@ -426,7 +426,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     if (!tokenProgramId) {
       tokenProgramId = (await getMintAndProgram(this.connection, mintPublicKey)).tokenProgramId;
     }
-    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+    const partnerPublicKey = partner ? new PublicKey(partner) : sender.publicKey;
 
     const streamflowProgramPublicKey = new PublicKey(this.programId);
 
@@ -559,7 +559,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const recipientTokens = await ata(mintPublicKey, recipientPublicKey, tokenProgramId);
     const streamflowTreasuryTokens = await ata(mintPublicKey, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
 
-    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+    const partnerPublicKey = partner ? new PublicKey(partner) : sender.publicKey;
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
 
@@ -701,7 +701,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     const { tokenProgramId } = await getMintAndProgram(this.connection, mintPublicKey);
     const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
 
-    const partnerPublicKey = partner ? new PublicKey(partner) : WITHDRAWOR_PUBLIC_KEY;
+    const partnerPublicKey = partner ? new PublicKey(partner) : sender.publicKey;
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
@@ -788,7 +788,7 @@ export class SolanaStreamClient extends BaseStreamClient {
     }[] = [];
     const metadataPubKeys = metadataPubKeysExt || [];
 
-    const partnerPublicKey = data.partner ? new PublicKey(data.partner) : WITHDRAWOR_PUBLIC_KEY;
+    const partnerPublicKey = data.partner ? new PublicKey(data.partner) : sender.publicKey;
     const mintPublicKey = new PublicKey(data.tokenId);
 
     if (recipients.length === 0) {
