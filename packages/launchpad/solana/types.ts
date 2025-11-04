@@ -1,7 +1,7 @@
 import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type { Keypair } from "@solana/web3.js";
-import { type ITransactionSolanaExt } from "@streamflow/common/solana";
+import { type ITransactionExt } from "@streamflow/common";
 import { type OracleTypeName } from "@streamflow/stream";
 import type BN from "bn.js";
 
@@ -10,7 +10,7 @@ import type { StreamflowLaunchpad } from "./descriptor/streamflow_launchpad.js";
 export type Launchpad = IdlAccounts<StreamflowLaunchpad>["launchpad"];
 export type DepositAccount = IdlAccounts<StreamflowLaunchpad>["depositAccount"];
 
-export interface IInteractSolanaExt extends ITransactionSolanaExt {
+export interface IInteractExt extends ITransactionExt {
   invoker: SignerWalletAdapter | Keypair;
 }
 

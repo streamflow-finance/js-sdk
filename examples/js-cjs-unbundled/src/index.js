@@ -8,7 +8,7 @@
  */
 
 // Import specific exports from each package using CommonJS require
-const { StreamflowSolana } = require("@streamflow/stream");
+const { SolanaStreamClient } = require("@streamflow/stream");
 const { ICluster, ContractError } = require("@streamflow/common");
 const { StreamflowDistributorSolana } = require("@streamflow/distributor");
 const { SolanaStakingClient } = require("@streamflow/staking");
@@ -16,7 +16,7 @@ const { SolanaLaunchpadClient } = require("@streamflow/launchpad");
 
 // Other entrypoints to test that the package.json is correct
 const { MerkleDistributor } = require("@streamflow/distributor/solana");
-const { prepareTransaction } = require("@streamflow/common/solana");
+const { prepareTransaction } = require("@streamflow/common");
 
 // Import IDL files to test import resolving
 const streamflowAlignedUnlocksIDL = require("@streamflow/stream/solana/idl/streamflow_aligned_unlocks.json");
@@ -52,7 +52,7 @@ function verifyEnvironment() {
     }
 
     // Verify StreamClient is loaded correctly
-    if (typeof StreamflowSolana.SolanaStreamClient !== "function") {
+    if (typeof SolanaStreamClient !== "function") {
       throw new Error("SolanaStreamClient is not a constructor function");
     }
     console.log("Verified: SolanaStreamClient loaded correctly");
@@ -152,7 +152,7 @@ async function main() {
 
     // Initialize the Streamflow Solana client
     console.log("Initializing Streamflow Solana client...");
-    const streamClient = new StreamflowSolana.SolanaStreamClient({ clusterUrl, cluster });
+    const streamClient = new SolanaStreamClient({ clusterUrl, cluster });
 
     // Initialize the Distributor Solana client
     console.log("Initializing Distributor Solana client...");

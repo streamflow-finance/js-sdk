@@ -55,16 +55,16 @@ Most common imports:
 
 ```javascript
 import { BN } from "bn.js";
-import { GenericStreamClient, getBN, getNumberFromBN } from "@streamflow/stream";
+import { getBN, getNumberFromBN } from "@streamflow/stream";
 ```
 
 _Check the SDK for other types and utility functions._
 
 ## Create StreamClient instance
 
-Before creating and manipulating streams, a chain-specific or generic StreamClient instance must be created. All stream functions are methods on this instance.
+Before creating and manipulating streams, a Solana client instance must be created. All stream functions are methods on this instance.
 
-### Chain-specific clients
+### Solana client
 
 ```javascript
 // Solana
@@ -73,41 +73,12 @@ const solanaClient = new StreamflowSolana.SolanaStreamClient(
   "https://api.mainnet-beta.solana.com"
 );
 
-// Aptos
-import { StreamflowAptos } from "@streamflow/stream";
-const aptosClient = new StreamflowAptos.AptosStreamClient(
-  "https://fullnode.mainnet.aptoslabs.com/v1"
-);
 
-// Sui
-import { StreamflowSui } from "@streamflow/stream";
-const suiClient = new StreamflowSui.SuiStreamClient(
-  "https://fullnode.testnet.sui.io:443"
-);
-```
+## Universal parameters
 
-### Generic Stream Client
-
-GenericStreamClient provides an isomorphic interface to work with streams agnostic of chain.
-
-```javascript
-import { GenericStreamClient } from "@streamflow/stream";
-
-const client = new GenericStreamClient<Types.IChain.Solana>({
-  chain: IChain.Solana, // Blockchain
-  clusterUrl: "https://api.mainnet-beta.solana.com", // RPC cluster URL
-  cluster: ICluster.Mainnet, // (optional) (default: Mainnet)
-  // ...rest chain specific params e.g. commitment for Solana
-});
-```
-
-## Chain-specific Parameters
-
-Each method requires chain-specific parameters. Here are the common patterns:
+Each method requires some shared parameters. Here are the common patterns:
 These are defined in:
 - [Solana Types](./solana/types.ts) 
-- [Aptos Types](./aptos/types.ts) 
-- [Sui Types](./sui/types.ts) 
 
 ```javascript
 // Solana parameters for Create 
@@ -121,18 +92,6 @@ const solanaInteractParams = {
   invoker: wallet, // SignerWalletAdapter or Keypair signing the transaction, can be only PublicKey if you are not using the client to initiate the signing and execution of the transaction
   isNative: false // [optional] Whether Stream should be paid with Solana native token (wSOL)
 };
-
-// Aptos parameters
-const aptosParams = {
-  senderWallet: wallet, // AptosWalletAdapter Wallet of sender
-  tokenId: "0x1::aptos_coin::AptosCoin" // Aptos Coin type
-};
-
-// Sui parameters
-const suiParams = {
-  senderWallet: wallet, // WalletContextState | Keypair
-  tokenId: "0x2::sui::SUI" // Sui token type
-};
 ```
 
 
@@ -140,7 +99,7 @@ const suiParams = {
 
 ## Create a Vesting Stream
 
-Vesting Streams are a type of Stream used to linearly unlock a given amount of tokens over a period of time. You can specify the amount, cliff, start time and releasePeriod along with other configuration that controls who can transfer or cancel the contract. For a Stream to be considered Vesting in the Streamflow App it has to match the criteria from the `isVesting` helper function (or `buildStreamType` returns `StreamType.Vesting`). The stream must not allow top-ups, the cliff amount must not be too close to the total amount and it must not be a Dynamic token lock.
+Vesting Streams are a type of Stream used to linearly unlock a given amount of tokens over a period of time. You can specify the amount, cliff, start time and releasePeriod along with other configuration that controls who can transfer or cancel the contract. For a Stream to be considered Vesting in the Streamflow App it has to match the criteria from the `isVesting` helper function (or `buildStreamType` returns `StreamType.Vesting`). The cliff amount must not be too close to the total amount and it must not be a Dynamic token lock.
 
 For more details creating a Stream with arbitrary configuration see [General Stream creation](#general-stream-creation).
 For creating multiple Streams at once see [Create Multiple Streams](#create-multiple-streams-at-once).
@@ -282,7 +241,6 @@ const createStreamParams: Types.ICreateStreamData = {
   partner: undefined, //  (optional) Partner's wallet address (string | undefined).
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { ixs, tx, metadata } = await client.create(createStreamParams, solanaCreateParams);
 } catch (exception) {
@@ -370,8 +328,7 @@ const topupStreamParams: ITopUpData = {
   amount: getBN(100, 9), // Specified amount to topup (increases deposited amount).
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
-// Note: For Solana, you can add isNative: true for wSOL streams
+// Note: You can add isNative: true for wSOL streams to the solanaInteractParams
 try {
   const { ixs, tx } = await client.topup(topupStreamParams, solanaInteractParams);
 } catch (exception) {
@@ -387,7 +344,6 @@ const data: ITransferData = {
   newRecipient: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99", // Identifier (address) of a stream to be transferred.
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { tx } = await client.transfer(data, solanaInteractParams);
 } catch (exception) {
@@ -402,7 +358,6 @@ const cancelStreamParams: ICancelData = {
   id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA", // Identifier of a stream to be canceled.
 };
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { ixs, tx } = await client.cancel(cancelStreamParams, solanaInteractParams);
 } catch (exception) {
@@ -420,7 +375,6 @@ const updateStreamParams: IUpdateData = {
   amountPerPeriod: getBN(10, 9),  // [optional], allows to update release amount effective on next unlock
 }
 
-// Use appropriate chain-specific parameters (see Chain-specific Parameters section above)
 try {
   const { ixs, tx } = await client.update(updateStreamParams, solanaInteractParams);
 } catch (exception) {
@@ -472,7 +426,7 @@ console.log(remaining);
 ```javascript
 const data: IGetAllData = {
   address: "99h00075bKjVg000000tLdk4w42NyG3Mv0000dc0M99",
-  type: StreamType.All, // StreamType.Vesting, StreamType.Lock, StreamType.Payment
+  type: StreamType.All, // StreamType.Vesting, StreamType.Lock
   direction: StreamDirection.All, // StreamDirection.Outgoing, StreamDirection.Incoming
 };
 
@@ -517,16 +471,6 @@ Streamflow protocol program IDs
 | ------- | -------------------------------------------- |
 | Devet   | HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ |
 | Mainnet | strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m  |
-
-| Aptos   |                                                                    |
-| ------- | ------------------------------------------------------------------ |
-| Testnet | 0xc6737de143d91b2f99a7e490d4f8348fdfa3bdd1eb8737a27d0455f8a3625688 |
-| Mainnet | 0x9009d93d52576bf9ac6dc6cf10b870610bcb316342fef6eff80662fbbfce51b0 |
-
-| Sui     |                                                                    |
-| ------- | ------------------------------------------------------------------ |
-| Testnet | 0xf1916c119a6c917d4b36f96ffc0443930745789f3126a716e05a62223c48993a |
-| Mainnet | 0xa283fd6b45f1103176e7ae27e870c89df7c8783b15345e2b13faa81ec25c4fa6 |
 
 **All BN amounts are denominated in their smallest units.**
 
