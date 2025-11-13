@@ -55,6 +55,7 @@ import {
   type OracleType,
   type IPrepareCreateStreamSolanaExt,
   type IPrepareStreamSolanaExt,
+    type AlignedUnlocksContract,
 } from "./types.js";
 import {
   decodeStream,
@@ -116,7 +117,7 @@ import type { IPartnerLayout } from "./instructionTypes.js";
 import { calculateTotalAmountToDeposit } from "../common/utils.js";
 import { WITHDRAW_AVAILABLE_AMOUNT } from "../common/constants.js";
 import type { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
-import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json" with { type: "json" };
+import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
 import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "../common/contractUtils.js";
 
@@ -1632,20 +1633,51 @@ export class SolanaStreamClient extends BaseStreamClient {
       filters,
     });
 
-    const mapped = await Promise.all(
-      accounts.map(async ({ pubkey, account }) => {
-        const stream = decodeStream(account.data);
-        if (this.isAlignedUnlock(pubkey, stream.sender)) {
-          const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
-            deriveContractPDA(this.alignedProxyProgram.programId, pubkey),
-          );
-          invariant(alignedProxy, "Couldn't get aligned proxy account info");
-          return { publicKey: pubkey, account: new AlignedContract(stream, alignedProxy) };
-        }
-        return { publicKey: pubkey, account: new Contract(stream) };
-      }),
-    );
-    return mapped;
+    const decoded = this.decodeStreamsFromAccounts(accounts);
+    const alignedEntries = this.collectAlignedEntries(decoded);
+    const alignedProxies = await this.fetchAlignedProxiesByEntries(alignedEntries);
+    return this.mapDecodedToProgramAccounts(decoded, alignedEntries, alignedProxies);
+  }
+
+  private decodeStreamsFromAccounts(accounts: ReadonlyArray<{ pubkey: PublicKey; account: { data: Buffer } }>) {
+    return accounts.map(({ pubkey, account }) => ({
+      pubkey,
+      stream: decodeStream(account.data),
+    }));
+  }
+
+  private collectAlignedEntries(decoded: { pubkey: PublicKey; stream: DecodedStream }[]) {
+    const entries: { index: number; pda: PublicKey }[] = [];
+    decoded.forEach(({ pubkey, stream }, index) => {
+      if (this.isAlignedUnlock(pubkey, stream.sender)) {
+        entries.push({ index, pda: deriveContractPDA(this.alignedProxyProgram.programId, pubkey) });
+      }
+    });
+    return entries;
+  }
+
+  private async fetchAlignedProxiesByEntries(
+    aligned: { index: number; pda: PublicKey }[],
+  ): Promise<ReadonlyArray<AlignedUnlocksContract | null>> {
+    if (aligned.length === 0) return [];
+    const res = await this.alignedProxyProgram.account.contract.fetchMultiple(aligned.map((a) => a.pda));
+    return res as ReadonlyArray<AlignedUnlocksContract | null>;
+  }
+
+  private mapDecodedToProgramAccounts(
+    decoded: { pubkey: PublicKey; stream: DecodedStream }[],
+    alignedEntries: { index: number; pda: PublicKey }[],
+    alignedProxies: ReadonlyArray<AlignedUnlocksContract | null>,
+  ): IProgramAccount<Stream>[] {
+    return decoded.map(({ pubkey, stream }, idx) => {
+      const alignedIdx = alignedEntries.findIndex((a) => a.index === idx);
+      if (alignedIdx !== -1) {
+        const alignedProxy = alignedProxies[alignedIdx];
+        invariant(alignedProxy, "Couldn't get aligned proxy account info");
+        return { publicKey: pubkey, account: new AlignedContract(stream, alignedProxy) };
+      }
+      return { publicKey: pubkey, account: new Contract(stream) };
+    });
   }
 
   /**
