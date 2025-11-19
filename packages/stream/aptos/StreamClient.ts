@@ -47,11 +47,9 @@ export default class AptosStreamClient extends BaseStreamClient {
 
     this.maxGas = maxGas;
 
-    const clientConfig = apiKey ? {
+    this.client = new AptosClient(clusterUrl, apiKey ? {
       TOKEN: apiKey,
-    } : undefined;
-
-    this.client = new AptosClient(clusterUrl, clientConfig);
+    } : undefined);
   }
 
   /**
