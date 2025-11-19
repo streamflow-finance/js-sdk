@@ -1,4 +1,4 @@
-import type { ClientConfig, Types } from "aptos";
+import type { Types } from "aptos";
 import { AptosAccount, AptosClient } from "aptos";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
