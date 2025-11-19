@@ -398,6 +398,7 @@ export interface AptosStreamClientOptions {
   cluster?: ICluster;
   programId?: string;
   maxGas?: string;
+  apiKey?: string;
 }
 
 /**
