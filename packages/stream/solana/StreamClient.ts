@@ -178,12 +178,12 @@ export class SolanaStreamClient extends BaseStreamClient {
     sendThrottler?: PQueue,
   ) {
     super();
-    this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
-    this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
     if (typeof optionsOrClusterUrl === "string") {
       this.commitment = commitment;
       this.connection = new Connection(optionsOrClusterUrl, this.commitment);
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+      this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
       this.schedulingParams = {
         sendThrottler: sendThrottler ?? buildSendThrottler(sendRate),
       };
@@ -198,6 +198,8 @@ export class SolanaStreamClient extends BaseStreamClient {
       this.commitment = commitment;
       this.connection = new Connection(clusterUrl, this.commitment);
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+      this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
       const schedulingOptions = sendScheduler && "sendRate" in sendScheduler ? sendScheduler : undefined;
       const sendThrottler = !sendScheduler
         ? buildSendThrottler(1)

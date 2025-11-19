@@ -93,6 +93,7 @@ export const PARTNER_SCHEMA = {
     creation_fee: "u32",
     auto_claim_fee: "u32",
     token_fee_percent: "f32",
+    buffer: { array: { type: "u8", len: 16 } }
   },
 };
 export const PARTNERS_SCHEMA = { array: { type: PARTNER_SCHEMA } };
