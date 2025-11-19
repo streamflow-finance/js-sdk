@@ -103,6 +103,7 @@ export default class GenericStreamClient<T extends IChain> extends BaseStreamCli
           options.cluster,
           options.maxGas,
           options.programId,
+          options.apiKey,
         ) as StreamClientType<T>;
         break;
       case IChain.BNB:
