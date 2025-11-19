@@ -1,4 +1,4 @@
-import type { Types } from "aptos";
+import type { ClientConfig, Types } from "aptos";
 import { AptosAccount, AptosClient } from "aptos";
 
 import { BaseStreamClient } from "../common/BaseStreamClient.js";
@@ -40,14 +40,18 @@ export default class AptosStreamClient extends BaseStreamClient {
 
   private client: AptosClient;
 
-  constructor(clusterUrl: string, cluster: ICluster = ICluster.Mainnet, maxGas = "10000", programId?: string) {
+  constructor(clusterUrl: string, cluster: ICluster = ICluster.Mainnet, maxGas = "10000", programId?: string, apiKey?: string ) {
     super();
 
     this.programId = programId ? programId : APTOS_PROGRAM_IDS[cluster];
 
     this.maxGas = maxGas;
 
-    this.client = new AptosClient(clusterUrl);
+    const clientConfig = apiKey ? {
+      TOKEN: apiKey,
+    } : undefined;
+
+    this.client = new AptosClient(clusterUrl, clientConfig);
   }
 
   /**
