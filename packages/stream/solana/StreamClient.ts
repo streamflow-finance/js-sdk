@@ -1787,7 +1787,7 @@ export class SolanaStreamClient extends BaseStreamClient {
           autoClaimFeeSol: Number(partner.auto_claim_fee),
           streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
           partnerFee: 0,
-        }
+        };
       }
     }
     return null;
@@ -1807,12 +1807,12 @@ export class SolanaStreamClient extends BaseStreamClient {
    * Protocol will use fees set for WITHDRAWOR as default if they are set.
    */
   public async getDefaultFees(): Promise<IFees> {
-    return await this.getFees({address: WITHDRAWOR}) || {
+    return await this.getFees({ address: WITHDRAWOR }) || {
       creationFeeSol: DEFAULT_CREATION_FEE_SOL,
       autoClaimFeeSol: DEFAULT_AUTO_CLAIM_FEE_SOL,
       streamflowFee: DEFAULT_STREAMFLOW_FEE,
       partnerFee: 0,
-    }
+    };
   }
 
   /**
