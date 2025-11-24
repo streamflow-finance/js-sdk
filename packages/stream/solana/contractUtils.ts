@@ -67,7 +67,7 @@ export const isVesting = (streamData: {
 };
 
 export const isAligned = (stream: Stream): stream is AlignedStream => {
-  return "minPrice" in stream && "maxPrice" in stream && "minPercentage" in stream && "maxPercentage" in stream;
+  return stream.isAligned;
 };
 
 export const isCreateAlignedStreamData = (obj: ICreateStreamData): obj is ICreateAlignedStreamData => {

@@ -19,6 +19,10 @@ You can also `getOne` stream and `get` multiple streams.
 - [Create a Token Lock](#create-a-token-lock)
   - [Streamflow app token lock criteria](#streamflow-app-token-lock-criteria)
   - [Example for creating a token lock](#example-for-creating-a-token-lock)
+- [Create a Price-based Stream (Aligned)](#create-a-price-based-stream-aligned)
+  - [Example for creating a Price-based Vesting Stream](#example-for-creating-a-price-based-vesting-stream)
+  - [Create a Price-based Lock](#create-a-price-based-lock)
+  - [Fetching Aligned Stream Data](#fetching-aligned-stream-data)
 - [General Stream creation](#general-stream-creation)
 - [Create multiple streams at once](#create-multiple-streams-at-once)
 - [Identifying created Streams](#identifying-created-streams)
@@ -72,7 +76,7 @@ import { StreamflowSolana } from "@streamflow/stream";
 const solanaClient = new StreamflowSolana.SolanaStreamClient(
   "https://api.mainnet-beta.solana.com"
 );
-
+```
 
 ## Universal parameters
 
@@ -214,6 +218,147 @@ try {
 const { ixs } = await client.prepareCreateStreamInstructions(createTokenLockParams, solanaCreateParams)
 ```
 
+## Create a Price-based Stream (Aligned)
+
+Price-based Streams (also known as Aligned or Dynamic Streams) are a type of Stream where the unlock rate dynamically adjusts based on the price of a token as reported by a price oracle. The unlock percentage scales between `minPercentage` and `maxPercentage` based on whether the current price is at or below `minPrice` or at or above `maxPrice`. This allows for vesting schedules that accelerate or decelerate based on token price performance.
+
+Price-based Streams require all the standard stream parameters plus additional price-based configuration parameters. The unlock rate is recalculated periodically based on the oracle price, making the vesting schedule responsive to market conditions.
+
+Streamflow's custom oracles can be fetched through the Oracle API 
+- Endpoint -> `https://oracle-api.streamflow.finance/oracle/{mint}`
+- [API Docs](https://oracle-api.streamflow.finance/docs)
+
+For more details creating a Stream with arbitrary configuration see [General Stream creation](#general-stream-creation).
+
+### Example for creating a Price-based Vesting Stream
+
+The following code will create a Price-based Stream that adjusts its unlock rate based on token price. When the price is at or below `minPrice`, it unlocks at `minPercentage` rate. When the price is at or above `maxPrice`, it unlocks at `maxPercentage` rate. For prices between these bounds, the unlock rate scales proportionally.
+
+```javascript
+const tokenDecimals = 9; 
+const totalAmount = getBN(1000, tokenDecimals);
+const cliffAmount = getBN(100, tokenDecimals);
+
+const day = 60 * 60 * 24; // in seconds
+const twoWeeks = day * 14;
+
+const mint = "DNw99999M7e24g99999999WJirKeZ5fQc6KY999999gK"
+const remainingAmount = totalAmount.sub(cliffAmount);
+const baseAmountPerPeriod = remainingAmount.divn(twoWeeks);
+
+const priceOracleAddress = await fetch(`https://oracle-api.streamflow.finance/oracle/${mint}`).then(res => res.json()).then(data => data.address);
+
+const createPriceBasedParams: Types.ICreateAlignedStreamData = {
+  recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Recipient address.
+  tokenId: mint, // Token mint address.
+  start: 1643363040, // Timestamp (in seconds) when the stream starts.
+  amount: totalAmount,
+  period: day, // 1 day for daily unlock updates
+  cliff: 1643363040, // Cliff timestamp in seconds.
+  cliffAmount: cliffAmount, // Amount unlocked at the "cliff" timestamp.
+  amountPerPeriod: baseAmountPerPeriod, // Base release rate (will be adjusted based on price).
+  name: "Price-based Vesting for Jane Doe.", // The stream name or subject.
+  transferableBySender: false, // not possible for aligned streams
+  automaticWithdrawal: false, // not possible for aligned streams
+  // Price-based configuration parameters - NOTE: all of these must be present in the creation order for the created Stream to be price-based
+  minPrice: 0.05, // Minimum price threshold. If current price <= minPrice, minPercentage is used.
+  maxPrice: 1.0, // Maximum price threshold. If current price >= maxPrice, maxPercentage is used.
+  minPercentage: 1, // Minimum unlock percentage (in basis points, e.g., 1 = 0.01%). Used when price <= minPrice.
+  maxPercentage: 1000, // Maximum unlock percentage (in basis points, e.g., 1000 = 10%). Used when price >= maxPrice.
+  // If either of these are omitted or oracleType is set to "none" the resulting Stream will behave like a regular Stream
+  oracleType: "test", //  "test" is passed if you are using Streamflow's price oracles, you can also pass "pyth" if you are passing a Pyth price oracle to priceOracle
+  priceOracle: priceOracleAddress, // Address of the price oracle, either a Streamflow oracle address, or a Pyth oracle address.
+  skipInitial: false, //  [optional] Whether to skip initial unlock amount update when the stream starts. Defaults to false.
+  tickSize: 1, // [optional] Tick size for percentage calculations when price is between minPrice and maxPrice. Defaults to 1.
+};
+
+try {
+  const { ixs, tx, metadata } = await client.create(createPriceBasedParams, solanaCreateParams);
+} catch (exception) {
+}
+
+const { ixs } = await client.prepareCreateStreamInstructions(createPriceBasedParams, solanaCreateParams)
+```
+## Create a Price-based Lock
+
+You can also create a Stream that behaves similar to a token Lock and unlocks at a specific price. There are some technical limitations that cause a small portion of the tokens to be unlocked over time that depends on the contract amount and number of decimals, but for most cases the time it would take for the whole contract to be unlocked would be measured in decades or even hundreds of years. You can achieve this with the following settings:
+
+```javascript
+const targetPrice = 100; // Price at which you want tokens to unlock
+const minPrice = targetPrice - 1;
+const maxPrice = targetPrice;
+const minPercentage = 0;
+const maxPercentage = 100;
+const totalAmount = new BN(1000000);
+const amountPerPeriod = totalAmount;
+const cliffAmount = new BN(0); // No cliff for price-based lock
+
+const createPriceBasedParams: Types.ICreateAlignedStreamData = {
+  recipient: "4ih00075bKjVg000000tLdk4w42NyG3Mv0000dc0M00", // Recipient address.
+  tokenId: mint, // Token mint address.
+  start: 1643363040, // Timestamp (in seconds) when the stream starts.
+  amount: totalAmount, 
+  period: 30, // 30 seconds so in case the target price is reached, the oracle has 30 seconds to fetch the price and update the contract release rate
+  cliff: 1643363040, // Cliff timestamp in seconds (should match start for price-based lock).
+  cliffAmount: cliffAmount, // Amount unlocked at the "cliff" timestamp.
+  amountPerPeriod: amountPerPeriod, // Will be updated to 1 as long as price below targetPrice,
+  // meaning that tokens are unlocked at rate of 1 smallest denominator of the token per each period (if token has 9 decimals that is 0.000000001 token every 30 seconds)
+  name: "Price-based Lock for Jane Doe.",
+  transferableBySender: false, // not possible for aligned streams
+  automaticWithdrawal: false, // not possible for aligned streams
+  // Price-based configuration parameters - NOTE: all of these must be present in the creation order for the created Stream to be price-based
+  minPrice, // Minimum price threshold. If current price <= minPrice, minPercentage is used.
+  maxPrice, // Maximum price threshold. If current price >= maxPrice, maxPercentage is used.
+  minPercentage, // Minimum unlock percentage (in basis points, e.g., 1 = 0.01%). Used when price <= minPrice.
+  maxPercentage, // Maximum unlock percentage (in basis points, e.g., 1000 = 10%). Used when price >= maxPrice.
+  // If either of these are omitted or oracleType is set to "none" the resulting Stream will behave like a regular Stream
+  oracleType: "test", //  "test" is passed if you are using Streamflow's price oracles, you can also pass "pyth" if you are passing a Pyth price oracle to priceOracle
+  priceOracle: priceOracleAddress, // Address of the price oracle, either a Streamflow oracle address, or a Pyth oracle address.
+  skipInitial: false, // In this case it should not be set to true 
+  // These parameters make sense for a price-based token lock
+  floorPrice: 20, // lower bound targetPrice - at or below this price tokens will be unlocked
+  expiryTime: 1643364640, // If the targetPrice has not been reached by this point in time, the tokens will be unlocked
+  expiryPercentage: maxPercentage, // The percentage unlock rate of tokens after expiryTime, it should be maxPercentage or 100
+
+};
+```
+
+### Fetching Aligned Stream Data
+
+When you fetch a price-based stream using `getOne()`, `get()` or `searchStreams()`, it automatically returns an `AlignedContract` instance if the stream is price-based. You can check if a stream is aligned and access its price-based properties:
+
+```javascript
+import { isAligned, getNumberFromBN } from "@streamflow/stream";
+
+const tokenDecimals = 9; // Token decimals for the stream's token
+
+const stream = await client.getOne({
+  id: "AAAAyotqTZZMAAAAmsD1JAgksT8NVAAAASfrGB5RAAAA",
+});
+
+// Check if the stream is price-based (aligned)
+if (isAligned(stream)) {
+  console.log("Min Price:", stream.minPrice);
+  console.log("Max Price:", stream.maxPrice);
+  console.log("Min Percentage:", stream.minPercentage);
+  console.log("Max Percentage:", stream.maxPercentage); 
+  console.log("Tick Size:", stream.tickSize);
+  console.log("Oracle Type:", stream.oracleType); // "test", "pyth", or "none"
+  console.log("Price Oracle Address:", stream.priceOracle);
+  console.log("Initial Price:", stream.initialPrice);
+  console.log("Last Price:", stream.lastPrice);
+  console.log("Last Amount Update Time:", stream.lastAmountUpdateTime);
+  console.log("Initial Amount Per Period:", getNumberFromBN(stream.initialAmountPerPeriod, tokenDecimals));
+  console.log("Expiry Time:", stream.expiryTime);
+  console.log("Expiry Percentage:", stream.expiryPercentage);
+  console.log("Floor Price:", stream.floorPrice);
+  console.log("Proxy Address:", stream.proxyAddress);
+}
+```
+
+All standard stream properties (like `amount`, `withdrawnAmount`, `unlocked()`, etc.) are also available on aligned streams, as `AlignedContract` extends the base `Contract` class.
+
+> **Note:** Price-based Streams use a separate proxy program (Aligned Unlocks) to manage the dynamic unlock logic. The unlock rate is recalculated periodically based on the oracle price. Automatic withdrawal and rate updates are not supported for price-based streams.
 
 ## General Stream creation
 

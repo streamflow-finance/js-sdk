@@ -162,6 +162,7 @@ export enum StreamType {
 
 // Base types
 export interface LinearStream {
+  isAligned: boolean;
   magic: number;
   version: number;
   createdAt: number;
@@ -514,7 +515,7 @@ export class Contract implements LinearStream {
 
   type: StreamType;
 
-  isAligned?: boolean;
+  isAligned: boolean;
 
   constructor(stream: DecodedStream) {
     this.magic = stream.magic.toNumber();
