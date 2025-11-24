@@ -225,8 +225,8 @@ Price-based Streams (also known as Aligned or Dynamic Streams) are a type of Str
 Price-based Streams require all the standard stream parameters plus additional price-based configuration parameters. The unlock rate is recalculated periodically based on the oracle price, making the vesting schedule responsive to market conditions.
 
 Streamflow's custom oracles can be fetched through the Oracle API 
-- Endpoint -> `https://oracle-api.streamflow.finance/oracle/{mint}`
-- [API Docs](https://oracle-api.streamflow.finance/docs)
+- Endpoint -> `https://oracle-api-public.streamflow.finance/oracle/{mint}`
+- [API Docs](https://oracle-api-public.streamflow.finance/docs)
 
 For more details creating a Stream with arbitrary configuration see [General Stream creation](#general-stream-creation).
 
