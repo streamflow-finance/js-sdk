@@ -31,6 +31,7 @@ import {
   FEE_ORACLE_PUBLIC_KEY,
   WITHDRAWOR_PUBLIC_KEY,
   PROGRAM_ID as STREAM_PROGRAM_ID,
+  PARTNER_ORACLE_PROGRAM_ID,
 } from "@streamflow/stream";
 import BN from "bn.js";
 import type PQueue from "p-queue";
@@ -78,6 +79,10 @@ export class SolanaLaunchpadClient {
 
   private readonly vestingId: PublicKey;
 
+  private readonly partnerOracleProgramId: PublicKey;
+
+  private readonly feeOraclePublicKey: PublicKey;
+
   public readonly program: Program<StreamflowLaunchpad>;
 
   constructor({
@@ -117,6 +122,8 @@ export class SolanaLaunchpadClient {
       programIds?.dynamicVesting ? programIds.dynamicVesting : ALIGNED_UNLOCKS_PROGRAM_ID[cluster],
     );
     this.vestingId = pk(programIds?.vesting ? programIds.vesting :  STREAM_PROGRAM_ID[cluster]);
+    this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+    this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
   }
 
   getCurrentProgramId(): PublicKey {
@@ -409,7 +416,7 @@ export class SolanaLaunchpadClient {
         streamMetadata: streamKey,
         escrowTokens: escrowKey,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
-        feeOracle: FEE_ORACLE_PUBLIC_KEY,
+        feeOracle: this.feeOraclePublicKey,
         tokenProgram: tokenProgramId,
       })
       .accountsPartial({

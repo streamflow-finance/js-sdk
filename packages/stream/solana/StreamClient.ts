@@ -91,17 +91,19 @@ import {
   STREAM_STRUCT_OFFSET_RECIPIENT,
   STREAM_STRUCT_OFFSET_SENDER,
   TX_FINALITY_CONFIRMED,
+  WITHDRAWOR,
   WITHDRAWOR_PUBLIC_KEY,
   FEE_ORACLE_PUBLIC_KEY,
   DEFAULT_STREAMFLOW_FEE,
   PARTNER_ORACLE_PROGRAM_ID,
-  FEES_METADATA_SEED,
   PARTNERS_SCHEMA,
   STREAM_STRUCT_OFFSETS,
   ORIGINAL_CONTRACT_SENDER_OFFSET,
   ALIGNED_PRECISION_FACTOR_POW,
   ALIGNED_COMPUTE_LIMIT,
   WITHDRAW_AVAILABLE_AMOUNT,
+  DEFAULT_CREATION_FEE_SOL,
+  DEFAULT_AUTO_CLAIM_FEE_SOL,
 } from "./constants.js";
 import {
   withdrawStreamInstruction,
@@ -133,6 +135,10 @@ export class SolanaStreamClient {
   private readonly connection: Connection;
 
   private readonly programId: PublicKey;
+
+  private readonly partnerOracleProgramId: PublicKey;
+
+  private readonly feeOraclePublicKey: PublicKey;
 
   private readonly commitment: Commitment | ConnectionConfig;
 
@@ -172,6 +178,8 @@ export class SolanaStreamClient {
       this.commitment = commitment;
       this.connection = new Connection(optionsOrClusterUrl, this.commitment);
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+      this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
       this.schedulingParams = {
         sendThrottler: sendThrottler ?? buildSendThrottler(sendRate),
       };
@@ -186,6 +194,8 @@ export class SolanaStreamClient {
       this.commitment = commitment;
       this.connection = new Connection(clusterUrl, this.commitment);
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+      this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
       const schedulingOptions = sendScheduler && "sendRate" in sendScheduler ? sendScheduler : undefined;
       const sendThrottler = !sendScheduler
         ? buildSendThrottler(1)
@@ -489,7 +499,7 @@ export class SolanaStreamClient {
         partner: partnerPublicKey,
         recipient: recipientPublicKey,
         withdrawor: WITHDRAWOR_PUBLIC_KEY,
-        feeOracle: FEE_ORACLE_PUBLIC_KEY,
+        feeOracle: this.feeOraclePublicKey,
         priceOracle: oracle,
         tokenProgram: tokenProgramId,
         streamflowProgram: this.programId,
@@ -593,7 +603,7 @@ export class SolanaStreamClient {
           partner: partnerPublicKey,
           partnerTokens: partnerTokens,
           mint: new PublicKey(mint),
-          feeOracle: FEE_ORACLE_PUBLIC_KEY,
+          feeOracle: this.feeOraclePublicKey,
           rent: SYSVAR_RENT_PUBKEY,
           timelockProgram: this.programId,
           tokenProgram: tokenProgramId,
@@ -738,7 +748,7 @@ export class SolanaStreamClient {
         metadata: metadataPubKey,
         escrowTokens,
         mint: new PublicKey(mint),
-        feeOracle: FEE_ORACLE_PUBLIC_KEY,
+        feeOracle: this.feeOraclePublicKey,
         rent: SYSVAR_RENT_PUBKEY,
         timelockProgram: this.programId,
         tokenProgram: tokenProgramId,
@@ -1765,23 +1775,23 @@ export class SolanaStreamClient {
    * @returns Fees
    */
   public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
-    const [metadataPubKey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(FEES_METADATA_SEED)],
-      new PublicKey(PARTNER_ORACLE_PROGRAM_ID),
-    );
-    const data = await this.connection.getAccountInfo(metadataPubKey);
+    const data = await this.connection.getAccountInfo(this.feeOraclePublicKey);
     if (!data) {
       return null;
     }
     const partners = borsh.deserialize(PARTNERS_SCHEMA, data.data) as unknown as IPartnerLayout[];
-    const filteredPartners = partners.filter((item) => new PublicKey(item.pubkey).toString() === address);
-    if (filteredPartners.length === 0) {
-      return null;
+    for (const partner of partners) {
+      const partnerAddress = new PublicKey(partner.pubkey).toString();
+      if (partnerAddress === address) {
+        return {
+          creationFeeSol: Number(partner.creation_fee),
+          autoClaimFeeSol: Number(partner.auto_claim_fee),
+          streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
+          partnerFee: 0,
+        };
+      }
     }
-    return {
-      streamflowFee: Number(filteredPartners[0].strm_fee.toFixed(4)),
-      partnerFee: Number(filteredPartners[0].partner_fee.toFixed(4)),
-    };
+    return null;
   }
 
   /**
@@ -1789,13 +1799,26 @@ export class SolanaStreamClient {
    * @returns Default streamflow fee
    */
   public async getDefaultStreamflowFee(): Promise<number> {
-    return DEFAULT_STREAMFLOW_FEE;
+    return (await this.getDefaultFees()).streamflowFee;
   }
 
   /**
+   * Get all defaults fees applied by the protocol.
+   *
+   * Protocol will use fees set for WITHDRAWOR as default if they are set.
+   */
+  public async getDefaultFees(): Promise<IFees> {
+    return await this.getFees({ address: WITHDRAWOR }) || {
+      creationFeeSol: DEFAULT_CREATION_FEE_SOL,
+      autoClaimFeeSol: DEFAULT_AUTO_CLAIM_FEE_SOL,
+      streamflowFee: DEFAULT_STREAMFLOW_FEE,
+      partnerFee: 0,
+    };
+  }
+
+    /**
    * Returns total fee percent, streamflow fees + partner fees
    * @param getFeesData structure with address for which we need to derive fee, either sender or partner usually
-   * @param chainSpecificParams additional parameters required by chain client
    * @returns fee as floating number, so if fee is 0.99%, it will return 0.99
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

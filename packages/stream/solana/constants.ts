@@ -44,6 +44,24 @@ export const ALIGNED_UNLOCKS_PROGRAM_ID = {
   [ICluster.Local]: "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
 };
 
+export const PARTNER_ORACLE_PROGRAM_ID = {
+  [ICluster.Devnet]: "pardoTarcc6HKsPcbXkVycxsJsoN9QEzrdHgVdHAGY3",
+  [ICluster.Mainnet]: "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa",
+  [ICluster.Testnet]: "pardoTarcc6HKsPcbXkVycxsJsoN9QEzrdHgVdHAGY3",
+  [ICluster.Local]: "pardoTarcc6HKsPcbXkVycxsJsoN9QEzrdHgVdHAGY3",
+};
+
+// const [feeOracle] = PublicKey.findProgramAddressSync(
+//   [Buffer.from(FEES_METADATA_SEED)],
+//   new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]),
+// );
+export const FEE_ORACLE_PUBLIC_KEY = {
+  [ICluster.Devnet]: "Aa2JJfFzUN3V54DXUHRBJowFw416xfZHpPk9DaNy3iYs",
+  [ICluster.Mainnet]: "B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT",
+  [ICluster.Testnet]: "Aa2JJfFzUN3V54DXUHRBJowFw416xfZHpPk9DaNy3iYs",
+  [ICluster.Local]: "Aa2JJfFzUN3V54DXUHRBJowFw416xfZHpPk9DaNy3iYs",
+};
+
 // Aligned Unlocks Program transactions require a higher comput limit
 export const ALIGNED_COMPUTE_LIMIT = 300000;
 
@@ -53,27 +71,34 @@ export const CONTRACT_SEED = Buffer.from("contract", "utf-8");
 export const ESCROW_SEED = Buffer.from("strm", "utf-8");
 export const TEST_ORACLE_SEED = Buffer.from("test-oracle", "utf-8");
 
-export const PARTNER_ORACLE_PROGRAM_ID = "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa";
-
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 
-export const WITHDRAWOR_PUBLIC_KEY = new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u");
+export const WITHDRAWOR = "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u";
 
-export const FEE_ORACLE_PUBLIC_KEY = new PublicKey("B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT");
+export const WITHDRAWOR_PUBLIC_KEY = new PublicKey(WITHDRAWOR);
 
 export const AIRDROP_TEST_TOKEN = "Gssm3vfi8s65R31SBdmQRq6cKeYojGgup7whkw4VCiQj";
 
 export const FEES_METADATA_SEED = Buffer.from("strm_fees");
 
-export const DEFAULT_STREAMFLOW_FEE = 0.99;
+// Default creation fee, 0.09 SOL
+export const DEFAULT_CREATION_FEE_SOL = 90_000_000;
+
+// Default auto claim fee, 0.19 SOL
+export const DEFAULT_AUTO_CLAIM_FEE_SOL = 190_000_000;
+
+// Default token fee %, 0.19%
+export const DEFAULT_STREAMFLOW_FEE = 0.19;
 
 export const AIRDROP_AMOUNT = 1; // 1 SOL is the cap on the testnet
 
 export const PARTNER_SCHEMA = {
   struct: {
     pubkey: { array: { type: "u8", len: 32 } },
-    partner_fee: "f32",
-    strm_fee: "f32",
+    creation_fee: "u32",
+    auto_claim_fee: "u32",
+    token_fee_percent: "f32",
+    buffer: { array: { type: "u8", len: 16 } },
   },
 };
 export const PARTNERS_SCHEMA = { array: { type: PARTNER_SCHEMA } };

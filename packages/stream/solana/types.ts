@@ -121,8 +121,17 @@ export interface ITransactionResult {
   txId: string;
 }
 
+/**
+ * Schema outlining vesting protocol fees.
+ */
 export interface IFees {
+  // fee paid in SOL to create a contract
+  creationFeeSol?: number;
+  // fee paid in SOL to enable auto-claim
+  autoClaimFeeSol?: number;
+  // fee paid in token % paid on contract creation and claimed to the treasury with every claim
   streamflowFee: number;
+  // referral fee, not used right now
   partnerFee: number;
 }
 

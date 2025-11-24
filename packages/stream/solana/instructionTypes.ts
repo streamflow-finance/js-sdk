@@ -105,6 +105,7 @@ export interface ITopupStreamLayout {
 
 export interface IPartnerLayout {
   pubkey: Uint8Array;
-  partner_fee: number;
-  strm_fee: number;
+  creation_fee: number;
+  auto_claim_fee: number;
+  token_fee_percent: number;
 }
