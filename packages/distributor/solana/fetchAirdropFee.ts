@@ -1,5 +1,3 @@
-import { ICluster } from "@streamflow/common";
-
 export type AirdropFeeResponse = {
   claimFee: string | number;
   claimFeeDynamic?: {
@@ -19,13 +17,11 @@ export interface AirdropFeeQueryOptionsOverrides {
 
 export const fetchAirdropFee = async (
   distributorId: string,
-  cluster: ICluster,
-  apiUrl?: string,
+  apiUrl: string,
   apiKey?: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<AirdropFeeResponse> => {
-  const baseUrl = apiUrl ?? cluster === ICluster.Mainnet ? "https://api.streamflow.finance" : "https://staging-api.streamflow.finance";
-  const url = `${baseUrl}/v2/api/airdrops/${encodeURIComponent(distributorId)}/fees`;
+  const url = `${apiUrl}/v2/api/airdrops/${encodeURIComponent(distributorId)}/fees`;
 
   const res = await fetchFn(url, {
     method: "GET",

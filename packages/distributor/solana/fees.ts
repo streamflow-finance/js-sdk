@@ -167,14 +167,14 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
   mintAccount: Mint;
   claimableAmount: bigint;
   cluster: ICluster;
-  apiUrl?: string;
+  apiUrl: string;
   apiKey?: string;
 }): Promise<bigint> {
   const { distributorAddress, mintAccount, claimableAmount, cluster, apiUrl, apiKey } = params;
   let apiFeesResponse = undefined;
 
   try {
-    apiFeesResponse = await fetchAirdropFee(distributorAddress, cluster, apiUrl, apiKey);
+    apiFeesResponse = await fetchAirdropFee(distributorAddress, apiUrl, apiKey);
   } catch (_) {
     // ignore and fallback
   }
@@ -192,7 +192,7 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
 
   const response = apiFeesResponse ?? defaultAPIFeesResponse;
 
-  if (response?.isCustom && !!response.claimFee) {
+  if (response?.isCustom && response.claimFee !== undefined && response.claimFee !== null) {
     return toLamportsSOL(response.claimFee);
   }
 

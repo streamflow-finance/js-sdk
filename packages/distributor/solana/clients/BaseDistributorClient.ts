@@ -77,7 +77,7 @@ export interface IInitOptions {
   programId?: string;
   sendRate?: number;
   sendThrottler?: PQueue;
-  apiUrl?: string;
+  apiUrl: string;
   apiKey?: string;
 }
 
@@ -94,7 +94,7 @@ export default abstract class BaseDistributorClient {
 
   protected cluster: ICluster;
 
-  protected apiUrl?: string;
+  protected apiUrl: string;
 
   protected apiKey?: string;
 
