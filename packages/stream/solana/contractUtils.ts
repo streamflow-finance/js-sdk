@@ -7,7 +7,8 @@ import {
   type Stream,
   StreamType,
 } from "./types.js";
-import { MAX_SAFE_UNIX_TIME_VALUE } from "./constants.js";
+
+const MAX_SAFE_UNIX_TIME_VALUE = 8640000000000;
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
@@ -51,12 +52,7 @@ export const isCliffCloseToDepositedAmount = (streamData: { depositedAmount: BN;
   return streamData.cliffAmount.gte(streamData.depositedAmount.sub(new BN(1)));
 };
 
-export const isPayment = (streamData: { canTopup: boolean }): boolean => {
-  return streamData.canTopup;
-};
-
 export const isVesting = (streamData: {
-  canTopup: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
   minPrice?: number;
@@ -65,14 +61,13 @@ export const isVesting = (streamData: {
   maxPercentage?: number;
 }): boolean => {
   return (
-    !streamData.canTopup &&
     !isCliffCloseToDepositedAmount(streamData) &&
     !isDynamicLock(streamData.minPrice, streamData.maxPrice, streamData.minPercentage, streamData.maxPercentage)
   );
 };
 
 export const isAligned = (stream: Stream): stream is AlignedStream => {
-  return "minPrice" in stream && "maxPrice" in stream && "minPercentage" in stream && "maxPercentage" in stream;
+  return stream.isAligned;
 };
 
 export const isCreateAlignedStreamData = (obj: ICreateStreamData): obj is ICreateAlignedStreamData => {
@@ -129,13 +124,11 @@ export const buildStreamType = (streamData: {
   minPercentage?: number;
   maxPercentage?: number;
 }): StreamType => {
-  if (isVesting(streamData)) {
-    return StreamType.Vesting;
-  }
   if (isTokenLock(streamData)) {
     return StreamType.Lock;
   }
-  return StreamType.Payment;
+
+  return StreamType.Vesting;
 };
 
 export const decodeEndTime = (endTime: BN): number => {

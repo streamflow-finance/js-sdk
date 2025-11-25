@@ -8,8 +8,7 @@ import {
 } from "@solana/spl-token";
 import type { AccountInfo, Commitment, ConnectionConfig, MemcmpFilter, TransactionInstruction } from "@solana/web3.js";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
-import { ICluster, invariant, type ITransactionResult } from "@streamflow/common";
-import {
+import { ICluster, invariant, type ITransactionResult,
   ata,
   buildSendThrottler,
   checkOrCreateAtaBatch,
@@ -21,8 +20,8 @@ import {
   prepareWrappedAccount,
   unwrapExecutionParams,
   type IProgramAccount,
-  type ITransactionSolanaExtResolved,
-} from "@streamflow/common/solana";
+  type ITransactionExtResolved,
+} from "@streamflow/common";
 import BN from "bn.js";
 import bs58 from "bs58";
 import type PQueue from "p-queue";
@@ -57,10 +56,10 @@ import type {
   ICreateAlignedDistributorData,
   ICreateDistributorData,
   ICreateDistributorResult,
-  ICreateSolanaExt,
+  ICreateExt,
   IGetClaimData,
   IGetDistributors,
-  IInteractSolanaExt,
+  IInteractExt,
   ISearchDistributors,
 } from "../types.js";
 import {
@@ -132,7 +131,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareCreateInstructions(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    extParams: ITransactionSolanaExtResolved<ICreateSolanaExt>,
+    extParams: ITransactionExtResolved<ICreateExt>,
   ): Promise<{ distributorPublicKey: PublicKey; ixs: TransactionInstruction[] }> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -208,7 +207,7 @@ export default abstract class BaseDistributorClient {
 
   public async create(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    extParams: ICreateSolanaExt,
+    extParams: ICreateExt,
   ): Promise<ICreateDistributorResult> {
     const invoker = extParams.invoker.publicKey;
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -242,19 +241,19 @@ export default abstract class BaseDistributorClient {
    * @public
    * @overload
    */
-  public async claim(data: IClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult>;
+  public async claim(data: IClaimData, extParams: IInteractExt): Promise<ITransactionResult>;
 
   /**
    * @internal
    */
   public async claim(
     data: IClaimData,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
     _serviceTransfer?: unknown
   ): Promise<ITransactionResult>;
   public async claim(
     data: IClaimData,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
     _serviceTransfer?: unknown,
   ): Promise<ITransactionResult> {
     const executionParams = this.unwrapExecutionParams(extParams);
@@ -286,7 +285,7 @@ export default abstract class BaseDistributorClient {
    */
   public async prepareClaimInstructions(
     data: IClaimData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>
+    extParams: ITransactionExtResolved<IInteractExt>
   ): Promise<TransactionInstruction[]>;
 
   /**
@@ -294,12 +293,12 @@ export default abstract class BaseDistributorClient {
    */
   public async prepareClaimInstructions(
     data: IClaimData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    extParams: ITransactionExtResolved<IInteractExt>,
     _serviceTransfer?: unknown
   ): Promise<TransactionInstruction[]>;
   public async prepareClaimInstructions(
     data: IClaimData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    extParams: ITransactionExtResolved<IInteractExt>,
     _serviceTransfer?: unknown,
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
@@ -402,7 +401,7 @@ export default abstract class BaseDistributorClient {
     return ixs;
   }
 
-  public async closeClaim(data: ICloseClaimData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  public async closeClaim(data: ICloseClaimData, extParams: IInteractExt): Promise<ITransactionResult> {
     const executionParams = this.unwrapExecutionParams(extParams);
     const invoker = executionParams.invoker.publicKey;
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -428,7 +427,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareCloseClaimInstructions(
     data: ICloseClaimData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    extParams: ITransactionExtResolved<IInteractExt>,
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -472,7 +471,7 @@ export default abstract class BaseDistributorClient {
 
   public async prepareClawbackInstructions(
     data: IClawbackData,
-    extParams: ITransactionSolanaExtResolved<IInteractSolanaExt>,
+    extParams: ITransactionExtResolved<IInteractExt>,
   ): Promise<TransactionInstruction[]> {
     if (!extParams.invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -515,7 +514,7 @@ export default abstract class BaseDistributorClient {
     return ixs;
   }
 
-  public async clawback(data: IClawbackData, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  public async clawback(data: IClawbackData, extParams: IInteractExt): Promise<ITransactionResult> {
     const executionParams = this.unwrapExecutionParams(extParams);
     const invoker = executionParams.invoker.publicKey;
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
@@ -617,7 +616,7 @@ export default abstract class BaseDistributorClient {
     return args;
   }
 
-  protected unwrapExecutionParams<T extends IInteractSolanaExt>(
+  protected unwrapExecutionParams<T extends IInteractExt>(
     extParams: T,
   ): ReturnType<typeof unwrapExecutionParams<T>> {
     return unwrapExecutionParams(extParams, this.connection);

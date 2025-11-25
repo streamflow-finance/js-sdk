@@ -9,6 +9,5 @@ export default defineConfig(
       "solana/index": "solana/index.ts",
       "solana/rpc/index": "solana/rpc/index.ts",
     },
-    external: ["aptos"],
   }),
 );

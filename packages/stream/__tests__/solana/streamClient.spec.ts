@@ -3,7 +3,7 @@ import { describe, expect, test, beforeEach, vi } from "vitest";
 import { PublicKey, type VersionedTransaction } from "@solana/web3.js";
 
 import { SolanaStreamClient } from "../../solana/StreamClient.js";
-import { ICluster } from "../../common/types.js";
+import { ICluster } from "../../solana/types.js";
 
 // Mock Web Crypto API for Node.js test environment
 Object.defineProperty(globalThis, "crypto", {
@@ -34,21 +34,25 @@ Object.defineProperty(globalThis, "crypto", {
 });
 
 // Mock external imports - move mock functions inside factory
-vi.mock("@streamflow/common/solana", () => ({
-  ata: vi.fn(),
-  checkOrCreateAtaBatch: vi.fn(),
-  prepareTransaction: vi.fn(),
-  prepareBaseInstructions: vi.fn(),
-  getMintAndProgram: vi.fn(),
-  createVersionedTransaction: vi.fn(),
-  prepareWrappedAccount: vi.fn(),
-  signAndExecuteTransaction: vi.fn(),
-  executeTransaction: vi.fn(),
-  executeMultipleTransactions: vi.fn(),
-  buildSendThrottler: vi.fn(() => ({})),
-  getMultipleAccountsInfoBatched: vi.fn(),
-  getProgramAccounts: vi.fn(),
-}));
+vi.mock("@streamflow/common", async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, any>;
+  return {
+    ...actual,
+    ata: vi.fn(),
+    checkOrCreateAtaBatch: vi.fn(),
+    prepareTransaction: vi.fn(),
+    prepareBaseInstructions: vi.fn(),
+    getMintAndProgram: vi.fn(),
+    createVersionedTransaction: vi.fn(),
+    prepareWrappedAccount: vi.fn(),
+    signAndExecuteTransaction: vi.fn(),
+    executeTransaction: vi.fn(),
+    executeMultipleTransactions: vi.fn(),
+    buildSendThrottler: vi.fn(() => ({})),
+    getMultipleAccountsInfoBatched: vi.fn(),
+    getProgramAccounts: vi.fn(),
+  };
+});
 
 vi.mock("@coral-xyz/anchor", () => ({
   Program: vi.fn().mockImplementation(() => ({
@@ -74,25 +78,26 @@ vi.mock("../../solana/lib/utils.js", () => ({
   signAllTransactionWithRecipients: vi.fn(),
   sendAndConfirmStreamRawTransaction: vi.fn(),
   extractSolanaErrorCode: vi.fn(),
+  calculateTotalAmountToDeposit: vi.fn(),
 }));
 
 describe("SolanaStreamClient Transaction Builders", async () => {
   let instance: SolanaStreamClient;
 
   // Access mocked functions
-  const mockPrepareTransaction = vi.mocked(await import("@streamflow/common/solana")).prepareTransaction;
-  const mockGetMintAndProgram = vi.mocked(await import("@streamflow/common/solana")).getMintAndProgram;
-  const mockAta = vi.mocked(await import("@streamflow/common/solana")).ata;
-  const mockCheckOrCreateAtaBatch = vi.mocked(await import("@streamflow/common/solana")).checkOrCreateAtaBatch;
-  const mockPrepareBaseInstructions = vi.mocked(await import("@streamflow/common/solana")).prepareBaseInstructions;
+  const mockPrepareTransaction = vi.mocked(await import("@streamflow/common")).prepareTransaction;
+  const mockGetMintAndProgram = vi.mocked(await import("@streamflow/common")).getMintAndProgram;
+  const mockAta = vi.mocked(await import("@streamflow/common")).ata;
+  const mockCheckOrCreateAtaBatch = vi.mocked(await import("@streamflow/common")).checkOrCreateAtaBatch;
+  const mockPrepareBaseInstructions = vi.mocked(await import("@streamflow/common")).prepareBaseInstructions;
   const mockCreateVersionedTransaction = vi.mocked(
-    await import("@streamflow/common/solana"),
+    await import("@streamflow/common"),
   ).createVersionedTransaction;
-  const mockPrepareWrappedAccount = vi.mocked(await import("@streamflow/common/solana")).prepareWrappedAccount;
-  const mockSignAndExecuteTransaction = vi.mocked(await import("@streamflow/common/solana")).signAndExecuteTransaction;
-  const mockExecuteTransaction = vi.mocked(await import("@streamflow/common/solana")).executeTransaction;
+  const mockPrepareWrappedAccount = vi.mocked(await import("@streamflow/common")).prepareWrappedAccount;
+  const mockSignAndExecuteTransaction = vi.mocked(await import("@streamflow/common")).signAndExecuteTransaction;
+  const mockExecuteTransaction = vi.mocked(await import("@streamflow/common")).executeTransaction;
   const mockExecuteMultipleTransactions = vi.mocked(
-    await import("@streamflow/common/solana"),
+    await import("@streamflow/common"),
   ).executeMultipleTransactions;
 
   // Access Solana-specific mocked functions

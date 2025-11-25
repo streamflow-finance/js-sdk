@@ -1,7 +1,7 @@
 import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { type Keypair } from "@solana/web3.js";
-import { type ITransactionSolanaExt } from "@streamflow/common/solana";
+import { type ITransactionExt } from "@streamflow/common";
 import type BN from "bn.js";
 
 import { type RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
@@ -15,7 +15,7 @@ export type RewardPool = IdlAccounts<RewardPoolIDL>["rewardPool"];
 export type FeeValue = IdlAccounts<FeeManagerIDL>["feeValue"];
 export type DefaultFeeValueConfig = IdlAccounts<FeeManagerIDL>["config"];
 
-export interface IInteractSolanaExt extends ITransactionSolanaExt {
+export interface IInteractExt extends ITransactionExt {
   invoker: SignerWalletAdapter | Keypair;
 }
 

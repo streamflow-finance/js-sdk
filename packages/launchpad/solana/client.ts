@@ -20,14 +20,19 @@ import {
   prepareTransaction,
   signAndExecuteTransaction,
   prepareBaseInstructions,
-} from "@streamflow/common/solana";
-import {
-  constants as streamConstants,
+} from "@streamflow/common";
+import {  
   type OracleType,
   deriveTestOraclePDA,
   deriveContractPDA,
   deriveEscrowPDA,
-} from "@streamflow/stream/solana";
+  ALIGNED_PRECISION_FACTOR_POW,
+  ALIGNED_UNLOCKS_PROGRAM_ID,
+  FEE_ORACLE_PUBLIC_KEY,
+  WITHDRAWOR_PUBLIC_KEY,
+  PROGRAM_ID as STREAM_PROGRAM_ID,
+  PARTNER_ORACLE_PROGRAM_ID,
+} from "@streamflow/stream";
 import BN from "bn.js";
 import type PQueue from "p-queue";
 
@@ -38,7 +43,7 @@ import { deriveDepositPDA, deriveLaunchpadPDA } from "./lib/derive-accounts.js";
 import {
   type DepositAccount,
   type Launchpad,
-  type IInteractSolanaExt,
+  type IInteractExt,
   type ICreateLaunchpad,
   type IDeposit,
   type IClaimDeposits,
@@ -73,6 +78,10 @@ export class SolanaLaunchpadClient {
   private readonly dynamicVestingId: PublicKey;
 
   private readonly vestingId: PublicKey;
+
+  private readonly partnerOracleProgramId: PublicKey;
+
+  private readonly feeOraclePublicKey: PublicKey;
 
   public readonly program: Program<StreamflowLaunchpad>;
 
@@ -110,9 +119,11 @@ export class SolanaLaunchpadClient {
       connection: this.connection,
     }) as Program<StreamflowLaunchpad>;
     this.dynamicVestingId = pk(
-      programIds?.dynamicVesting ? programIds.dynamicVesting : streamConstants.ALIGNED_UNLOCKS_PROGRAM_ID[cluster],
+      programIds?.dynamicVesting ? programIds.dynamicVesting : ALIGNED_UNLOCKS_PROGRAM_ID[cluster],
     );
-    this.vestingId = pk(programIds?.vesting ? programIds.vesting : streamConstants.PROGRAM_ID[cluster]);
+    this.vestingId = pk(programIds?.vesting ? programIds.vesting :  STREAM_PROGRAM_ID[cluster]);
+    this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+    this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
   }
 
   getCurrentProgramId(): PublicKey {
@@ -138,7 +149,7 @@ export class SolanaLaunchpadClient {
     return this.program.account.depositAccount.fetch(id);
   }
 
-  async createLaunchpad(data: ICreateLaunchpad, extParams: IInteractSolanaExt): Promise<CreationResult> {
+  async createLaunchpad(data: ICreateLaunchpad, extParams: IInteractExt): Promise<CreationResult> {
     const { ixs, publicKey } = await this.prepareCreateLaunchpadInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
     return {
@@ -173,7 +184,7 @@ export class SolanaLaunchpadClient {
       isMemoRequired,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: ICreateLaunchpad,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
     publicKey: PublicKey;
@@ -204,11 +215,11 @@ export class SolanaLaunchpadClient {
         vestingEndTs: new BN(vestingEndTs),
         vestingPeriod: new BN(vestingPeriod),
         oracleType: (!!oracleType ? { [oracleType]: {} } : { none: {} }) as OracleType,
-        minPrice: getBN(minPrice, streamConstants.ALIGNED_PRECISION_FACTOR_POW),
-        maxPrice: getBN(maxPrice, streamConstants.ALIGNED_PRECISION_FACTOR_POW),
-        minPercentage: getBN(minPercentage, streamConstants.ALIGNED_PRECISION_FACTOR_POW),
-        maxPercentage: getBN(maxPercentage, streamConstants.ALIGNED_PRECISION_FACTOR_POW),
-        tickSize: getBN(tickSize, streamConstants.ALIGNED_PRECISION_FACTOR_POW),
+        minPrice: getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW),
+        maxPrice: getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW),
+        minPercentage: getBN(minPercentage, ALIGNED_PRECISION_FACTOR_POW),
+        maxPercentage: getBN(maxPercentage, ALIGNED_PRECISION_FACTOR_POW),
+        tickSize: getBN(tickSize, ALIGNED_PRECISION_FACTOR_POW),
         skipInitial,
         isMemoRequired,
       })
@@ -225,7 +236,7 @@ export class SolanaLaunchpadClient {
     return { ixs: [createIx], publicKey: launchpadPDA };
   }
 
-  async fundLaunchpad(data: IFundLaunchpad, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async fundLaunchpad(data: IFundLaunchpad, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareFundLaunchpadInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
     return {
@@ -236,7 +247,7 @@ export class SolanaLaunchpadClient {
 
   async prepareFundLaunchpadInstructions(
     { launchpad: launchpadKey, amount, baseMint: baseMintKey, tokenProgramId = TOKEN_PROGRAM_ID }: IFundLaunchpad,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -271,7 +282,7 @@ export class SolanaLaunchpadClient {
     };
   }
 
-  async deposit(data: IDeposit, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async deposit(data: IDeposit, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareDepositInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
     return {
@@ -290,7 +301,7 @@ export class SolanaLaunchpadClient {
       owner,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: IDeposit,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
     publicKey: PublicKey;
@@ -330,7 +341,7 @@ export class SolanaLaunchpadClient {
     return { ixs, publicKey: depositPDA };
   }
 
-  async claimDeposits(data: IClaimDeposits, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async claimDeposits(data: IClaimDeposits, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareClaimDepositsInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
     return {
@@ -341,7 +352,7 @@ export class SolanaLaunchpadClient {
 
   async prepareClaimDepositsInstructions(
     { launchpad: launchpadKey, tokenProgramId = TOKEN_PROGRAM_ID }: IClaimDeposits,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -362,7 +373,7 @@ export class SolanaLaunchpadClient {
     };
   }
 
-  async claimAllocatedVested(data: IClaimAllocatedVested, extParams: IInteractSolanaExt): Promise<ITransactionResult> {
+  async claimAllocatedVested(data: IClaimAllocatedVested, extParams: IInteractExt): Promise<ITransactionResult> {
     if (!extParams.computeLimit) {
       extParams.computeLimit = 280_000;
     }
@@ -376,7 +387,7 @@ export class SolanaLaunchpadClient {
 
   async prepareClaimAllocatedVestedInstructions(
     { launchpad: launchpadKey, baseMint: baseMintKey, owner, tokenProgramId = TOKEN_PROGRAM_ID }: IClaimAllocatedVested,
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
   ): Promise<{
     ixs: TransactionInstruction[];
     streamKeypair: Keypair;
@@ -404,8 +415,8 @@ export class SolanaLaunchpadClient {
         proxyTokens: proxyTokensKey,
         streamMetadata: streamKey,
         escrowTokens: escrowKey,
-        withdrawor: streamConstants.WITHDRAWOR_PUBLIC_KEY,
-        feeOracle: streamConstants.FEE_ORACLE_PUBLIC_KEY,
+        withdrawor: WITHDRAWOR_PUBLIC_KEY,
+        feeOracle: this.feeOraclePublicKey,
         tokenProgram: tokenProgramId,
       })
       .accountsPartial({
@@ -419,7 +430,7 @@ export class SolanaLaunchpadClient {
 
   private async execute(
     ixs: TransactionInstruction[],
-    extParams: IInteractSolanaExt,
+    extParams: IInteractExt,
     ...partialSigners: (Keypair | undefined)[]
   ) {
     ixs = [...prepareBaseInstructions(this.connection, extParams), ...ixs];

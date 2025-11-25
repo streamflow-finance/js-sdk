@@ -1,10 +1,10 @@
-import type {
-  AccountInfo,
-  BlockhashWithExpiryBlockHeight,
-  Commitment,
-  Context,
-  PublicKey,
-  VersionedTransaction,
+import { type TransactionInstruction,
+  type AccountInfo,
+  type BlockhashWithExpiryBlockHeight,
+  type Commitment,
+  type Context,
+  type PublicKey,
+  type VersionedTransaction,
 } from "@solana/web3.js";
 import type PQueue from "p-queue";
 
@@ -25,7 +25,7 @@ export type ComputeLimitEstimate = (tx: VersionedTransaction) => Promise<number>
  *  - should be only when building instructions via `prepare` methods, as tx executing methods will fail without a signer;
  *  - currently supported only when claiming an Airdrop;
  */
-export interface ITransactionSolanaExt {
+export interface ITransactionExt {
   computePrice?: number | ComputePriceEstimate;
   computeLimit?: number | ComputeLimitEstimate | "autoSimulate";
   feePayer?: PublicKey;
@@ -35,7 +35,7 @@ export interface ITransactionSolanaExt {
  * Acceptable type with resolved values.
  * Function types may be omitted if passed to destinations that do not support them.
  */
-type ITransactionSolanaExtResolvedValues = {
+type ITransactionExtResolvedValues = {
   computePrice?: number | ComputePriceEstimate;
   computeLimit?: number | ComputeLimitEstimate;
   feePayer?: PublicKey;
@@ -43,11 +43,11 @@ type ITransactionSolanaExtResolvedValues = {
 
 type KeysNotOfA<T, ToExclude> = Pick<T, Exclude<keyof T, keyof ToExclude>>;
 
-export type ITransactionSolanaExtResolved<T extends ITransactionSolanaExt = ITransactionSolanaExt> = {
-  [AK in keyof KeysNotOfA<T, ITransactionSolanaExt>]: T[AK];
-} & ITransactionSolanaExtResolvedValues;
+export type ITransactionExtResolved<T extends ITransactionExt = ITransactionExt> = {
+  [AK in keyof KeysNotOfA<T, ITransactionExt>]: T[AK];
+} & ITransactionExtResolvedValues;
 
-export interface IInteractSolanaExt extends ITransactionSolanaExt {
+export interface IInteractExt extends ITransactionExt {
   invoker: {
     publicKey: string | PublicKey | null;
   };
@@ -98,5 +98,42 @@ export class TransactionFailedError extends Error {
     super(m);
     Object.setPrototypeOf(this, TransactionFailedError.prototype);
     this.name = "TransactionFailedError";
+  }
+}
+
+export interface ITransactionResult {
+  ixs: TransactionInstruction[];
+  txId: string;
+}
+
+// Utility types
+export enum ICluster {
+  Mainnet = "mainnet",
+  Devnet = "devnet",
+  Testnet = "testnet",
+  Local = "local",
+}
+
+/**
+ * Error wrapper for calls made to the contract on chain
+ */
+export class ContractError extends Error {
+  public contractErrorCode: string | null;
+
+  public description: string | null;
+
+  /**
+   * Constructs the Error Wrapper
+   * @param error Original error raised probably by the chain SDK
+   * @param code extracted code from the error if managed to parse it
+   */
+  constructor(error: Error, code?: string | null, description?: string | null) {
+    super(error.message, { cause: error }); // Call the base class constructor with the error message
+    this.contractErrorCode = code ?? null;
+    this.description = description ?? null;
+    // Copy properties from the original error
+    Object.setPrototypeOf(this, ContractError.prototype);
+    this.name = "ContractError"; // Set the name property
+    this.stack = error.stack;
   }
 }

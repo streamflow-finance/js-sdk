@@ -190,7 +190,7 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
 
   const response = apiFeesResponse ?? defaultAPIFeesResponse;
 
-  if (response?.isCustom && !!response.claimFee) {
+  if (response?.isCustom && response.claimFee !== null && response.claimFee !== undefined) {
     return toLamportsSOL(response.claimFee);
   }
 
