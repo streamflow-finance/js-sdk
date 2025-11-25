@@ -77,6 +77,8 @@ export interface IInitOptions {
   programId?: string;
   sendRate?: number;
   sendThrottler?: PQueue;
+  apiUrl?: string;
+  apiKey?: string;
 }
 
 export default abstract class BaseDistributorClient {
@@ -92,6 +94,10 @@ export default abstract class BaseDistributorClient {
 
   protected cluster: ICluster;
 
+  protected apiUrl?: string;
+
+  protected apiKey?: string;
+
   public constructor({
     clusterUrl,
     cluster = ICluster.Mainnet,
@@ -99,6 +105,8 @@ export default abstract class BaseDistributorClient {
     programId = "",
     sendRate = 1,
     sendThrottler,
+    apiUrl,
+    apiKey,
   }: IInitOptions) {
     this.commitment = commitment;
     this.cluster = cluster;
@@ -109,6 +117,8 @@ export default abstract class BaseDistributorClient {
       ...MerkleDistributorIDL,
     } as MerkleDistributorProgramType;
     this.merkleDistributorProgram = new Program(merkleDistributorProgram, { connection: this.connection });
+    this.apiUrl = apiUrl;
+    this.apiKey = apiKey;
   }
 
   protected abstract getNewDistributorInstruction(
@@ -391,6 +401,8 @@ export default abstract class BaseDistributorClient {
           mintAccount,
           claimableAmount,
           cluster: this.cluster,
+          apiUrl: this.apiUrl,
+          apiKey: this.apiKey,
         });
       } catch (_) {
         feeLamports = MINIMUM_FEE_FALLBACK;

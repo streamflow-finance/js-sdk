@@ -19,17 +19,19 @@ export interface AirdropFeeQueryOptionsOverrides {
 
 export const fetchAirdropFee = async (
   distributorId: string,
-  cluster: ICluster = ICluster.Mainnet,
+  cluster: ICluster,
+  apiUrl?: string,
+  apiKey?: string,
   fetchFn: typeof fetch = fetch,
 ): Promise<AirdropFeeResponse> => {
-  const baseUrl =
-    cluster === ICluster.Mainnet ? "https://api.streamflow.finance" : "https://staging-api.streamflow.finance";
+  const baseUrl = apiUrl ?? cluster === ICluster.Mainnet ? "https://api.streamflow.finance" : "https://staging-api.streamflow.finance";
   const url = `${baseUrl}/v2/api/airdrops/${encodeURIComponent(distributorId)}/fees`;
 
   const res = await fetchFn(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      ...(apiKey ? { "x-api-key": apiKey } : {}),
     },
   });
 
