@@ -151,6 +151,7 @@ async function main() {
     // Define common parameters
     const clusterUrl = "https://api.devnet.solana.com";
     const cluster = ICluster.Devnet;
+    const apiUrl = "https://api-public.streamflow.finance";
 
     // Initialize the Streamflow Solana client
     console.log("Initializing Streamflow Solana client...");
@@ -161,6 +162,7 @@ async function main() {
     const distributorClient = new StreamflowDistributorSolana.SolanaDistributorClient({
       clusterUrl,
       cluster,
+      apiUrl,
     });
 
     // Initialize the Staking client
