@@ -4,7 +4,7 @@ import BN from "bn.js";
 
 export const FEE_PRECISION_FACTOR = 10_000;
 export const FEE_PRECISION_FACTOR_BN = new BN(FEE_PRECISION_FACTOR);
-export const DEFAULT_FEE = 19;
+export const DEFAULT_FEE = 25;
 export const DEFAULT_FEE_BN = new BN(DEFAULT_FEE);
 export const SCALE_PRECISION_FACTOR = 1_000_000_000;
 export const SCALE_PRECISION_FACTOR_BN = new BN(SCALE_PRECISION_FACTOR);
