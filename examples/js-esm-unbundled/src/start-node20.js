@@ -14,7 +14,6 @@ import { StreamflowDistributorSolana } from "@streamflow/distributor";
 import { SolanaStakingClient } from "@streamflow/staking";
 import { SolanaLaunchpadClient } from "@streamflow/launchpad";
 // Other entrypoints to test that the package.json is correct
-import { MerkleDistributor } from "@streamflow/distributor/solana";
 import {prepareTransaction} from "@streamflow/common";
 
 // Import IDL files to test import resolving
