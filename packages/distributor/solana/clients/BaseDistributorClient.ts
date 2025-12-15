@@ -1,6 +1,5 @@
 import { Program, type AccountsCoder, type Idl, type IdlAccounts } from "@coral-xyz/anchor";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferCheckedInstruction,
   createTransferCheckedWithFeeInstruction,
   getTransferFeeConfig,
@@ -8,7 +7,10 @@ import {
 } from "@solana/spl-token";
 import type { AccountInfo, Commitment, ConnectionConfig, MemcmpFilter, TransactionInstruction } from "@solana/web3.js";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
-import { ICluster, invariant, type ITransactionResult,
+import {
+  ICluster,
+  invariant,
+  type ITransactionResult,
   ata,
   buildSendThrottler,
   checkOrCreateAtaBatch,
@@ -21,9 +23,10 @@ import { ICluster, invariant, type ITransactionResult,
   unwrapExecutionParams,
   type IProgramAccount,
   type ITransactionExtResolved,
+  type PartnerOracle,
+  buildPartnerOracle,
 } from "@streamflow/common";
 import BN from "bn.js";
-import bs58 from "bs58";
 import type PQueue from "p-queue";
 
 import {
@@ -31,25 +34,17 @@ import {
   DISTRIBUTOR_ADMIN_OFFSET,
   DISTRIBUTOR_MINT_OFFSET,
   DISTRIBUTOR_PROGRAM_ID,
+  FEE_CONFIG_PUBLIC_KEY,
+  PARTNER_ORACLE_PROGRAM_ID,
+  SOL_FEE_PROGRAM_VERSION,
   STREAMFLOW_TREASURY_PUBLIC_KEY,
 } from "../constants.js";
 import { MINIMUM_FEE_FALLBACK, resolveAirdropFeeLamportsUsingApi } from "../fees.js";
 import MerkleDistributorIDL from "../descriptor/idl/merkle_distributor.json";
 import type { MerkleDistributor as MerkleDistributorProgramType } from "../descriptor/merkle_distributor.js";
-import { MerkleDistributor } from "../generated/accounts/index.js";
-import { closeClaim, type CloseClaimAccounts, type CloseClaimArgs } from "../generated/instructions/closeClaim.js";
-import {
-  claimLocked,
-  newClaim,
-  type ClaimLockedAccounts,
-  type ClawbackAccounts,
-  type NewClaimAccounts,
-  type NewClaimArgs,
-  type NewDistributorAccounts,
-  type NewDistributorArgs,
-} from "../generated/instructions/index.js";
 import type {
   AnyClaimStatus,
+  MerkleDistributor,
   IClaimData,
   IClawbackData,
   ICloseClaimData,
@@ -61,12 +56,15 @@ import type {
   IGetDistributors,
   IInteractExt,
   ISearchDistributors,
+  ClawbackAccounts,
+  NewDistributorAccounts,
+  Fees,
+  FeeConfig,
 } from "../types.js";
 import {
   calculateAmountWithTransferFees,
   getClaimantStatusPda,
   getDistributorPda,
-  getEventAuthorityPda,
   wrappedSignAndExecuteTransaction,
 } from "../utils.js";
 
@@ -85,6 +83,12 @@ export default abstract class BaseDistributorClient {
   protected connection: Connection;
 
   protected programId: PublicKey;
+
+  protected partnerOracleProgramId: PublicKey;
+
+  protected partnerOracle: Program<PartnerOracle>;
+
+  protected feeConfigPublicKey: PublicKey;
 
   protected commitment: Commitment | ConnectionConfig;
 
@@ -112,6 +116,9 @@ export default abstract class BaseDistributorClient {
     this.cluster = cluster;
     this.connection = new Connection(clusterUrl, this.commitment);
     this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(DISTRIBUTOR_PROGRAM_ID[cluster]);
+    this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+    this.partnerOracle = buildPartnerOracle(this.connection);
+    this.feeConfigPublicKey = new PublicKey(FEE_CONFIG_PUBLIC_KEY[cluster]);
     this.sendThrottler = sendThrottler ?? buildSendThrottler(sendRate);
     const merkleDistributorProgram = {
       ...MerkleDistributorIDL,
@@ -123,7 +130,7 @@ export default abstract class BaseDistributorClient {
 
   protected abstract getNewDistributorInstruction(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    accounts: NewDistributorAccounts
+    accounts: NewDistributorAccounts,
   ): Promise<TransactionInstruction>;
   protected abstract getClawbackInstruction(account: ClawbackAccounts): Promise<TransactionInstruction>;
 
@@ -157,13 +164,9 @@ export default abstract class BaseDistributorClient {
     const senderTokens = await ata(mintPublicKey, extParams.invoker.publicKey, tokenProgramId);
 
     const accounts: NewDistributorAccounts = {
-      distributor: distributorPublicKey,
       clawbackReceiver: senderTokens,
       mint: mintPublicKey,
-      tokenVault,
       admin: extParams.invoker.publicKey,
-      systemProgram: SystemProgram.programId,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       tokenProgram: tokenProgramId,
     };
 
@@ -259,7 +262,7 @@ export default abstract class BaseDistributorClient {
   public async claim(
     data: IClaimData,
     extParams: IInteractExt,
-    _serviceTransfer?: unknown
+    _serviceTransfer?: unknown,
   ): Promise<ITransactionResult>;
   public async claim(
     data: IClaimData,
@@ -283,7 +286,7 @@ export default abstract class BaseDistributorClient {
         context,
         commitment: this.getCommitment(),
       },
-      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+      { sendThrottler: this.sendThrottler, skipSimulation: true },
     );
 
     return { ixs, txId: signature };
@@ -295,7 +298,7 @@ export default abstract class BaseDistributorClient {
    */
   public async prepareClaimInstructions(
     data: IClaimData,
-    extParams: ITransactionExtResolved<IInteractExt>
+    extParams: ITransactionExtResolved<IInteractExt>,
   ): Promise<TransactionInstruction[]>;
 
   /**
@@ -304,7 +307,7 @@ export default abstract class BaseDistributorClient {
   public async prepareClaimInstructions(
     data: IClaimData,
     extParams: ITransactionExtResolved<IInteractExt>,
-    _serviceTransfer?: unknown
+    _serviceTransfer?: unknown,
   ): Promise<TransactionInstruction[]>;
   public async prepareClaimInstructions(
     data: IClaimData,
@@ -316,7 +319,7 @@ export default abstract class BaseDistributorClient {
     }
 
     const distributorPublicKey = new PublicKey(data.id);
-    const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
+    const distributor = await this.merkleDistributorProgram.account.merkleDistributor.fetch(distributorPublicKey);
 
     if (!distributor) {
       throw new Error("Couldn't get account info");
@@ -340,29 +343,21 @@ export default abstract class BaseDistributorClient {
       distributorPublicKey,
       extParams.invoker.publicKey,
     );
-    const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
     const claimStatus = await this.getClaim(claimStatusPublicKey);
 
-    const accounts: ClaimLockedAccounts | NewClaimAccounts = {
-      distributor: distributorPublicKey,
-      claimStatus: claimStatusPublicKey,
-      from: distributor.tokenVault,
-      to: invokerTokens,
-      claimant: extParams.invoker.publicKey,
-      mint: distributor.mint,
-      tokenProgram: tokenProgramId,
-      systemProgram: SystemProgram.programId,
-      eventAuthority: eventAuthorityPublicKey,
-      program: this.programId,
-    };
-
     if (!claimStatus) {
-      const args: NewClaimArgs = {
-        amountLocked: new BN(data.amountLocked),
-        amountUnlocked: new BN(data.amountUnlocked),
-        proof: data.proof,
-      };
-      ixs.push(newClaim(args, accounts, this.programId));
+      ixs.push(
+        await this.merkleDistributorProgram.methods
+          .newClaim(new BN(data.amountUnlocked), new BN(data.amountLocked), data.proof)
+          .accounts({
+            distributor: distributorPublicKey,
+            to: invokerTokens,
+            claimant: extParams.invoker.publicKey,
+            tokenProgram: tokenProgramId,
+            program: this.programId,
+          })
+          .instruction(),
+      );
     }
 
     const nowTs = new BN(Math.floor(Date.now() / 1000));
@@ -370,7 +365,25 @@ export default abstract class BaseDistributorClient {
       claimStatus ||
       (new BN(data.amountLocked).gtn(0) && nowTs.sub(distributor.startTs).gte(distributor.unlockPeriod))
     ) {
-      ixs.push(claimLocked(accounts, this.programId));
+      const claimMethod =
+        distributor.programVersion >= SOL_FEE_PROGRAM_VERSION
+          ? this.merkleDistributorProgram.methods.claimLockedV2
+          : this.merkleDistributorProgram.methods.claimLocked;
+      ixs.push(
+        await claimMethod()
+          .accounts({
+            distributor: distributorPublicKey,
+            to: invokerTokens,
+            claimant: extParams.invoker.publicKey,
+            tokenProgram: tokenProgramId,
+            program: this.programId,
+          })
+          .instruction(),
+      );
+    }
+
+    if (distributor.programVersion >= SOL_FEE_PROGRAM_VERSION) {
+      return ixs;
     }
 
     // Determine fee: prefer service internal (if provided by service), else fetch params from API
@@ -381,10 +394,12 @@ export default abstract class BaseDistributorClient {
         const { mint: mintAccount } = await getMintAndProgram(this.connection, distributor.mint);
         // Backward-compatible: compute claimable amount if not provided by the caller
         // Prefer explicit field if present; otherwise default to unlocked + locked inputs
-        const claimableAmountRaw = (data as unknown as {
-          // optional for legacy callers
-          claimableAmount?: BN | bigint | number | string;
-        })?.claimableAmount;
+        const claimableAmountRaw = (
+          data as unknown as {
+            // optional for legacy callers
+            claimableAmount?: BN | bigint | number | string;
+          }
+        )?.claimableAmount;
         // Default legacy fields to 0 when missing
         const unlockedRaw = (data as unknown as { amountUnlocked?: BN | number | string })?.amountUnlocked;
         const lockedRaw = (data as unknown as { amountLocked?: BN | number | string })?.amountLocked;
@@ -392,9 +407,7 @@ export default abstract class BaseDistributorClient {
         const locked = lockedRaw != null ? new BN(lockedRaw) : new BN(0);
         const computedFallback = unlocked.add(locked);
         const claimableAmount =
-          claimableAmountRaw != null
-            ? BigInt(claimableAmountRaw.toString())
-            : BigInt(computedFallback.toString());
+          claimableAmountRaw != null ? BigInt(claimableAmountRaw.toString()) : BigInt(computedFallback.toString());
 
         feeLamports = await resolveAirdropFeeLamportsUsingApi({
           distributorAddress: distributorPublicKey.toBase58(),
@@ -446,7 +459,7 @@ export default abstract class BaseDistributorClient {
     }
 
     const distributorPublicKey = new PublicKey(data.id);
-    const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
+    const distributor = await this.merkleDistributorProgram.account.merkleDistributor.fetch(distributorPublicKey);
 
     const claimantPublicKey = pk(data.claimant);
 
@@ -456,27 +469,22 @@ export default abstract class BaseDistributorClient {
 
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
 
-    const claimStatusPublicKey = getClaimantStatusPda(this.programId, distributorPublicKey, claimantPublicKey);
-    const eventAuthorityPublicKey = getEventAuthorityPda(this.programId);
-
-    const closeClaimAccounts: CloseClaimAccounts = {
-      adminOrClaimant: extParams.invoker.publicKey,
-      payer: extParams.invoker.publicKey,
-      distributor: distributorPublicKey,
-      claimStatus: claimStatusPublicKey,
-      claimant: claimantPublicKey,
-      systemProgram: SystemProgram.programId,
-      eventAuthority: eventAuthorityPublicKey,
-      program: this.programId,
-    };
-
-    const closeClaimArgs: CloseClaimArgs = {
-      amountLocked: data.amountLocked ? new BN(data.amountLocked) : undefined,
-      amountUnlocked: data.amountUnlocked ? new BN(data.amountUnlocked) : undefined,
-      proof: data.proof,
-    };
-
-    ixs.push(closeClaim(closeClaimArgs, closeClaimAccounts, this.programId));
+    ixs.push(
+      await this.merkleDistributorProgram.methods
+        .closeClaim(
+          data.amountUnlocked ? new BN(data.amountUnlocked) : null,
+          data.amountLocked ? new BN(data.amountLocked) : null,
+          data.proof ?? null,
+        )
+        .accounts({
+          adminOrClaimant: extParams.invoker.publicKey,
+          payer: extParams.invoker.publicKey,
+          distributor: distributorPublicKey,
+          claimant: claimantPublicKey,
+          program: this.programId,
+        })
+        .instruction(),
+    );
 
     return ixs;
   }
@@ -490,7 +498,7 @@ export default abstract class BaseDistributorClient {
     }
 
     const distributorPublicKey = new PublicKey(data.id);
-    const distributor = await MerkleDistributor.fetch(this.connection, distributorPublicKey);
+    const distributor = await this.merkleDistributorProgram.account.merkleDistributor.fetch(distributorPublicKey);
 
     if (!distributor) {
       throw new Error("Couldn't get account info");
@@ -515,7 +523,6 @@ export default abstract class BaseDistributorClient {
       to: distributor.clawbackReceiver,
       admin: extParams.invoker.publicKey,
       mint: distributor.mint,
-      systemProgram: SystemProgram.programId,
       tokenProgram: tokenProgramId,
     };
 
@@ -566,11 +573,11 @@ export default abstract class BaseDistributorClient {
 
   public async getDistributors(data: IGetDistributors): Promise<(MerkleDistributor | null)[]> {
     const distributorPublicKeys = data.ids.map((distributorId) => new PublicKey(distributorId));
-    return MerkleDistributor.fetchMultiple(this.connection, distributorPublicKeys, this.programId);
+    return this.merkleDistributorProgram.account.merkleDistributor.fetchMultiple(distributorPublicKeys);
   }
 
   public async searchDistributors(data: ISearchDistributors): Promise<IProgramAccount<MerkleDistributor>[]> {
-    const filters: MemcmpFilter[] = [{ memcmp: { offset: 0, bytes: bs58.encode(MerkleDistributor.discriminator) } }];
+    const filters: MemcmpFilter[] = [];
     if (data.mint) {
       filters.push({
         memcmp: {
@@ -587,12 +594,47 @@ export default abstract class BaseDistributorClient {
         },
       });
     }
-    const accounts = await this.connection.getProgramAccounts(this.programId, { filters });
+    return this.merkleDistributorProgram.account.merkleDistributor.all(filters);
+  }
 
-    return accounts.map(({ pubkey, account }) => ({
-      publicKey: pubkey,
-      account: MerkleDistributor.decode(account.data),
-    }));
+  /**
+   * Fetch Fee Config for the Airdrop protocol from Partner Oracle.
+   */
+  public async getFeeConfig(): Promise<FeeConfig> {
+    const accInfo = await this.connection.getAccountInfo(this.feeConfigPublicKey);
+    if (!accInfo) {
+      throw new Error("Fee config is not initialized!");
+    }
+    return decode(this.partnerOracle, "airdropConfig", accInfo.data);
+  }
+
+  /**
+   * Get all defaults fees applied by the protocol.
+   */
+  public async getDefaultFees(): Promise<Fees> {
+    const feeConfig = await this.getFeeConfig();
+    return {
+      pubkey: PublicKey.default,
+      creationFee: feeConfig.creationFee,
+      priceOracleFee: feeConfig.priceOracleFee,
+      claimMinFee: feeConfig.claimMinFee,
+      claimMaxFee: feeConfig.claimMaxFee,
+      allocationFactor: feeConfig.allocationFactor,
+      clawbackTokenFeePercent: feeConfig.clawbackTokenFeePercent,
+    };
+  }
+
+  /**
+   * Get fees for a given wallet.
+   *
+   * @param pubkey partner to search fees for
+   */
+  public async getFees(pubkey: PublicKey): Promise<Fees | null> {
+    const feeConfig = await this.getFeeConfig();
+    const nowTs = new BN(Math.trunc(Date.now() / 1000));
+    return (
+      feeConfig.partners.filter((partner) => partner.pubkey.equals(pubkey) && partner.expiryTs.gt(nowTs))[0] ?? null
+    );
   }
 
   protected prepareClaimFeeInstruction(payer: PublicKey, fee = AIRDROP_CLAIM_FEE): TransactionInstruction {
@@ -603,34 +645,16 @@ export default abstract class BaseDistributorClient {
     });
   }
 
-  protected getNewDistributorArgs(data: ICreateDistributorData): NewDistributorArgs {
-    const args = {
-      version: new BN(data.version),
-      root: data.root,
-      maxTotalClaim: new BN(data.maxTotalClaim),
-      maxNumNodes: new BN(data.maxNumNodes),
-      unlockPeriod: new BN(data.unlockPeriod),
-      startVestingTs: new BN(data.startVestingTs),
-      endVestingTs: new BN(data.endVestingTs),
-      clawbackStartTs: new BN(data.clawbackStartTs),
-      claimsClosableByAdmin: data.claimsClosableByAdmin,
-      claimsClosableByClaimant: data.claimsClosableByClaimant,
-      claimsLimit: data.claimsLimit,
-    };
-
-    const nowTs = new BN(Math.floor(Date.now() / 1000));
-    const endVestingTs = args.endVestingTs.isZero() ? nowTs : args.endVestingTs;
-    const startVestingTs = args.startVestingTs.isZero() ? nowTs : args.startVestingTs;
-    if (endVestingTs.gt(startVestingTs) && endVestingTs.sub(startVestingTs).lt(args.unlockPeriod)) {
+  protected validateDistributorArgs(data: ICreateDistributorData): void {
+    const nowTs = Math.floor(Date.now() / 1000);
+    const endVestingTs = data.endVestingTs === 0 ? nowTs : data.endVestingTs;
+    const startVestingTs = data.startVestingTs === 0 ? nowTs : data.startVestingTs;
+    if (endVestingTs > startVestingTs && endVestingTs - startVestingTs < data.unlockPeriod) {
       throw new Error("The unlock period cannot be longer than the total vesting duration!");
     }
-
-    return args;
   }
 
-  protected unwrapExecutionParams<T extends IInteractExt>(
-    extParams: T,
-  ): ReturnType<typeof unwrapExecutionParams<T>> {
+  protected unwrapExecutionParams<T extends IInteractExt>(extParams: T): ReturnType<typeof unwrapExecutionParams<T>> {
     return unwrapExecutionParams(extParams, this.connection);
   }
 

@@ -7,6 +7,9 @@ import { type TransactionInstruction,
   type VersionedTransaction,
 } from "@solana/web3.js";
 import type PQueue from "p-queue";
+import type { IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
+
+import type { PartnerOracle as PartnerOracle } from "./descriptor/partner_oracle.js";
 
 export type ComputePriceEstimate = (tx: string | (string | PublicKey)[]) => Promise<number>;
 export type ComputeLimitEstimate = (tx: VersionedTransaction) => Promise<number>;
@@ -113,6 +116,9 @@ export enum ICluster {
   Testnet = "testnet",
   Local = "local",
 }
+
+export type PartnerOracleTypes = IdlTypes<PartnerOracle>;
+export type PartnerOracleAccounts = IdlAccounts<PartnerOracle>;
 
 /**
  * Error wrapper for calls made to the contract on chain
