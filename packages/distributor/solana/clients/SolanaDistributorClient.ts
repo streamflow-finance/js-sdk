@@ -7,7 +7,7 @@ import BaseDistributorClient from "./BaseDistributorClient.js";
 export default class SolanaDistributorClient extends BaseDistributorClient {
   protected async getNewDistributorInstruction(
     data: ICreateDistributorData,
-    accounts: NewDistributorAccounts,
+    accounts: Required<NewDistributorAccounts>,
   ): Promise<TransactionInstruction> {
     this.validateDistributorArgs(data);
     return this.merkleDistributorProgram.methods

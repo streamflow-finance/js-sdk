@@ -130,7 +130,7 @@ export default abstract class BaseDistributorClient {
 
   protected abstract getNewDistributorInstruction(
     data: ICreateDistributorData | ICreateAlignedDistributorData,
-    accounts: NewDistributorAccounts,
+    accounts: Required<NewDistributorAccounts>,
   ): Promise<TransactionInstruction>;
   protected abstract getClawbackInstruction(account: ClawbackAccounts): Promise<TransactionInstruction>;
 
@@ -163,7 +163,7 @@ export default abstract class BaseDistributorClient {
     const tokenVault = await ata(mintPublicKey, distributorPublicKey, tokenProgramId);
     const senderTokens = await ata(mintPublicKey, extParams.invoker.publicKey, tokenProgramId);
 
-    const accounts: NewDistributorAccounts = {
+    const accounts: Required<NewDistributorAccounts> = {
       clawbackReceiver: senderTokens,
       mint: mintPublicKey,
       admin: extParams.invoker.publicKey,
@@ -632,9 +632,13 @@ export default abstract class BaseDistributorClient {
   public async getFees(pubkey: PublicKey): Promise<Fees | null> {
     const feeConfig = await this.getFeeConfig();
     const nowTs = new BN(Math.trunc(Date.now() / 1000));
-    return (
-      feeConfig.partners.filter((partner) => partner.pubkey.equals(pubkey) && partner.expiryTs.gt(nowTs))[0] ?? null
+    const filteredPartners = feeConfig.partners.filter(
+      (partner) => partner.pubkey.equals(pubkey) && (partner.expiryTs.eqn(0) || partner.expiryTs.gt(nowTs)),
     );
+    if (filteredPartners.length > 1) {
+      throw new Error("More than one partner found, fees fetching is not possible.");
+    }
+    return filteredPartners[0] ?? null;
   }
 
   protected prepareClaimFeeInstruction(payer: PublicKey, fee = AIRDROP_CLAIM_FEE): TransactionInstruction {

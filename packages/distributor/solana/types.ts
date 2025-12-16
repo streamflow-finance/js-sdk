@@ -1,8 +1,8 @@
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type { Keypair, PublicKey } from "@solana/web3.js";
-import { type ITransactionResult, type ITransactionExt, type PartnerOracleTypes } from "@streamflow/common";
+import type { IdlInstruction, IdlAccountsOfMethod, IdlArgsOfMethod, ITransactionResult, ITransactionExt, PartnerOracleTypes } from "@streamflow/common";
 import type BN from "bn.js";
-import type { Idl, IdlTypes, IdlAccounts, Program } from "@coral-xyz/anchor";
+import type { IdlTypes, IdlAccounts, Program } from "@coral-xyz/anchor";
 
 import { type AlignedDistributor as AlignedDistributorIDL } from "./descriptor/aligned_distributor.js";
 import { type MerkleDistributor as MerkleDistributorIDL } from "./descriptor/merkle_distributor.js";
@@ -29,26 +29,14 @@ export type CompressedClaimStatus = MerkleDistributorAccountTypes["compressedCla
  */
 export type MerkleDistributor = MerkleDistributorAccountTypes["merkleDistributor"];
 
-type IdlInstruction<IDL extends Idl, Name extends IDL["instructions"][number]["name"]> = Extract<
-  IDL["instructions"][number],
-  { name: Name }
->;
-
-type AccountsOfMethod<M extends keyof Program<MerkleDistributorIDL>["methods"]> = Parameters<
-  ReturnType<Program<MerkleDistributorIDL>["methods"][M]>["accounts"]
->[0];
-type ArgsOfMethod<M extends keyof Program<MerkleDistributorIDL>["methods"]> = Parameters<
-  Program<MerkleDistributorIDL>["methods"][M]
->;
-
-export type NewDistributorAccounts = AccountsOfMethod<"newDistributor">;
-export type NewDistributorArgs = ArgsOfMethod<"newDistributor">;
-export type NewClaimAccounts = AccountsOfMethod<"newClaim">;
+export type NewDistributorAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "newDistributor">;
+export type NewDistributorArgs = IdlArgsOfMethod<MerkleDistributorIDL, "newDistributor">;
+export type NewClaimAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "newClaim">;
 export type NewClaimArgs = IdlInstruction<MerkleDistributorIDL, "newClaim">["args"];
-export type ClaimLockedV2Accounts = AccountsOfMethod<"claimLockedV2">;
-export type ClaimLockedAccounts = AccountsOfMethod<"claimLocked">;
-export type ClawbackAccounts = AccountsOfMethod<"clawback">;
-export type CloseClaimAccounts = AccountsOfMethod<"closeClaim">;
+export type ClaimLockedV2Accounts = IdlAccountsOfMethod<MerkleDistributorIDL, "claimLockedV2">;
+export type ClaimLockedAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "claimLocked">;
+export type ClawbackAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "clawback">;
+export type CloseClaimAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "closeClaim">;
 export type CloseClaimArgs = IdlInstruction<MerkleDistributorIDL, "closeClaim">["args"];
 
 /**

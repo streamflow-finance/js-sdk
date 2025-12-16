@@ -1,4 +1,5 @@
-import { type TransactionInstruction,
+import {
+  type TransactionInstruction,
   type AccountInfo,
   type BlockhashWithExpiryBlockHeight,
   type Commitment,
@@ -7,7 +8,7 @@ import { type TransactionInstruction,
   type VersionedTransaction,
 } from "@solana/web3.js";
 import type PQueue from "p-queue";
-import type { IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
+import type { Idl, IdlAccounts, IdlTypes, Program } from "@coral-xyz/anchor";
 
 import type { PartnerOracle as PartnerOracle } from "./descriptor/partner_oracle.js";
 
@@ -117,6 +118,20 @@ export enum ICluster {
   Local = "local",
 }
 
+/// Anchor type extractions
+export type IdlInstruction<IDL extends Idl, Name extends IDL["instructions"][number]["name"]> = Extract<
+  IDL["instructions"][number],
+  { name: Name }
+>;
+
+export type IdlAccountsOfMethod<IDL extends Idl, M extends keyof Program<IDL>["methods"]> = Parameters<
+  ReturnType<Program<IDL>["methods"][M]>["accounts"]
+>[0];
+export type IdlArgsOfMethod<IDL extends Idl, M extends keyof Program<IDL>["methods"]> = Parameters<
+  Program<IDL>["methods"][M]
+>;
+
+// Common Partner oracle
 export type PartnerOracleTypes = IdlTypes<PartnerOracle>;
 export type PartnerOracleAccounts = IdlAccounts<PartnerOracle>;
 

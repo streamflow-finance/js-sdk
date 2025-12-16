@@ -75,17 +75,17 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
 
   protected async getNewDistributorInstruction(
     data: ICreateAlignedDistributorData,
-    accounts: NewDistributorAccounts,
+    accounts: Required<NewDistributorAccounts>,
   ): Promise<TransactionInstruction> {
     const { mint, clawbackReceiver, tokenProgram, admin } = accounts;
     const distributorKey = getDistributorPda(this.merkleDistributorProgram.programId, pk(accounts.mint), data.version);
-    const tokenVaultKey = getAssociatedTokenAddressSync(pk(mint), pk(admin!), true, pk(tokenProgram));
+    const tokenVaultKey = getAssociatedTokenAddressSync(pk(mint), pk(admin), true, pk(tokenProgram));
 
     this.validateDistributorArgs(data);
     const alignedArgs = this.getNewAlignedDistributorArgs(data);
     const oracle = data.oracleAddress
       ? new PublicKey(data.oracleAddress)
-      : getTestOraclePda(this.alignedProxyProgram.programId, pk(mint), pk(admin!));
+      : getTestOraclePda(this.alignedProxyProgram.programId, pk(mint), pk(admin));
 
     return this.alignedProxyProgram.methods
       .newDistributor({
