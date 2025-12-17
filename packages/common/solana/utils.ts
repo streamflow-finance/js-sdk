@@ -587,7 +587,7 @@ export function prepareBaseInstructions(
 }
 
 /**
- * Retrieve information about a mint and its program ID, support all Token Programs.
+ * Retrieve information about a mint and its program ID, supports all Token Programs.
  *
  * @param connection Connection to use
  * @param address    Mint account
