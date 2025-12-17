@@ -28,6 +28,7 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
         data.claimsLimit ?? null,
       )
       .accounts(accounts)
+      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey })
       .instruction();
   }
 

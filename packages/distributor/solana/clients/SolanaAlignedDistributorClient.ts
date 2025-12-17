@@ -109,6 +109,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
         tokenProgram,
         priceOracle: oracle,
       })
+      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey })
       .instruction();
   }
 
