@@ -2,7 +2,7 @@
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "aligned_distributor",
-    "version": "1.5.1",
+    "version": "2.0.0",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
@@ -49,6 +49,34 @@
           }
         }
       ]
+    },
+    {
+      "name": "claim_sol_fees",
+      "discriminator": [
+        127,
+        0,
+        119,
+        89,
+        193,
+        27,
+        209,
+        142
+      ],
+      "accounts": [
+        {
+          "name": "aligned_distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        }
+      ],
+      "args": []
     },
     {
       "name": "clawback",
@@ -553,6 +581,76 @@
           "docs": [
             "The [Token] program."
           ]
+        },
+        {
+          "name": "partner_oracle_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                12,
+                48,
+                148,
+                48,
+                221,
+                89,
+                2,
+                209,
+                180,
+                126,
+                151,
+                216,
+                166,
+                3,
+                112,
+                50,
+                177,
+                192,
+                141,
+                218,
+                37,
+                78,
+                51,
+                109,
+                243,
+                106,
+                174,
+                122,
+                93,
+                121,
+                191,
+                119
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner_oracle",
+          "docs": [
+            "Partner Oracle program that stores fees"
+          ],
+          "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa"
         }
       ],
       "args": [
@@ -928,6 +1026,11 @@
       "code": 6013,
       "name": "InvalidMint",
       "msg": "Invalid Mint"
+    },
+    {
+      "code": 6014,
+      "name": "NoFeesToClaim",
+      "msg": "No fees to claim"
     }
   ],
   "types": [
@@ -1077,6 +1180,20 @@
             "type": "pubkey"
           },
           {
+            "name": "price_oracle_fee",
+            "docs": [
+              "Fee for custom price oracle used in dynamic airdrops"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "price_oracle_fee_claimed",
+            "docs": [
+              "Whether fee for the price oracle has been claimed"
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer_2",
             "docs": [
               "Buffer for additional fields"
@@ -1084,7 +1201,7 @@
             "type": {
               "array": [
                 "u8",
-                32
+                27
               ]
             }
           },
@@ -1332,26 +1449,84 @@
             "type": "u16"
           },
           {
-            "name": "buffer_2",
+            "name": "creation_fee",
             "docs": [
-              "Buffer for additional fields"
+              "Creation SOL fee"
             ],
-            "type": {
-              "array": [
-                "u8",
-                20
-              ]
-            }
+            "type": "u32"
           },
           {
-            "name": "buffer_3",
+            "name": "creation_fee_claimed",
+            "docs": [
+              "Whether creation SOL was claimed"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "claim_min_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, min"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_max_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, max"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "allocation_factor",
+            "docs": [
+              "Factor to multiply claimable SOL lamports by when calculating fee"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "claim_fee_claimed",
+            "docs": [
+              "Whether all claim fees were claimed, true by default since no claim fee is taken on creation"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "token_price_lamports",
+            "docs": [
+              "Last observed token price in lamports per 1 whole token for claim fee calculation"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clawback_token_fee_percent",
+            "docs": [
+              "Token % fee on clawback"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "clawback_fee_claimed",
+            "docs": [
+              "Whether clawback token % fee has been claimed"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "program_version",
+            "docs": [
+              "Program version that initiated the Distributor account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "buffer",
             "docs": [
               "Buffer for additional fields"
             ],
             "type": {
               "array": [
                 "u8",
-                32
+                13
               ]
             }
           }

@@ -1,3 +1,4 @@
+import { translateError } from "@coral-xyz/anchor";
 import { type TransferFeeConfig } from "@solana/spl-token";
 import { type Connection, PublicKey } from "@solana/web3.js";
 import { ContractError, divCeilN, signAndExecuteTransaction } from "@streamflow/common";
@@ -7,10 +8,10 @@ import {
   ALIGNED_DISTRIBUTOR_PREFIX,
   CLAIM_STATUS_PREFIX,
   DISTRIBUTOR_PREFIX,
+  MERKLE_DISTRIBUTOR_ERRORS,
   ONE_IN_BASIS_POINTS,
   TEST_ORACLE_PREFIX,
 } from "./constants.js";
-import { fromTxError } from "./generated/errors/index.js";
 import type { AnyClaimStatus, CompressedClaimStatus } from "./types.js";
 
 export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
@@ -60,9 +61,9 @@ export async function wrappedSignAndExecuteTransaction(
     return await signAndExecuteTransaction(...args);
   } catch (err: unknown) {
     if (err instanceof Error) {
-      const parsed = fromTxError(err);
-      if (parsed) {
-        throw new ContractError(err, parsed.name, parsed.msg);
+      const parsed = translateError(err, MERKLE_DISTRIBUTOR_ERRORS);
+      if ("error" in parsed) {
+        throw new ContractError(err, parsed.error.errorCode?.code, parsed.error.errorMessage);
       }
     }
     throw err;

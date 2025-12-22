@@ -2,26 +2,37 @@ import BN from "bn.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { getBN, getNumberFromBN, invariant } from "@streamflow/common";
+import { getBN, getNumberFromBN, invariant, pk } from "@streamflow/common";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 import {
-  type ICreateAlignedDistributorData,
   type AlignedDistributorData,
+  type ClawbackAccounts,
+  type ICreateAlignedDistributorData,
   type NewAlignedDistributorArgs,
+  type NewDistributorAccounts,
   type OracleType,
   type OracleTypeName,
 } from "../types.js";
-import { type ClawbackAccounts, type NewDistributorAccounts } from "../generated/instructions/index.js";
 import BaseDistributorClient, { type IInitOptions } from "./BaseDistributorClient.js";
 import { type AlignedDistributor as AlignedAirdropsProgramType } from "../descriptor/aligned_distributor.js";
 import StreamflowAlignedAirdropsIDL from "../descriptor/idl/aligned_distributor.json";
 import { ALIGNED_PRECISION_FACTOR_POW } from "../constants.js";
-import { getAlignedDistributorPda, getTestOraclePda } from "../utils.js";
+import { getAlignedDistributorPda, getDistributorPda, getTestOraclePda } from "../utils.js";
 
 export default class SolanaAlignedDistributorClient extends BaseDistributorClient {
   public alignedProxyProgram: Program<AlignedAirdropsProgramType>;
 
-  public constructor({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler, apiUrl, apiKey }: IInitOptions) {
+  public constructor({
+    clusterUrl,
+    cluster,
+    commitment,
+    programId,
+    sendRate,
+    sendThrottler,
+    apiUrl,
+    apiKey,
+  }: IInitOptions) {
     super({ clusterUrl, cluster, commitment, programId, sendRate, sendThrottler, apiUrl, apiKey });
     const alignedAirdropsProgram = {
       ...StreamflowAlignedAirdropsIDL,
@@ -64,51 +75,55 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
 
   protected async getNewDistributorInstruction(
     data: ICreateAlignedDistributorData,
-    accounts: NewDistributorAccounts,
+    accounts: Required<NewDistributorAccounts>,
   ): Promise<TransactionInstruction> {
-    const { distributor, mint, clawbackReceiver, tokenProgram, tokenVault, admin } = accounts;
+    const { mint, clawbackReceiver, tokenProgram, admin } = accounts;
+    const distributorKey = getDistributorPda(this.merkleDistributorProgram.programId, pk(accounts.mint), data.version);
+    const tokenVaultKey = getAssociatedTokenAddressSync(pk(mint), distributorKey, true, pk(tokenProgram));
 
-    const baseArgs = this.getNewDistributorArgs(data);
+    this.validateDistributorArgs(data);
     const alignedArgs = this.getNewAlignedDistributorArgs(data);
     const oracle = data.oracleAddress
       ? new PublicKey(data.oracleAddress)
-      : getTestOraclePda(this.alignedProxyProgram.programId, mint, admin);
+      : getTestOraclePda(this.alignedProxyProgram.programId, pk(mint), pk(admin));
 
-    const newDistributorIx = await this.alignedProxyProgram.methods
+    return this.alignedProxyProgram.methods
       .newDistributor({
-        claimsClosable: baseArgs.claimsClosableByAdmin,
-        version: baseArgs.version,
-        root: baseArgs.root,
-        maxTotalClaim: baseArgs.maxTotalClaim,
-        maxNumNodes: baseArgs.maxNumNodes,
-        unlockPeriod: baseArgs.unlockPeriod,
-        startVestingTs: baseArgs.startVestingTs,
-        endVestingTs: baseArgs.endVestingTs,
-        clawbackStartTs: baseArgs.clawbackStartTs,
+        claimsClosable: data.claimsClosableByAdmin,
+        version: new BN(data.version),
+        root: data.root,
+        maxTotalClaim: new BN(data.maxTotalClaim),
+        maxNumNodes: new BN(data.maxNumNodes),
+        unlockPeriod: new BN(data.unlockPeriod),
+        startVestingTs: new BN(data.startVestingTs),
+        endVestingTs: new BN(data.endVestingTs),
+        clawbackStartTs: new BN(data.clawbackStartTs),
         ...alignedArgs,
       })
       .accounts({
         admin,
-        tokenVault,
-        distributor,
+        tokenVault: tokenVaultKey,
+        distributor: distributorKey,
         clawbackReceiver,
         mint,
         tokenProgram,
         priceOracle: oracle,
       })
+      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey })
       .instruction();
-
-    return newDistributorIx;
   }
 
   protected async getClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
     const { distributor, from, to, mint, tokenProgram, admin } = accounts;
-    const alignedDistributorKey = getAlignedDistributorPda(this.alignedProxyProgram.programId, distributor);
+    const alignedDistributorKey = getAlignedDistributorPda(
+      this.alignedProxyProgram.programId,
+      pk(accounts.distributor),
+    );
 
     const alignedProxy = await this.alignedProxyProgram.account.alignedDistributor.fetch(alignedDistributorKey);
     invariant(alignedProxy, "Aligned Distributor proxy account not found");
 
-    const clawbackInstruction = await this.alignedProxyProgram.methods
+    return this.alignedProxyProgram.methods
       .clawback()
       .accounts({
         admin,
@@ -119,8 +134,6 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
         tokenProgram,
       })
       .instruction();
-
-    return clawbackInstruction;
   }
 
   protected getNewAlignedDistributorArgs(data: ICreateAlignedDistributorData): NewAlignedDistributorArgs {

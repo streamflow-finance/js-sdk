@@ -8,7 +8,7 @@ export type AlignedDistributor = {
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "alignedDistributor",
-    "version": "1.5.1",
+    "version": "2.0.0",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
@@ -55,6 +55,34 @@ export type AlignedDistributor = {
           }
         },
       ]
+    },
+    {
+      "name": "claimSolFees",
+      "discriminator": [
+        127,
+        0,
+        119,
+        89,
+        193,
+        27,
+        209,
+        142,
+      ],
+      "accounts": [
+        {
+          "name": "alignedDistributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        },
+      ],
+      "args": []
     },
     {
       "name": "clawback",
@@ -560,6 +588,76 @@ export type AlignedDistributor = {
             "The [Token] program.",
           ]
         },
+        {
+          "name": "partnerOracleConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                ]
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                12,
+                48,
+                148,
+                48,
+                221,
+                89,
+                2,
+                209,
+                180,
+                126,
+                151,
+                216,
+                166,
+                3,
+                112,
+                50,
+                177,
+                192,
+                141,
+                218,
+                37,
+                78,
+                51,
+                109,
+                243,
+                106,
+                174,
+                122,
+                93,
+                121,
+                191,
+                119,
+              ]
+            }
+          }
+        },
+        {
+          "name": "partnerOracle",
+          "docs": [
+            "Partner Oracle program that stores fees",
+          ],
+          "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa"
+        },
       ],
       "args": [
         {
@@ -935,6 +1033,11 @@ export type AlignedDistributor = {
       "name": "invalidMint",
       "msg": "Invalid Mint"
     },
+    {
+      "code": 6014,
+      "name": "noFeesToClaim",
+      "msg": "No fees to claim"
+    },
   ],
   "types": [
     {
@@ -1083,6 +1186,20 @@ export type AlignedDistributor = {
             "type": "pubkey"
           },
           {
+            "name": "priceOracleFee",
+            "docs": [
+              "Fee for custom price oracle used in dynamic airdrops",
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "priceOracleFeeClaimed",
+            "docs": [
+              "Whether fee for the price oracle has been claimed",
+            ],
+            "type": "bool"
+          },
+          {
             "name": "buffer2",
             "docs": [
               "Buffer for additional fields",
@@ -1090,7 +1207,7 @@ export type AlignedDistributor = {
             "type": {
               "array": [
                 "u8",
-                32,
+                27,
               ]
             }
           },
@@ -1338,26 +1455,84 @@ export type AlignedDistributor = {
             "type": "u16"
           },
           {
-            "name": "buffer2",
+            "name": "creationFee",
             "docs": [
-              "Buffer for additional fields",
+              "Creation SOL fee",
             ],
-            "type": {
-              "array": [
-                "u8",
-                20,
-              ]
-            }
+            "type": "u32"
           },
           {
-            "name": "buffer3",
+            "name": "creationFeeClaimed",
+            "docs": [
+              "Whether creation SOL was claimed",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "claimMinFee",
+            "docs": [
+              "Dynamic claim fee in SOL, min",
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claimMaxFee",
+            "docs": [
+              "Dynamic claim fee in SOL, max",
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "allocationFactor",
+            "docs": [
+              "Factor to multiply claimable SOL lamports by when calculating fee",
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "claimFeeClaimed",
+            "docs": [
+              "Whether all claim fees were claimed, true by default since no claim fee is taken on creation",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "tokenPriceLamports",
+            "docs": [
+              "Last observed token price in lamports per 1 whole token for claim fee calculation",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clawbackTokenFeePercent",
+            "docs": [
+              "Token % fee on clawback",
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "clawbackFeeClaimed",
+            "docs": [
+              "Whether clawback token % fee has been claimed",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "programVersion",
+            "docs": [
+              "Program version that initiated the Distributor account",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "buffer",
             "docs": [
               "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                32,
+                13,
               ]
             }
           },

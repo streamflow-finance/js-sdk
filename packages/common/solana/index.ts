@@ -6,3 +6,4 @@ export * from "./lib/deserialize-raw-transaction.js";
 export * from "./lib/estimate.js";
 export * from "./lib/public-key.js";
 export * from "./lib/unwrap-auto-simulate-ext.js";
+export type { PartnerOracle } from "./descriptor/partner_oracle.js";

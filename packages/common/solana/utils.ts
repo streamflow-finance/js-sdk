@@ -28,6 +28,7 @@ import {
   type SimulatedTransactionResponse,
   type AddressLookupTableAccount,
 } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
 
 import {
   type Account,
@@ -40,6 +41,8 @@ import {
 } from "./types.js";
 import { sleep } from "../lib/utils.js";
 import { assertHasPublicKey, invariant } from "../lib/assertions.js";
+import type { PartnerOracle } from "./descriptor/partner_oracle.js";
+import PartnerOracleIDL from "./descriptor/idl/partner_oracle.json";
 
 const SIMULATE_TRIES = 3;
 
@@ -584,7 +587,7 @@ export function prepareBaseInstructions(
 }
 
 /**
- * Retrieve information about a mint and its program ID, support all Token Programs.
+ * Retrieve information about a mint and its program ID, supports all Token Programs.
  *
  * @param connection Connection to use
  * @param address    Mint account
@@ -633,4 +636,11 @@ export async function getMultipleAccountsInfoBatched(
 
   const results = await Promise.all(batches);
   return results.flat();
+}
+
+/**
+ * Build a partner oracle program without a wallet, just to fetch accounts.
+ */
+export function buildPartnerOracle(connection: Connection): Program<PartnerOracle> {
+  return new Program(PartnerOracleIDL, { connection });
 }

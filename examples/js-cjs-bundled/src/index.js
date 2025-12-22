@@ -14,7 +14,6 @@ const { SolanaStakingClient } = require("@streamflow/staking");
 const { SolanaLaunchpadClient } = require("@streamflow/launchpad");
 const { ICluster } = require("@streamflow/common");
 // Other entrypoints to test that the package.json is correct
-const { MerkleDistributor } = require("@streamflow/distributor/solana");
 const { prepareTransaction } = require("@streamflow/common");
 
 // Import IDL files to test import resolving
