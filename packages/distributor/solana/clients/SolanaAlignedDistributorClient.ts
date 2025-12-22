@@ -79,7 +79,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
   ): Promise<TransactionInstruction> {
     const { mint, clawbackReceiver, tokenProgram, admin } = accounts;
     const distributorKey = getDistributorPda(this.merkleDistributorProgram.programId, pk(accounts.mint), data.version);
-    const tokenVaultKey = getAssociatedTokenAddressSync(pk(mint), pk(admin), true, pk(tokenProgram));
+    const tokenVaultKey = getAssociatedTokenAddressSync(pk(mint), distributorKey, true, pk(tokenProgram));
 
     this.validateDistributorArgs(data);
     const alignedArgs = this.getNewAlignedDistributorArgs(data);
