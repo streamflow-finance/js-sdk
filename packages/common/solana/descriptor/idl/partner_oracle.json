@@ -1,0 +1,977 @@
+{
+  "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa",
+  "metadata": {
+    "name": "partner_oracle",
+    "version": "1.0.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "airdrop_clear_expired_fees",
+      "discriminator": [
+        203,
+        5,
+        237,
+        235,
+        32,
+        38,
+        150,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "airdrop_get_fees",
+      "discriminator": [
+        185,
+        20,
+        28,
+        207,
+        70,
+        243,
+        32,
+        62
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "pubkey"
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "AirdropFees"
+        }
+      }
+    },
+    {
+      "name": "airdrop_initialize_config",
+      "discriminator": [
+        2,
+        110,
+        102,
+        10,
+        34,
+        83,
+        164,
+        55
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Account that will cover tx fees, can be anybody since the instruction is safe"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "airdrop_remove_fees",
+      "discriminator": [
+        119,
+        246,
+        202,
+        91,
+        59,
+        94,
+        252,
+        239
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Fee Authority"
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "CgdggophaMCFRP8gA1QjrZHsHaNQgByhBU7zoF5TpXF7"
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "airdrop_write_default_fees",
+      "discriminator": [
+        37,
+        104,
+        254,
+        202,
+        136,
+        124,
+        245,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Fee Authority"
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "CgdggophaMCFRP8gA1QjrZHsHaNQgByhBU7zoF5TpXF7"
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "creation_fee",
+          "type": "u32"
+        },
+        {
+          "name": "price_oracle_fee",
+          "type": "u32"
+        },
+        {
+          "name": "claim_min_fee",
+          "type": "u32"
+        },
+        {
+          "name": "claim_max_fee",
+          "type": "u32"
+        },
+        {
+          "name": "allocation_factor",
+          "type": "f64"
+        },
+        {
+          "name": "clawback_token_fee_percent",
+          "type": "f64"
+        }
+      ]
+    },
+    {
+      "name": "airdrop_write_fees",
+      "discriminator": [
+        71,
+        165,
+        178,
+        215,
+        19,
+        70,
+        146,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Fee Authority"
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "CgdggophaMCFRP8gA1QjrZHsHaNQgByhBU7zoF5TpXF7"
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "creation_fee",
+          "type": "u32"
+        },
+        {
+          "name": "price_oracle_fee",
+          "type": "u32"
+        },
+        {
+          "name": "claim_min_fee",
+          "type": "u32"
+        },
+        {
+          "name": "claim_max_fee",
+          "type": "u32"
+        },
+        {
+          "name": "allocation_factor",
+          "type": "f64"
+        },
+        {
+          "name": "clawback_token_fee_percent",
+          "type": "f64"
+        },
+        {
+          "name": "expiry_ts",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "vesting_get_fees",
+      "discriminator": [
+        239,
+        230,
+        28,
+        173,
+        134,
+        247,
+        57,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "partners",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "pubkey"
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "VestingFees"
+        }
+      }
+    },
+    {
+      "name": "vesting_initialize_partners",
+      "discriminator": [
+        205,
+        170,
+        148,
+        219,
+        143,
+        38,
+        77,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Account that will cover tx fees, can be anybody since the instruction is safe"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partners",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "vesting_remove_fees",
+      "discriminator": [
+        233,
+        176,
+        222,
+        64,
+        79,
+        14,
+        48,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Account that will cover tx fees, should be equal to creator if not is not expired"
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "CgdggophaMCFRP8gA1QjrZHsHaNQgByhBU7zoF5TpXF7"
+        },
+        {
+          "name": "partners",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "vesting_write_default_fees",
+      "discriminator": [
+        96,
+        198,
+        97,
+        81,
+        162,
+        50,
+        51,
+        10
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Account that will cover tx fees, should be equal to creator if not is not expired"
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "CgdggophaMCFRP8gA1QjrZHsHaNQgByhBU7zoF5TpXF7"
+        },
+        {
+          "name": "partners",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "creation_fee",
+          "type": "u32"
+        },
+        {
+          "name": "auto_claim_fee",
+          "type": "u32"
+        },
+        {
+          "name": "token_fee_percent",
+          "type": "f32"
+        }
+      ]
+    },
+    {
+      "name": "vesting_write_fees",
+      "discriminator": [
+        251,
+        24,
+        6,
+        241,
+        182,
+        56,
+        93,
+        100
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Account that will cover tx fees, should be equal to creator if not is not expired"
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "CgdggophaMCFRP8gA1QjrZHsHaNQgByhBU7zoF5TpXF7"
+        },
+        {
+          "name": "partners",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "creation_fee",
+          "type": "u32"
+        },
+        {
+          "name": "auto_claim_fee",
+          "type": "u32"
+        },
+        {
+          "name": "token_fee_percent",
+          "type": "f32"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AirdropConfig",
+      "discriminator": [
+        194,
+        149,
+        223,
+        142,
+        42,
+        98,
+        128,
+        16
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Account is not authorized to execute this instruction"
+    },
+    {
+      "code": 6001,
+      "name": "ArithmeticError",
+      "msg": "Arithmetic Error (overflow/underflow)"
+    },
+    {
+      "code": 6100,
+      "name": "InvalidExpiry",
+      "msg": "Provided expiry ts is invalid"
+    },
+    {
+      "code": 6101,
+      "name": "NoExpiredFees",
+      "msg": "No expired fees found, transaction won't change the config"
+    },
+    {
+      "code": 6200,
+      "name": "InvalidVestingFee",
+      "msg": "Received invalid Vesting Fee configuration"
+    },
+    {
+      "code": 6300,
+      "name": "InvalidAirdropFee",
+      "msg": "Received invalid Airdrop Fee configuration"
+    },
+    {
+      "code": 6301,
+      "name": "AirdropConfigFull",
+      "msg": "Airdrop config is full, can not write fees"
+    }
+  ],
+  "types": [
+    {
+      "name": "AirdropConfig",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "usd_multiplier",
+            "docs": [
+              "Multiplier to apply when calculating ALL fees"
+            ],
+            "type": "f32"
+          },
+          {
+            "name": "solana_price",
+            "docs": [
+              "Last solana price used"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "creation_fee",
+            "docs": [
+              "Creation SOL fee"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "price_oracle_fee",
+            "docs": [
+              "Fee for custom price oracle used in dynamic airdrops"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_min_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, min"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_max_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, max"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "allocation_factor",
+            "docs": [
+              "Factor to multiple claimable SOL by when calculating fee"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "clawback_token_fee_percent",
+            "docs": [
+              "Toke % fee on clawback"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "buffer",
+            "type": {
+              "array": [
+                "u8",
+                144
+              ]
+            }
+          },
+          {
+            "name": "partners",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "AirdropPartner"
+                  }
+                },
+                100
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AirdropFees",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "docs": [
+              "Account for which the fees were configured"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "creation_fee",
+            "docs": [
+              "Creation SOL fee"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "price_oracle_fee",
+            "docs": [
+              "Fee for custom price oracle used in dynamic airdrops"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_min_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, min"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_max_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, max"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "allocation_factor",
+            "docs": [
+              "Factor to multiple claimable SOL by when calculating fee"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "clawback_token_fee_percent",
+            "docs": [
+              "Token % fee on clawback"
+            ],
+            "type": "f64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AirdropPartner",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "docs": [
+              "Pubkey of the partner"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "creation_fee",
+            "docs": [
+              "Creation SOL fee"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "price_oracle_fee",
+            "docs": [
+              "Fee for custom price oracle used in dynamic airdrops"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_min_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, min"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claim_max_fee",
+            "docs": [
+              "Dynamic claim fee in SOL, max"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "allocation_factor",
+            "docs": [
+              "Factor to multiple claimable SOL by when calculating fee"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "clawback_token_fee_percent",
+            "docs": [
+              "Toke % fee on clawback"
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "expiry_ts",
+            "docs": [
+              "Time when fee configuration expires"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "VestingFees",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "creation_fee",
+            "type": "u32"
+          },
+          {
+            "name": "auto_claim_fee",
+            "type": "u32"
+          },
+          {
+            "name": "token_fee_percent",
+            "type": "f32"
+          }
+        ]
+      }
+    }
+  ]
+}

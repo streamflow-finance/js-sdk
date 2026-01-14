@@ -8,7 +8,7 @@ export type MerkleDistributor = {
   "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",
   "metadata": {
     "name": "merkleDistributor",
-    "version": "1.5.1",
+    "version": "2.0.0",
     "spec": "0.1.0",
     "description": "A Solana program for distributing tokens according to a Merkle root.",
     "repository": "https://github.com/streamflow-finance/distributor"
@@ -288,6 +288,280 @@ export type MerkleDistributor = {
         },
         {
           "name": "program"
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "claimLockedV2",
+      "discriminator": [
+        44,
+        21,
+        175,
+        161,
+        99,
+        76,
+        44,
+        249,
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "claimStatus",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              },
+            ]
+          }
+        },
+        {
+          "name": "from",
+          "docs": [
+            "Distributor ATA containing the tokens to distribute.",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "distributor"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "distributor.mint",
+                "account": "merkleDistributor"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "to",
+          "docs": [
+            "Account to send the claimed tokens to.",
+            "Claimant must sign the transaction and can only claim on behalf of themself",
+          ],
+          "writable": true
+        },
+        {
+          "name": "claimant",
+          "docs": [
+            "Who is claiming the tokens.",
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint to claim.",
+          ],
+          "relations": [
+            "distributor",
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "docs": [
+            "SPL [Token] program.",
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System program for fee transfers.",
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "eventAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121,
+                ]
+              },
+            ]
+          }
+        },
+        {
+          "name": "program"
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "claimSolFees",
+      "discriminator": [
+        127,
+        0,
+        119,
+        89,
+        193,
+        27,
+        209,
+        142,
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "claimTokenFees",
+      "discriminator": [
+        205,
+        136,
+        215,
+        209,
+        62,
+        196,
+        69,
+        182,
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenVault",
+          "docs": [
+            "Token vault to return clawback fee from",
+          ],
+          "writable": true,
+          "relations": [
+            "distributor",
+          ]
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Distributor mint",
+          ],
+          "relations": [
+            "distributor",
+          ]
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        },
+        {
+          "name": "to",
+          "docs": [
+            "Account to send the clawed back fee to.",
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "docs": [
+            "SPL [Token] program.",
+          ]
         },
       ],
       "args": []
@@ -947,6 +1221,76 @@ export type MerkleDistributor = {
             "The [Token] program.",
           ]
         },
+        {
+          "name": "partnerOracleConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                ]
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                12,
+                48,
+                148,
+                48,
+                221,
+                89,
+                2,
+                209,
+                180,
+                126,
+                151,
+                216,
+                166,
+                3,
+                112,
+                50,
+                177,
+                192,
+                141,
+                218,
+                37,
+                78,
+                51,
+                109,
+                243,
+                106,
+                174,
+                122,
+                93,
+                121,
+                191,
+                119,
+              ]
+            }
+          }
+        },
+        {
+          "name": "partnerOracle",
+          "docs": [
+            "Partner Oracle program that stores fees",
+          ],
+          "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa"
+        },
       ],
       "args": [
         {
@@ -1174,6 +1518,43 @@ export type MerkleDistributor = {
         },
       ],
       "args": []
+    },
+    {
+      "name": "setTokenPrice",
+      "discriminator": [
+        166,
+        216,
+        142,
+        197,
+        200,
+        225,
+        253,
+        233,
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "Wallet authorized to call this method",
+          ],
+          "writable": true,
+          "signer": true,
+          "address": "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"
+        },
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+      ],
+      "args": [
+        {
+          "name": "priceLamports",
+          "type": "u64"
+        },
+      ]
     },
     {
       "name": "update",
@@ -1423,6 +1804,21 @@ export type MerkleDistributor = {
       "code": 6023,
       "name": "claimsLimitReached",
       "msg": "Claims limit has been reached"
+    },
+    {
+      "code": 6024,
+      "name": "insufficientFunds",
+      "msg": "Account does not have enough funds to cover fees"
+    },
+    {
+      "code": 6025,
+      "name": "claimV2Required",
+      "msg": "This Airdrop must be claimed via claimLockedV2"
+    },
+    {
+      "code": 6026,
+      "name": "noFeesToClaim",
+      "msg": "No fees to claim"
     },
   ],
   "types": [
@@ -1777,26 +2173,84 @@ export type MerkleDistributor = {
             "type": "u16"
           },
           {
-            "name": "buffer2",
+            "name": "creationFee",
             "docs": [
-              "Buffer for additional fields",
+              "Creation SOL fee",
             ],
-            "type": {
-              "array": [
-                "u8",
-                20,
-              ]
-            }
+            "type": "u32"
           },
           {
-            "name": "buffer3",
+            "name": "creationFeeClaimed",
+            "docs": [
+              "Whether creation SOL was claimed",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "claimMinFee",
+            "docs": [
+              "Dynamic claim fee in SOL, min",
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claimMaxFee",
+            "docs": [
+              "Dynamic claim fee in SOL, max",
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "allocationFactor",
+            "docs": [
+              "Factor to multiply claimable SOL lamports by when calculating fee",
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "claimFeeClaimed",
+            "docs": [
+              "Whether all claim fees were claimed, true by default since no claim fee is taken on creation",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "tokenPriceLamports",
+            "docs": [
+              "Last observed token price in lamports per 1 whole token for claim fee calculation",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clawbackTokenFeePercent",
+            "docs": [
+              "Token % fee on clawback",
+            ],
+            "type": "f64"
+          },
+          {
+            "name": "clawbackFeeClaimed",
+            "docs": [
+              "Whether clawback token % fee has been claimed",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "programVersion",
+            "docs": [
+              "Program version that initiated the Distributor account",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "buffer",
             "docs": [
               "Buffer for additional fields",
             ],
             "type": {
               "array": [
                 "u8",
-                32,
+                13,
               ]
             }
           },

@@ -76,7 +76,7 @@ import {
   type ICreateMultiError,
   type ICreateAlignedStreamData,
   type StreamClientOptions,
-    type AlignedUnlocksContract,
+  type AlignedUnlocksContract,
 } from "./types.js";
 import {
   decodeStream,
@@ -1780,18 +1780,20 @@ export class SolanaStreamClient {
       return null;
     }
     const partners = borsh.deserialize(PARTNERS_SCHEMA, data.data) as unknown as IPartnerLayout[];
-    for (const partner of partners) {
-      const partnerAddress = new PublicKey(partner.pubkey).toString();
-      if (partnerAddress === address) {
-        return {
-          creationFeeSol: Number(partner.creation_fee),
-          autoClaimFeeSol: Number(partner.auto_claim_fee),
-          streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
-          partnerFee: 0,
-        };
-      }
+    const filteredPartners = partners.filter((partner) => new PublicKey(partner.pubkey).toString() === address);
+    if (filteredPartners.length === 0) {
+      return null;
     }
-    return null;
+    if (filteredPartners.length > 1) {
+      throw new Error("More than one partner found, fees fetching is not possible.");
+    }
+    const partner = filteredPartners[0];
+    return {
+      creationFeeSol: Number(partner.creation_fee),
+      autoClaimFeeSol: Number(partner.auto_claim_fee),
+      streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
+      partnerFee: 0,
+    };
   }
 
   /**
@@ -1808,15 +1810,17 @@ export class SolanaStreamClient {
    * Protocol will use fees set for WITHDRAWOR as default if they are set.
    */
   public async getDefaultFees(): Promise<IFees> {
-    return await this.getFees({ address: WITHDRAWOR }) || {
-      creationFeeSol: DEFAULT_CREATION_FEE_SOL,
-      autoClaimFeeSol: DEFAULT_AUTO_CLAIM_FEE_SOL,
-      streamflowFee: DEFAULT_STREAMFLOW_FEE,
-      partnerFee: 0,
-    };
+    return (
+      (await this.getFees({ address: WITHDRAWOR })) || {
+        creationFeeSol: DEFAULT_CREATION_FEE_SOL,
+        autoClaimFeeSol: DEFAULT_AUTO_CLAIM_FEE_SOL,
+        streamflowFee: DEFAULT_STREAMFLOW_FEE,
+        partnerFee: 0,
+      }
+    );
   }
 
-    /**
+  /**
    * Returns total fee percent, streamflow fees + partner fees
    * @param getFeesData structure with address for which we need to derive fee, either sender or partner usually
    * @returns fee as floating number, so if fee is 0.99%, it will return 0.99
