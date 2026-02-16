@@ -1,7 +1,7 @@
 import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { type Keypair } from "@solana/web3.js";
-import { type ITransactionExt, type ITransactionResult } from "@streamflow/common";
+import { type ITransactionExt, type ITransactionResult, type IPrepareResult } from "@streamflow/common";
 import type BN from "bn.js";
 
 import { type RewardPool as RewardPoolIDL } from "./descriptor/reward_pool.js";
@@ -111,6 +111,10 @@ export interface CreateFundDelegateArgs extends TokenProgram {
   startTs: BN;
   period: BN;
   expiryTs: BN;
+}
+
+export interface CreateFundDelegatePrepareResult extends IPrepareResult {
+  tokenAccount: Address;
 }
 
 export interface CreateFundDelegateResult extends ITransactionResult {

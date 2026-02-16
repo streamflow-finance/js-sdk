@@ -57,6 +57,7 @@ import type {
   CloseRewardEntryArgs,
   CloseStakeEntryArgs,
   CreateFundDelegateArgs,
+  CreateFundDelegatePrepareResult,
   CreateFundDelegateResult,
   CreateRewardEntryArgs,
   CreateRewardPoolArgs,
@@ -757,7 +758,7 @@ export class SolanaStakingClient {
   async prepareCreateFundDelegateInstructions(
     { rewardPool, startTs, period, expiryTs, tokenProgramId = TOKEN_PROGRAM_ID }: CreateFundDelegateArgs,
     extParams: IInteractExt,
-  ) {
+  ): Promise<CreateFundDelegatePrepareResult> {
     const { rewardPoolDynamicProgram } = this.programs;
     const authority = extParams.invoker.publicKey;
     invariant(authority, "Undefined invoker publicKey");
