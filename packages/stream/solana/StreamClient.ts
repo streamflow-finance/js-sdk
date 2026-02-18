@@ -1212,7 +1212,7 @@ export class SolanaStreamClient {
       throw new Error("Impossible to cancel a stream contract that does not exist");
     }
     const decoded = decodeStream(account.data);
-    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender, decoded.oldMetadataKey);
+    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender, decoded.oldMetadata);
 
     const ixs = isAlignedUnlock
       ? await this.prepareCancelAlignedUnlockInstructions(cancelData, extParams)
@@ -1515,9 +1515,9 @@ export class SolanaStreamClient {
 
   private async decodeStreamAccount(pubkey: PublicKey, data: Buffer): Promise<Stream> {
     const stream = decodeStream(data);
-    const metadataKey = getMetadataKey(pubkey, stream.oldMetadataKey);
+    const metadataKey = getMetadataKey(pubkey, stream.oldMetadata);
 
-    if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadataKey)) {
+    if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadata)) {
       const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
         deriveContractPDA(this.alignedProxyProgram.programId, metadataKey),
       );
@@ -1568,7 +1568,7 @@ export class SolanaStreamClient {
     const alignedStreamsPubKeys = Object.keys(streamRecord);
     const alignedProxyPDAs = alignedStreamsPubKeys.map((streamPubKey) => {
       const pubkey = new PublicKey(streamPubKey);
-      const metadataKey = getMetadataKey(pubkey, streamRecord[streamPubKey].oldMetadataKey);
+      const metadataKey = getMetadataKey(pubkey, streamRecord[streamPubKey].oldMetadata);
       return deriveContractPDA(this.alignedProxyProgram.programId, metadataKey);
     });
     const alignedProxyAccounts = await getMultipleAccountsInfoBatched(this.connection, alignedProxyPDAs);
@@ -1630,7 +1630,7 @@ export class SolanaStreamClient {
 
       // filter out aligned unlocks and store them in a separate object
       allIncomingAccounts.forEach((account, index) => {
-        if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender, allIncomingStreams[index].oldMetadataKey)) {
+        if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender, allIncomingStreams[index].oldMetadata)) {
           alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
         } else {
           streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index]);
@@ -1686,8 +1686,8 @@ export class SolanaStreamClient {
   private collectAlignedEntries(decoded: { pubkey: PublicKey; stream: DecodedStream }[]) {
     const entries: { index: number; pda: PublicKey }[] = [];
     decoded.forEach(({ pubkey, stream }, index) => {
-      if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadataKey)) {
-        const metadataKey = getMetadataKey(pubkey, stream.oldMetadataKey);
+      if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadata)) {
+        const metadataKey = getMetadataKey(pubkey, stream.oldMetadata);
         entries.push({ index, pda: deriveContractPDA(this.alignedProxyProgram.programId, metadataKey) });
       }
     });
@@ -1766,7 +1766,7 @@ export class SolanaStreamClient {
     invariant(escrow, "Couldn't get account info");
 
     const decoded = decodeStream(escrow.data);
-    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender, decoded.oldMetadataKey);
+    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender, decoded.oldMetadata);
 
     if (isAlignedUnlock && (data.enableAutomaticWithdrawal !== undefined || data.amountPerPeriod !== undefined)) {
       throw new Error("Automatic withdrawal and rate update are not possible in price-based vesting!");
@@ -1877,8 +1877,8 @@ export class SolanaStreamClient {
    * Utility function that checks whether the associated stream address is an aligned unlock contract, indicated by whether the sender/creator is a PDA.
    * For migrated streams, the PDA was derived from the old metadata key.
    */
-  public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey, oldMetadataKey?: PublicKey) {
-    const metadataKey = oldMetadataKey ? getMetadataKey(streamPublicKey, oldMetadataKey) : streamPublicKey;
+  public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey, oldMetadata?: PublicKey) {
+    const metadataKey = oldMetadata ? getMetadataKey(streamPublicKey, oldMetadata) : streamPublicKey;
     const pda = deriveContractPDA(this.alignedProxyProgram.programId, metadataKey);
     return senderPublicKey.equals(pda);
   }

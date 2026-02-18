@@ -679,7 +679,7 @@ export interface DecodedStream {
   pauseCumulative: BN;
   lastRateChangeTime: BN;
   fundsUnlockedAtLastRateChange: BN;
-  oldMetadataKey: PublicKey;
+  oldMetadata: PublicKey;
 }
 
 export interface MetadataRecipientHashMap {
