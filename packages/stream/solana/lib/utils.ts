@@ -95,7 +95,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     pauseCumulative: new BN(raw.pause_cumulative, LE),
     lastRateChangeTime: new BN(raw.last_rate_change_time, LE),
     fundsUnlockedAtLastRateChange: new BN(raw.funds_unlocked_at_last_rate_change, LE),
-    oldMetadataKey: new PublicKey(raw.old_metadata_key),
+    oldMetadataKey: new PublicKey(raw.old_metadata),
   };
 };
 

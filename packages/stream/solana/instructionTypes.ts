@@ -50,7 +50,7 @@ export interface IStreamLayout {
   creation_fee_claimed: number;
   auto_claim_fee: number;
   auto_claim_fee_claimed: number;
-  old_metadata_key: Uint8Array;
+  old_metadata: Uint8Array;
 }
 
 export interface ICreateStreamLayout {
