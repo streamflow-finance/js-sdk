@@ -25,6 +25,7 @@ jobs:
       - run: echo "All tests completed"
 
   publish:
+    if: github.event.pull_request.merged == true
     needs: all-tests-pass
     runs-on: ubuntu-latest
     steps:
