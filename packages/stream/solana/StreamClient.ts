@@ -35,6 +35,7 @@ import {
   type IProgramAccount,
   type ThrottleParams,
   getMultipleAccountsInfoBatched,
+  pk,
 } from "@streamflow/common";
 import * as borsh from "borsh";
 import { Program } from "@coral-xyz/anchor";
@@ -84,7 +85,7 @@ import {
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
   calculateTotalAmountToDeposit,
-  getMetadataKey,
+  getOriginalMetadataKey,
 } from "./lib/utils.js";
 import {
   PROGRAM_ID,
@@ -1515,7 +1516,7 @@ export class SolanaStreamClient {
 
   private async decodeStreamAccount(pubkey: PublicKey, data: Buffer): Promise<Stream> {
     const stream = decodeStream(data);
-    const metadataKey = getMetadataKey(pubkey, stream.oldMetadata);
+    const metadataKey = getOriginalMetadataKey(pubkey, stream.oldMetadata);
 
     if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadata)) {
       const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
@@ -1524,10 +1525,10 @@ export class SolanaStreamClient {
       if (!alignedProxy) {
         throw new Error("Couldn't get proxy account info.");
       }
-      return new AlignedContract(stream, alignedProxy);
+      return new AlignedContract(stream, pk(pubkey), alignedProxy);
     }
 
-    return new Contract(stream);
+    return new Contract(stream, pk(pubkey));
   }
 
   /**
@@ -1554,7 +1555,7 @@ export class SolanaStreamClient {
     streamAccounts.forEach((account, index) => {
       if (account) {
         const alignedData = alignedOutgoingProgramAccounts[index].account;
-        streams[streamPubKeys[index].toBase58()] = new AlignedContract(decodeStream(account.data), alignedData);
+        streams[streamPubKeys[index].toBase58()] = new AlignedContract(decodeStream(account.data), pk(streamPubKeys[index]), alignedData);
       }
     });
 
@@ -1568,7 +1569,7 @@ export class SolanaStreamClient {
     const alignedStreamsPubKeys = Object.keys(streamRecord);
     const alignedProxyPDAs = alignedStreamsPubKeys.map((streamPubKey) => {
       const pubkey = new PublicKey(streamPubKey);
-      const metadataKey = getMetadataKey(pubkey, streamRecord[streamPubKey].oldMetadata);
+      const metadataKey = getOriginalMetadataKey(pubkey, streamRecord[streamPubKey].oldMetadata);
       return deriveContractPDA(this.alignedProxyProgram.programId, metadataKey);
     });
     const alignedProxyAccounts = await getMultipleAccountsInfoBatched(this.connection, alignedProxyPDAs);
@@ -1577,6 +1578,7 @@ export class SolanaStreamClient {
         const alignedData = streamRecord[alignedStreamsPubKeys[index]];
         streams[alignedStreamsPubKeys[index]] = new AlignedContract(
           alignedData,
+          pk(alignedStreamsPubKeys[index]),
           this.alignedProxyProgram.account.contract.coder.accounts.decode("contract", account.data),
         );
       }
@@ -1608,7 +1610,7 @@ export class SolanaStreamClient {
         this.programId,
       );
       outgoingStreamAccounts.forEach((account) => {
-        streams[account.pubkey.toBase58()] = new Contract(decodeStream(account.account.data));
+        streams[account.pubkey.toBase58()] = new Contract(decodeStream(account.account.data), pk(account.pubkey));
       });
 
       if (shouldFetchAligned) {
@@ -1633,7 +1635,7 @@ export class SolanaStreamClient {
         if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender, allIncomingStreams[index].oldMetadata)) {
           alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
         } else {
-          streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index]);
+          streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index], pk(account.pubkey));
         }
       });
 
@@ -1687,7 +1689,7 @@ export class SolanaStreamClient {
     const entries: { index: number; pda: PublicKey }[] = [];
     decoded.forEach(({ pubkey, stream }, index) => {
       if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadata)) {
-        const metadataKey = getMetadataKey(pubkey, stream.oldMetadata);
+        const metadataKey = getOriginalMetadataKey(pubkey, stream.oldMetadata);
         entries.push({ index, pda: deriveContractPDA(this.alignedProxyProgram.programId, metadataKey) });
       }
     });
@@ -1712,9 +1714,9 @@ export class SolanaStreamClient {
       if (alignedIdx !== -1) {
         const alignedProxy = alignedProxies[alignedIdx];
         invariant(alignedProxy, "Couldn't get aligned proxy account info");
-        return { publicKey: pubkey, account: new AlignedContract(stream, alignedProxy) };
+        return { publicKey: pubkey, account: new AlignedContract(stream, pk(pubkey), alignedProxy) };
       }
-      return { publicKey: pubkey, account: new Contract(stream) };
+      return { publicKey: pubkey, account: new Contract(stream, pk(pubkey)) };
     });
   }
 
@@ -1878,7 +1880,7 @@ export class SolanaStreamClient {
    * For migrated streams, the PDA was derived from the old metadata key.
    */
   public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey, oldMetadata?: PublicKey) {
-    const metadataKey = oldMetadata ? getMetadataKey(streamPublicKey, oldMetadata) : streamPublicKey;
+    const metadataKey = oldMetadata ? getOriginalMetadataKey(streamPublicKey, oldMetadata) : streamPublicKey;
     const pda = deriveContractPDA(this.alignedProxyProgram.programId, metadataKey);
     return senderPublicKey.equals(pda);
   }

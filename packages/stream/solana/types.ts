@@ -206,6 +206,7 @@ export interface LinearStream {
   lastRateChangeTime: number;
   fundsUnlockedAtLastRateChange: BN;
   oldMetadata: PublicKey;
+  metadata: PublicKey;
 
   type: StreamType;
 
@@ -516,11 +517,13 @@ export class Contract implements LinearStream {
 
   oldMetadata: PublicKey;
 
+  metadata: PublicKey;
+
   type: StreamType;
 
   isAligned: boolean;
 
-  constructor(stream: DecodedStream) {
+  constructor(stream: DecodedStream, metadata: PublicKey) {
     this.magic = stream.magic.toNumber();
     this.version = stream.version.toNumber();
     this.createdAt = stream.createdAt.toNumber();
@@ -565,6 +568,7 @@ export class Contract implements LinearStream {
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
     this.oldMetadata = stream.oldMetadata;
+    this.metadata = metadata;
     this.type = buildStreamType(this);
     this.isAligned = false;
   }
@@ -614,8 +618,8 @@ export class AlignedContract extends Contract implements AlignedStream {
 
   floorPrice: number;
 
-  constructor(stream: DecodedStream, alignedProxy: AlignedUnlocksContract) {
-    super(stream);
+  constructor(stream: DecodedStream, metadata: PublicKey, alignedProxy: AlignedUnlocksContract) {
+    super(stream, metadata);
     this.minPrice = getNumberFromBN(alignedProxy.minPrice, ALIGNED_PRECISION_FACTOR_POW);
     this.maxPrice = getNumberFromBN(alignedProxy.maxPrice, ALIGNED_PRECISION_FACTOR_POW);
     this.minPercentage = getNumberFromBN(alignedProxy.minPercentage, ALIGNED_PRECISION_FACTOR_POW);
