@@ -71,6 +71,7 @@ export const TEST_ORACLE_DISCRIMINATOR = [198, 49, 63, 134, 232, 251, 168, 28];
 export const CONTRACT_SEED = Buffer.from("contract", "utf-8");
 export const ESCROW_SEED = Buffer.from("strm", "utf-8");
 export const TEST_ORACLE_SEED = Buffer.from("test-oracle", "utf-8");
+export const REPOPULATED_METADATA_SEED = Buffer.from("strm-rep", "utf-8");
 
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 
