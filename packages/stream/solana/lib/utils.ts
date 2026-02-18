@@ -21,7 +21,7 @@ export { getBN, getNumberFromBN } from "@streamflow/common";
  * For migrated streams, the aligned proxy PDA was derived from the original (old) metadata key,
  * so we need to use that instead of the current stream pubkey.
  */
-export const getMetadataKey = (streamPubkey: PublicKey, oldMetadata: PublicKey): PublicKey => {
+export const getOriginalMetadataKey = (streamPubkey: PublicKey, oldMetadata: PublicKey): PublicKey => {
   if (PublicKey.default.equals(oldMetadata)) {
     return streamPubkey;
   }
