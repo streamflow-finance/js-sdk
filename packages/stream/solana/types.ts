@@ -205,6 +205,7 @@ export interface LinearStream {
   pauseCumulative: BN;
   lastRateChangeTime: number;
   fundsUnlockedAtLastRateChange: BN;
+  oldMetadata: PublicKey;
 
   type: StreamType;
 
@@ -513,6 +514,8 @@ export class Contract implements LinearStream {
 
   fundsUnlockedAtLastRateChange: BN;
 
+  oldMetadata: PublicKey;
+
   type: StreamType;
 
   isAligned: boolean;
@@ -561,6 +564,7 @@ export class Contract implements LinearStream {
     this.pauseCumulative = stream.pauseCumulative;
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
+    this.oldMetadata = stream.oldMetadata;
     this.type = buildStreamType(this);
     this.isAligned = false;
   }
