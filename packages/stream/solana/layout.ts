@@ -65,6 +65,11 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.blob(8, "pause_cumulative"),
   BufferLayout.blob(8, "last_rate_change_time"),
   BufferLayout.blob(8, "funds_unlocked_at_last_rate_change"),
+  BufferLayout.u32("creation_fee"),
+  BufferLayout.u8("creation_fee_claimed"),
+  BufferLayout.u32("auto_claim_fee"),
+  BufferLayout.u8("auto_claim_fee_claimed"),
+  BufferLayout.blob(32, "old_metadata_key"),
 ]);
 
 export const partnerLayout: BufferLayout.Structure<IPartnerLayout> = BufferLayout.struct([

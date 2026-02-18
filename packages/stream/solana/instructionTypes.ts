@@ -46,6 +46,11 @@ export interface IStreamLayout {
   pause_cumulative: Uint8Array;
   last_rate_change_time: Uint8Array;
   funds_unlocked_at_last_rate_change: Uint8Array;
+  creation_fee: number;
+  creation_fee_claimed: number;
+  auto_claim_fee: number;
+  auto_claim_fee_claimed: number;
+  old_metadata_key: Uint8Array;
 }
 
 export interface ICreateStreamLayout {

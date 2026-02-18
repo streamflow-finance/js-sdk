@@ -16,6 +16,18 @@ import { SOLANA_ERROR_MAP, SOLANA_ERROR_MATCH_REGEX } from "../constants.js";
 
 export { getBN, getNumberFromBN } from "@streamflow/common";
 
+/**
+ * Returns the key that should be used for PDA derivation.
+ * For migrated streams, the aligned proxy PDA was derived from the original (old) metadata key,
+ * so we need to use that instead of the current stream pubkey.
+ */
+export const getMetadataKey = (streamPubkey: PublicKey, oldMetadataKey: PublicKey): PublicKey => {
+  if (PublicKey.default.equals(oldMetadataKey)) {
+    return streamPubkey;
+  }
+  return oldMetadataKey;
+};
+
 const FEE_PRECISION = 4;
 const FEE_NORMALIZER = 10 ** FEE_PRECISION;
 const FEE_MULTIPLIER = new BN(10 ** 6);
@@ -83,6 +95,7 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     pauseCumulative: new BN(raw.pause_cumulative, LE),
     lastRateChangeTime: new BN(raw.last_rate_change_time, LE),
     fundsUnlockedAtLastRateChange: new BN(raw.funds_unlocked_at_last_rate_change, LE),
+    oldMetadataKey: new PublicKey(raw.old_metadata_key),
   };
 };
 
