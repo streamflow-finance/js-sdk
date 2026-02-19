@@ -13,6 +13,7 @@ export const STREAM_STRUCT_OFFSET_SENDER = 49;
 export const STREAM_STRUCT_OFFSET_RECIPIENT = 113;
 export const STREAM_STRUCT_OFFSET_MINT = 177;
 export const STREAM_STRUCT_OFFSET_CLOSED = 671;
+export const STREAM_STRUCT_OFFSET_OLD_METADATA_KEY = 714;
 
 export const MAX_SAFE_UNIX_TIME_VALUE = 8640000000000;
 
@@ -70,6 +71,7 @@ export const TEST_ORACLE_DISCRIMINATOR = [198, 49, 63, 134, 232, 251, 168, 28];
 export const CONTRACT_SEED = Buffer.from("contract", "utf-8");
 export const ESCROW_SEED = Buffer.from("strm", "utf-8");
 export const TEST_ORACLE_SEED = Buffer.from("test-oracle", "utf-8");
+export const REPOPULATED_METADATA_SEED = Buffer.from("strm-rep", "utf-8");
 
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
 
