@@ -32,6 +32,7 @@ import {
   executeMultipleTransactions,
   buildSendThrottler,
   createVersionedTransaction,
+  isDev,
   type IProgramAccount,
   type ThrottleParams,
   getMultipleAccountsInfoBatched,
@@ -121,6 +122,7 @@ import type { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./de
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
 import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "./contractUtils.js";
+import { createClient, transformContract } from "./api-public/index.js";
 
 const METADATA_ACC_SIZE = 1104;
 const ALIGNED_METADATA_ACC_SIZE = 320;
@@ -148,6 +150,8 @@ export class SolanaStreamClient {
 
   private readonly schedulingParams: ThrottleParams;
 
+  private readonly apiClient: ReturnType<typeof createClient>;
+
   /**
    * Create Stream instance with flat arguments
    */
@@ -157,7 +161,7 @@ export class SolanaStreamClient {
     commitment?: Commitment | ConnectionConfig,
     programId?: string,
     sendRate?: number,
-    sendThrottler?: PQueue,
+    sendThrottler?: PQueue
   );
 
   /**
@@ -202,8 +206,8 @@ export class SolanaStreamClient {
       const sendThrottler = !sendScheduler
         ? buildSendThrottler(1)
         : "sendRate" in sendScheduler
-          ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
-          : sendScheduler;
+        ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
+        : sendScheduler;
       this.schedulingParams = {
         ...schedulingOptions,
         sendThrottler,
@@ -214,6 +218,11 @@ export class SolanaStreamClient {
       address: StreamflowAlignedUnlocksIDL.address,
     } as AlignedUnlocksProgramType;
     this.alignedProxyProgram = new Program(alignedUnlocksProgram, { connection: this.connection });
+    this.apiClient = createClient(
+      typeof optionsOrClusterUrl === "object" && optionsOrClusterUrl.cluster !== ICluster.Mainnet
+        ? { cluster: "devnet" }
+        : { cluster: "mainnet" },
+    );
   }
 
   public getConnection(): Connection {
@@ -1506,11 +1515,17 @@ export class SolanaStreamClient {
       ],
     });
 
-    if (migrated.length === 0) {
-      throw new Error("Couldn't get account info.");
+    if (migrated.length > 0) {
+      return this.decodeStreamAccount(migrated[0].pubkey, migrated[0].account.data);
     }
 
-    return this.decodeStreamAccount(migrated[0].pubkey, migrated[0].account.data);
+    // Fallback to Tabularium API for closed contracts
+    try {
+      const contract = await this.apiClient.getContract(id);
+      return await transformContract(contract);
+    } catch (cause) {
+      throw new Error(`Couldn't get account info from chain or Tabularium`, { cause });
+    }
   }
 
   private async decodeStreamAccount(pubkey: PublicKey, data: Buffer): Promise<Stream> {
@@ -1594,6 +1609,7 @@ export class SolanaStreamClient {
     address,
     type = StreamType.All,
     direction = StreamDirection.All,
+    filters,
   }: IGetAllData): Promise<[string, Stream][]> {
     const publicKey = new PublicKey(address);
     let streams: Record<string, Stream> = {};
@@ -1616,6 +1632,7 @@ export class SolanaStreamClient {
         streams = { ...streams, ...alignedStreams };
       }
     }
+
     if (direction !== StreamDirection.Outgoing) {
       const allIncomingAccounts = await getProgramAccounts(
         this.connection,
@@ -1630,7 +1647,9 @@ export class SolanaStreamClient {
 
       // filter out aligned unlocks and store them in a separate object
       allIncomingAccounts.forEach((account, index) => {
-        if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender, allIncomingStreams[index].oldMetadata)) {
+        if (
+          this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender, allIncomingStreams[index].oldMetadata)
+        ) {
           alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
         } else {
           streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index]);
@@ -1641,6 +1660,11 @@ export class SolanaStreamClient {
         const incomingAlignedStreams = await this.getIncomingAlignedStreams(alignedDecoded);
         streams = { ...streams, ...incomingAlignedStreams };
       }
+    }
+
+    if (filters?.closed) {
+      const closedStreams = await this.getClosedStreams(address, direction);
+      streams = { ...streams, ...closedStreams };
     }
 
     const sortedStreams = Object.entries(streams).sort(([, stream1], [, stream2]) => stream2.start - stream1.start);
@@ -1902,6 +1926,46 @@ export class SolanaStreamClient {
         {},
       ),
     };
+  }
+
+  /**
+   * Gets closed streams for a given owner and direction
+   * @param owner - Owner address
+   * @param direction - Stream direction
+   * @returns Record of closed streams
+   */
+  public async getClosedStreams(
+    owner: string,
+    direction: StreamDirection = StreamDirection.All,
+  ): Promise<Record<string, Stream>> {
+    const streams: Record<string, Stream> = {};
+    try {
+      const tabulariumContracts = await this.apiClient.getContracts({
+        sender: direction !== StreamDirection.Incoming ? owner : undefined,
+        recipient: direction !== StreamDirection.Outgoing ? owner : undefined,
+      });
+
+      for (const contract of tabulariumContracts) {
+        if (!streams[contract.address]) {
+          try {
+            const transformed = await transformContract(contract);
+            streams[contract.address] = transformed;
+          } catch (cause) {
+            if (isDev) {
+              throw new Error(`Failed to transform contract ${contract.address}:`, { cause });
+            }
+            console.warn(new Error(`Failed to transform contract ${contract.address}:`, { cause }));
+          }
+        }
+      }
+    } catch (cause) {
+      if (isDev) {
+        throw new Error("Failed to get data from the service", { cause });
+      }
+      console.warn(new Error("Failed to get data from the service", { cause }));
+    }
+
+    return streams;
   }
 
   /**

@@ -6,3 +6,4 @@ export * from "./instructions.js";
 export * from "./contractUtils.js";
 export * from "./constants.js";
 export { default as timelockIDL } from "./timelockIDL.js";
+export * from "./api-public/index.js";

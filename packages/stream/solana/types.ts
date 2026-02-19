@@ -106,6 +106,9 @@ export interface IGetAllData {
   address: string;
   type?: StreamType;
   direction?: StreamDirection;
+  filters?: {
+    closed?: boolean;
+  };
 }
 
 export interface ICreateMultiError {

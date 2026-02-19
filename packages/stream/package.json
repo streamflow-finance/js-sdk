@@ -40,6 +40,7 @@
   "scripts": {
     "copyIdls": "mkdir -p dist/esm/solana/descriptor/idl && cp solana/descriptor/idl/*.json dist/esm/solana/descriptor/idl/",
     "build": "rm -rf dist && tsup && pnpm copyIdls",
+    "dev": "pnpm copyIdls && tsup --watch",
     "tsc:lint": "tsc --noEmit",
     "pack": "pnpm build && pnpm pack",
     "test": "vitest run --passWithNoTests",
