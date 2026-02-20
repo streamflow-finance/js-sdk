@@ -2,7 +2,7 @@ import { defineConfig } from "tsup";
 
 import { createPackageConfig } from "../../tsup.config.base.js";
 
-export default defineConfig(
+export default defineConfig((options) =>
   createPackageConfig({
     entry: {
       index: "index.ts",
@@ -10,5 +10,5 @@ export default defineConfig(
       "solana/descriptor/merkle_distributor": "solana/descriptor/merkle_distributor.ts",
       "solana/descriptor/aligned_distributor": "solana/descriptor/aligned_distributor.ts",
     },
-  }),
+  })(options),
 );

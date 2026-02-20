@@ -21,6 +21,7 @@
   },
   "scripts": {
     "build": "lerna run build",
+    "dev": "pnpm build && pnpm -r --stream --parallel --filter \"@streamflow/common\" --filter \"@streamflow/stream\" --filter \"@streamflow/staking\" --filter \"@streamflow/distributor\" run dev",
     "build-docs": "typedoc packages/stream/index.ts",
     "pack": "lerna run pack",
     "test": "lerna run test",
@@ -42,12 +43,14 @@
     "examples": "pnpm examples:install && pnpm examples:build && pnpm examples:verify",
     "watch:docs": "typedoc --out dist/docs",
     "watch:docs:serve": "pnpx serve dist/docs -p 51921",
-    "serve:docs": "pnpm run --stream \"/^watch:docs.*/\""
+    "serve:docs": "pnpm run --stream \"/^watch:docs.*/\"",
+    "watch:build-pack": "node scripts/watch-build-pack.cjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.17.4",
     "@types/eslint": "^8.56.3",
     "@types/node": "^24.3.0",
+    "chokidar": "4.0.3",
     "eslint": "^8.56.0",
     "eslint-import-resolver-typescript": "3.8.3",
     "husky": "^8.0.0",
