@@ -22,7 +22,9 @@ export const REWARD_VAULT_PREFIX = Buffer.from("reward-vault", "utf-8");
 export const REWARD_ENTRY_PREFIX = Buffer.from("reward-entry", "utf-8");
 export const CONFIG_PREFIX = Buffer.from("config", "utf-8");
 export const FEE_VALUE_PREFIX = Buffer.from("fee-value", "utf-8");
+export const FUND_DELEGATE_PREFIX = Buffer.from("fund-delegate", "utf-8");
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
+export const WORKER_PUBLIC_KEY = new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u");
 
 export const ANCHOR_DISCRIMINATOR_OFFSET = 8;
 export const STAKE_ENTRY_STAKE_POOL_OFFSET = ANCHOR_DISCRIMINATOR_OFFSET + 4;

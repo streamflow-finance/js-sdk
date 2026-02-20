@@ -46,6 +46,7 @@ import { type StakePool as StakePoolProgramType } from "./descriptor/stake_pool.
 import {
   deriveConfigPDA,
   deriveFeeValuePDA,
+  deriveFundDelegatePDA,
   deriveRewardPoolPDA,
   deriveRewardVaultPDA,
   deriveStakeEntryPDA,
@@ -55,6 +56,9 @@ import type {
   ClaimRewardPoolArgs,
   CloseRewardEntryArgs,
   CloseStakeEntryArgs,
+  CreateFundDelegateArgs,
+  CreateFundDelegatePrepareResult,
+  CreateFundDelegateResult,
   CreateRewardEntryArgs,
   CreateRewardPoolArgs,
   CreateStakePoolArgs,
@@ -315,10 +319,7 @@ export class SolanaStakingClient {
    * @param data - enriched stake params with an array of reward pools
    * @param extParams - parameter required for transaction execution
    */
-  async stakeAndCreateEntries(
-    data: StakeAndCreateEntriesArgs,
-    extParams: IInteractExt,
-  ): Promise<ITransactionResult> {
+  async stakeAndCreateEntries(data: StakeAndCreateEntriesArgs, extParams: IInteractExt): Promise<ITransactionResult> {
     const { ixs } = await this.prepareStakeAndCreateEntriesInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -741,6 +742,41 @@ export class SolanaStakingClient {
       .instruction();
 
     return { ixs: [instruction] };
+  }
+
+  async createFundDelegate(data: CreateFundDelegateArgs, extParams: IInteractExt): Promise<CreateFundDelegateResult> {
+    const { ixs, tokenAccount } = await this.prepareCreateFundDelegateInstructions(data, extParams);
+    const { signature } = await this.execute(ixs, extParams);
+
+    return {
+      ixs,
+      txId: signature,
+      tokenAccount,
+    };
+  }
+
+  async prepareCreateFundDelegateInstructions(
+    { rewardPool, startTs, period, expiryTs, tokenProgramId = TOKEN_PROGRAM_ID }: CreateFundDelegateArgs,
+    extParams: IInteractExt,
+  ): Promise<CreateFundDelegatePrepareResult> {
+    const { rewardPoolDynamicProgram } = this.programs;
+    const authority = extParams.invoker.publicKey;
+    invariant(authority, "Undefined invoker publicKey");
+    const rewardPoolPk = pk(rewardPool);
+    const rewardPoolData = await rewardPoolDynamicProgram.account.rewardPool.fetch(rewardPoolPk);
+    const mint = rewardPoolData.mint;
+    const fundDelegate = deriveFundDelegatePDA(rewardPoolDynamicProgram.programId, rewardPoolPk);
+    const tokenAccount = getAssociatedTokenAddressSync(mint, fundDelegate, true, pk(tokenProgramId));
+
+    const instruction = await rewardPoolDynamicProgram.methods
+      .createFundDelegate(startTs, period, expiryTs)
+      .accounts({
+        rewardPool: rewardPoolPk,
+        tokenProgram: tokenProgramId,
+      })
+      .instruction();
+
+    return { ixs: [instruction], tokenAccount };
   }
 
   async updateRewardPool(data: UpdateRewardPoolArgs, extParams: IInteractExt) {

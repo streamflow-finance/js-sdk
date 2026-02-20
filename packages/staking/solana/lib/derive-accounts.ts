@@ -12,6 +12,7 @@ import {
   REWARD_ENTRY_PREFIX,
   CONFIG_PREFIX,
   FEE_VALUE_PREFIX,
+  FUND_DELEGATE_PREFIX,
 } from "../constants.js";
 
 export const deriveStakePoolPDA = (
@@ -75,4 +76,8 @@ export const deriveConfigPDA = (programId: PublicKey): PublicKey => {
 
 export const deriveFeeValuePDA = (programId: PublicKey, target: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([FEE_VALUE_PREFIX, target.toBuffer()], programId)[0];
+};
+
+export const deriveFundDelegatePDA = (programId: PublicKey, rewardPool: PublicKey): PublicKey => {
+  return PublicKey.findProgramAddressSync([FUND_DELEGATE_PREFIX, rewardPool.toBuffer()], programId)[0];
 };

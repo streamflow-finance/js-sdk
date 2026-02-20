@@ -15,7 +15,7 @@ This protocol is the complex of several programs that ensure flexibility and acc
 
 aforementioned programs are:
 - Stake Pools Program
-- Reward Pools Program
+- Reward Pools Program (fixed and dynamic variants)
 - Fee Management Program (for streamflow usage, non-required and omitted from further docs)
 
 
@@ -338,6 +338,45 @@ Client also exposes methods to group staking/unstaking with reward pool actions.
 > [!Note]
 > Transactions can become quite large if you have many rewards pools, that can make it impossible to do all actions in 1 transaction - in this case please stick with `prepare` methods to build custom instructions and execute them with `execute`.
 
+### Auto-Unstake
+
+Stake pools can be configured with `autoUnstake: true` (via `createPoolV2`) to automatically unstake entries once their lock duration expires. 
+- When auto-unstake is enabled, a worker will unstake on the user's behalf after the lock period ends; 
+- if the stake entry has an associated reward entry from a fixed reward pool, the worker will also claim rewards during the auto-unstake process.
+
+This feature works well with `maxTotalStakeCumulative` — together they allow stake pool creators to have a predictable amount of tokens needed in the reward pool. Without auto-unstake, rewards continue to accumulate past unlock time, which can drain a reward pool unexpectedly.
+
+```typescript
+const { metadataId: stakePoolPda } = await client.createStakePool({
+    maxWeight: multiplier,
+    maxDuration,
+    minDuration,
+    mint: MINT_ADDRESS,
+    permissionless: false,
+    nonce: 0,
+    autoUnstake: true,
+    maxTotalStakeCumulative: new BN(1_000_000_000), // cap total stake
+}, extParams);
+```
+
+### Fund Delegate
+
+Fund Delegate allows configuring automated periodic top-ups of a dynamic reward pool. The delegate account holds tokens that a worker uses to fund the reward pool on a schedule. Users transfer tokens to the delegate's token account, and the worker funds the pool according to the configured schedule (start time, period, and expiry).
+
+```typescript
+const rewardPool = /* dynamic reward pool address */;
+
+// Create a fund delegate with a schedule
+const { tokenAccount } = await client.createFundDelegate({
+    rewardPool,
+    startTs: new BN(Math.floor(Date.now() / 1000)),  // start now
+    period: new BN(86400),                             // fund every 24 hours
+    expiryTs: new BN(Math.floor(Date.now() / 1000) + 86400 * 30), // expire in 30 days
+}, extParams);
+```
+
+After creating the delegate, transfer reward tokens to the `tokenAccount`, which is an ATA for the fund delegate PDA address. The worker will periodically fund the reward pool from these tokens according to the schedule.
+
 ### Set Token Metadata
 
 SolanaStakingClient also exposes original IDL of all programs, so you can use some additional instructions, that are not wrapped by the client. Currently there is no method to update Token Metadata of the Staking Mint that stakers get in return for their stake, but you can call the instructions from the original IDL like so:
@@ -372,10 +411,12 @@ Streamflow Staking protocol program IDs
 | Solana  |                                              |
 | ------- | -------------------------------------------- |
 | Staking Pools Mainnet   | STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH  |
-| Reward Pools Mainnet   | RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj  |
+| Reward Pools (fixed) Mainnet   | RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj  |
+| Reward Pools (dynamic) Mainnet   | RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez  |
 | ----   | ---  |
 | Staking Pools Devnet   | STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH  |
-| Reward Pools Devnet   | RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj  |
+| Reward Pools (fixed) Devnet   | RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj  |
+| Reward Pools (dynamic) Devnet   | RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez  |
 
 ### IDLs
 For further details you can consult with IDLs of protocols available at:

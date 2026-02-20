@@ -2,7 +2,7 @@
   "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
     "name": "reward_pool_dynamic",
-    "version": "2.4.0",
+    "version": "2.6.0",
     "spec": "0.1.0",
     "description": "Reward pools with dynamic rewards distribution"
   },
@@ -460,6 +460,173 @@
       "args": []
     },
     {
+      "name": "create_fund_delegate",
+      "discriminator": [
+        131,
+        15,
+        250,
+        148,
+        39,
+        103,
+        14,
+        232
+      ],
+      "accounts": [
+        {
+          "name": "reward_pool",
+          "docs": [
+            "Reward Pool"
+          ]
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Mint of reward tokens"
+          ],
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
+          "name": "fund_delegate",
+          "docs": [
+            "Fund Delegate account that stores fund configuration"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  117,
+                  110,
+                  100,
+                  45,
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reward_pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "Token account that stores tokens for funding, should be topped up prior to funding"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fund_delegate"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Reward Pool authority"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
+          "name": "worker",
+          "writable": true,
+          "address": "wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The [Associated Token] program."
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_ts",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "expiry_ts",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "create_pool",
       "discriminator": [
         233,
@@ -596,6 +763,289 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "fund_as_delegate",
+      "discriminator": [
+        165,
+        90,
+        78,
+        137,
+        23,
+        155,
+        220,
+        116
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "docs": [
+            "Worker initiated the transaction"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
+          "name": "from",
+          "docs": [
+            "Token Account from which tokens will be transferred"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fund_delegate"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Reward Pool Vault that stores tokens"
+          ],
+          "writable": true,
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "Mint of reward tokens"
+          ],
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
+          "name": "stake_pool",
+          "docs": [
+            "Original Stake Pool"
+          ],
+          "relations": [
+            "reward_pool"
+          ]
+        },
+        {
+          "name": "reward_pool",
+          "docs": [
+            "Reward Pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fund_delegate",
+          "docs": [
+            "Fund Delegate account that stores fund configuration"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  117,
+                  110,
+                  100,
+                  45,
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reward_pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true,
+          "address": "5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw"
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "streamflow_treasury"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "config",
+          "docs": [
+            "Fee Configuration"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "fee_program"
+            }
+          }
+        },
+        {
+          "name": "fee_value",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  45,
+                  118,
+                  97,
+                  108,
+                  117,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "fee_program"
+            }
+          }
+        },
+        {
+          "name": "fee_program",
+          "address": "FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
     },
     {
       "name": "fund_pool",
@@ -915,6 +1365,19 @@
       ]
     },
     {
+      "name": "FundDelegate",
+      "discriminator": [
+        49,
+        154,
+        133,
+        22,
+        46,
+        68,
+        68,
+        44
+      ]
+    },
+    {
       "name": "Governor",
       "discriminator": [
         37,
@@ -1078,6 +1541,26 @@
       "code": 6016,
       "name": "VoteRequired",
       "msg": "Vote is required for claiming"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidFundStart",
+      "msg": "Fund start can not be in the past"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidFundPeriod",
+      "msg": "Fund period should be >= 1 day and less or equal than expiration"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidFundExpiry",
+      "msg": "Fund expiration should be later than start time"
+    },
+    {
+      "code": 6020,
+      "name": "AlreadyFunded",
+      "msg": "Fund already happened for the current period"
     }
   ],
   "types": [
@@ -1159,6 +1642,114 @@
                 64
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FundDelegate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer to account for space"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "reward_pool",
+            "docs": [
+              "Reward Pool"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "start_ts",
+            "docs": [
+              "Time when the first fund happens"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "period",
+            "docs": [
+              "Period of funds in seconds"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "expiry_ts",
+            "docs": [
+              "Time when vault expires and funds stop"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_fund_ts",
+            "docs": [
+              "Time when last fund happened"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "mode",
+            "docs": [
+              "Funding mode, may have its own configuration"
+            ],
+            "type": {
+              "defined": {
+                "name": "FundMode"
+              }
+            }
+          },
+          {
+            "name": "buffer_1",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "buffer_2",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FundMode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "RevShare"
           }
         ]
       }
