@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "11.0.4",
+  "version": "11.0.5",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/cjs/index.cjs",
@@ -66,6 +66,7 @@
   "scripts": {
     "copyIdls": "mkdir -p dist/esm/solana/descriptor/idl && cp solana/descriptor/idl/*.json dist/esm/solana/descriptor/idl/",
     "build": "rm -rf dist && tsup && pnpm copyIdls",
+    "dev": "pnpm copyIdls && tsup --watch",
     "tsc:lint": "tsc --noEmit",
     "pack": "pnpm build && pnpm pack",
     "lint": "eslint --fix .",
