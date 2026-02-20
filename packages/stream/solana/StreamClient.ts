@@ -85,7 +85,6 @@ import {
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
   calculateTotalAmountToDeposit,
-  getMetadataKey,
 } from "./lib/utils.js";
 import {
   PROGRAM_ID,
@@ -1221,7 +1220,7 @@ export class SolanaStreamClient {
       throw new Error("Impossible to cancel a stream contract that does not exist");
     }
     const decoded = decodeStream(account.data);
-    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender, decoded.oldMetadata);
+    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender);
 
     const ixs = isAlignedUnlock
       ? await this.prepareCancelAlignedUnlockInstructions(cancelData, extParams)
@@ -1530,11 +1529,10 @@ export class SolanaStreamClient {
 
   private async decodeStreamAccount(pubkey: PublicKey, data: Buffer): Promise<Stream> {
     const stream = decodeStream(data);
-    const metadataKey = getMetadataKey(pubkey, stream.oldMetadata);
 
-    if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadata)) {
+    if (this.isAlignedUnlock(pubkey, stream.sender)) {
       const alignedProxy = await this.alignedProxyProgram.account.contract.fetch(
-        deriveContractPDA(this.alignedProxyProgram.programId, metadataKey),
+        deriveContractPDA(this.alignedProxyProgram.programId, pubkey),
       );
       if (!alignedProxy) {
         throw new Error("Couldn't get proxy account info.");
@@ -1582,9 +1580,7 @@ export class SolanaStreamClient {
     const streams: Record<string, Stream> = {};
     const alignedStreamsPubKeys = Object.keys(streamRecord);
     const alignedProxyPDAs = alignedStreamsPubKeys.map((streamPubKey) => {
-      const pubkey = new PublicKey(streamPubKey);
-      const metadataKey = getMetadataKey(pubkey, streamRecord[streamPubKey].oldMetadata);
-      return deriveContractPDA(this.alignedProxyProgram.programId, metadataKey);
+      return deriveContractPDA(this.alignedProxyProgram.programId, new PublicKey(streamPubKey));
     });
     const alignedProxyAccounts = await getMultipleAccountsInfoBatched(this.connection, alignedProxyPDAs);
     alignedProxyAccounts.forEach((account, index) => {
@@ -1648,7 +1644,7 @@ export class SolanaStreamClient {
       // filter out aligned unlocks and store them in a separate object
       allIncomingAccounts.forEach((account, index) => {
         if (
-          this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender, allIncomingStreams[index].oldMetadata)
+          this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender)
         ) {
           alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
         } else {
@@ -1710,9 +1706,8 @@ export class SolanaStreamClient {
   private collectAlignedEntries(decoded: { pubkey: PublicKey; stream: DecodedStream }[]) {
     const entries: { index: number; pda: PublicKey }[] = [];
     decoded.forEach(({ pubkey, stream }, index) => {
-      if (this.isAlignedUnlock(pubkey, stream.sender, stream.oldMetadata)) {
-        const metadataKey = getMetadataKey(pubkey, stream.oldMetadata);
-        entries.push({ index, pda: deriveContractPDA(this.alignedProxyProgram.programId, metadataKey) });
+      if (this.isAlignedUnlock(pubkey, stream.sender)) {
+        entries.push({ index, pda: deriveContractPDA(this.alignedProxyProgram.programId, pubkey) });
       }
     });
     return entries;
@@ -1790,7 +1785,7 @@ export class SolanaStreamClient {
     invariant(escrow, "Couldn't get account info");
 
     const decoded = decodeStream(escrow.data);
-    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender, decoded.oldMetadata);
+    const isAlignedUnlock = this.isAlignedUnlock(streamPublicKey, decoded.sender);
 
     if (isAlignedUnlock && (data.enableAutomaticWithdrawal !== undefined || data.amountPerPeriod !== undefined)) {
       throw new Error("Automatic withdrawal and rate update are not possible in price-based vesting!");
@@ -1901,9 +1896,8 @@ export class SolanaStreamClient {
    * Utility function that checks whether the associated stream address is an aligned unlock contract, indicated by whether the sender/creator is a PDA.
    * For migrated streams, the PDA was derived from the old metadata key.
    */
-  public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey, oldMetadata?: PublicKey) {
-    const metadataKey = oldMetadata ? getMetadataKey(streamPublicKey, oldMetadata) : streamPublicKey;
-    const pda = deriveContractPDA(this.alignedProxyProgram.programId, metadataKey);
+  public isAlignedUnlock(streamPublicKey: PublicKey, senderPublicKey: PublicKey) {
+    const pda = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
     return senderPublicKey.equals(pda);
   }
 
