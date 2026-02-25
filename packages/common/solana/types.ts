@@ -105,8 +105,11 @@ export class TransactionFailedError extends Error {
   }
 }
 
-export interface ITransactionResult {
+export interface IPrepareResult {
   ixs: TransactionInstruction[];
+}
+
+export interface ITransactionResult extends IPrepareResult {
   txId: string;
 }
 
