@@ -42,6 +42,8 @@ export interface IStreamLayout {
   create_params_padding_length: number;
   create_params_padding: number[];
   closed: number;
+  is_pda: number;
+  nonce: number;
   current_pause_start: Uint8Array;
   pause_cumulative: Uint8Array;
   last_rate_change_time: Uint8Array;
@@ -51,6 +53,8 @@ export interface IStreamLayout {
   auto_claim_fee: number;
   auto_claim_fee_claimed: number;
   old_metadata: Uint8Array;
+  payer: Uint8Array;
+  bump: number;
 }
 
 export interface ICreateStreamLayout {

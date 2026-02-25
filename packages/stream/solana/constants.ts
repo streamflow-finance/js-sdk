@@ -29,7 +29,7 @@ export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
 };
 
 // Defined: https://github.com/streamflow-finance/protocol/blob/main/programs/protocol/src/state.rs#L25
-export const CREATE_PARAMS_PADDING = 126;
+export const CREATE_PARAMS_PADDING = 121;
 
 export const PROGRAM_ID = {
   [ICluster.Devnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",

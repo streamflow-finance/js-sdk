@@ -70,6 +70,10 @@ export interface ContractSchema {
   autoClaimFee: number | null;
   autoClaimFeeClaimed: boolean | null;
   lastUpdateSlot: number | null;
+  isPda: boolean;
+  nonce: number | null;
+  payer: string | null;
+  bump: number | null;
   dynamicContract: DynamicContractSchema | null;
 }
 

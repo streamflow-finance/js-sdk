@@ -60,6 +60,8 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
 
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
+  BufferLayout.u8("is_pda"),
+  BufferLayout.u32("nonce"),
   BufferLayout.blob(4, "create_stream_params_padding_length"),
   BufferLayout.seq(BufferLayout.u8(), CREATE_PARAMS_PADDING, "create_params_padding"),
   BufferLayout.u8("closed"),
@@ -72,6 +74,8 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.u32("auto_claim_fee"),
   BufferLayout.u8("auto_claim_fee_claimed"),
   BufferLayout.blob(32, "old_metadata"),
+  BufferLayout.blob(32, "payer"),
+  BufferLayout.u8("bump"),
 ]);
 
 export const partnerLayout: BufferLayout.Structure<IPartnerLayout> = BufferLayout.struct([
