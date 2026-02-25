@@ -1,0 +1,1440 @@
+{
+  "address": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m",
+  "metadata": {
+    "name": "streamflow",
+    "version": "0.4.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "cancel",
+      "discriminator": [
+        232,
+        219,
+        223,
+        41,
+        219,
+        236,
+        220,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "sender",
+          "writable": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "recipient_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "partner_tokens",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_fee",
+      "discriminator": [
+        169,
+        32,
+        79,
+        137,
+        136,
+        232,
+        70,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create",
+      "discriminator": [
+        24,
+        30,
+        200,
+        40,
+        5,
+        28,
+        7,
+        119
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "- create: should be an ephemeral signer;",
+            "- create_v2: a PDA, deriviation path is:",
+            "```ignore",
+            "Pubkey::find_program_address(",
+            "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
+            "pid",
+            ")",
+            "```"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "recipient_tokens",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "partner_tokens",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "fee_oracle"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "timelock_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "u64"
+        },
+        {
+          "name": "net_amount_deposited",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "amount_per_period",
+          "type": "u64"
+        },
+        {
+          "name": "cliff",
+          "type": "u64"
+        },
+        {
+          "name": "cliff_amount",
+          "type": "u64"
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "automatic_withdrawal",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "can_topup",
+          "type": "bool"
+        },
+        {
+          "name": "stream_name",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "pausable",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "can_update_rate",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_unchecked",
+      "discriminator": [
+        174,
+        205,
+        227,
+        30,
+        140,
+        186,
+        80,
+        195
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "- create: be an initialized account with 1104 bytes reserved that has pid assigned to it, i.e.;",
+            "```ignore",
+            "let cluster_rent = Rent::get()?;",
+            "let stream_metadata_rent = cluster_rent.minimum_balance(METADATA_LEN);",
+            "create_account(",
+            "CpiContext::new(",
+            "ctx.accounts.system_program.to_account_info(),",
+            "CreateAccount {",
+            "from: ctx.accounts.payer.to_account_info(),",
+            "to: ctx.accounts.stream_metadata.to_account_info(),",
+            "},",
+            "),",
+            "stream_metadata_rent,",
+            "METADATA_LEN as u64,",
+            "ctx.accounts.streamflow_program.to_account_info().key,",
+            ")?;",
+            "```",
+            "- create_v2: a PDA that will be created, derivation path is:",
+            "```ignore",
+            "Pubkey::find_program_address(",
+            "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
+            "pid",
+            ")",
+            "```"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "fee_oracle"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "timelock_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "u64"
+        },
+        {
+          "name": "net_amount_deposited",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "amount_per_period",
+          "type": "u64"
+        },
+        {
+          "name": "cliff",
+          "type": "u64"
+        },
+        {
+          "name": "cliff_amount",
+          "type": "u64"
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "automatic_withdrawal",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "can_topup",
+          "type": "bool"
+        },
+        {
+          "name": "stream_name",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "recipient",
+          "type": "pubkey"
+        },
+        {
+          "name": "partner",
+          "type": "pubkey"
+        },
+        {
+          "name": "pausable",
+          "type": "bool"
+        },
+        {
+          "name": "can_update_rate",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "create_unchecked_v2",
+      "discriminator": [
+        224,
+        111,
+        138,
+        71,
+        113,
+        197,
+        168,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "- create: be an initialized account with 1104 bytes reserved that has pid assigned to it, i.e.;",
+            "```ignore",
+            "let cluster_rent = Rent::get()?;",
+            "let stream_metadata_rent = cluster_rent.minimum_balance(METADATA_LEN);",
+            "create_account(",
+            "CpiContext::new(",
+            "ctx.accounts.system_program.to_account_info(),",
+            "CreateAccount {",
+            "from: ctx.accounts.payer.to_account_info(),",
+            "to: ctx.accounts.stream_metadata.to_account_info(),",
+            "},",
+            "),",
+            "stream_metadata_rent,",
+            "METADATA_LEN as u64,",
+            "ctx.accounts.streamflow_program.to_account_info().key,",
+            ")?;",
+            "```",
+            "- create_v2: a PDA that will be created, derivation path is:",
+            "```ignore",
+            "Pubkey::find_program_address(",
+            "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
+            "pid",
+            ")",
+            "```"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "fee_oracle"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "timelock_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "u64"
+        },
+        {
+          "name": "net_amount_deposited",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "amount_per_period",
+          "type": "u64"
+        },
+        {
+          "name": "cliff",
+          "type": "u64"
+        },
+        {
+          "name": "cliff_amount",
+          "type": "u64"
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "automatic_withdrawal",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "can_topup",
+          "type": "bool"
+        },
+        {
+          "name": "stream_name",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "recipient",
+          "type": "pubkey"
+        },
+        {
+          "name": "partner",
+          "type": "pubkey"
+        },
+        {
+          "name": "pausable",
+          "type": "bool"
+        },
+        {
+          "name": "can_update_rate",
+          "type": "bool"
+        },
+        {
+          "name": "nonce",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "create_unchecked_with_payer",
+      "discriminator": [
+        0,
+        123,
+        85,
+        155,
+        20,
+        111,
+        159,
+        22
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "- create: be an initialized account with 1104 bytes reserved that has pid assigned to it, i.e.;",
+            "```ignore",
+            "let cluster_rent = Rent::get()?;",
+            "let stream_metadata_rent = cluster_rent.minimum_balance(METADATA_LEN);",
+            "create_account(",
+            "CpiContext::new(",
+            "ctx.accounts.system_program.to_account_info(),",
+            "CreateAccount {",
+            "from: ctx.accounts.payer.to_account_info(),",
+            "to: ctx.accounts.stream_metadata.to_account_info(),",
+            "},",
+            "),",
+            "stream_metadata_rent,",
+            "METADATA_LEN as u64,",
+            "ctx.accounts.streamflow_program.to_account_info().key,",
+            ")?;",
+            "```",
+            "- create_v2: a PDA account that will be created, derivation path is:",
+            "```ignore",
+            "Pubkey::find_program_address(",
+            "&[b\"strm-met\", mint.as_ref(), payer.as_ref(), nonce.to_be_bytes().as_ref()],",
+            "pid",
+            ")",
+            "```"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "fee_oracle"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "timelock_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "u64"
+        },
+        {
+          "name": "net_amount_deposited",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "amount_per_period",
+          "type": "u64"
+        },
+        {
+          "name": "cliff",
+          "type": "u64"
+        },
+        {
+          "name": "cliff_amount",
+          "type": "u64"
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "automatic_withdrawal",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "can_topup",
+          "type": "bool"
+        },
+        {
+          "name": "stream_name",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "recipient",
+          "type": "pubkey"
+        },
+        {
+          "name": "partner",
+          "type": "pubkey"
+        },
+        {
+          "name": "pausable",
+          "type": "bool"
+        },
+        {
+          "name": "can_update_rate",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "create_unchecked_with_payer_v2",
+      "discriminator": [
+        1,
+        244,
+        255,
+        246,
+        255,
+        170,
+        153,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "- create: be an initialized account with 1104 bytes reserved that has pid assigned to it, i.e.;",
+            "```ignore",
+            "let cluster_rent = Rent::get()?;",
+            "let stream_metadata_rent = cluster_rent.minimum_balance(METADATA_LEN);",
+            "create_account(",
+            "CpiContext::new(",
+            "ctx.accounts.system_program.to_account_info(),",
+            "CreateAccount {",
+            "from: ctx.accounts.payer.to_account_info(),",
+            "to: ctx.accounts.stream_metadata.to_account_info(),",
+            "},",
+            "),",
+            "stream_metadata_rent,",
+            "METADATA_LEN as u64,",
+            "ctx.accounts.streamflow_program.to_account_info().key,",
+            ")?;",
+            "```",
+            "- create_v2: a PDA account that will be created, derivation path is:",
+            "```ignore",
+            "Pubkey::find_program_address(",
+            "&[b\"strm-met\", mint.as_ref(), payer.as_ref(), nonce.to_be_bytes().as_ref()],",
+            "pid",
+            ")",
+            "```"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "fee_oracle"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "timelock_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "u64"
+        },
+        {
+          "name": "net_amount_deposited",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "amount_per_period",
+          "type": "u64"
+        },
+        {
+          "name": "cliff",
+          "type": "u64"
+        },
+        {
+          "name": "cliff_amount",
+          "type": "u64"
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "automatic_withdrawal",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "can_topup",
+          "type": "bool"
+        },
+        {
+          "name": "stream_name",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "recipient",
+          "type": "pubkey"
+        },
+        {
+          "name": "partner",
+          "type": "pubkey"
+        },
+        {
+          "name": "pausable",
+          "type": "bool"
+        },
+        {
+          "name": "can_update_rate",
+          "type": "bool"
+        },
+        {
+          "name": "nonce",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "create_v2",
+      "discriminator": [
+        214,
+        144,
+        76,
+        236,
+        95,
+        139,
+        49,
+        180
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "- create: should be an ephemeral signer;",
+            "- create_v2: a PDA, deriviation path is:",
+            "```ignore",
+            "Pubkey::find_program_address(",
+            "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
+            "pid",
+            ")",
+            "```"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "recipient_tokens",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "partner_tokens",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "fee_oracle"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "timelock_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "u64"
+        },
+        {
+          "name": "net_amount_deposited",
+          "type": "u64"
+        },
+        {
+          "name": "period",
+          "type": "u64"
+        },
+        {
+          "name": "amount_per_period",
+          "type": "u64"
+        },
+        {
+          "name": "cliff",
+          "type": "u64"
+        },
+        {
+          "name": "cliff_amount",
+          "type": "u64"
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "cancelable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "automatic_withdrawal",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": "bool"
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": "bool"
+        },
+        {
+          "name": "can_topup",
+          "type": "bool"
+        },
+        {
+          "name": "stream_name",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": "u64"
+        },
+        {
+          "name": "pausable",
+          "type": "bool"
+        },
+        {
+          "name": "can_update_rate",
+          "type": "bool"
+        },
+        {
+          "name": "nonce",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "pause",
+      "discriminator": [
+        211,
+        22,
+        221,
+        251,
+        74,
+        121,
+        193,
+        47
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "topup",
+      "discriminator": [
+        126,
+        42,
+        49,
+        78,
+        225,
+        151,
+        99,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "partner_tokens",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "transfer_recipient",
+      "discriminator": [
+        235,
+        246,
+        224,
+        64,
+        105,
+        166,
+        20,
+        138
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "new_recipient",
+          "writable": true
+        },
+        {
+          "name": "new_recipient_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "transfer_sender",
+      "discriminator": [
+        164,
+        145,
+        241,
+        243,
+        109,
+        58,
+        215,
+        239
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "signer": true
+        },
+        {
+          "name": "new_sender",
+          "signer": true
+        },
+        {
+          "name": "new_sender_tokens"
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unpause",
+      "discriminator": [
+        169,
+        144,
+        4,
+        38,
+        10,
+        141,
+        188,
+        255
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update",
+      "discriminator": [
+        219,
+        200,
+        88,
+        176,
+        158,
+        63,
+        253,
+        127
+      ],
+      "accounts": [
+        {
+          "name": "sender",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "withdrawor",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "enable_automatic_withdrawal",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "withdraw_frequency",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "amount_per_period",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "transferable_by_sender",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "transferable_by_recipient",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "cancelable_by_sender",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "recipient_tokens",
+          "writable": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "partner_tokens",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ]
+}

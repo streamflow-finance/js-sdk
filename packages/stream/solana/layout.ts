@@ -3,7 +3,9 @@ import * as BufferLayout from "@solana/buffer-layout";
 import { CREATE_PARAMS_PADDING } from "./constants.js";
 import {
   type ICreateStreamLayout,
+  type ICreateStreamV2Layout,
   type ICreateUncheckedStreamLayout,
+  type ICreateUncheckedStreamV2Layout,
   type IPartnerLayout,
   type IStreamLayout,
   type ITopupStreamLayout,
@@ -105,6 +107,29 @@ export const createStreamLayout: BufferLayout.Structure<ICreateStreamLayout> = B
 ]);
 
 /**
+ * Create stream v2 instruction layout (PDA-based metadata, non-optional pausable/canUpdateRate, with nonce)
+ */
+export const createStreamV2Layout: BufferLayout.Structure<ICreateStreamV2Layout> = BufferLayout.struct([
+  BufferLayout.blob(8, "start_time"),
+  BufferLayout.blob(8, "net_amount_deposited"),
+  BufferLayout.blob(8, "period"),
+  BufferLayout.blob(8, "amount_per_period"),
+  BufferLayout.blob(8, "cliff"),
+  BufferLayout.blob(8, "cliff_amount"),
+  BufferLayout.u8("cancelable_by_sender"),
+  BufferLayout.u8("cancelable_by_recipient"),
+  BufferLayout.u8("automatic_withdrawal"),
+  BufferLayout.u8("transferable_by_sender"),
+  BufferLayout.u8("transferable_by_recipient"),
+  BufferLayout.u8("can_topup"),
+  BufferLayout.blob(64, "stream_name"),
+  BufferLayout.blob(8, "withdraw_frequency"),
+  BufferLayout.u8("pausable"),
+  BufferLayout.u8("can_update_rate"),
+  BufferLayout.blob(4, "nonce"),
+]);
+
+/**
  * Create unchecked stream instruction layout
  */
 export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUncheckedStreamLayout> = BufferLayout.struct([
@@ -127,6 +152,32 @@ export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUnchecke
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
 ]);
+
+/**
+ * Create unchecked stream v2 instruction layout (PDA-based metadata, with nonce)
+ */
+export const createUncheckedStreamV2Layout: BufferLayout.Structure<ICreateUncheckedStreamV2Layout> =
+  BufferLayout.struct([
+    BufferLayout.blob(8, "start_time"),
+    BufferLayout.blob(8, "net_amount_deposited"),
+    BufferLayout.blob(8, "period"),
+    BufferLayout.blob(8, "amount_per_period"),
+    BufferLayout.blob(8, "cliff"),
+    BufferLayout.blob(8, "cliff_amount"),
+    BufferLayout.u8("cancelable_by_sender"),
+    BufferLayout.u8("cancelable_by_recipient"),
+    BufferLayout.u8("automatic_withdrawal"),
+    BufferLayout.u8("transferable_by_sender"),
+    BufferLayout.u8("transferable_by_recipient"),
+    BufferLayout.u8("can_topup"),
+    BufferLayout.blob(64, "stream_name"),
+    BufferLayout.blob(8, "withdraw_frequency"),
+    BufferLayout.blob(32, "recipient"),
+    BufferLayout.blob(32, "partner"),
+    BufferLayout.u8("pausable"),
+    BufferLayout.u8("can_update_rate"),
+    BufferLayout.blob(4, "nonce"),
+  ]);
 
 /**
  * Withdraw stream instruction layout

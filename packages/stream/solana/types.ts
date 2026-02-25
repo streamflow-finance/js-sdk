@@ -19,6 +19,7 @@ export interface IRecipient {
   name: string;
   cliffAmount: BN;
   amountPerPeriod: BN;
+  nonce?: number;
 }
 
 export interface IBaseStreamConfig {

@@ -113,13 +113,15 @@ import {
   transferStreamInstruction,
   topupStreamInstruction,
   createStreamInstruction,
+  createStreamV2Instruction,
   createUncheckedStreamInstruction,
+  createUncheckedStreamV2Instruction,
   updateStreamInstruction,
 } from "./instructions.js";
 import type { IPartnerLayout } from "./instructionTypes.js";
 import type { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
-import { deriveContractPDA, deriveEscrowPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
+import { deriveContractPDA, deriveEscrowPDA, deriveStreamMetadataPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "./contractUtils.js";
 import { createClient, transformContract } from "./api-public/index.js";
 
@@ -550,6 +552,7 @@ export class SolanaStreamClient {
       withdrawalFrequency = 0,
       partner,
       tokenProgramId: streamTokenProgramId,
+      nonce,
     }: ICreateStreamData,
     { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: IPrepareCreateStreamExt,
   ): Promise<ICreateStreamInstructions> {
@@ -562,7 +565,15 @@ export class SolanaStreamClient {
     const mintPublicKey = isNative ? NATIVE_MINT : new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
 
-    const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
+    let metadata: Keypair | undefined;
+    let metadataPubKey: PublicKey;
+
+    if (nonce != null) {
+      [metadataPubKey] = deriveStreamMetadataPDA(this.programId, mintPublicKey, sender.publicKey!, nonce);
+    } else {
+      ({ metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys));
+    }
+
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
       this.programId,
@@ -580,49 +591,51 @@ export class SolanaStreamClient {
 
     const partnerTokens = await ata(mintPublicKey, partnerPublicKey, tokenProgramId);
 
-    ixs.push(
-      await createStreamInstruction(
-        {
-          start: new BN(start),
-          depositedAmount,
-          period: new BN(period),
-          amountPerPeriod,
-          cliff: new BN(cliff),
-          cliffAmount: new BN(cliffAmount),
-          cancelableBySender,
-          cancelableByRecipient,
-          automaticWithdrawal,
-          transferableBySender,
-          transferableByRecipient,
-          canTopup,
-          canUpdateRate: !!canUpdateRate,
-          canPause: !!canPause,
-          name,
-          withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
-        },
-        this.programId,
-        {
-          sender: sender.publicKey,
-          senderTokens,
-          recipient: new PublicKey(recipient),
-          metadata: metadataPubKey,
-          escrowTokens,
-          recipientTokens,
-          streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
-          streamflowTreasuryTokens: streamflowTreasuryTokens,
-          partner: partnerPublicKey,
-          partnerTokens: partnerTokens,
-          mint: new PublicKey(mint),
-          feeOracle: this.feeOraclePublicKey,
-          rent: SYSVAR_RENT_PUBKEY,
-          timelockProgram: this.programId,
-          tokenProgram: tokenProgramId,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          withdrawor: WITHDRAWOR_PUBLIC_KEY,
-          systemProgram: SystemProgram.programId,
-        },
-      ),
-    );
+    const accounts = {
+      sender: sender.publicKey,
+      senderTokens,
+      recipient: new PublicKey(recipient),
+      metadata: metadataPubKey,
+      escrowTokens,
+      recipientTokens,
+      streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
+      streamflowTreasuryTokens: streamflowTreasuryTokens,
+      partner: partnerPublicKey,
+      partnerTokens: partnerTokens,
+      mint: new PublicKey(mint),
+      feeOracle: this.feeOraclePublicKey,
+      rent: SYSVAR_RENT_PUBKEY,
+      timelockProgram: this.programId,
+      tokenProgram: tokenProgramId,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      withdrawor: WITHDRAWOR_PUBLIC_KEY,
+      systemProgram: SystemProgram.programId,
+    };
+
+    const baseData = {
+      start: new BN(start),
+      depositedAmount,
+      period: new BN(period),
+      amountPerPeriod,
+      cliff: new BN(cliff),
+      cliffAmount: new BN(cliffAmount),
+      cancelableBySender,
+      cancelableByRecipient,
+      automaticWithdrawal,
+      transferableBySender,
+      transferableByRecipient,
+      canTopup,
+      canUpdateRate: !!canUpdateRate,
+      canPause: !!canPause,
+      name,
+      withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
+    };
+
+    if (nonce != null) {
+      ixs.push(await createStreamV2Instruction({ ...baseData, nonce }, this.programId, accounts));
+    } else {
+      ixs.push(await createStreamInstruction(baseData, this.programId, accounts));
+    }
 
     return { ixs, metadata, metadataPubKey };
   }
@@ -688,6 +701,7 @@ export class SolanaStreamClient {
       automaticWithdrawal = false,
       withdrawalFrequency = 0,
       partner,
+      nonce,
     }: ICreateStreamData,
     { sender, metadataPubKeys, isNative = false, computePrice, computeLimit }: IPrepareCreateStreamExt,
   ): Promise<{
@@ -699,16 +713,15 @@ export class SolanaStreamClient {
 
     const mintPublicKey = new PublicKey(mint);
     const recipientPublicKey = new PublicKey(recipient);
-    const { metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys);
 
-    const rentToExempt = await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
-    const createMetadataInstruction = SystemProgram.createAccount({
-      programId: this.programId,
-      space: METADATA_ACC_SIZE,
-      lamports: rentToExempt,
-      fromPubkey: sender.publicKey,
-      newAccountPubkey: metadataPubKey,
-    });
+    let metadata: Keypair | undefined;
+    let metadataPubKey: PublicKey;
+
+    if (nonce != null) {
+      [metadataPubKey] = deriveStreamMetadataPDA(this.programId, mintPublicKey, sender.publicKey!, nonce);
+    } else {
+      ({ metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys));
+    }
 
     const [escrowTokens] = PublicKey.findProgramAddressSync(
       [Buffer.from("strm"), metadataPubKey.toBuffer()],
@@ -730,43 +743,60 @@ export class SolanaStreamClient {
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
-    const createInstruction = await createUncheckedStreamInstruction(
-      {
-        start: new BN(start),
-        depositedAmount,
-        period: new BN(period),
-        amountPerPeriod,
-        cliff: new BN(cliff),
-        cliffAmount: new BN(cliffAmount),
-        cancelableBySender,
-        cancelableByRecipient,
-        automaticWithdrawal,
-        transferableBySender,
-        transferableByRecipient,
-        canTopup,
-        canUpdateRate: !!canUpdateRate,
-        canPause: !!canPause,
-        name,
-        withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
-        recipient: recipientPublicKey,
-        partner: partnerPublicKey,
-      },
-      this.programId,
-      {
-        sender: sender.publicKey,
-        senderTokens,
-        metadata: metadataPubKey,
-        escrowTokens,
-        mint: new PublicKey(mint),
-        feeOracle: this.feeOraclePublicKey,
-        rent: SYSVAR_RENT_PUBKEY,
-        timelockProgram: this.programId,
-        tokenProgram: tokenProgramId,
-        withdrawor: WITHDRAWOR_PUBLIC_KEY,
-        systemProgram: SystemProgram.programId,
-      },
-    );
-    ixs.push(createMetadataInstruction, createInstruction);
+    const accounts = {
+      sender: sender.publicKey,
+      senderTokens,
+      metadata: metadataPubKey,
+      escrowTokens,
+      mint: new PublicKey(mint),
+      feeOracle: this.feeOraclePublicKey,
+      rent: SYSVAR_RENT_PUBKEY,
+      timelockProgram: this.programId,
+      tokenProgram: tokenProgramId,
+      withdrawor: WITHDRAWOR_PUBLIC_KEY,
+      systemProgram: SystemProgram.programId,
+    };
+
+    const baseData = {
+      start: new BN(start),
+      depositedAmount,
+      period: new BN(period),
+      amountPerPeriod,
+      cliff: new BN(cliff),
+      cliffAmount: new BN(cliffAmount),
+      cancelableBySender,
+      cancelableByRecipient,
+      automaticWithdrawal,
+      transferableBySender,
+      transferableByRecipient,
+      canTopup,
+      canUpdateRate: !!canUpdateRate,
+      canPause: !!canPause,
+      name,
+      withdrawFrequency: new BN(automaticWithdrawal ? withdrawalFrequency : period),
+      recipient: recipientPublicKey,
+      partner: partnerPublicKey,
+    };
+
+    if (nonce != null) {
+      const createInstruction = await createUncheckedStreamV2Instruction(
+        { ...baseData, nonce },
+        this.programId,
+        accounts,
+      );
+      ixs.push(createInstruction);
+    } else {
+      const rentToExempt = await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
+      const createMetadataInstruction = SystemProgram.createAccount({
+        programId: this.programId,
+        space: METADATA_ACC_SIZE,
+        lamports: rentToExempt,
+        fromPubkey: sender.publicKey,
+        newAccountPubkey: metadataPubKey,
+      });
+      const createInstruction = await createUncheckedStreamInstruction(baseData, this.programId, accounts);
+      ixs.push(createMetadataInstruction, createInstruction);
+    }
 
     return { ixs, metadata, metadataPubKey };
   }
