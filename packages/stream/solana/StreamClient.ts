@@ -569,7 +569,7 @@ export class SolanaStreamClient {
     let metadataPubKey: PublicKey;
 
     if (nonce != null) {
-      [metadataPubKey] = deriveStreamMetadataPDA(this.programId, mintPublicKey, sender.publicKey!, nonce);
+      metadataPubKey = deriveStreamMetadataPDA(this.programId, mintPublicKey, sender.publicKey!, nonce);
     } else {
       ({ metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys));
     }
@@ -718,7 +718,7 @@ export class SolanaStreamClient {
     let metadataPubKey: PublicKey;
 
     if (nonce != null) {
-      [metadataPubKey] = deriveStreamMetadataPDA(this.programId, mintPublicKey, sender.publicKey!, nonce);
+      metadataPubKey = deriveStreamMetadataPDA(this.programId, mintPublicKey, sender.publicKey!, nonce);
     } else {
       ({ metadata, metadataPubKey } = this.getOrCreateStreamMetadata(metadataPubKeys));
     }
