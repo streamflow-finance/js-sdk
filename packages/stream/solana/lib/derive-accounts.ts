@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
+import BN from "bn.js";
 
 import {
   CONTRACT_SEED,
@@ -8,7 +9,6 @@ import {
   REPOPULATED_METADATA_SEED,
   TEST_ORACLE_SEED,
 } from "../constants.js";
-import BN from "bn.js";
 
 export const deriveContractPDA = (programId: PublicKey, streamMetadata: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([CONTRACT_SEED, streamMetadata.toBuffer()], programId)[0];
