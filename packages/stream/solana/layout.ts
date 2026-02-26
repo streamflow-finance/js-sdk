@@ -130,7 +130,7 @@ export const createStreamV2Layout: BufferLayout.Structure<ICreateStreamV2Layout>
   BufferLayout.blob(8, "withdraw_frequency"),
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
-  BufferLayout.blob(4, "nonce"),
+  BufferLayout.u32("nonce"),
 ]);
 
 /**
@@ -180,7 +180,7 @@ export const createUncheckedStreamV2Layout: BufferLayout.Structure<ICreateUnchec
     BufferLayout.blob(32, "partner"),
     BufferLayout.u8("pausable"),
     BufferLayout.u8("can_update_rate"),
-    BufferLayout.blob(4, "nonce"),
+    BufferLayout.u32("nonce"),
   ]);
 
 /**
