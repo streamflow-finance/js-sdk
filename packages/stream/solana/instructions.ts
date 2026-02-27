@@ -234,6 +234,198 @@ export const createUncheckedStreamInstruction = async (
   });
 };
 
+interface CreateStreamV2Data {
+  start: BN;
+  depositedAmount: BN;
+  period: BN;
+  amountPerPeriod: BN;
+  cliff: BN;
+  cliffAmount: BN;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  canTopup: boolean;
+  canUpdateRate: boolean;
+  canPause: boolean;
+  name: string;
+  withdrawFrequency: BN;
+  nonce: number;
+}
+
+export const createStreamV2Instruction = async (
+  data: CreateStreamV2Data,
+  programId: PublicKey,
+  accounts: CreateStreamAccounts,
+): Promise<TransactionInstruction> => {
+  const keys = [
+    { pubkey: accounts.sender, isSigner: true, isWritable: true },
+    { pubkey: accounts.senderTokens, isSigner: false, isWritable: true },
+    { pubkey: accounts.recipient, isSigner: false, isWritable: true },
+    { pubkey: accounts.metadata, isSigner: false, isWritable: true },
+    { pubkey: accounts.escrowTokens, isSigner: false, isWritable: true },
+    { pubkey: accounts.recipientTokens, isSigner: false, isWritable: true },
+    {
+      pubkey: accounts.streamflowTreasury,
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: accounts.streamflowTreasuryTokens,
+      isSigner: false,
+      isWritable: true,
+    },
+    { pubkey: accounts.withdrawor, isSigner: false, isWritable: true },
+    { pubkey: accounts.partner, isSigner: false, isWritable: true },
+    { pubkey: accounts.partnerTokens, isSigner: false, isWritable: true },
+    { pubkey: accounts.mint, isSigner: false, isWritable: false },
+    { pubkey: accounts.feeOracle, isSigner: false, isWritable: false },
+    { pubkey: accounts.rent, isSigner: false, isWritable: false },
+    { pubkey: accounts.timelockProgram, isSigner: false, isWritable: false },
+    { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
+    {
+      pubkey: accounts.associatedTokenProgram,
+      isSigner: false,
+      isWritable: false,
+    },
+    { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
+  ];
+
+  let bufferData = Buffer.alloc(Layout.createStreamV2Layout.span);
+
+  const encodedUIntArray = new TextEncoder().encode(data.name);
+  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
+
+  const nonceBuffer = Buffer.alloc(4);
+  nonceBuffer.writeUInt32LE(data.nonce);
+
+  const decodedData = {
+    start_time: data.start.toArrayLike(Buffer, "le", 8),
+    net_amount_deposited: data.depositedAmount.toArrayLike(Buffer, "le", 8),
+    period: data.period.toArrayLike(Buffer, "le", 8),
+    amount_per_period: data.amountPerPeriod.toArrayLike(Buffer, "le", 8),
+    cliff: data.cliff.toArrayLike(Buffer, "le", 8),
+    cliff_amount: data.cliffAmount.toArrayLike(Buffer, "le", 8),
+    cancelable_by_sender: Number(data.cancelableBySender),
+    cancelable_by_recipient: Number(data.cancelableByRecipient),
+    automatic_withdrawal: Number(data.automaticWithdrawal),
+    transferable_by_sender: Number(data.transferableBySender),
+    transferable_by_recipient: Number(data.transferableByRecipient),
+    can_topup: Number(data.canTopup),
+    stream_name: streamNameBuffer,
+    withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
+    pausable: Number(data.canPause),
+    can_update_rate: Number(data.canUpdateRate),
+    nonce: nonceBuffer,
+  };
+  const encodeLength = Layout.createStreamV2Layout.encode(decodedData, bufferData);
+  bufferData = bufferData.slice(0, encodeLength);
+  bufferData = Buffer.concat([
+    Buffer.from(await sha256.digest("global:create_v2")).slice(0, 8),
+    bufferData,
+    Buffer.alloc(10),
+  ]);
+
+  return new TransactionInstruction({
+    keys,
+    programId,
+    data: bufferData,
+  });
+};
+
+interface CreateUncheckedStreamV2Data {
+  start: BN;
+  depositedAmount: BN;
+  period: BN;
+  amountPerPeriod: BN;
+  cliff: BN;
+  cliffAmount: BN;
+  cancelableBySender: boolean;
+  cancelableByRecipient: boolean;
+  automaticWithdrawal: boolean;
+  transferableBySender: boolean;
+  transferableByRecipient: boolean;
+  canTopup: boolean;
+  canUpdateRate: boolean;
+  canPause: boolean;
+  name: string;
+  withdrawFrequency: BN;
+  recipient: PublicKey;
+  partner: PublicKey;
+  nonce: number;
+}
+
+export const createUncheckedStreamV2Instruction = async (
+  data: CreateUncheckedStreamV2Data,
+  programId: PublicKey,
+  accounts: CreateUncheckedStreamAccounts,
+): Promise<TransactionInstruction> => {
+  const keys = [
+    { pubkey: accounts.sender, isSigner: true, isWritable: true },
+    { pubkey: accounts.senderTokens, isSigner: false, isWritable: true },
+    { pubkey: accounts.metadata, isSigner: false, isWritable: true },
+    { pubkey: accounts.escrowTokens, isSigner: false, isWritable: true },
+    { pubkey: accounts.withdrawor, isSigner: false, isWritable: true },
+    { pubkey: accounts.mint, isSigner: false, isWritable: false },
+    { pubkey: accounts.feeOracle, isSigner: false, isWritable: false },
+    { pubkey: accounts.rent, isSigner: false, isWritable: false },
+    { pubkey: accounts.timelockProgram, isSigner: false, isWritable: false },
+    { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
+    { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
+  ];
+
+  if (accounts.payer) {
+    keys.unshift({
+      pubkey: accounts.payer,
+      isSigner: true,
+      isWritable: true,
+    });
+  }
+
+  let bufferData = Buffer.alloc(Layout.createUncheckedStreamV2Layout.span);
+
+  const encodedUIntArray = new TextEncoder().encode(data.name);
+  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
+
+  const nonceBuffer = Buffer.alloc(4);
+  nonceBuffer.writeUInt32LE(data.nonce);
+
+  const decodedData = {
+    start_time: data.start.toArrayLike(Buffer, "le", 8),
+    net_amount_deposited: data.depositedAmount.toArrayLike(Buffer, "le", 8),
+    period: data.period.toArrayLike(Buffer, "le", 8),
+    amount_per_period: data.amountPerPeriod.toArrayLike(Buffer, "le", 8),
+    cliff: data.cliff.toArrayLike(Buffer, "le", 8),
+    cliff_amount: data.cliffAmount.toArrayLike(Buffer, "le", 8),
+    cancelable_by_sender: Number(data.cancelableBySender),
+    cancelable_by_recipient: Number(data.cancelableByRecipient),
+    automatic_withdrawal: Number(data.automaticWithdrawal),
+    transferable_by_sender: Number(data.transferableBySender),
+    transferable_by_recipient: Number(data.transferableByRecipient),
+    can_topup: Number(data.canTopup),
+    stream_name: streamNameBuffer,
+    withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
+    recipient: data.recipient.toBuffer(),
+    partner: data.partner.toBuffer(),
+    pausable: Number(data.canPause),
+    can_update_rate: Number(data.canUpdateRate),
+    nonce: nonceBuffer,
+  };
+  const encodeLength = Layout.createUncheckedStreamV2Layout.encode(decodedData, bufferData);
+  bufferData = bufferData.slice(0, encodeLength);
+  const digest = accounts.payer
+    ? await sha256.digest("global:create_unchecked_with_payer_v2")
+    : await sha256.digest("global:create_unchecked_v2");
+  bufferData = Buffer.concat([Buffer.from(digest).slice(0, 8), bufferData, Buffer.alloc(10)]);
+
+  return new TransactionInstruction({
+    keys,
+    programId,
+    data: bufferData,
+  });
+};
+
 interface WithdrawAccounts {
   authority: PublicKey;
   recipient: PublicKey;

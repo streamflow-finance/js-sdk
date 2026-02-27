@@ -29,7 +29,7 @@ export const STREAM_STRUCT_OFFSETS: Record<keyof ISearchStreams, number> = {
 };
 
 // Defined: https://github.com/streamflow-finance/protocol/blob/main/programs/protocol/src/state.rs#L25
-export const CREATE_PARAMS_PADDING = 126;
+export const CREATE_PARAMS_PADDING = 121;
 
 export const PROGRAM_ID = {
   [ICluster.Devnet]: "HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ",
@@ -71,6 +71,7 @@ export const TEST_ORACLE_DISCRIMINATOR = [198, 49, 63, 134, 232, 251, 168, 28];
 export const CONTRACT_SEED = Buffer.from("contract", "utf-8");
 export const ESCROW_SEED = Buffer.from("strm", "utf-8");
 export const TEST_ORACLE_SEED = Buffer.from("test-oracle", "utf-8");
+export const METADATA_SEED = Buffer.from("strm-met", "utf-8");
 export const REPOPULATED_METADATA_SEED = Buffer.from("strm-rep", "utf-8");
 
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");

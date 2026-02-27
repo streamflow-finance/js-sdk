@@ -42,6 +42,8 @@ export interface IStreamLayout {
   create_params_padding_length: number;
   create_params_padding: number[];
   closed: number;
+  is_pda: number;
+  nonce: number;
   current_pause_start: Uint8Array;
   pause_cumulative: Uint8Array;
   last_rate_change_time: Uint8Array;
@@ -51,6 +53,8 @@ export interface IStreamLayout {
   auto_claim_fee: number;
   auto_claim_fee_claimed: number;
   old_metadata: Uint8Array;
+  payer: Uint8Array;
+  bump: number;
 }
 
 export interface ICreateStreamLayout {
@@ -89,6 +93,48 @@ export interface ICreateUncheckedStreamLayout {
   partner: Uint8Array;
   pausable: number;
   can_update_rate: number;
+}
+
+export interface ICreateStreamV2Layout {
+  start_time: Uint8Array;
+  net_amount_deposited: Uint8Array;
+  period: Uint8Array;
+  amount_per_period: Uint8Array;
+  cliff: Uint8Array;
+  cliff_amount: Uint8Array;
+  cancelable_by_sender: number;
+  cancelable_by_recipient: number;
+  automatic_withdrawal: number;
+  transferable_by_sender: number;
+  transferable_by_recipient: number;
+  can_topup: number;
+  stream_name: Uint8Array;
+  withdraw_frequency: Uint8Array;
+  pausable: number;
+  can_update_rate: number;
+  nonce: Uint8Array;
+}
+
+export interface ICreateUncheckedStreamV2Layout {
+  start_time: Uint8Array;
+  net_amount_deposited: Uint8Array;
+  period: Uint8Array;
+  amount_per_period: Uint8Array;
+  cliff: Uint8Array;
+  cliff_amount: Uint8Array;
+  cancelable_by_sender: number;
+  cancelable_by_recipient: number;
+  automatic_withdrawal: number;
+  transferable_by_sender: number;
+  transferable_by_recipient: number;
+  can_topup: number;
+  stream_name: Uint8Array;
+  withdraw_frequency: Uint8Array;
+  recipient: Uint8Array;
+  partner: Uint8Array;
+  pausable: number;
+  can_update_rate: number;
+  nonce: Uint8Array;
 }
 
 export interface IWithdrawStreamLayout {

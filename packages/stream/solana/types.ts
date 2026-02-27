@@ -19,6 +19,7 @@ export interface IRecipient {
   name: string;
   cliffAmount: BN;
   amountPerPeriod: BN;
+  nonce?: number;
 }
 
 export interface IBaseStreamConfig {
@@ -203,12 +204,16 @@ export interface LinearStream {
   canTopup: boolean;
   name: string;
   withdrawalFrequency: number;
+  isPda: boolean;
+  nonce: number;
   closed: boolean;
   currentPauseStart: number;
   pauseCumulative: BN;
   lastRateChangeTime: number;
   fundsUnlockedAtLastRateChange: BN;
   oldMetadata: PublicKey;
+  payer: string;
+  bump: number;
 
   type: StreamType;
 
@@ -507,6 +512,10 @@ export class Contract implements LinearStream {
 
   withdrawalFrequency: number;
 
+  isPda: boolean;
+
+  nonce: number;
+
   closed: boolean;
 
   currentPauseStart: number;
@@ -518,6 +527,10 @@ export class Contract implements LinearStream {
   fundsUnlockedAtLastRateChange: BN;
 
   oldMetadata: PublicKey;
+
+  payer: string;
+
+  bump: number;
 
   type: StreamType;
 
@@ -562,12 +575,16 @@ export class Contract implements LinearStream {
     this.canTopup = stream.canTopup;
     this.name = stream.name;
     this.withdrawalFrequency = stream.withdrawFrequency.toNumber();
+    this.isPda = stream.isPda;
+    this.nonce = stream.nonce;
     this.closed = stream.closed;
     this.currentPauseStart = stream.currentPauseStart.toNumber();
     this.pauseCumulative = stream.pauseCumulative;
     this.lastRateChangeTime = stream.lastRateChangeTime.toNumber();
     this.fundsUnlockedAtLastRateChange = stream.fundsUnlockedAtLastRateChange;
     this.oldMetadata = stream.oldMetadata;
+    this.payer = stream.payer.toBase58();
+    this.bump = stream.bump;
     this.type = buildStreamType(this);
     this.isAligned = false;
   }
@@ -681,12 +698,16 @@ export interface DecodedStream {
   canTopup: boolean;
   name: string;
   withdrawFrequency: BN;
+  isPda: boolean;
+  nonce: number;
   closed: boolean;
   currentPauseStart: BN;
   pauseCumulative: BN;
   lastRateChangeTime: BN;
   fundsUnlockedAtLastRateChange: BN;
   oldMetadata: PublicKey;
+  payer: PublicKey;
+  bump: number;
 }
 
 export interface MetadataRecipientHashMap {

@@ -3,7 +3,9 @@ import * as BufferLayout from "@solana/buffer-layout";
 import { CREATE_PARAMS_PADDING } from "./constants.js";
 import {
   type ICreateStreamLayout,
+  type ICreateStreamV2Layout,
   type ICreateUncheckedStreamLayout,
+  type ICreateUncheckedStreamV2Layout,
   type IPartnerLayout,
   type IStreamLayout,
   type ITopupStreamLayout,
@@ -58,7 +60,9 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
 
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
-  BufferLayout.blob(4, "create_stream_params_padding_length"),
+  BufferLayout.blob(4, "ghost2"),
+  BufferLayout.u8("is_pda"),
+  BufferLayout.u32("nonce"),
   BufferLayout.seq(BufferLayout.u8(), CREATE_PARAMS_PADDING, "create_params_padding"),
   BufferLayout.u8("closed"),
   BufferLayout.blob(8, "current_pause_start"),
@@ -70,6 +74,8 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.u32("auto_claim_fee"),
   BufferLayout.u8("auto_claim_fee_claimed"),
   BufferLayout.blob(32, "old_metadata"),
+  BufferLayout.blob(32, "payer"),
+  BufferLayout.u8("bump"),
 ]);
 
 export const partnerLayout: BufferLayout.Structure<IPartnerLayout> = BufferLayout.struct([
@@ -105,6 +111,29 @@ export const createStreamLayout: BufferLayout.Structure<ICreateStreamLayout> = B
 ]);
 
 /**
+ * Create stream v2 instruction layout (PDA-based metadata, non-optional pausable/canUpdateRate, with nonce)
+ */
+export const createStreamV2Layout: BufferLayout.Structure<ICreateStreamV2Layout> = BufferLayout.struct([
+  BufferLayout.blob(8, "start_time"),
+  BufferLayout.blob(8, "net_amount_deposited"),
+  BufferLayout.blob(8, "period"),
+  BufferLayout.blob(8, "amount_per_period"),
+  BufferLayout.blob(8, "cliff"),
+  BufferLayout.blob(8, "cliff_amount"),
+  BufferLayout.u8("cancelable_by_sender"),
+  BufferLayout.u8("cancelable_by_recipient"),
+  BufferLayout.u8("automatic_withdrawal"),
+  BufferLayout.u8("transferable_by_sender"),
+  BufferLayout.u8("transferable_by_recipient"),
+  BufferLayout.u8("can_topup"),
+  BufferLayout.blob(64, "stream_name"),
+  BufferLayout.blob(8, "withdraw_frequency"),
+  BufferLayout.u8("pausable"),
+  BufferLayout.u8("can_update_rate"),
+  BufferLayout.u32("nonce"),
+]);
+
+/**
  * Create unchecked stream instruction layout
  */
 export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUncheckedStreamLayout> = BufferLayout.struct([
@@ -127,6 +156,32 @@ export const createUncheckedStreamLayout: BufferLayout.Structure<ICreateUnchecke
   BufferLayout.u8("pausable"),
   BufferLayout.u8("can_update_rate"),
 ]);
+
+/**
+ * Create unchecked stream v2 instruction layout (PDA-based metadata, with nonce)
+ */
+export const createUncheckedStreamV2Layout: BufferLayout.Structure<ICreateUncheckedStreamV2Layout> =
+  BufferLayout.struct([
+    BufferLayout.blob(8, "start_time"),
+    BufferLayout.blob(8, "net_amount_deposited"),
+    BufferLayout.blob(8, "period"),
+    BufferLayout.blob(8, "amount_per_period"),
+    BufferLayout.blob(8, "cliff"),
+    BufferLayout.blob(8, "cliff_amount"),
+    BufferLayout.u8("cancelable_by_sender"),
+    BufferLayout.u8("cancelable_by_recipient"),
+    BufferLayout.u8("automatic_withdrawal"),
+    BufferLayout.u8("transferable_by_sender"),
+    BufferLayout.u8("transferable_by_recipient"),
+    BufferLayout.u8("can_topup"),
+    BufferLayout.blob(64, "stream_name"),
+    BufferLayout.blob(8, "withdraw_frequency"),
+    BufferLayout.blob(32, "recipient"),
+    BufferLayout.blob(32, "partner"),
+    BufferLayout.u8("pausable"),
+    BufferLayout.u8("can_update_rate"),
+    BufferLayout.u32("nonce"),
+  ]);
 
 /**
  * Withdraw stream instruction layout

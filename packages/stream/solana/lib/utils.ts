@@ -90,12 +90,16 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     canTopup: Boolean(raw.can_topup),
     name: decoder.decode(raw.stream_name),
     withdrawFrequency: new BN(raw.withdraw_frequency, LE),
+    isPda: Boolean(raw.is_pda),
+    nonce: raw.nonce,
     closed: Boolean(raw.closed),
     currentPauseStart: new BN(raw.current_pause_start, LE),
     pauseCumulative: new BN(raw.pause_cumulative, LE),
     lastRateChangeTime: new BN(raw.last_rate_change_time, LE),
     fundsUnlockedAtLastRateChange: new BN(raw.funds_unlocked_at_last_rate_change, LE),
     oldMetadata: new PublicKey(raw.old_metadata),
+    payer: new PublicKey(raw.payer),
+    bump: raw.bump,
   };
 };
 

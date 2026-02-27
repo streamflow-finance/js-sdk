@@ -30,6 +30,7 @@ async function toDecodedStream(schema: ContractSchema): Promise<DecodedStream> {
   const sender = pk(schema.sender);
   const recipient = pk(schema.recipient);
   const partner = schema.partner ? pk(schema.partner) : sender;
+  const payer = schema.payer ? pk(schema.payer) : PublicKey.default;
 
   const [senderTokens, recipientTokens, partnerTokens, streamflowTreasuryTokens] = await Promise.all([
     ata(mint, sender),
@@ -76,12 +77,16 @@ async function toDecodedStream(schema: ContractSchema): Promise<DecodedStream> {
     canTopup: schema.canTopup,
     name: schema.name,
     withdrawFrequency: toBN(schema.autoClaimPeriod),
+    isPda: schema.isPda,
+    nonce: schema.nonce ? schema.nonce : 0,
     closed: schema.isClosed,
     currentPauseStart: toBN(0),
     pauseCumulative: toBN(schema.pauseCumulative),
     lastRateChangeTime: toBN(isoToUnix(schema.lastRateUpdateDt)),
     fundsUnlockedAtLastRateChange: toBN(schema.amountUnlockedAtLastRateUpdate),
     oldMetadata: PublicKey.default,
+    payer,
+    bump: schema.bump ? schema.bump : 0,
   };
 }
 
