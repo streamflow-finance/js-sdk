@@ -105,6 +105,7 @@ export const isTokenLock = (streamData: {
     !streamData.cancelableBySender &&
     !streamData.cancelableByRecipient &&
     !streamData.transferableBySender &&
+    !streamData.transferableByRecipient &&
     (isCliffCloseToDepositedAmount(streamData) ||
       isDynamicLock(streamData.minPrice, streamData.maxPrice, streamData.minPercentage, streamData.maxPercentage))
   );
