@@ -9,6 +9,7 @@ import {
 } from "./types.js";
 
 const MAX_SAFE_UNIX_TIME_VALUE = 8640000000000;
+const MAX_CLIFF_END_GAP_SECONDS = 1;
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
@@ -94,20 +95,35 @@ export const isTokenLock = (streamData: {
   transferableByRecipient: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
+  cliff?: number;
+  end?: number;
   minPrice?: number;
   maxPrice?: number;
   minPercentage?: number;
   maxPercentage?: number;
 }): boolean => {
-  return (
-    !streamData.canTopup &&
-    !streamData.automaticWithdrawal &&
-    !streamData.cancelableBySender &&
-    !streamData.cancelableByRecipient &&
-    !streamData.transferableBySender &&
-    (isCliffCloseToDepositedAmount(streamData) ||
-      isDynamicLock(streamData.minPrice, streamData.maxPrice, streamData.minPercentage, streamData.maxPercentage))
-  );
+  if (
+    streamData.canTopup ||
+    streamData.automaticWithdrawal ||
+    streamData.cancelableBySender ||
+    streamData.cancelableByRecipient ||
+    streamData.transferableBySender
+  ) {
+    return false;
+  }
+
+  if (isDynamicLock(streamData.minPrice, streamData.maxPrice, streamData.minPercentage, streamData.maxPercentage)) {
+    return true;
+  }
+
+  if (isCliffCloseToDepositedAmount(streamData)) {
+    if (streamData.cliff !== undefined && streamData.end !== undefined) {
+      return streamData.end - streamData.cliff <= MAX_CLIFF_END_GAP_SECONDS;
+    }
+    return true;
+  }
+
+  return false;
 };
 
 export const buildStreamType = (streamData: {
@@ -119,6 +135,8 @@ export const buildStreamType = (streamData: {
   transferableByRecipient: boolean;
   depositedAmount: BN;
   cliffAmount: BN;
+  cliff?: number;
+  end?: number;
   minPrice?: number;
   maxPrice?: number;
   minPercentage?: number;
