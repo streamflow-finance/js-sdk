@@ -34,17 +34,6 @@ describe("isTokenLock", () => {
     expect(result).toBe(true);
   });
 
-  test("legitimate dynamic-period lock (cliff 60s before end) returns true", () => {
-    const result = isTokenLock({
-      ...baseLockPermissions,
-      depositedAmount: new BN(1_000_000),
-      cliffAmount: new BN(999_999),
-      cliff: 1700000000,
-      end: 1700000060,
-    });
-    expect(result).toBe(true);
-  });
-
   test("exploit lock (cliff far before end) returns false", () => {
     const result = isTokenLock({
       ...baseLockPermissions,
@@ -56,24 +45,35 @@ describe("isTokenLock", () => {
     expect(result).toBe(false);
   });
 
-  test("exploit lock at exact threshold boundary (601s gap) returns false", () => {
+  test("exploit lock with small gap (2s) returns false", () => {
     const result = isTokenLock({
       ...baseLockPermissions,
       depositedAmount: new BN(1_000_000),
       cliffAmount: new BN(999_999),
       cliff: 1700000000,
-      end: 1700000601,
+      end: 1700000002,
     });
     expect(result).toBe(false);
   });
 
-  test("lock at exact threshold boundary (600s gap) returns true", () => {
+  test("lock at exact threshold boundary (1s gap) returns true", () => {
     const result = isTokenLock({
       ...baseLockPermissions,
       depositedAmount: new BN(1_000_000),
       cliffAmount: new BN(999_999),
       cliff: 1700000000,
-      end: 1700000600,
+      end: 1700000001,
+    });
+    expect(result).toBe(true);
+  });
+
+  test("lock with zero gap (cliff equals end) returns true", () => {
+    const result = isTokenLock({
+      ...baseLockPermissions,
+      depositedAmount: new BN(1_000_000),
+      cliffAmount: new BN(999_999),
+      cliff: 1700000000,
+      end: 1700000000,
     });
     expect(result).toBe(true);
   });

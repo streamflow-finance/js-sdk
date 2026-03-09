@@ -9,7 +9,7 @@ import {
 } from "./types.js";
 
 const MAX_SAFE_UNIX_TIME_VALUE = 8640000000000;
-const MAX_CLIFF_END_GAP_SECONDS = 600; // 10 minutes
+const MAX_CLIFF_END_GAP_SECONDS = 1; // 10 minutes
 
 interface ICalculateUnlockedAmount {
   depositedAmount: BN;
