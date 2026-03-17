@@ -17,7 +17,7 @@ export interface ApiClient {
 }
 
 const DEFAULT_API_URL = "https://api-public.streamflow.finance";
-const DEFAULT_DEVNET_API_URL = "https://api-public-staging.streamflow.finance";
+const DEFAULT_DEVNET_API_URL = "https://staging-api-public.streamflow.finance";
 
 export const createClient = (options?: ApiClientOptions): ApiClient => {
   const apiUrl = options?.apiUrl ?? options?.cluster === "mainnet" ? DEFAULT_API_URL : DEFAULT_DEVNET_API_URL;
