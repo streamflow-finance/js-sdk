@@ -79,6 +79,11 @@ export interface FundPoolArgs extends BaseStakePoolArgs, TokenProgram, RewardPoo
   feeValue: Address | null;
 }
 
+export interface ClawbackRewardPoolArgs extends BaseStakePoolArgs, TokenProgram {
+  nonce: number;
+  rewardMint: Address;
+}
+
 export interface CreateRewardEntryArgs extends BaseStakePoolArgs, TokenProgram, RewardPoolProgram {
   depositNonce: number;
   rewardPoolNonce: number;

@@ -8,6 +8,7 @@ This package allows you to
 - `stake`; 
 - `unstake`; 
 - `fund rewards pools`;
+- `claw back unclaimed tokens from expired fixed reward pools`;
 
 with the Streamflow Staking protocol.
 
@@ -66,6 +67,7 @@ const client = new SolanaStakingClient({
 > - Withdraw/Unstake - staker's ATAs for stake mint and stake mint (see deriveStakeMintPDA fn) 
 > - Claim rewards - staker's ATAs for reward mint
 > - Fund Reward Pool - signer creates Streamflow Treasury's ATA for holding fee if defined
+> - Clawback - authority's ATA for reward mint
 
 #### Read operations
 ```typescript
@@ -376,6 +378,26 @@ const { tokenAccount } = await client.createFundDelegate({
 ```
 
 After creating the delegate, transfer reward tokens to the `tokenAccount`, which is an ATA for the fund delegate PDA address. The worker will periodically fund the reward pool from these tokens according to the schedule.
+
+### Clawback fixed reward pool funds
+
+`clawback` lets the reward pool authority recover any tokens still left in the reward pool vault after the stake pool has expired and the cooldown has passed.
+
+- It is available only for the fixed reward pool program.
+- Dynamic reward pools do not support clawback.
+- The program enforces a 7 day delay after `stakePool.expiryTs` before clawback is allowed.
+- When it succeeds, the remaining reward tokens are transferred to the authority's ATA for the reward mint and the reward vault is closed.
+
+```typescript
+await client.clawback({
+  stakePool,
+  stakePoolMint: mint,
+  nonce: rewardPoolNonce,
+  rewardMint,
+}, extParams);
+```
+
+Use `prepareClawbackInstructions` if you want to include the clawback instruction in a larger custom transaction.
 
 ### Set Token Metadata
 

@@ -54,6 +54,7 @@ import {
 } from "./lib/derive-accounts.js";
 import type {
   ClaimRewardPoolArgs,
+  ClawbackRewardPoolArgs,
   CloseRewardEntryArgs,
   CloseStakeEntryArgs,
   CreateFundDelegateArgs,
@@ -680,6 +681,39 @@ export class SolanaStakingClient {
       .instruction();
 
     return { ixs: treasuryATA ? treasuryATA.concat([instruction]) : [instruction] };
+  }
+
+  async clawback(data: ClawbackRewardPoolArgs, extParams: IInteractExt): Promise<ITransactionResult> {
+    const { ixs } = await this.prepareClawbackInstructions(data, extParams);
+    const { signature } = await this.execute(ixs, extParams);
+
+    return {
+      ixs,
+      txId: signature,
+    };
+  }
+
+  async prepareClawbackInstructions(
+    { nonce, rewardMint, stakePool, tokenProgramId = TOKEN_PROGRAM_ID }: ClawbackRewardPoolArgs,
+    extParams: IInteractExt,
+  ) {
+    const { rewardPoolProgram } = this.programs;
+    const authority = extParams.invoker.publicKey;
+    invariant(authority, "Undefined invoker publicKey");
+    const rewardMintPk = pk(rewardMint);
+    const tokenProgramPk = pk(tokenProgramId);
+    const rewardPoolPda = deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), rewardMintPk, nonce);
+    const instruction = await rewardPoolProgram.methods
+      .clawback()
+      .accountsPartial({
+        rewardPool: rewardPoolPda,
+        authority,
+        tokenProgram: tokenProgramId,
+        to: getAssociatedTokenAddressSync(rewardMintPk, authority, true, tokenProgramPk),
+      })
+      .instruction();
+
+    return { ixs: [instruction] };
   }
 
   async createRewardEntry(data: CreateRewardEntryArgs, extParams: IInteractExt): Promise<ITransactionResult> {
