@@ -842,7 +842,6 @@ export class SolanaStreamClient {
       throw new Error("Recipients array is empty!");
     }
 
-
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
       const createStreamData = { ...streamParams, ...recipientData };
