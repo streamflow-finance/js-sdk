@@ -354,7 +354,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       });
     });
 
-    test("should build multiple transactions with native SOL and include prepare transaction", async () => {
+    test("should build multiple transactions with native SOL and include wrap instructions per recipient", async () => {
       // Arrange
       const senderPublicKey = new PublicKey("11111111111111111111111111111112");
       const mockData = {
@@ -418,8 +418,10 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       expect(result.transactions).toHaveLength(2);
       expect(result.metadatas).toHaveLength(2);
 
-      // Should have a prepare transaction for native SOL handling
-      expect(result.prepareTx).toBeDefined();
+      // Wrap instructions are now included in each recipient's transaction, not in a separate prepareTx
+      expect(result.prepareTx).toBeUndefined();
+      // prepareWrappedAccount should be called once per recipient
+      expect(mockPrepareWrappedAccount).toHaveBeenCalledTimes(2);
     });
 
     test("should throw error when recipients array is empty", async () => {

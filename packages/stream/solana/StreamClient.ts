@@ -850,6 +850,13 @@ export class SolanaStreamClient {
         metadataPubKeys: metadataPubKeysExt?.[i] ? [metadataPubKeysExt[i]] : undefined,
       };
 
+      const wrapInstructions: TransactionInstruction[] = [];
+      if (isNative) {
+        const totalFee = await this.getTotalFee({ address: partnerPublicKey.toString() });
+        const recipientAmount = calculateTotalAmountToDeposit(recipientData.amount, totalFee);
+        wrapInstructions.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, recipientAmount)));
+      }
+
       const { ixs, metadata, metadataPubKey } = await this.prepareCreateInstructions(
         createStreamData,
         createStreamExtParams,
@@ -862,19 +869,13 @@ export class SolanaStreamClient {
 
       metadatas.push(metadataPubKey.toBase58());
       instructionsBatch.push({
-        ixs,
+        ixs: [...wrapInstructions, ...ixs],
         metadata,
         recipient: recipientData.recipient,
       });
     }
 
     const prepareInstructions = await this.getCreateATAInstructions([partnerPublicKey], mintPublicKey, sender, true);
-
-    if (isNative) {
-      const totalDepositedAmount = recipients.reduce((acc, recipient) => recipient.amount.add(acc), new BN(0));
-      const nativeInstructions = await prepareWrappedAccount(this.connection, sender.publicKey, totalDepositedAmount);
-      prepareInstructions.push(...nativeInstructions);
-    }
 
     return {
       instructionsBatch,
