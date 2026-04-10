@@ -37,6 +37,8 @@ export interface IBaseStreamConfig {
   canPause?: boolean;
   canUpdateRate?: boolean;
   partner?: string;
+  // signer or PartnerLink PDA used for fee derivation
+  partnerLink?: { address: string, isSigner: boolean };
   tokenProgramId?: string | PublicKey;
 }
 
