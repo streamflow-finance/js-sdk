@@ -72,7 +72,7 @@ import {
   type IInteractStreamExt,
   type IMultiTransactionResult,
   type IPrepareCreateStreamExt,
-  type IPrepareStreamExt,
+  type IPrepareStreamExt, type IPrepareTopUpstreamExt,
   type ISearchStreams,
   type ITopUpData,
   type ITopUpStreamExt,
@@ -1573,7 +1573,7 @@ export class SolanaStreamClient {
    */
   public async prepareTopupInstructions(
     { id, amount }: ITopUpData,
-    { invoker, isNative, computePrice, computeLimit }: ITopUpStreamExt,
+    { invoker, isNative, computePrice, computeLimit }: IPrepareTopUpstreamExt,
   ): Promise<TransactionInstruction[]> {
     if (!invoker.publicKey) {
       throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");

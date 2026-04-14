@@ -428,9 +428,15 @@ export interface IPrepareStreamExt extends Omit<IInteractStreamExt, "invoker"> {
   }
 }
 
-export interface ITopUpStreamExt extends ITransactionExt {
-  invoker: SignerWalletAdapter | Keypair;
+export interface IPrepareTopUpstreamExt extends ITransactionExt {
+  invoker: {
+    publicKey: PublicKey | null;
+  }
   isNative?: boolean;
+}
+
+export interface ITopUpStreamExt extends IPrepareTopUpstreamExt {
+  invoker: SignerWalletAdapter | Keypair;
 }
 
 export interface ICreateStreamInstructions {
