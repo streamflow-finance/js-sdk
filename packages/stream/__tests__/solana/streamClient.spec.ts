@@ -1,6 +1,6 @@
 import { BN } from "bn.js";
 import { describe, expect, test, beforeEach, vi } from "vitest";
-import { PublicKey, type VersionedTransaction } from "@solana/web3.js";
+import { type Keypair, PublicKey, type VersionedTransaction } from "@solana/web3.js";
 
 import { SolanaStreamClient } from "../../solana/StreamClient.js";
 import { ICluster } from "../../solana/types.js";
@@ -761,7 +761,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       const result = await instance.prepareTopupInstructions(
         { id: streamPublicKey.toBase58(), amount: new BN(100) },
         {
-          invoker: { publicKey: pk(13) },
+          invoker: { publicKey: pk(13) } as unknown as Keypair,
           isNative: false,
         },
       );
