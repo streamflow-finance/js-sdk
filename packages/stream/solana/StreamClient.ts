@@ -6,14 +6,13 @@ import { Buffer } from "buffer";
 import type PQueue from "p-queue";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  getExtraAccountMetaAddress,
+  addExtraAccountMetasForExecute,
   getTransferHook,
   type Mint,
   NATIVE_MINT,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
-  type AccountMeta,
   type Commitment,
   Connection,
   type ConnectionConfig,
@@ -466,11 +465,13 @@ export class SolanaStreamClient {
       mintPublicKey,
     );
     const tokenProgramId = streamTokenProgramId ? new PublicKey(streamTokenProgramId) : detectedTokenProgramId;
+    const senderTokens = await ata(mintPublicKey, sender.publicKey, tokenProgramId);
     const partnerPublicKey = partner ? new PublicKey(partner) : sender.publicKey;
 
     const streamflowProgramPublicKey = new PublicKey(this.programId);
-
     const escrowPDA = deriveEscrowPDA(streamflowProgramPublicKey, metadataPubKey);
+    const proxyMetadata = deriveContractPDA(this.alignedProxyProgram.programId, metadataPubKey);
+    const proxyTokens = await ata(mintPublicKey, proxyMetadata, tokenProgramId);
 
     const oracle =
       priceOracle ?? deriveTestOraclePDA(this.alignedProxyProgram.programId, mintPublicKey, sender.publicKey);
@@ -491,12 +492,6 @@ export class SolanaStreamClient {
 
     const encodedUIntArray = new TextEncoder().encode(streamName);
     const streamNameArray = Array.from(encodedUIntArray);
-    const remainingAccounts = [
-      ...(partnerLink
-        ? [{ pubkey: new PublicKey(partnerLink.address), isSigner: partnerLink.isSigner, isWritable: false }]
-        : []),
-      ...(await this.getTransferHookAccounts({ mint: mintPublicKey, mintAccount, tokenProgramId })),
-    ];
 
     const createMethod = this.alignedProxyProgram.methods
       .create({
@@ -544,9 +539,20 @@ export class SolanaStreamClient {
         streamflowProgram: this.programId,
       });
 
-    const createIx = await (
-      remainingAccounts.length > 0 ? createMethod.remainingAccounts(remainingAccounts) : createMethod
-    ).instruction();
+    const remainingAccounts = partnerLink
+      ? [{ pubkey: new PublicKey(partnerLink.address), isSigner: partnerLink.isSigner, isWritable: false }]
+      : [];
+    const createIx = await (remainingAccounts.length > 0 ? createMethod.remainingAccounts(remainingAccounts) : createMethod).instruction();
+
+    await this.addTransferHookAccounts(createIx, {
+      mint: mintPublicKey,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [
+        { source: senderTokens, destination: proxyTokens, owner: sender.publicKey },
+        { source: proxyTokens, destination: escrowPDA, owner: proxyMetadata },
+      ],
+    });
 
     ixs.push(createIx);
 
@@ -671,7 +677,12 @@ export class SolanaStreamClient {
         ? await createStreamV2Instruction({ ...baseData, nonce }, this.programId, accounts)
         : await createStreamInstruction(baseData, this.programId, accounts);
 
-    this.addTransferHookAccounts(createIx, { mint: mintPublicKey, mintAccount, tokenProgramId });
+    await this.addTransferHookAccounts(createIx, {
+      mint: mintPublicKey,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [{ source: senderTokens, destination: escrowTokens, owner: sender.publicKey }],
+    });
 
     ixs.push(createIx);
 
@@ -826,7 +837,12 @@ export class SolanaStreamClient {
         this.programId,
         accounts,
       );
-      this.addTransferHookAccounts(createInstruction, { mint: mintPublicKey, mintAccount, tokenProgramId });
+      await this.addTransferHookAccounts(createInstruction, {
+        mint: mintPublicKey,
+        mintAccount,
+        tokenProgramId,
+        potentialTransfers: [{ source: senderTokens, destination: escrowTokens, owner: sender.publicKey }],
+      });
       ixs.push(createInstruction);
     } else {
       const rentToExempt = await this.connection.getMinimumBalanceForRentExemption(METADATA_ACC_SIZE);
@@ -838,7 +854,12 @@ export class SolanaStreamClient {
         newAccountPubkey: metadataPubKey,
       });
       const createInstruction = await createUncheckedStreamInstruction(baseData, this.programId, accounts);
-      this.addTransferHookAccounts(createInstruction, { mint: mintPublicKey, mintAccount, tokenProgramId });
+      await this.addTransferHookAccounts(createInstruction, {
+        mint: mintPublicKey,
+        mintAccount,
+        tokenProgramId,
+        potentialTransfers: [{ source: senderTokens, destination: escrowTokens, owner: sender.publicKey }],
+      });
       ixs.push(createMetadataInstruction, createInstruction);
     }
 
@@ -1248,7 +1269,16 @@ export class SolanaStreamClient {
       streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
       tokenProgram: tokenProgramId,
     });
-    this.addTransferHookAccounts(withdrawIx, { mint, mintAccount, tokenProgramId });
+    await this.addTransferHookAccounts(withdrawIx, {
+      mint,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [
+        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
+      ],
+    });
 
     ixs.push(...ataIx, withdrawIx);
 
@@ -1322,6 +1352,12 @@ export class SolanaStreamClient {
     const streamData = decodeStream(escrowAcc.data);
     const { sender, recipient, mint, streamflowTreasury, partner, escrowTokens } = streamData;
     const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const senderTokens = await ata(mint, sender, tokenProgramId);
+    const recipientTokens = await ata(mint, recipient, tokenProgramId);
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const partnerTokens = await ata(mint, partner, tokenProgramId);
+    const proxyMetadata = deriveContractPDA(this.alignedProxyProgram.programId, streamPublicKey);
+    const proxyTokens = await ata(mint, proxyMetadata, tokenProgramId);
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit: computeLimit ?? ALIGNED_COMPUTE_LIMIT,
@@ -1345,10 +1381,20 @@ export class SolanaStreamClient {
       tokenProgram: tokenProgramId,
       streamflowProgram: this.programId,
     });
-    const remainingAccounts = await this.getTransferHookAccounts({ mint, mintAccount, tokenProgramId });
-    const cancelIx = await (
-      remainingAccounts.length > 0 ? cancelMethod.remainingAccounts(remainingAccounts) : cancelMethod
-    ).instruction();
+    const cancelIx = await cancelMethod.instruction();
+
+    await this.addTransferHookAccounts(cancelIx, {
+      mint,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [
+        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: proxyTokens, owner: streamPublicKey },
+        { source: proxyTokens, destination: senderTokens, owner: proxyMetadata },
+      ],
+    });
 
     ixs.push(...ataIx, cancelIx);
 
@@ -1378,7 +1424,6 @@ export class SolanaStreamClient {
     const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
     const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
     const partnerTokens = await ata(mint, partner, tokenProgramId);
-
     const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
       computePrice,
       computeLimit,
@@ -1406,7 +1451,17 @@ export class SolanaStreamClient {
       streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
       tokenProgram: tokenProgramId,
     });
-    await this.addTransferHookAccounts(cancelIx, { mint, mintAccount, tokenProgramId });
+    await this.addTransferHookAccounts(cancelIx, {
+      mint,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [
+        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: senderTokens, owner: streamPublicKey },
+      ],
+    });
 
     ixs.push(...ixsAta, cancelIx);
 
@@ -1559,7 +1614,12 @@ export class SolanaStreamClient {
       withdrawor: WITHDRAWOR_PUBLIC_KEY,
       systemProgram: SystemProgram.programId,
     });
-    this.addTransferHookAccounts(topupIx, { mint, mintAccount, tokenProgramId });
+    await this.addTransferHookAccounts(topupIx, {
+      mint,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [{ source: senderTokens, destination: escrowTokens, owner: invoker.publicKey }],
+    });
 
     ixs.push(topupIx);
 
@@ -2068,42 +2128,43 @@ export class SolanaStreamClient {
   }
 
   /**
-   * Returns the minimal transfer-hook account metas required by Streamflow instructions:
-   * the validation PDA followed by the transfer hook program id.
+   * Appends transfer-hook extra metas for each potential token transfer performed by the instruction.
+   *
+   * Transfer hook may rely on additional accounts/PDAs - derivation path is configured on the transfer hook metadata account, so for each potential transfer we need to check whether these accounts are needed and add them.
    */
-  private getTransferHookAccounts({
-    mint,
-    mintAccount,
-    tokenProgramId,
-  }: {
-    mint: PublicKey;
-    mintAccount: Mint;
-    tokenProgramId: PublicKey;
-  }): AccountMeta[] {
-    const transferHookProgramId = this.getTransferHookProgramId(mintAccount, tokenProgramId);
-
-    if (!transferHookProgramId) {
-      return [];
-    }
-
-    return [
-      { pubkey: getExtraAccountMetaAddress(mint, transferHookProgramId), isSigner: false, isWritable: false },
-      { pubkey: transferHookProgramId, isSigner: false, isWritable: false },
-    ];
-  }
-
-  /**
-   * Appends transfer-hook account metas to an existing instruction when the mint uses Token-2022 hooks.
-   */
-  private addTransferHookAccounts(
+  private async addTransferHookAccounts(
     instruction: TransactionInstruction,
     params: {
       mint: PublicKey;
       mintAccount: Mint;
       tokenProgramId: PublicKey;
+      potentialTransfers: {
+        source: PublicKey;
+        destination: PublicKey;
+        owner: PublicKey;
+      }[];
     },
-  ): void {
-    instruction.keys.push(...this.getTransferHookAccounts(params));
+  ): Promise<void> {
+    const { mint, mintAccount, tokenProgramId, potentialTransfers } = params;
+    const transferHookProgramId = this.getTransferHookProgramId(mintAccount, tokenProgramId);
+
+    if (!transferHookProgramId) {
+      return;
+    }
+
+    for (const transfer of potentialTransfers) {
+      await addExtraAccountMetasForExecute(
+        this.connection,
+        instruction,
+        transferHookProgramId,
+        transfer.source,
+        mint,
+        transfer.destination,
+        transfer.owner,
+        1n,
+        this.getCommitment(),
+      );
+    }
   }
 
   /**

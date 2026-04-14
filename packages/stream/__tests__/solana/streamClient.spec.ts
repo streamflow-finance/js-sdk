@@ -59,6 +59,7 @@ vi.mock("@solana/spl-token", async (importOriginal) => {
   return {
     ...actual,
     getTransferHook: vi.fn(),
+    addExtraAccountMetasForExecute: vi.fn().mockImplementation(async () => undefined),
   };
 });
 
@@ -163,7 +164,8 @@ describe("SolanaStreamClient Transaction Builders", async () => {
   ).calculateTotalAmountToDeposit;
   const mockDecodeStream = vi.mocked(await import("../../solana/lib/utils.js")).decodeStream;
   const mockGetTransferHook = vi.mocked(await import("@solana/spl-token")).getTransferHook;
-  const { TOKEN_2022_PROGRAM_ID, getExtraAccountMetaAddress } = await import("@solana/spl-token");
+  const mockAddExtraAccountMetasForExecute = vi.mocked(await import("@solana/spl-token")).addExtraAccountMetasForExecute;
+  const { TOKEN_2022_PROGRAM_ID } = await import("@solana/spl-token");
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -224,6 +226,8 @@ describe("SolanaStreamClient Transaction Builders", async () => {
     mockCalculateTotalAmountToDeposit.mockImplementation((amount) => amount);
     mockDecodeStream.mockReset();
     mockGetTransferHook.mockReturnValue(null);
+    mockAddExtraAccountMetasForExecute.mockReset();
+    mockAddExtraAccountMetasForExecute.mockResolvedValue(undefined as any);
 
     // Mock connection on instance
     (instance as any).connection = mockConnection;
@@ -385,19 +389,21 @@ describe("SolanaStreamClient Transaction Builders", async () => {
     test("adds transfer hook accounts to linear create instructions", async () => {
       const senderPublicKey = pk(13);
       const transferHookProgramId = pk(14);
-      const validationPubkey = getExtraAccountMetaAddress(pk(16), transferHookProgramId);
+      const mint = pk(16);
+      const senderTokens = pk(19);
 
       mockGetMintAndProgram.mockResolvedValue({
         tokenProgramId: TOKEN_2022_PROGRAM_ID,
         mint: {} as any,
       });
       mockGetTransferHook.mockReturnValue({ programId: transferHookProgramId } as any);
+      mockAta.mockResolvedValue(senderTokens);
 
       const result = await instance.prepareCreateLinearStreamInstructions(
         {
           recipient: pk(15).toBase58(),
           amount: new BN(1000),
-          tokenId: pk(16).toBase58(),
+          tokenId: mint.toBase58(),
           name: "Hooked Stream",
           cliffAmount: new BN(100),
           amountPerPeriod: new BN(50),
@@ -419,29 +425,42 @@ describe("SolanaStreamClient Transaction Builders", async () => {
         },
       );
 
-      expect(result.ixs.at(-1)?.keys.slice(-2)).toEqual([
-        { pubkey: validationPubkey, isSigner: false, isWritable: false },
-        { pubkey: transferHookProgramId, isSigner: false, isWritable: false },
-      ]);
+      expect(result.ixs.at(-1)).toBeDefined();
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenCalledTimes(1);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        1,
+        (instance as any).connection,
+        result.ixs.at(-1),
+        transferHookProgramId,
+        senderTokens,
+        mint,
+        expect.any(PublicKey),
+        senderPublicKey,
+        1n,
+        "confirmed",
+      );
     });
 
     test("adds partnerLink before transfer hook accounts for aligned create remaining accounts", async () => {
       const senderPublicKey = pk(13);
       const transferHookProgramId = pk(14);
       const partnerLinkPublicKey = pk(18);
-      const validationPubkey = getExtraAccountMetaAddress(pk(16), transferHookProgramId);
+      const mint = pk(16);
+      const senderTokens = pk(19);
+      const proxyTokens = pk(20);
 
       mockGetMintAndProgram.mockResolvedValue({
         tokenProgramId: TOKEN_2022_PROGRAM_ID,
         mint: {} as any,
       });
       mockGetTransferHook.mockReturnValue({ programId: transferHookProgramId } as any);
+      mockAta.mockResolvedValueOnce(senderTokens).mockResolvedValueOnce(proxyTokens);
 
       const result = await instance.prepareCreateAlignedUnlockInstructions(
         {
           recipient: pk(15).toBase58(),
           amount: new BN(1000),
-          tokenId: pk(16).toBase58(),
+          tokenId: mint.toBase58(),
           name: "Hooked Aligned Stream",
           cliffAmount: new BN(100),
           amountPerPeriod: new BN(50),
@@ -464,18 +483,40 @@ describe("SolanaStreamClient Transaction Builders", async () => {
         },
       );
 
-      expect(result.ixs.at(-1)?.keys).toEqual([
-        { pubkey: partnerLinkPublicKey, isSigner: true, isWritable: false },
-        { pubkey: validationPubkey, isSigner: false, isWritable: false },
-        { pubkey: transferHookProgramId, isSigner: false, isWritable: false },
-      ]);
+      expect(result.ixs.at(-1)?.keys).toEqual([{ pubkey: partnerLinkPublicKey, isSigner: true, isWritable: false }]);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenCalledTimes(2);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        1,
+        (instance as any).connection,
+        result.ixs.at(-1),
+        transferHookProgramId,
+        senderTokens,
+        mint,
+        proxyTokens,
+        senderPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        2,
+        (instance as any).connection,
+        result.ixs.at(-1),
+        transferHookProgramId,
+        proxyTokens,
+        mint,
+        expect.any(PublicKey),
+        expect.any(PublicKey),
+        1n,
+        "confirmed",
+      );
     });
 
     test("adds transfer hook validation and program accounts to withdraw instructions", async () => {
       const streamPublicKey = pk(17);
       const transferHookProgramId = pk(14);
       const decodedStream = createDecodedStream();
-      const validationPubkey = getExtraAccountMetaAddress(decodedStream.mint, transferHookProgramId);
+      const streamflowTreasuryTokens = pk(21);
+      const partnerTokens = pk(22);
 
       mockGetMintAndProgram.mockResolvedValue({
         tokenProgramId: TOKEN_2022_PROGRAM_ID,
@@ -484,6 +525,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       mockGetTransferHook.mockReturnValue({ programId: transferHookProgramId } as any);
       mockDecodeStream.mockReturnValue(decodedStream as any);
       (instance as any).connection.getAccountInfo.mockResolvedValue({ data: Buffer.alloc(1) });
+      mockAta.mockResolvedValueOnce(streamflowTreasuryTokens).mockResolvedValueOnce(partnerTokens);
 
       const result = await instance.prepareWithdrawInstructions(
         { id: streamPublicKey.toBase58() },
@@ -493,17 +535,51 @@ describe("SolanaStreamClient Transaction Builders", async () => {
         },
       );
 
-      expect(result.at(-1)?.keys.slice(-2)).toEqual([
-        { pubkey: validationPubkey, isSigner: false, isWritable: false },
-        { pubkey: transferHookProgramId, isSigner: false, isWritable: false },
-      ]);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenCalledTimes(3);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        1,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        decodedStream.recipientTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        2,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        streamflowTreasuryTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        3,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        partnerTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
     });
 
     test("adds transfer hook validation and program accounts to linear cancel instructions", async () => {
       const streamPublicKey = pk(17);
       const transferHookProgramId = pk(14);
       const decodedStream = createDecodedStream();
-      const validationPubkey = getExtraAccountMetaAddress(decodedStream.mint, transferHookProgramId);
+      const streamflowTreasuryTokens = pk(21);
+      const partnerTokens = pk(22);
 
       mockGetMintAndProgram.mockResolvedValue({
         tokenProgramId: TOKEN_2022_PROGRAM_ID,
@@ -512,6 +588,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       mockGetTransferHook.mockReturnValue({ programId: transferHookProgramId } as any);
       mockDecodeStream.mockReturnValue(decodedStream as any);
       (instance as any).connection.getAccountInfo.mockResolvedValue({ data: Buffer.alloc(1) });
+      mockAta.mockResolvedValueOnce(streamflowTreasuryTokens).mockResolvedValueOnce(partnerTokens);
 
       const result = await instance.prepareCancelLinearStream(
         { id: streamPublicKey.toBase58() },
@@ -521,17 +598,66 @@ describe("SolanaStreamClient Transaction Builders", async () => {
         },
       );
 
-      expect(result.at(-1)?.keys.slice(-2)).toEqual([
-        { pubkey: validationPubkey, isSigner: false, isWritable: false },
-        { pubkey: transferHookProgramId, isSigner: false, isWritable: false },
-      ]);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenCalledTimes(4);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        1,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        decodedStream.recipientTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        2,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        streamflowTreasuryTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        3,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        partnerTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        4,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        decodedStream.senderTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
     });
 
     test("adds transfer hook validation and program accounts to aligned cancel remaining accounts", async () => {
       const streamPublicKey = pk(17);
       const transferHookProgramId = pk(14);
       const decodedStream = createDecodedStream();
-      const validationPubkey = getExtraAccountMetaAddress(decodedStream.mint, transferHookProgramId);
+      const senderTokens = pk(19);
+      const recipientTokens = pk(20);
+      const streamflowTreasuryTokens = pk(21);
+      const partnerTokens = pk(22);
+      const proxyTokens = pk(23);
 
       mockGetMintAndProgram.mockResolvedValue({
         tokenProgramId: TOKEN_2022_PROGRAM_ID,
@@ -540,6 +666,12 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       mockGetTransferHook.mockReturnValue({ programId: transferHookProgramId } as any);
       mockDecodeStream.mockReturnValue(decodedStream as any);
       (instance as any).connection.getAccountInfo.mockResolvedValue({ data: Buffer.alloc(1) });
+      mockAta
+        .mockResolvedValueOnce(senderTokens)
+        .mockResolvedValueOnce(recipientTokens)
+        .mockResolvedValueOnce(streamflowTreasuryTokens)
+        .mockResolvedValueOnce(partnerTokens)
+        .mockResolvedValueOnce(proxyTokens);
 
       const result = await instance.prepareCancelAlignedUnlockInstructions(
         { id: streamPublicKey.toBase58() },
@@ -549,10 +681,104 @@ describe("SolanaStreamClient Transaction Builders", async () => {
         },
       );
 
-      expect(result.at(-1)?.keys).toEqual([
-        { pubkey: validationPubkey, isSigner: false, isWritable: false },
-        { pubkey: transferHookProgramId, isSigner: false, isWritable: false },
-      ]);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenCalledTimes(5);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        1,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        recipientTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        2,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        streamflowTreasuryTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        3,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        partnerTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        4,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.escrowTokens,
+        decodedStream.mint,
+        proxyTokens,
+        streamPublicKey,
+        1n,
+        "confirmed",
+      );
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        5,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        proxyTokens,
+        decodedStream.mint,
+        senderTokens,
+        expect.any(PublicKey),
+        1n,
+        "confirmed",
+      );
+    });
+
+    test("adds transfer hook validation and program accounts to topup instructions", async () => {
+      const streamPublicKey = pk(17);
+      const transferHookProgramId = pk(14);
+      const decodedStream = createDecodedStream();
+
+      mockGetMintAndProgram.mockResolvedValue({
+        tokenProgramId: TOKEN_2022_PROGRAM_ID,
+        mint: {} as any,
+      });
+      mockGetTransferHook.mockReturnValue({ programId: transferHookProgramId } as any);
+      mockDecodeStream.mockReturnValue(decodedStream as any);
+      (instance as any).connection.getAccountInfo.mockResolvedValue({ data: Buffer.alloc(1) });
+      (instance as any).getTotalFee = vi.fn().mockResolvedValue(0);
+
+      const result = await instance.prepareTopupInstructions(
+        { id: streamPublicKey.toBase58(), amount: new BN(100) },
+        {
+          invoker: { publicKey: pk(13) },
+          isNative: false,
+        },
+      );
+
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenCalledTimes(1);
+      expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+        1,
+        (instance as any).connection,
+        result.at(-1),
+        transferHookProgramId,
+        decodedStream.senderTokens,
+        decodedStream.mint,
+        decodedStream.escrowTokens,
+        pk(13),
+        1n,
+        "confirmed",
+      );
     });
   });
 
