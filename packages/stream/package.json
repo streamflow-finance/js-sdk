@@ -35,6 +35,14 @@
       "import": "./dist/esm/solana/descriptor/streamflow_aligned_unlocks.js",
       "require": "./dist/cjs/solana/descriptor/streamflow_aligned_unlocks.cjs"
     },
+    "./solana/api": {
+      "types": {
+        "import": "./dist/esm/solana/api/index.d.ts",
+        "require": "./dist/cjs/solana/api/index.d.cts"
+      },
+      "import": "./dist/esm/solana/api/index.js",
+      "require": "./dist/cjs/solana/api/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
