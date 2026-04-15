@@ -1,6 +1,8 @@
 import {
+  type BlockhashWithExpiryBlockHeight,
   type Commitment,
   Connection,
+  type Context,
   type Keypair,
   type PublicKey,
   type TransactionInstruction,
@@ -71,6 +73,12 @@ export interface NativeOptions {
   isNative?: boolean;
 }
 
+export interface BuiltTransaction {
+  transaction: VersionedTransaction;
+  blockhashWithExpiryBlockHeight: BlockhashWithExpiryBlockHeight;
+  context: Context;
+}
+
 export interface BatchExecuteResult {
   signatures: TransactionSignature[];
   errors: Error[];
@@ -97,22 +105,19 @@ export type BuildTransactionFn = (
   instructions: TransactionInstruction[],
   options: BuildTransactionOptions,
   env: Env,
-) => Promise<VersionedTransaction>;
+) => Promise<BuiltTransaction>;
 
 export type SignFn = (
   transaction: VersionedTransaction,
   signers: (SignerWalletAdapter | Keypair | { publicKey: PublicKey })[],
 ) => Promise<VersionedTransaction>;
 
-export type ExecuteFn = (signedTransaction: VersionedTransaction, env: ExecutionEnv) => Promise<TransactionSignature>;
+export type ExecuteFn = (builtTx: BuiltTransaction, env: ExecutionEnv) => Promise<TransactionSignature>;
 
-export type ExecuteBatchFn = (
-  signedTransactions: VersionedTransaction[],
-  env: ExecutionEnv,
-) => Promise<BatchExecuteResult>;
+export type ExecuteBatchFn = (builtTransactions: BuiltTransaction[], env: ExecutionEnv) => Promise<BatchExecuteResult>;
 
 export type ExecuteBatchSequentialFn = (
-  signedTransactions: VersionedTransaction[],
+  builtTransactions: BuiltTransaction[],
   env: ExecutionEnv,
 ) => Promise<BatchExecuteResult>;
 
