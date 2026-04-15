@@ -30,6 +30,8 @@
     "docs:build": "lerna exec -- typedoc",
     "validate-types": "lerna exec -- attw --pack --profile node16 .",
     "validate-packages": "lerna exec -- publint && pnpm validate-types",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "version-all": "lerna version --force-publish --no-git-tag-version --no-push",
     "publish": "pnpm validate-packages && lerna publish from-package --yes --loglevel=verbose",
     "local-publish": "lerna publish --no-git-tag-version --no-push --registry=\"http://localhost:4873/\" from-package --yes",
@@ -56,6 +58,7 @@
     "husky": "^8.0.0",
     "lerna": "7.4.2",
     "lint-staged": "^13.1.0",
+    "prettier": "^3.2.5",
     "publint": "0.3.8",
     "tsup": "^8.0.2",
     "typedoc": "0.27.8",
@@ -66,15 +69,14 @@
   "engines": {
     "node": ">=18"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,cjs,mjs,cts,json,yml,yaml}": "prettier --write"
+  },
   "pnpm": {
     "overrides": {
       "axios": ">=1.15.0",
       "handlebars": ">=4.7.9",
       "lodash": ">=4.18.0",
-      "ws": ">=8.17.1",
-      "base-x@<=3.0.10": ">=3.0.11",
-      "base-x@4.0.0": ">=4.0.1",
-      "bn.js@>=5.0.0 <5.2.3": ">=5.2.3",
       "cross-spawn": ">=7.0.5",
       "braces": ">=3.0.3",
       "flatted": ">=3.4.2",

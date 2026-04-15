@@ -35,7 +35,7 @@ Object.defineProperty(globalThis, "crypto", {
 
 // Mock external imports - move mock functions inside factory
 vi.mock("@streamflow/common", async (importOriginal) => {
-  const actual = await importOriginal() as Record<string, any>;
+  const actual = (await importOriginal()) as Record<string, any>;
   return {
     ...actual,
     ata: vi.fn(),
@@ -90,15 +90,11 @@ describe("SolanaStreamClient Transaction Builders", async () => {
   const mockAta = vi.mocked(await import("@streamflow/common")).ata;
   const mockCheckOrCreateAtaBatch = vi.mocked(await import("@streamflow/common")).checkOrCreateAtaBatch;
   const mockPrepareBaseInstructions = vi.mocked(await import("@streamflow/common")).prepareBaseInstructions;
-  const mockCreateVersionedTransaction = vi.mocked(
-    await import("@streamflow/common"),
-  ).createVersionedTransaction;
+  const mockCreateVersionedTransaction = vi.mocked(await import("@streamflow/common")).createVersionedTransaction;
   const mockPrepareWrappedAccount = vi.mocked(await import("@streamflow/common")).prepareWrappedAccount;
   const mockSignAndExecuteTransaction = vi.mocked(await import("@streamflow/common")).signAndExecuteTransaction;
   const mockExecuteTransaction = vi.mocked(await import("@streamflow/common")).executeTransaction;
-  const mockExecuteMultipleTransactions = vi.mocked(
-    await import("@streamflow/common"),
-  ).executeMultipleTransactions;
+  const mockExecuteMultipleTransactions = vi.mocked(await import("@streamflow/common")).executeMultipleTransactions;
 
   // Access Solana-specific mocked functions
   const mockSignAllTransactionWithRecipients = vi.mocked(

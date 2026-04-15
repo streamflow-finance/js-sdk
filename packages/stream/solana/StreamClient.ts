@@ -121,7 +121,12 @@ import {
 import type { IPartnerLayout } from "./instructionTypes.js";
 import type { StreamflowAlignedUnlocks as AlignedUnlocksProgramType } from "./descriptor/streamflow_aligned_unlocks.js";
 import StreamflowAlignedUnlocksIDL from "./descriptor/idl/streamflow_aligned_unlocks.json";
-import { deriveContractPDA, deriveEscrowPDA, deriveStreamMetadataPDA, deriveTestOraclePDA } from "./lib/derive-accounts.js";
+import {
+  deriveContractPDA,
+  deriveEscrowPDA,
+  deriveStreamMetadataPDA,
+  deriveTestOraclePDA,
+} from "./lib/derive-accounts.js";
 import { isCreateAlignedStreamData } from "./contractUtils.js";
 import { createClient, transformContract } from "./api-public/index.js";
 
@@ -162,7 +167,7 @@ export class SolanaStreamClient {
     commitment?: Commitment | ConnectionConfig,
     programId?: string,
     sendRate?: number,
-    sendThrottler?: PQueue
+    sendThrottler?: PQueue,
   );
 
   /**
@@ -207,8 +212,8 @@ export class SolanaStreamClient {
       const sendThrottler = !sendScheduler
         ? buildSendThrottler(1)
         : "sendRate" in sendScheduler
-        ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
-        : sendScheduler;
+          ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
+          : sendScheduler;
       this.schedulingParams = {
         ...schedulingOptions,
         sendThrottler,
@@ -1674,9 +1679,7 @@ export class SolanaStreamClient {
 
       // filter out aligned unlocks and store them in a separate object
       allIncomingAccounts.forEach((account, index) => {
-        if (
-          this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender)
-        ) {
+        if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender)) {
           alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
         } else {
           streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index]);

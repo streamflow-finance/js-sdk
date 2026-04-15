@@ -68,7 +68,7 @@ export const divCeilN = (n: bigint, d: bigint): bigint => n / d + (n % d ? BigIn
  */
 export function multiplyBigIntByNumber(x: bigint, y: number, scaleDigits = 9): bigint {
   if (!Number.isFinite(y) || y === 0) return 0n;
-  const isNegative = (x < 0n) !== (y < 0);
+  const isNegative = x < 0n !== y < 0;
   const absX = x < 0n ? -x : x;
   const absY = Math.abs(y);
 

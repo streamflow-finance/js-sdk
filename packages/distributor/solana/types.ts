@@ -1,6 +1,13 @@
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type { Keypair, PublicKey } from "@solana/web3.js";
-import type { IdlInstruction, IdlAccountsOfMethod, IdlArgsOfMethod, ITransactionResult, ITransactionExt, PartnerOracleTypes } from "@streamflow/common";
+import type {
+  IdlInstruction,
+  IdlAccountsOfMethod,
+  IdlArgsOfMethod,
+  ITransactionResult,
+  ITransactionExt,
+  PartnerOracleTypes,
+} from "@streamflow/common";
 import type BN from "bn.js";
 import type { IdlTypes, IdlAccounts, Program } from "@coral-xyz/anchor";
 

@@ -21,6 +21,8 @@ jobs:
           cache: "pnpm"
       - name: 📂 Install dependencies
         run: pnpm install
+      - name: ✨ Prettier
+        run: pnpm format:check
       - name: 📦 Build packages
         run: pnpm build
       - name: 🧪 Run Tests

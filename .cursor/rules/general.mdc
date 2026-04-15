@@ -1,0 +1,17 @@
+---
+description: Streamflow JS SDK project conventions and structure
+globs:
+alwaysApply: true
+---
+
+# Streamflow JS SDK
+
+This project reads `AGENTS.md` at the repository root for full project context, conventions, commands, and anti-patterns. See also `CODESTYLE.md` for detailed formatting and TypeScript rules.
+
+## Cursor-specific
+
+- Use `pnpm` for all package operations (not npm, not yarn)
+- Before considering work done: `pnpm lint && pnpm tsc:lint`
+- Run `pnpm test` to verify changes (Vitest, zero-config)
+- Do not hand-edit files in `packages/*/solana/descriptor/` — they are auto-generated Anchor IDLs
+- All Solana BN conversions must use `getBN()` / `getNumberFromBN()` from `@streamflow/common`

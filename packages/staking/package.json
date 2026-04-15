@@ -85,9 +85,9 @@
     "@solana/buffer-layout": "4.0.1",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-base": "0.9.19",
-    "@solana/web3.js": "1.95.4",
+    "@solana/web3.js": "1.98.4",
     "@streamflow/common": "workspace:*",
-    "bn.js": "5.2.1",
+    "bn.js": "5.2.3",
     "borsh": "^2.0.0",
     "bs58": "5.0.0",
     "p-queue": "^8.0.1"

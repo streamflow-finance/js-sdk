@@ -27,3 +27,7 @@ vite.config.ts.timestamp-*
 vite.config.js.timestamp-*
 
 scripts/local
+
+# agents
+.sisyphus/plans
+.sisyphus/drafts

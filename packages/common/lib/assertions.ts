@@ -20,4 +20,3 @@ export function assertHasPublicKey<T extends { publicKey?: PublicKey | null }>(
 ): asserts value is T & { publicKey: PublicKey } {
   invariant(value.publicKey, message ?? "publicKey is missing");
 }
-

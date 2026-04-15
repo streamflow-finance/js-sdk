@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number (for manual runs)'
+        description: "PR number (for manual runs)"
         required: true
   pull_request:
     branches:

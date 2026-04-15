@@ -20,9 +20,7 @@ export const fetchTokenPrice = async (
 
   const impl = options?.fetchImpl ?? fetch;
   const controller = new AbortController();
-  const timeout = options?.timeoutMs
-    ? setTimeout(() => controller.abort(), options.timeoutMs)
-    : undefined;
+  const timeout = options?.timeoutMs ? setTimeout(() => controller.abort(), options.timeoutMs) : undefined;
 
   try {
     const res = await impl(url, {

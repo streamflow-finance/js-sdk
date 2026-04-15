@@ -9,9 +9,7 @@ export default defineConfig((options) =>
       "solana/index": "solana/index.ts",
       "solana/descriptor/streamflow_aligned_unlocks": "solana/descriptor/streamflow_aligned_unlocks.ts",
     },
-    external: [
-      "@coral-xyz/anchor",
-    ],
+    external: ["@coral-xyz/anchor"],
     noExternal: [],
   })(options),
 );

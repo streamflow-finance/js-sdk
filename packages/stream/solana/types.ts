@@ -1,5 +1,13 @@
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import type { PublicKey, Keypair, VersionedTransaction, TransactionInstruction, AccountInfo, Commitment, ConnectionConfig } from "@solana/web3.js";
+import type {
+  PublicKey,
+  Keypair,
+  VersionedTransaction,
+  TransactionInstruction,
+  AccountInfo,
+  Commitment,
+  ConnectionConfig,
+} from "@solana/web3.js";
 import { getNumberFromBN } from "@streamflow/common";
 import type { ITransactionExt, ICluster } from "@streamflow/common";
 import type BN from "bn.js";
@@ -412,7 +420,7 @@ export interface ICreateStreamExt extends ICreateExt, ITransactionExtWithInstruc
 export interface IPrepareCreateStreamExt extends Omit<ICreateStreamExt, "sender"> {
   sender: {
     publicKey: PublicKey | null;
-  }
+  };
 }
 
 export interface IInteractStreamExt extends ITransactionExtWithInstructions {
@@ -423,7 +431,7 @@ export interface IInteractStreamExt extends ITransactionExtWithInstructions {
 export interface IPrepareStreamExt extends Omit<IInteractStreamExt, "invoker"> {
   invoker: {
     publicKey: PublicKey | null;
-  }
+  };
 }
 
 export interface ITopUpStreamExt extends ITransactionExt {
