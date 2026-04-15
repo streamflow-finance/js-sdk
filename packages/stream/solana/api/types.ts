@@ -10,9 +10,10 @@ import {
   type VersionedTransaction,
 } from "@solana/web3.js";
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import type { ComputeLimitEstimate, ComputePriceEstimate, ICluster } from "@streamflow/common";
+import { type ComputeLimitEstimate, type ComputePriceEstimate, ICluster } from "@streamflow/common";
 import type PQueue from "p-queue";
 
+import { SolanaStreamClient } from "../StreamClient.js";
 import type {
   ICreateMultipleAlignedStreamData,
   ICreateMultipleLinearStreamData,
@@ -26,6 +27,7 @@ import type {
 type EnvBase = {
   programId: PublicKey;
   commitment?: Commitment;
+  client?: SolanaStreamClient;
 };
 
 type EnvWithConnection = EnvBase & { connection: Connection };
@@ -84,20 +86,27 @@ export interface BatchExecuteResult {
   errors: Error[];
 }
 
-export type CreateFn = (params: ICreateStreamData, env: Env & NativeOptions) => Promise<CreateInstructionResult>;
+export type Invoker = { publicKey: string | PublicKey };
 
-export type WithdrawFn = (params: IWithdrawData, env: Env) => Promise<InstructionResult>;
+export type CreateFn = (
+  params: ICreateStreamData,
+  invoker: Invoker,
+  env: Env & NativeOptions,
+) => Promise<CreateInstructionResult>;
 
-export type TopupFn = (params: ITopUpData, env: Env & NativeOptions) => Promise<InstructionResult>;
+export type WithdrawFn = (params: IWithdrawData, invoker: Invoker, env: Env) => Promise<InstructionResult>;
 
-export type CancelFn = (params: { id: string }, env: Env) => Promise<InstructionResult>;
+export type TopupFn = (params: ITopUpData, invoker: Invoker, env: Env & NativeOptions) => Promise<InstructionResult>;
 
-export type TransferFn = (params: ITransferData, env: Env) => Promise<InstructionResult>;
+export type CancelFn = (params: { id: string }, invoker: Invoker, env: Env) => Promise<InstructionResult>;
 
-export type UpdateFn = (params: IUpdateData, env: Env) => Promise<InstructionResult>;
+export type TransferFn = (params: ITransferData, invoker: Invoker, env: Env) => Promise<InstructionResult>;
+
+export type UpdateFn = (params: IUpdateData, invoker: Invoker, env: Env) => Promise<InstructionResult>;
 
 export type CreateBatchFn = (
   params: ICreateMultipleLinearStreamData | ICreateMultipleAlignedStreamData,
+  invoker: Invoker,
   env: Env & NativeOptions,
 ) => Promise<BatchInstructionResult>;
 
@@ -128,4 +137,13 @@ export function resolveConnection(env: Env): Connection {
   return new Connection(env.rpcUrl, {
     commitment: env.commitment,
   });
+}
+
+export function createClientFromEnv(env: Env): SolanaStreamClient {
+  if (env.client) return env.client;
+
+  const rpcUrl = "connection" in env ? env.connection.rpcEndpoint : env.rpcUrl;
+  const cluster = "cluster" in env ? env.cluster : ICluster.Mainnet;
+
+  return new SolanaStreamClient(rpcUrl, cluster, env.commitment, env.programId.toBase58());
 }
