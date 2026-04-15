@@ -16,6 +16,6 @@
     "@streamflow/launchpad": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^5.0.0"
+    "vite": "^5.4.21"
   }
 }
