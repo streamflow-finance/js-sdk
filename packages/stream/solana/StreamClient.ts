@@ -77,6 +77,7 @@ import {
   type ICreateMultiError,
   type ICreateAlignedStreamData,
   type StreamClientOptions,
+  type StreamClientOptionsWithConnection,
   type AlignedUnlocksContract,
 } from "./types.js";
 import {
@@ -139,7 +140,9 @@ const ALIGNED_METADATA_ACC_SIZE = 320;
  * @property clusterUrl cluster url
  * @interface ClientCreationOptions
  */
-export type ClientCreationOptions = Omit<StreamClientOptions, "sendRate" | "sendThrottler">;
+export type ClientCreationOptions =
+  | Omit<StreamClientOptions, "sendRate" | "sendThrottler">
+  | StreamClientOptionsWithConnection;
 
 export class SolanaStreamClient {
   private readonly connection: Connection;
@@ -195,6 +198,23 @@ export class SolanaStreamClient {
       this.schedulingParams = {
         sendThrottler: sendThrottler ?? buildSendThrottler(sendRate),
       };
+    } else if ("connection" in optionsOrClusterUrl) {
+      const { connection, cluster, programId = "", sendScheduler } = optionsOrClusterUrl;
+      this.connection = connection;
+      this.commitment = "confirmed";
+      this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+      this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
+      const schedulingOptions = sendScheduler && "sendRate" in sendScheduler ? sendScheduler : undefined;
+      const sendThrottler = !sendScheduler
+        ? buildSendThrottler(1)
+        : "sendRate" in sendScheduler
+          ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
+          : sendScheduler;
+      this.schedulingParams = {
+        ...schedulingOptions,
+        sendThrottler,
+      };
     } else {
       const {
         clusterUrl,
@@ -225,7 +245,10 @@ export class SolanaStreamClient {
     } as AlignedUnlocksProgramType;
     this.alignedProxyProgram = new Program(alignedUnlocksProgram, { connection: this.connection });
     this.apiClient = createClient(
-      typeof optionsOrClusterUrl === "object" && optionsOrClusterUrl.cluster !== ICluster.Mainnet
+      typeof optionsOrClusterUrl === "object" &&
+        ("connection" in optionsOrClusterUrl
+          ? optionsOrClusterUrl.cluster !== ICluster.Mainnet
+          : optionsOrClusterUrl.cluster !== ICluster.Mainnet)
         ? { cluster: "devnet" }
         : { cluster: "mainnet" },
     );

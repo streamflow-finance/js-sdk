@@ -24,6 +24,7 @@ js-sdk/
 | Task | Location | Notes |
 |------|----------|-------|
 | Add new protocol method | `packages/<proto>/solana/` | Client class is the main file |
+| Add composable API function | `packages/stream/solana/api/` | Thin wrappers delegating to StreamClient (stream package only) |
 | Modify shared types/utils | `packages/common/solana/types.ts` or `common/solana/utils.ts` | Impacts ALL packages |
 | Change build output | `tsup.config.base.ts` + per-package `tsup.config.ts` | `createPackageConfig()` helper |
 | Fix IDL/descriptor | `packages/<proto>/solana/descriptor/*.ts` | Auto-generated from Anchor — don't hand-edit |
@@ -59,6 +60,7 @@ Full style reference: [`CODESTYLE.md`](CODESTYLE.md) (TypeScript, imports, forma
 - **Tests**: Vitest, `*.spec.ts` in `__tests__/solana/`, zero-config (no vitest.config)
 - **IDL descriptors**: Auto-generated Anchor types in `solana/descriptor/` — do NOT hand-edit
 - **`prepare*` / execute pattern**: Every write op has a `prepareXInstructions()` + `execute()` pair for composability
+- **`pk()` for PublicKey normalization**: `import { pk } from "@streamflow/common"` — canonical `string | PublicKey` → `PublicKey`. Use everywhere, never write custom helpers.
 - **Prettier ignores**: `*.md`, `pnpm-lock.yaml`
 
 ## ANTI-PATTERNS (MONOREPO-WIDE)
@@ -84,6 +86,7 @@ pnpm publish            # Validate + publish to npm (Lerna)
 - 7 of 10 largest files are **auto-generated Anchor IDLs** (~13,500 lines) — maintenance-free, regenerated from on-chain programs
 - `@streamflow/launchpad` is the only package with a cross-protocol dependency (`stream`)
 - All BN amount conversions MUST go through `getBN()` / `getNumberFromBN()` — canonical conversion functions
+- All PublicKey normalization MUST go through `pk()` — canonical `string | PublicKey` → `PublicKey`
 - Pre-commit hook runs `pnpm lint` only — no type-check or tests on commit
 - Alpha versions use `{version}-alpha.p{PR}.{sha}` format (non-standard semver)
 - Node.js >=18 required; CI tests Node 18/20/22/24 matrix

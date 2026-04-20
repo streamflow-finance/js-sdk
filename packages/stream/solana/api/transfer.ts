@@ -1,5 +1,3 @@
-import { pk } from "@streamflow/common";
-
 import type { ITransferData } from "../types.js";
 import type { Env, InstructionResult, Invoker } from "./types.js";
 import { createClientFromEnv } from "./types.js";
@@ -12,10 +10,9 @@ import { createClientFromEnv } from "./types.js";
  */
 export async function transfer(params: ITransferData, invoker: Invoker, env: Env): Promise<InstructionResult> {
   const client = createClientFromEnv(env);
-  const invokerPublicKey = pk(invoker.publicKey);
 
   const ixs = await client.prepareTransferInstructions(params, {
-    invoker: { publicKey: invokerPublicKey },
+    invoker,
   });
 
   return { instructions: ixs };

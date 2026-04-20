@@ -1,7 +1,7 @@
 import { Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SolanaStreamClient } from "../../../solana/StreamClient.js";
+import { type SolanaStreamClient } from "../../../solana/StreamClient.js";
 
 vi.mock("../../../solana/StreamClient.js", () => {
   return {

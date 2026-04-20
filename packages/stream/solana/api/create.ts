@@ -1,5 +1,4 @@
 import { PublicKey } from "@solana/web3.js";
-import { pk } from "@streamflow/common";
 
 import type { ICreateStreamData } from "../types.js";
 import type { CreateInstructionResult, Env, Invoker, NativeOptions } from "./types.js";
@@ -11,10 +10,9 @@ export async function create(
   env: Env & NativeOptions,
 ): Promise<CreateInstructionResult> {
   const client = createClientFromEnv(env);
-  const senderPublicKey = pk(invoker.publicKey);
 
   const { ixs, metadataId, metadata } = await client.buildCreateTransactionInstructions(params, {
-    sender: { publicKey: senderPublicKey },
+    sender: invoker,
     isNative: env.isNative ?? false,
   });
 

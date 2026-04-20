@@ -44,6 +44,7 @@ common/
 ## KEY EXPORTS
 - **Types**: `ICluster`, `ContractError`, `ITransactionExt`, `ITransactionResult`, `IPrepareResult`, `IInteractExt`, `ConfirmationParams`, `ThrottleParams`, `ComputePriceEstimate`, `ComputeLimitEstimate`
 - **BN**: `getBN(value, decimals)`, `getNumberFromBN(value, decimals)`
+- **PublicKey**: `pk(key)` — canonical `string | PublicKey` → `PublicKey` normalizer (`solana/lib/public-key.ts`). Use this everywhere instead of writing custom helpers.
 - **TX pipeline**: `prepareTransaction`, `signAndExecuteTransaction`, `executeTransaction`, `executeMultipleTransactions`, `simulateTransaction`
 - **ATA**: `ata()`, `ataBatchExist()`, `checkOrCreateAtaBatch()`, `createAtaBatch()`, `enrichAtaParams()`
 - **Compute**: `createAndEstimateTransaction()`, `prepareBaseInstructions()`

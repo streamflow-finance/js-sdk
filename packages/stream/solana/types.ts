@@ -1,5 +1,6 @@
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type {
+  Connection,
   PublicKey,
   Keypair,
   VersionedTransaction,
@@ -373,6 +374,18 @@ export interface StreamClientOptions {
   commitment?: Commitment | ConnectionConfig;
   sendRate?: number;
   sendThrottler?: PQueue;
+  sendScheduler?: PQueue | TransactionSchedulingOptions;
+}
+
+/**
+ * StreamClient options that accept a pre-existing Connection instance.
+ * Useful when you already have a connection (e.g. shared across multiple clients)
+ * and want to avoid creating a duplicate one internally.
+ */
+export interface StreamClientOptionsWithConnection {
+  connection: Connection;
+  cluster: ICluster;
+  programId?: string;
   sendScheduler?: PQueue | TransactionSchedulingOptions;
 }
 

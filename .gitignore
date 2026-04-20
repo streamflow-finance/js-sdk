@@ -7,15 +7,17 @@ yarn-error.log*
 
 # Dependency directories
 node_modules/
+
 # dotenv environment variables file
 .env
 
 target/
+dist/
+/local/
+
 .idea/
 .gitattributes
 
-dist/
-/local/
 .DS_Store
 packages/.DS_Store
 *.tgz
@@ -29,5 +31,4 @@ vite.config.js.timestamp-*
 scripts/local
 
 # agents
-.sisyphus/plans
-.sisyphus/drafts
+.sisyphus

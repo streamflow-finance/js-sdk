@@ -86,7 +86,7 @@ export interface BatchExecuteResult {
   errors: Error[];
 }
 
-export type Invoker = { publicKey: string | PublicKey };
+export type Invoker = Keypair | SignerWalletAdapter | { publicKey: PublicKey };
 
 export type CreateFn = (
   params: ICreateStreamData,

@@ -1,4 +1,5 @@
-import { pk } from "@streamflow/common";
+import type { Keypair } from "@solana/web3.js";
+import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 
 import type { ITopUpData } from "../types.js";
 import type { Env, InstructionResult, Invoker, NativeOptions } from "./types.js";
@@ -10,11 +11,9 @@ export async function topup(
   env: Env & NativeOptions,
 ): Promise<InstructionResult> {
   const client = createClientFromEnv(env);
-  const invokerPublicKey = pk(invoker.publicKey);
 
-  // ITopUpStreamExt.invoker type is SignerWalletAdapter | Keypair, but only publicKey is used internally
   const ixs = await client.prepareTopupInstructions(params, {
-    invoker: { publicKey: invokerPublicKey } as any,
+    invoker: invoker as SignerWalletAdapter | Keypair,
     isNative: env.isNative ?? false,
   });
 
