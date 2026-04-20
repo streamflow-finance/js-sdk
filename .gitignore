@@ -21,8 +21,8 @@ dist/
 .DS_Store
 packages/.DS_Store
 *.tgz
-docs/
-!docs/CNAME
+/docs/
+!/docs/CNAME
 
 # Bundlers
 vite.config.ts.timestamp-*

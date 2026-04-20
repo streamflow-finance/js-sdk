@@ -58,7 +58,8 @@ export async function wrappedSignAndExecuteTransaction(
   ...args: Parameters<typeof signAndExecuteTransaction>
 ): Promise<string> {
   try {
-    return await signAndExecuteTransaction(...args);
+    const result = await signAndExecuteTransaction(...args);
+    return result;
   } catch (err: unknown) {
     if (err instanceof Error) {
       const parsed = translateError(err, MERKLE_DISTRIBUTOR_ERRORS);

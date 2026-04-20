@@ -1,0 +1,6 @@
+# Generated API docs (build artifacts)
+content/api/
+
+# Next.js
+.next/
+node_modules/
