@@ -101,12 +101,20 @@ function rewriteLinks(content: string, filePath: string, apiDir: string): string
   });
 }
 
+function escapeYamlString(s: string): string {
+  // Strip HTML-like backslash escapes that TypeDoc generates (e.g. \<T\> → <T>)
+  let cleaned = s.replace(/\\</g, "<").replace(/\\>/g, ">");
+  // Escape characters that are special in YAML double-quoted strings
+  cleaned = cleaned.replace(/\\/g, "\\\\");
+  cleaned = cleaned.replace(/"/g, '\\"');
+  return cleaned;
+}
+
 function addFrontmatter(content: string, filePath: string): string {
   if (content.startsWith("---")) return content;
 
   const { title, description } = extractTitleAndDescription(content, filePath);
-  const esc = (s: string) => s.replace(/"/g, '\\"');
-  return `---\ntitle: "${esc(title)}"\ndescription: "${esc(description)}"\n---\n\n${content}`;
+  return `---\ntitle: "${escapeYamlString(title)}"\ndescription: "${escapeYamlString(description)}"\n---\n\n${content}`;
 }
 
 function generateMetaJson(apiDir: string): void {
@@ -162,15 +170,48 @@ function generateSubdirMeta(dirPath: string): void {
   }
 }
 
+function escapeMdxBraces(content: string): string {
+  const lines = content.split("\n");
+  const result: string[] = [];
+  let inCodeBlock = false;
+  let inFrontmatter = false;
+  let frontmatterCount = 0;
+
+  for (const line of lines) {
+    if (frontmatterCount < 2 && line.trim() === "---") {
+      frontmatterCount++;
+      inFrontmatter = frontmatterCount === 1;
+      result.push(line);
+      continue;
+    }
+    if (inFrontmatter) {
+      result.push(line);
+      continue;
+    }
+    if (line.trimStart().startsWith("```")) {
+      inCodeBlock = !inCodeBlock;
+      result.push(line);
+      continue;
+    }
+    if (inCodeBlock) {
+      result.push(line);
+      continue;
+    }
+    result.push(line.replace(/(?<!\\)\{(?![{])/g, "\\{").replace(/(?<!\\)\}(?![}])/g, "\\}"));
+  }
+  return result.join("\n");
+}
+
 async function main() {
   console.log("Post-processing API docs...\n");
 
-  console.log("1. Adding frontmatter and rewriting links...");
+  console.log("1. Adding frontmatter, rewriting links, escaping MDX...");
   const mdFiles = getAllMdFiles(API_DIR);
   for (const file of mdFiles) {
     let content = readFileSync(file, "utf-8");
     content = addFrontmatter(content, file);
     content = rewriteLinks(content, file, API_DIR);
+    content = escapeMdxBraces(content);
     writeFileSync(file, content);
   }
   console.log(`  Processed ${mdFiles.length} files\n`);
