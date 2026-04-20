@@ -1,6 +1,13 @@
 # Generated API docs (build artifacts)
 content/api/
 
+# Fumadocs MDX generated
+.source/
+
 # Next.js
 .next/
+next-env.d.ts
 node_modules/
+
+# TypeScript
+tsconfig.tsbuildinfo
