@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "generate-api": "npx tsx scripts/generate-api-docs.ts"
+    "generate-api": "npx tsx scripts/generate-api-docs.ts && npx tsx scripts/postprocess-api-docs.ts"
   },
   "dependencies": {
     "fumadocs-core": "^16.0.0",
