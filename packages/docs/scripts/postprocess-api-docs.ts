@@ -110,7 +110,14 @@ function addFrontmatter(content: string, filePath: string): string {
 }
 
 function generateMetaJson(apiDir: string): void {
-  for (const pkgDir of getSubdirs(apiDir)) {
+  const packageDirs = getSubdirs(apiDir);
+  writeFileSync(
+    join(apiDir, "meta.json"),
+    JSON.stringify({ title: "API Reference", icon: "BookOpen", pages: packageDirs }, null, 2) + "\n",
+  );
+  console.log("  Generated root meta.json for API Reference");
+
+  for (const pkgDir of packageDirs) {
     const packagePath = join(apiDir, pkgDir);
     const packageTitle = PACKAGE_TITLES[pkgDir] ?? pkgDir;
 

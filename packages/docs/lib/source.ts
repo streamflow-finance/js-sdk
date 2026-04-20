@@ -1,6 +1,13 @@
-import { loader } from "fumadocs-core/source";
-import { docs } from "@/.source/server";
+import { loader, multiple } from "fumadocs-core/source";
 
-export const source = loader(docs.toFumadocsSource(), {
-  baseUrl: "/docs",
-});
+import { api, docs } from "@/.source/server";
+
+export const source = loader(
+  multiple({
+    docs: docs.toFumadocsSource(),
+    api: api.toFumadocsSource(),
+  }),
+  {
+    baseUrl: "/docs",
+  },
+);
