@@ -12,12 +12,11 @@
   },
   "dependencies": {
     "fumadocs-core": "^16.0.0",
-    "fumadocs-mdx": "^16.0.0",
+    "fumadocs-mdx": "^14.0.0",
     "fumadocs-ui": "^16.0.0",
     "isbot": "^5.1.0",
     "react": "^19.2.0",
-    "react-router": "^7.0.0",
-    "react-router-serve": "^7.0.0"
+    "react-router": "^7.0.0"
   },
   "devDependencies": {
     "@react-router/dev": "^7.0.0",
