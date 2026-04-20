@@ -33,7 +33,8 @@
     "pack": "pnpm build && pnpm pack",
     "lint": "eslint --fix .",
     "lint-config": "eslint --print-config",
-    "prepublishOnly": "pnpm run lint && pnpm run build"
+    "test": "vitest run --passWithNoTests",
+    "prepublishOnly": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "gitHead": "a37306eba0e762af096db642fa22f07194014cfd",
   "devDependencies": {

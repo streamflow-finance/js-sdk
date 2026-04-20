@@ -22,9 +22,9 @@ API Documentation available here:
 
 ## JS SDK to interact with Streamflow protocols
 
-This repo consists of js-sdk to interact with several protocol exposed by streamflow:
-- `packages/stream` - [Core Streamflow Protocol](packages/stream/README.md) that allows to create a vesting/lock Stream to a Recipient;
-- `packages/distributor` - [Distributor Streamflow Protocol](packages/distributor/README.md) that allows to Airdrop tokens to large amount of Recipients (thousands or even millions);
+This repo contains the JS SDK used to interact with several protocols exposed by Streamflow:
+- `packages/stream` - [Core Streamflow Protocol](packages/stream/README.md) that allows you to create a vesting/lock stream for a recipient;
+- `packages/distributor` - [Distributor Streamflow Protocol](packages/distributor/README.md) that allows you to airdrop tokens to a large number of recipients (thousands or even millions);
 - `packages/common` - Common utilities and types used by Streamflow SDK;
 
 ## Installation
@@ -56,8 +56,7 @@ For polyfills take a look on these libraries:
 
 ## Contributing
 
-To contribute to this repository, please follow these steps:
-[CONTRIBUTING](./CONTRIBUTING.md)
+To contribute to this repository, see [CONTRIBUTING](./CONTRIBUTING.md).
 
 ## Release Notes
 Check out our [RELEASE NOTES](./RELEASE_NOTES.md) for the latest updates and migration guides.
