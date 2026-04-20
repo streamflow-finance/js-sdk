@@ -46,7 +46,10 @@
     "watch:docs": "typedoc --out dist/docs",
     "watch:docs:serve": "pnpx serve dist/docs -p 51921",
     "serve:docs": "pnpm run --stream \"/^watch:docs.*/\"",
-    "watch:build-pack": "node scripts/watch-build-pack.cjs"
+    "watch:build-pack": "node scripts/watch-build-pack.cjs",
+    "fumadocs:dev": "pnpm --filter @streamflow/docs dev",
+    "fumadocs:build": "pnpm --filter @streamflow/docs generate-api && pnpm --filter @streamflow/docs build",
+    "fumadocs:generate-api": "pnpm --filter @streamflow/docs generate-api"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.17.4",
