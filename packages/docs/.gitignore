@@ -4,9 +4,11 @@ content/api/
 # Fumadocs MDX generated
 .source/
 
-# Next.js
-.next/
-next-env.d.ts
+# React Router v7
+build/
+.react-router/
+
+# Dependencies
 node_modules/
 
 # TypeScript
