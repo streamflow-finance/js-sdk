@@ -52,6 +52,7 @@ interface CreateStreamAccounts {
   associatedTokenProgram: PublicKey;
   withdrawor: PublicKey;
   systemProgram: PublicKey;
+  partnerLink?: { pubkey: PublicKey, isSigner: boolean };
 }
 
 export const createStreamInstruction = async (
@@ -91,6 +92,9 @@ export const createStreamInstruction = async (
     },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
   ];
+  if (accounts.partnerLink) {
+    keys.push({ pubkey: accounts.partnerLink.pubkey, isSigner: accounts.partnerLink.isSigner, isWritable: false });
+  }
 
   let bufferData = Buffer.alloc(Layout.createStreamLayout.span);
 
@@ -166,6 +170,7 @@ interface CreateUncheckedStreamAccounts {
   tokenProgram: PublicKey;
   withdrawor: PublicKey;
   systemProgram: PublicKey;
+  partnerLink?: { pubkey: PublicKey, isSigner: boolean };
 }
 
 export const createUncheckedStreamInstruction = async (
@@ -186,6 +191,9 @@ export const createUncheckedStreamInstruction = async (
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
   ];
+  if (accounts.partnerLink) {
+    keys.push({ pubkey: accounts.partnerLink.pubkey, isSigner: accounts.partnerLink.isSigner, isWritable: false });
+  }
 
   if (accounts.payer) {
     keys.unshift({
@@ -291,6 +299,9 @@ export const createStreamV2Instruction = async (
     },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
   ];
+  if (accounts.partnerLink) {
+    keys.push({ pubkey: accounts.partnerLink.pubkey, isSigner: accounts.partnerLink.isSigner, isWritable: false });
+  }
 
   let bufferData = Buffer.alloc(Layout.createStreamV2Layout.span);
 
@@ -374,6 +385,9 @@ export const createUncheckedStreamV2Instruction = async (
     { pubkey: accounts.tokenProgram, isSigner: false, isWritable: false },
     { pubkey: accounts.systemProgram, isSigner: false, isWritable: false },
   ];
+  if (accounts.partnerLink) {
+    keys.push({ pubkey: accounts.partnerLink.pubkey, isSigner: accounts.partnerLink.isSigner, isWritable: false });
+  }
 
   if (accounts.payer) {
     keys.unshift({

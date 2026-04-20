@@ -1,9 +1,11 @@
 import { BN } from "bn.js";
 import { describe, expect, test, beforeEach, vi } from "vitest";
-import { PublicKey, type VersionedTransaction } from "@solana/web3.js";
+import { type Keypair, PublicKey, type VersionedTransaction } from "@solana/web3.js";
 
 import { SolanaStreamClient } from "../../solana/StreamClient.js";
 import { ICluster } from "../../solana/types.js";
+
+const createTestPublicKey = (seed: number): PublicKey => new PublicKey(new Uint8Array(32).fill(seed));
 
 // Mock Web Crypto API for Node.js test environment
 Object.defineProperty(globalThis, "crypto", {
@@ -54,20 +56,70 @@ vi.mock("@streamflow/common", async (importOriginal) => {
   };
 });
 
+vi.mock("@solana/spl-token", async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, any>;
+  return {
+    ...actual,
+    getTransferHook: vi.fn(),
+    addExtraAccountMetasForExecute: vi.fn().mockImplementation(async () => undefined),
+  };
+});
+
 vi.mock("@coral-xyz/anchor", () => ({
   Program: vi.fn().mockImplementation(() => ({
     programId: new PublicKey("11111111111111111111111111111111"),
     methods: {
       create: vi.fn(() => ({
-        accountsPartial: vi.fn(() => ({
-          instruction: vi.fn(() =>
-            Promise.resolve({
-              keys: [],
-              programId: new PublicKey("11111111111111111111111111111111"),
-              data: Buffer.alloc(0),
+        accountsPartial: vi.fn(() => {
+          let extraAccounts: any[] = [];
+          return {
+            remainingAccounts: vi.fn((accounts) => {
+              extraAccounts = accounts;
+              return {
+                instruction: vi.fn(() =>
+                  Promise.resolve({
+                    keys: extraAccounts,
+                    programId: new PublicKey("11111111111111111111111111111111"),
+                    data: Buffer.alloc(0),
+                  }),
+                ),
+              };
             }),
-          ),
-        })),
+            instruction: vi.fn(() =>
+              Promise.resolve({
+                keys: extraAccounts,
+                programId: new PublicKey("11111111111111111111111111111111"),
+                data: Buffer.alloc(0),
+              }),
+            ),
+          };
+        }),
+      })),
+      cancel: vi.fn(() => ({
+        accountsPartial: vi.fn(() => {
+          let extraAccounts: any[] = [];
+          return {
+            remainingAccounts: vi.fn((accounts) => {
+              extraAccounts = accounts;
+              return {
+                instruction: vi.fn(() =>
+                  Promise.resolve({
+                    keys: extraAccounts,
+                    programId: new PublicKey("11111111111111111111111111111111"),
+                    data: Buffer.alloc(0),
+                  }),
+                ),
+              };
+            }),
+            instruction: vi.fn(() =>
+              Promise.resolve({
+                keys: extraAccounts,
+                programId: new PublicKey("11111111111111111111111111111111"),
+                data: Buffer.alloc(0),
+              }),
+            ),
+          };
+        }),
       })),
     },
   })),
@@ -79,6 +131,7 @@ vi.mock("../../solana/lib/utils.js", () => ({
   sendAndConfirmStreamRawTransaction: vi.fn(),
   extractSolanaErrorCode: vi.fn(),
   calculateTotalAmountToDeposit: vi.fn(),
+  decodeStream: vi.fn(),
 }));
 
 describe("SolanaStreamClient Transaction Builders", async () => {
@@ -108,6 +161,13 @@ describe("SolanaStreamClient Transaction Builders", async () => {
     await import("../../solana/lib/utils.js"),
   ).sendAndConfirmStreamRawTransaction;
   const mockExtractSolanaErrorCode = vi.mocked(await import("../../solana/lib/utils.js")).extractSolanaErrorCode;
+  const mockCalculateTotalAmountToDeposit = vi.mocked(
+    await import("../../solana/lib/utils.js"),
+  ).calculateTotalAmountToDeposit;
+  const mockDecodeStream = vi.mocked(await import("../../solana/lib/utils.js")).decodeStream;
+  const mockGetTransferHook = vi.mocked(await import("@solana/spl-token")).getTransferHook;
+  const mockAddExtraAccountMetasForExecute = vi.mocked(await import("@solana/spl-token")).addExtraAccountMetasForExecute;
+  const { TOKEN_2022_PROGRAM_ID } = await import("@solana/spl-token");
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -165,6 +225,11 @@ describe("SolanaStreamClient Transaction Builders", async () => {
     ]);
     mockSendAndConfirmStreamRawTransaction.mockResolvedValue(undefined as any);
     mockExtractSolanaErrorCode.mockReturnValue("custom_error_code");
+    mockCalculateTotalAmountToDeposit.mockImplementation((amount) => amount);
+    mockDecodeStream.mockReset();
+    mockGetTransferHook.mockReturnValue(null);
+    mockAddExtraAccountMetasForExecute.mockReset();
+    mockAddExtraAccountMetasForExecute.mockResolvedValue(undefined as any);
 
     // Mock connection on instance
     (instance as any).connection = mockConnection;
@@ -266,6 +331,348 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       expect(result).toHaveProperty("context");
       expect(mockGetTotalFee).toHaveBeenCalledWith({
         address: expect.any(String),
+      });
+    });
+  });
+
+  describe("transfer hook accounts", () => {
+    const publicKeys = {
+      sender: createTestPublicKey(1),
+      senderTokens: createTestPublicKey(2),
+      recipient: createTestPublicKey(3),
+      recipientTokens: createTestPublicKey(4),
+      mint: createTestPublicKey(5),
+      stream: createTestPublicKey(17),
+      escrowTokens: createTestPublicKey(6),
+      streamflowTreasury: createTestPublicKey(7),
+      streamflowTreasuryTokens: createTestPublicKey(8),
+      partner: createTestPublicKey(9),
+      partnerTokens: createTestPublicKey(10),
+      oldMetadata: createTestPublicKey(11),
+      payer: createTestPublicKey(12),
+      invoker: createTestPublicKey(13),
+      transferHookProgram: createTestPublicKey(14),
+      partnerLink: createTestPublicKey(18),
+      proxyTokens: createTestPublicKey(23),
+    } as const;
+
+    const createDecodedStream = () => ({
+      magic: new BN(0),
+      version: new BN(0),
+      createdAt: new BN(0),
+      withdrawnAmount: new BN(100),
+      canceledAt: new BN(0),
+      end: new BN(9999999999),
+      lastWithdrawnAt: new BN(0),
+      sender: publicKeys.sender,
+      senderTokens: publicKeys.senderTokens,
+      recipient: publicKeys.recipient,
+      recipientTokens: publicKeys.recipientTokens,
+      mint: publicKeys.mint,
+      escrowTokens: publicKeys.escrowTokens,
+      streamflowTreasury: publicKeys.streamflowTreasury,
+      streamflowTreasuryTokens: publicKeys.streamflowTreasuryTokens,
+      streamflowFeeTotal: new BN(50),
+      streamflowFeeWithdrawn: new BN(10),
+      streamflowFeePercent: 0,
+      partnerFeeTotal: new BN(20),
+      partnerFeeWithdrawn: new BN(5),
+      partnerFeePercent: 0,
+      partner: publicKeys.partner,
+      partnerTokens: publicKeys.partnerTokens,
+      start: new BN(0),
+      depositedAmount: new BN(1000),
+      period: new BN(9999999999),
+      amountPerPeriod: new BN(0),
+      cliff: new BN(0),
+      cliffAmount: new BN(0),
+      cancelableBySender: true,
+      cancelableByRecipient: false,
+      automaticWithdrawal: false,
+      transferableBySender: true,
+      transferableByRecipient: false,
+      canTopup: true,
+      name: "hooked stream",
+      withdrawFrequency: new BN(0),
+      isPda: false,
+      nonce: 0,
+      closed: false,
+      currentPauseStart: new BN(0),
+      pauseCumulative: new BN(0),
+      lastRateChangeTime: new BN(1),
+      fundsUnlockedAtLastRateChange: new BN(400),
+      oldMetadata: PublicKey.default,
+      payer: PublicKey.default,
+      bump: 0,
+    });
+
+    const setupTransferHookMint = () => {
+      mockGetMintAndProgram.mockResolvedValue({
+        tokenProgramId: TOKEN_2022_PROGRAM_ID,
+        mint: {} as any,
+      });
+      mockGetTransferHook.mockReturnValue({ programId: publicKeys.transferHookProgram } as any);
+    };
+
+    const setupDecodedStreamInstruction = (...ataAddresses: PublicKey[]) => {
+      const decodedStream = createDecodedStream();
+
+      setupTransferHookMint();
+      mockDecodeStream.mockReturnValue(decodedStream as any);
+      (instance as any).connection.getAccountInfo.mockResolvedValue({ data: Buffer.alloc(1) });
+
+      ataAddresses.forEach((address) => {
+        mockAta.mockResolvedValueOnce(address);
+      });
+
+      return decodedStream;
+    };
+
+    const expectTransferHookCalls = (
+      instruction: unknown,
+      calls: ReadonlyArray<{ source: PublicKey; destination: unknown; owner: unknown }>,
+    ) => {
+      calls.forEach(({ source, destination, owner }, index) => {
+        expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
+          index + 1,
+          (instance as any).connection,
+          instruction,
+          publicKeys.transferHookProgram,
+          source,
+          publicKeys.mint,
+          destination,
+          owner,
+          1n,
+          "confirmed",
+        );
+      });
+    };
+
+    describe("transfer hook: linear", () => {
+      test("adds transfer hook accounts to create instructions", async () => {
+        setupTransferHookMint();
+        mockAta.mockResolvedValue(publicKeys.senderTokens);
+
+        const result = await instance.prepareCreateLinearStreamInstructions(
+          {
+            recipient: publicKeys.recipient.toBase58(),
+            amount: new BN(1000),
+            tokenId: publicKeys.mint.toBase58(),
+            name: "Hooked Stream",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+            period: 86400,
+            start: 10,
+            cliff: 10,
+            cancelableBySender: true,
+            cancelableByRecipient: false,
+            transferableBySender: true,
+            transferableByRecipient: false,
+            canTopup: true,
+            automaticWithdrawal: false,
+            withdrawalFrequency: 0,
+            canPause: false,
+            canUpdateRate: false,
+          },
+          {
+            sender: { publicKey: publicKeys.sender },
+          },
+        );
+
+        expect(result.ixs.at(-1)).toBeDefined();
+        expectTransferHookCalls(result.ixs.at(-1), [
+          {
+            source: publicKeys.senderTokens,
+            destination: expect.any(PublicKey),
+            owner: publicKeys.sender,
+          },
+        ]);
+      });
+
+      test("adds transfer hook validation accounts to withdraw instructions", async () => {
+        const decodedStream = setupDecodedStreamInstruction(
+          publicKeys.streamflowTreasuryTokens,
+          publicKeys.partnerTokens,
+        );
+
+        const result = await instance.prepareWithdrawInstructions(
+          { id: publicKeys.stream.toBase58() },
+          {
+            invoker: { publicKey: publicKeys.invoker },
+            checkTokenAccounts: false,
+          },
+        );
+
+        expectTransferHookCalls(result.at(-1), [
+          {
+            source: decodedStream.escrowTokens,
+            destination: decodedStream.recipientTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.streamflowTreasuryTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.partnerTokens,
+            owner: publicKeys.stream,
+          },
+        ]);
+      });
+
+      test("adds transfer hook validation accounts to cancel instructions", async () => {
+        const decodedStream = setupDecodedStreamInstruction(
+          publicKeys.streamflowTreasuryTokens,
+          publicKeys.partnerTokens,
+        );
+
+        const result = await instance.prepareCancelLinearStream(
+          { id: publicKeys.stream.toBase58() },
+          {
+            invoker: { publicKey: publicKeys.invoker },
+            checkTokenAccounts: false,
+          },
+        );
+
+        expectTransferHookCalls(result.at(-1), [
+          {
+            source: decodedStream.escrowTokens,
+            destination: decodedStream.recipientTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.streamflowTreasuryTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.partnerTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: decodedStream.senderTokens,
+            owner: publicKeys.stream,
+          },
+        ]);
+      });
+
+      test("adds transfer hook validation accounts to topup instructions", async () => {
+        const decodedStream = setupDecodedStreamInstruction();
+        (instance as any).getTotalFee = vi.fn().mockResolvedValue(0);
+
+        const result = await instance.prepareTopupInstructions(
+          { id: publicKeys.stream.toBase58(), amount: new BN(100) },
+          {
+            invoker: { publicKey: publicKeys.invoker } as unknown as Keypair,
+            isNative: false,
+          },
+        );
+
+        expectTransferHookCalls(result.at(-1), [
+          {
+            source: decodedStream.senderTokens,
+            destination: decodedStream.escrowTokens,
+            owner: publicKeys.invoker,
+          },
+        ]);
+      });
+    });
+
+    describe("transfer hook: aligned", () => {
+      test("adds partnerLink before transfer hook accounts for create remaining accounts", async () => {
+        setupTransferHookMint();
+        mockAta.mockResolvedValueOnce(publicKeys.senderTokens).mockResolvedValueOnce(publicKeys.proxyTokens);
+
+        const result = await instance.prepareCreateAlignedUnlockInstructions(
+          {
+            recipient: publicKeys.recipient.toBase58(),
+            amount: new BN(1000),
+            tokenId: publicKeys.mint.toBase58(),
+            name: "Hooked Aligned Stream",
+            cliffAmount: new BN(100),
+            amountPerPeriod: new BN(50),
+            period: 86400,
+            start: 10,
+            cliff: 10,
+            cancelableBySender: true,
+            cancelableByRecipient: false,
+            transferableBySender: true,
+            transferableByRecipient: false,
+            canTopup: true,
+            partnerLink: { address: publicKeys.partnerLink.toBase58(), isSigner: true },
+            minPrice: new BN(1),
+            maxPrice: new BN(2),
+            minPercentage: new BN(0),
+            maxPercentage: new BN(100),
+          },
+          {
+            sender: { publicKey: publicKeys.sender },
+          },
+        );
+
+        expect(result.ixs.at(-1)?.keys).toEqual([{ pubkey: publicKeys.partnerLink, isSigner: true, isWritable: false }]);
+        expectTransferHookCalls(result.ixs.at(-1), [
+          {
+            source: publicKeys.senderTokens,
+            destination: publicKeys.proxyTokens,
+            owner: publicKeys.sender,
+          },
+          {
+            source: publicKeys.proxyTokens,
+            destination: expect.any(PublicKey),
+            owner: expect.any(PublicKey),
+          },
+        ]);
+      });
+
+      test("adds transfer hook validation accounts to cancel remaining accounts", async () => {
+        const decodedStream = setupDecodedStreamInstruction(
+          publicKeys.senderTokens,
+          publicKeys.recipientTokens,
+          publicKeys.streamflowTreasuryTokens,
+          publicKeys.partnerTokens,
+          publicKeys.proxyTokens,
+        );
+
+        const result = await instance.prepareCancelAlignedUnlockInstructions(
+          { id: publicKeys.stream.toBase58() },
+          {
+            invoker: { publicKey: publicKeys.invoker },
+            checkTokenAccounts: false,
+          },
+        );
+
+        expectTransferHookCalls(result.at(-1), [
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.recipientTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.streamflowTreasuryTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.partnerTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.proxyTokens,
+            owner: publicKeys.stream,
+          },
+          {
+            source: publicKeys.proxyTokens,
+            destination: publicKeys.senderTokens,
+            owner: expect.any(PublicKey),
+          },
+        ]);
       });
     });
   });

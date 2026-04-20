@@ -37,6 +37,8 @@ export interface IBaseStreamConfig {
   canPause?: boolean;
   canUpdateRate?: boolean;
   partner?: string;
+  // signer or PartnerLink PDA used for fee derivation
+  partnerLink?: { address: string, isSigner: boolean };
   tokenProgramId?: string | PublicKey;
 }
 
@@ -426,9 +428,15 @@ export interface IPrepareStreamExt extends Omit<IInteractStreamExt, "invoker"> {
   }
 }
 
-export interface ITopUpStreamExt extends ITransactionExt {
-  invoker: SignerWalletAdapter | Keypair;
+export interface IPrepareTopUpstreamExt extends ITransactionExt {
+  invoker: {
+    publicKey: PublicKey | null;
+  }
   isNative?: boolean;
+}
+
+export interface ITopUpStreamExt extends IPrepareTopUpstreamExt {
+  invoker: SignerWalletAdapter | Keypair;
 }
 
 export interface ICreateStreamInstructions {
