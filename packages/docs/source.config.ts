@@ -2,6 +2,11 @@ import { defineCollections, defineConfig, defineDocs, frontmatterSchema } from "
 
 export const { docs, meta } = defineDocs({
   dir: "content/docs",
+  docs: {
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
+  },
 });
 
 export const api = defineCollections({
