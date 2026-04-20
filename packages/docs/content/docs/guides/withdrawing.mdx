@@ -1,0 +1,20 @@
+---
+title: Withdrawing from Streams
+description: Learn how to withdraw unlocked tokens from a Streamflow stream
+---
+
+# Withdrawing from Streams
+
+Once a stream is active and tokens have unlocked, recipients can withdraw their available balance at any time.
+
+## Checking Unlocked Amount
+
+Use the `unlocked()` method on a stream instance to check how many tokens are currently available for withdrawal. This accounts for the vesting schedule, cliff periods, and any top-ups.
+
+## Withdrawing
+
+Call the `withdraw()` method on `SolanaStreamClient` with an `IWithdrawData` object specifying the stream identifier and the amount to withdraw. The amount is denominated in the stream's token and should use `getBN()` for proper conversion.
+
+## Automatic Withdrawal
+
+The Streamflow protocol also supports an automatic withdrawal option when creating streams. When enabled, unlocked tokens are automatically sent to the recipient's wallet without requiring an explicit withdrawal transaction.

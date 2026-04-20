@@ -1,0 +1,20 @@
+---
+title: Creating Streams
+description: Learn how to create token vesting streams and locks using the Streamflow SDK
+---
+
+# Creating Streams
+
+The Streamflow SDK provides `SolanaStreamClient` for creating and managing token vesting streams on Solana.
+
+## Stream Types
+
+- **Vesting streams** — release tokens to a recipient on a linear or custom schedule.
+- **Token locks** — lock tokens until a specific cliff date, then release them.
+- **Price-based streams** — vesting that triggers based on a price oracle condition.
+
+## Creating a Stream
+
+Use the `create()` method on `SolanaStreamClient` with an `ICreateStreamData` object. All token amounts should be converted using `getBN()` from `@streamflow/common` to ensure proper lamport precision.
+
+The `create()` method returns a transaction that, once signed and confirmed, registers the stream on-chain. You can then track and manage it through the client's read methods.

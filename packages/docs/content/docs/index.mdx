@@ -1,0 +1,18 @@
+---
+title: Overview
+description: Get started with the Streamflow JS SDK — interact with vesting, staking, and distribution protocols on Solana.
+---
+
+# Overview
+
+The Streamflow JS SDK is a collection of TypeScript packages for interacting with Streamflow's Solana protocols. It provides typed clients for creating and managing token vesting streams, staking pools, merkle airdrops, and token launches.
+
+## Packages
+
+- **@streamflow/common** — Shared types, utilities, and Solana transaction helpers used across all SDK packages.
+- **@streamflow/stream** — Core vesting/stream protocol. Create, withdraw, cancel, top-up, and transfer token streams and locks.
+- **@streamflow/staking** — Staking pools and reward distribution. Manage staking positions and configure reward pools.
+- **@streamflow/distributor** — Merkle airdrop protocol for large-scale token distribution to thousands of recipients.
+- **@streamflow/launchpad** — Token launchpad with dynamic vesting schedules and launch configurations.
+
+All packages support both ESM and CJS, require Node.js >= 18, and share a common set of utilities through `@streamflow/common`.

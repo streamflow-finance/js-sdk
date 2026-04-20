@@ -1,0 +1,48 @@
+---
+title: Installation
+description: Install the Streamflow JS SDK packages
+---
+
+# Installation
+
+Install the SDK packages using your preferred package manager.
+
+## Stream Protocol
+
+```bash
+npm i -s @streamflow/stream
+```
+
+```bash
+yarn add @streamflow/stream
+```
+
+```bash
+pnpm add @streamflow/stream
+```
+
+## Distributor Protocol
+
+The distributor package depends on `@streamflow/common`, so install both:
+
+```bash
+npm i -s @streamflow/common @streamflow/distributor
+```
+
+```bash
+yarn add @streamflow/common @streamflow/distributor
+```
+
+```bash
+pnpm add @streamflow/common @streamflow/distributor
+```
+
+## Browser Polyfills
+
+The SDK uses Node.js built-in modules (e.g., `node:crypto`). For browser runtimes, you may need polyfills:
+
+- **Vite** — [vite-plugin-node-polyfills](https://www.npmjs.com/package/vite-plugin-node-polyfills)
+- **Webpack** — [node-polyfill-webpack-plugin](https://www.npmjs.com/package/node-polyfill-webpack-plugin)
+- **Rsbuild** — [rsbuild-plugin-node-polyfill](https://github.com/rspack-contrib/rsbuild-plugin-node-polyfill)
+
+Note that transitive dependencies may use non-prefixed `node:` imports, so both prefixed and non-prefixed modules should be polyfilled.
