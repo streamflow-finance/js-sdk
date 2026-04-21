@@ -20,7 +20,7 @@
     "url": "https://github.com/streamflow-finance/js-sdk/issues"
   },
   "scripts": {
-    "build": "lerna run build",
+    "build": "lerna run build --ignore @streamflow/docs",
     "dev": "pnpm build && pnpm -r --stream --parallel --filter \"@streamflow/common\" --filter \"@streamflow/stream\" --filter \"@streamflow/staking\" --filter \"@streamflow/distributor\" run dev",
     "build-docs": "typedoc packages/stream/index.ts",
     "pack": "lerna run pack",
