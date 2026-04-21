@@ -1,10 +1,10 @@
 import { Link } from "react-router";
+import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { baseOptions } from "@/lib/layout.shared";
-import { Layout } from "fumadocs-ui/layout";
 
 export default function HomePage() {
   return (
-    <Layout {...baseOptions()}>
+    <HomeLayout {...baseOptions()}>
       <main className="container mx-auto px-6 py-12">
         <h1 className="text-4xl font-bold mb-4">Streamflow JS SDK Documentation</h1>
         <p className="text-lg text-fd-muted-foreground mb-8">
@@ -55,6 +55,6 @@ export default function HomePage() {
           </ul>
         </section>
       </main>
-    </Layout>
+    </HomeLayout>
   );
 }
