@@ -13,6 +13,9 @@ export const api = defineCollections({
   type: "doc",
   dir: "content/api",
   schema: frontmatterSchema,
+  postprocess: {
+    includeProcessedMarkdown: true,
+  },
 });
 
 export default defineConfig({});
