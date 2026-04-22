@@ -1,0 +1,39 @@
+name: "Deploy Docs to Cloudflare Workers"
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+          registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build SDK packages
+        run: pnpm build
+      - name: Generate API docs
+        working-directory: packages/docs
+        run: pnpm generate-api
+      - name: Build docs
+        working-directory: packages/docs
+        run: pnpm build
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: packages/docs

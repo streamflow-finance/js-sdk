@@ -13,3 +13,8 @@ node_modules/
 
 # TypeScript
 tsconfig.tsbuildinfo
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+worker-configuration.d.ts
