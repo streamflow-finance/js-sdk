@@ -11,6 +11,7 @@ import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import browserCollections from "collections/browser";
 import { source } from "@/lib/source";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
+
 import { useMDXComponents } from "@/components/mdx";
 import { baseOptions } from "@/lib/layout.shared";
 import { PageActionsContext, usePageActions } from "@/lib/page-actions-context";
@@ -38,31 +39,13 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   return {
     path: page.path,
-    pageType: page.type,
     pageTree: await source.serializePageTree(source.getPageTree()),
     markdownUrl,
     githubUrl,
   };
 }
 
-const docsClientLoader = browserCollections.docs.createClientLoader({
-  component({ toc, frontmatter, default: Mdx }) {
-    return (
-      <DocsPage toc={toc}>
-        <title>{frontmatter.title}</title>
-        <meta name="description" content={frontmatter.description} />
-        <DocsTitle>{frontmatter.title}</DocsTitle>
-        <DocsDescription>{frontmatter.description}</DocsDescription>
-        <PageActions />
-        <DocsBody>
-          <Mdx components={useMDXComponents()} />
-        </DocsBody>
-      </DocsPage>
-    );
-  },
-});
-
-const apiClientLoader = browserCollections.api.createClientLoader({
+const clientLoader = browserCollections.docs.createClientLoader({
   component({ toc, frontmatter, default: Mdx }) {
     return (
       <DocsPage toc={toc}>
@@ -80,8 +63,7 @@ const apiClientLoader = browserCollections.api.createClientLoader({
 });
 
 export default function Page({ loaderData }: Route.ComponentProps) {
-  const { path, pageType, pageTree, markdownUrl, githubUrl } = useFumadocsLoader(loaderData);
-  const clientLoader = pageType === "api" ? apiClientLoader : docsClientLoader;
+  const { path, pageTree, markdownUrl, githubUrl } = useFumadocsLoader(loaderData);
 
   return (
     <DocsLayout {...baseOptions()} tree={pageTree}>

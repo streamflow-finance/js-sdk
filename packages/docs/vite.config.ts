@@ -16,6 +16,7 @@ export default defineConfig({
     reactRouter(),
   ],
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: {
       "@": path.resolve(__dirname, "app"),
       collections: path.resolve(__dirname, ".source"),

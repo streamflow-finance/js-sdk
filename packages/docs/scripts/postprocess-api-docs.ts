@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, writeFileSync, renameSync } from "fs";
 
 const SCRIPTS_DIR = import.meta.dirname;
 const DOCS_DIR = resolve(SCRIPTS_DIR, "..");
-const API_DIR = resolve(DOCS_DIR, "content", "api");
+const API_DIR = resolve(DOCS_DIR, "content", "docs", "api");
 
 const PACKAGE_TITLES: Record<string, string> = {
   common: "@streamflow/common",
@@ -59,7 +59,16 @@ function extractTitleAndDescription(content: string, filePath: string): { title:
     const afterHeading = content.slice(headingMatch.index! + headingMatch[0].length);
     for (const line of afterHeading.split("\n")) {
       const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith("#") && !trimmed.startsWith("---") && !trimmed.startsWith("```")) {
+      if (
+        trimmed &&
+        !trimmed.startsWith("#") &&
+        !trimmed.startsWith("---") &&
+        !trimmed.startsWith("```") &&
+        !trimmed.startsWith("-") &&
+        !trimmed.startsWith("*") &&
+        !trimmed.startsWith("[") &&
+        !trimmed.startsWith("|")
+      ) {
         description = trimmed;
         break;
       }
@@ -129,11 +138,7 @@ function generateMetaJson(apiDir: string): void {
     const packagePath = join(apiDir, pkgDir);
     const packageTitle = PACKAGE_TITLES[pkgDir] ?? pkgDir;
 
-    const pages: Array<Record<string, string>> = [{ title: "Overview", url: `/docs/api/${pkgDir}`, icon: "FileText" }];
-
-    for (const subdir of getSubdirs(packagePath)) {
-      pages.push({ title: subdir, icon: DIR_ICONS[subdir] ?? "Folder" });
-    }
+    const pages: string[] = ["index", ...getSubdirs(packagePath)];
 
     writeFileSync(
       join(packagePath, "meta.json"),

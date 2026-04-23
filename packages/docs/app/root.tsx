@@ -1,5 +1,6 @@
-import { Links, Meta, Scripts, ScrollRestoration } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { RootProvider } from "fumadocs-ui/provider/react-router";
+import { ReactRouterProvider } from "fumadocs-core/framework/react-router";
 import { rewritePath } from "fumadocs-core/negotiation";
 import "./app.css";
 import type { Route } from "./+types/root";
@@ -18,6 +19,10 @@ const serverMiddleware: Route.MiddlewareFunction = async ({ request }, next) => 
 
 export const middleware = [serverMiddleware];
 
+export default function App() {
+  return <Outlet />;
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -28,7 +33,9 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body className="flex flex-col min-h-screen">
-        <RootProvider>{children}</RootProvider>
+        <ReactRouterProvider>
+          <RootProvider>{children}</RootProvider>
+        </ReactRouterProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

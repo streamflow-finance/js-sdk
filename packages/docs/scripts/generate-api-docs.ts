@@ -75,7 +75,7 @@ async function generatePackageDocs(pkg: PackageConfig): Promise<boolean> {
   const docsDir = resolve(scriptsDir, "..");
   const repoRoot = resolve(docsDir, "..", "..");
   const packageDir = resolve(repoRoot, "packages", pkg.name);
-  const outputDir = resolve(docsDir, "content", "api", pkg.name);
+  const outputDir = resolve(docsDir, "content", "docs", "api", pkg.name);
   const resolvedEntryPoints = pkg.entryPoints.map((ep) => resolve(packageDir, ep));
   const tsconfigPath = createPackageTsconfig(packageDir);
 
