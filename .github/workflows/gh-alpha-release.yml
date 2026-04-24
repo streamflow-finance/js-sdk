@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number (for manual runs)'
+        description: "PR number (for manual runs)"
         required: true
   pull_request:
     branches:
@@ -23,22 +23,27 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
       - name: Resolve alpha version
         id: set_alpha_version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
         run: |
           BASE_VERSION=$(node -p 'require("./lerna.json").version')
           SHORT_SHA=$(git rev-parse --short HEAD)
           ALPHA_VERSION=""
           PR_NUMBER=""
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BRANCH="${{ github.head_ref }}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BRANCH="$HEAD_REF"
             if [[ "$BRANCH" == alpha/* ]]; then
               message=$(git log -1 --pretty=%B | head -n 1)
               if [[ "$message" != *'[skip alpha]'* ]]; then
-                PR_NUMBER="${{ github.event.pull_request.number }}"
+                PR_NUMBER="$PR_NUM"
                 ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
               fi
             fi
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            PR_NUMBER="$INPUT_PR_NUMBER"
             if [ -n "$PR_NUMBER" ]; then
               ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
             fi
@@ -78,15 +83,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Version all packages
-        run: pnpm version-all ${{ needs.resolve-alpha.outputs.alpha_version }} -y
+        env:
+          ALPHA_VERSION: ${{ needs.resolve-alpha.outputs.alpha_version }}
+        run: pnpm version-all "$ALPHA_VERSION" -y
       - name: Git status
         run: git status
       - name: Commit version changes
+        env:
+          ALPHA_VERSION: ${{ needs.resolve-alpha.outputs.alpha_version }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m "chore: version bump to ${{ needs.resolve-alpha.outputs.alpha_version }} [skip ci]" --no-verify || echo "No changes to commit"
+          git commit -m "chore: version bump to $ALPHA_VERSION [skip ci]" --no-verify || echo "No changes to commit"
       - name: Git status after
         run: git status
       - name: Build packages
