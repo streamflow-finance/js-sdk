@@ -106,13 +106,17 @@ jobs:
             ${{ github.event.pull_request.body }}
           draft: false
           prerelease: false
-      - uses: actions/github-script@v4
+      - name: Comment release URL
+        uses: actions/github-script@v4
+        env:
+          RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/v${{ env.CURRENT_VERSION }}
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            const releaseUrl = process.env.RELEASE_URL;
             github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'https://github.com/${{ github.repository }}/releases/tag/v${{ env.CURRENT_VERSION }} is released 🎉'
+              body: `${releaseUrl} is released 🎉`
             })
