@@ -2,7 +2,7 @@
   "address": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m",
   "metadata": {
     "name": "streamflow",
-    "version": "0.4.0",
+    "version": "0.6.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
@@ -93,6 +93,10 @@
         },
         {
           "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "partner",
           "writable": true
         }
       ],
@@ -1123,6 +1127,30 @@
       "args": []
     },
     {
+      "name": "request_cancel",
+      "discriminator": [
+        244,
+        78,
+        42,
+        227,
+        165,
+        174,
+        94,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "topup",
       "discriminator": [
         126,
@@ -1435,6 +1463,30 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "withdraw_cancel_request",
+      "discriminator": [
+        91,
+        137,
+        171,
+        103,
+        142,
+        205,
+        96,
+        75
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        }
+      ],
+      "args": []
     }
   ]
 }

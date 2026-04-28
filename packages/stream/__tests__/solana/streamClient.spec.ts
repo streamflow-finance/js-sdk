@@ -404,6 +404,8 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       oldMetadata: PublicKey.default,
       payer: PublicKey.default,
       bump: 0,
+      feePartner: PublicKey.default,
+      cancelRequestTime: new BN(0),
     });
 
     const setupTransferHookMint = () => {

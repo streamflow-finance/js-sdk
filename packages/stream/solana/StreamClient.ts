@@ -73,6 +73,7 @@ import {
   type IMultiTransactionResult,
   type IPrepareCreateStreamExt,
   type IPrepareStreamExt, type IPrepareTopUpstreamExt,
+  type IRequestCancelData,
   type ISearchStreams,
   type ITopUpData,
   type ITopUpStreamExt,
@@ -80,6 +81,7 @@ import {
   type ITransactionResult,
   type ITransferData,
   type IUpdateData,
+  type IWithdrawCancelRequestData,
   type IWithdrawData,
   type MetadataRecipientHashMap,
   type OracleType,
@@ -122,9 +124,11 @@ import {
   createStreamV2Instruction,
   createUncheckedStreamInstruction,
   createUncheckedStreamV2Instruction,
+  requestCancelStreamInstruction,
   topupStreamInstruction,
   transferStreamInstruction,
   updateStreamInstruction,
+  withdrawCancelRequestInstruction,
   withdrawStreamInstruction,
 } from "./instructions.js";
 import type { IPartnerLayout } from "./instructionTypes.js";
@@ -1464,6 +1468,114 @@ export class SolanaStreamClient {
     });
 
     ixs.push(...ixsAta, cancelIx);
+
+    return ixs;
+  }
+
+  /**
+   * Requests cancellation of a stream by the fee partner authority.
+   * @param {IRequestCancelData} data - Request cancel parameters including stream ID
+   * @param {IInteractStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction result
+   */
+  public async requestCancel(
+    data: IRequestCancelData,
+    extParams: IInteractStreamExt,
+  ): Promise<ITransactionResult> {
+    const ixs = await this.prepareRequestCancelInstructions(data, extParams);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      this.schedulingParams,
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  /**
+   * Creates Transaction Instructions for request_cancel
+   * @param {IRequestCancelData} data - Request cancel parameters including stream ID
+   * @param {IPrepareStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction instructions
+   */
+  public async prepareRequestCancelInstructions(
+    { id }: IRequestCancelData,
+    { invoker, computePrice, computeLimit }: IPrepareStreamExt,
+  ): Promise<TransactionInstruction[]> {
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
+      computePrice,
+      computeLimit,
+    });
+
+    ixs.push(
+      await requestCancelStreamInstruction(this.programId, {
+        authority: invoker.publicKey,
+        metadata: new PublicKey(id),
+      }),
+    );
+
+    return ixs;
+  }
+
+  /**
+   * Withdraws a previously submitted cancel request.
+   * @param {IWithdrawCancelRequestData} data - Withdraw cancel request parameters including stream ID
+   * @param {IInteractStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction result
+   */
+  public async withdrawCancelRequest(
+    data: IWithdrawCancelRequestData,
+    extParams: IInteractStreamExt,
+  ): Promise<ITransactionResult> {
+    const ixs = await this.prepareWithdrawCancelRequestInstructions(data, extParams);
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
+    const signature = await signAndExecuteTransaction(
+      this.connection,
+      extParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      this.schedulingParams,
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  /**
+   * Creates Transaction Instructions for withdraw_cancel_request
+   * @param {IWithdrawCancelRequestData} data - Withdraw cancel request parameters including stream ID
+   * @param {IPrepareStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
+   * @returns Transaction instructions
+   */
+  public async prepareWithdrawCancelRequestInstructions(
+    { id }: IWithdrawCancelRequestData,
+    { invoker, computePrice, computeLimit }: IPrepareStreamExt,
+  ): Promise<TransactionInstruction[]> {
+    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
+      computePrice,
+      computeLimit,
+    });
+
+    ixs.push(
+      await withdrawCancelRequestInstruction(this.programId, {
+        authority: invoker.publicKey,
+        metadata: new PublicKey(id),
+      }),
+    );
 
     return ixs;
   }

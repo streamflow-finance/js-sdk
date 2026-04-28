@@ -91,6 +91,10 @@ export interface IUpdateData extends IInteractData {
 
 export type ICancelData = IInteractData;
 
+export type IRequestCancelData = IInteractData;
+
+export type IWithdrawCancelRequestData = IInteractData;
+
 export interface ITransferData extends IInteractData {
   newRecipient: string;
 }
@@ -216,6 +220,8 @@ export interface LinearStream {
   oldMetadata: PublicKey;
   payer: string;
   bump: number;
+  feePartner: string;
+  cancelRequestTime: number;
 
   type: StreamType;
 
@@ -540,6 +546,10 @@ export class Contract implements LinearStream {
 
   bump: number;
 
+  feePartner: string;
+
+  cancelRequestTime: number;
+
   type: StreamType;
 
   isAligned: boolean;
@@ -593,6 +603,8 @@ export class Contract implements LinearStream {
     this.oldMetadata = stream.oldMetadata;
     this.payer = stream.payer.toBase58();
     this.bump = stream.bump;
+    this.feePartner = stream.feePartner.toBase58();
+    this.cancelRequestTime = stream.cancelRequestTime.toNumber();
     this.type = buildStreamType(this);
     this.isAligned = false;
   }
@@ -716,6 +728,8 @@ export interface DecodedStream {
   oldMetadata: PublicKey;
   payer: PublicKey;
   bump: number;
+  feePartner: PublicKey;
+  cancelRequestTime: BN;
 }
 
 export interface MetadataRecipientHashMap {
