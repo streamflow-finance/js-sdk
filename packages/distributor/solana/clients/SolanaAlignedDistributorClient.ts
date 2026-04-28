@@ -87,7 +87,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
       ? new PublicKey(data.oracleAddress)
       : getTestOraclePda(this.alignedProxyProgram.programId, pk(mint), pk(admin));
 
-    return this.alignedProxyProgram.methods
+    let builder = this.alignedProxyProgram.methods
       .newDistributor({
         claimsClosable: data.claimsClosableByAdmin,
         version: new BN(data.version),
@@ -109,12 +109,19 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
         tokenProgram,
         priceOracle: oracle,
       })
-      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey })
-      .instruction();
+      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey });
+
+    if (data.partnerLink) {
+      builder = builder.remainingAccounts([
+        { pubkey: new PublicKey(data.partnerLink.address), isSigner: data.partnerLink.isSigner, isWritable: false },
+      ])
+    }
+
+    return builder.instruction();
   }
 
   protected async getClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
-    const { distributor, from, to, mint, tokenProgram, admin } = accounts;
+    const { distributor, from, to, mint, tokenProgram, authority } = accounts;
     const alignedDistributorKey = getAlignedDistributorPda(
       this.alignedProxyProgram.programId,
       pk(accounts.distributor),
@@ -126,7 +133,7 @@ export default class SolanaAlignedDistributorClient extends BaseDistributorClien
     return this.alignedProxyProgram.methods
       .clawback()
       .accounts({
-        admin,
+        admin: authority,
         distributor,
         from,
         to,
