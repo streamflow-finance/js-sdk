@@ -33,7 +33,7 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
     if (data.partnerLink) {
       builder = builder.remainingAccounts([
         { pubkey: new PublicKey(data.partnerLink.address), isSigner: data.partnerLink.isSigner, isWritable: false },
-      ])
+      ]);
     }
 
     return builder.instruction();
