@@ -2,7 +2,7 @@
   "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
     "name": "reward_pool_dynamic",
-    "version": "2.6.0",
+    "version": "2.7.0",
     "spec": "0.1.0",
     "description": "Reward pools with dynamic rewards distribution"
   },
@@ -1561,6 +1561,11 @@
       "code": 6020,
       "name": "AlreadyFunded",
       "msg": "Fund already happened for the current period"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidRewardsStatePrecision",
+      "msg": "Rewards state precision is invalid"
     }
   ],
   "types": [
@@ -1871,6 +1876,13 @@
             "type": "bool"
           },
           {
+            "name": "rewards_state_precision",
+            "docs": [
+              "Precision level used to store `rewards_state`"
+            ],
+            "type": "u8"
+          },
+          {
             "name": "_buffer",
             "docs": [
               "Buffer for additional fields"
@@ -1878,7 +1890,7 @@
             "type": {
               "array": [
                 "u8",
-                31
+                30
               ]
             }
           }
@@ -1984,14 +1996,14 @@
           {
             "name": "rewards_state",
             "docs": [
-              "Ever increasing accumulator of the amount of rewards per effective stake.\n    Said another way, if a user deposited before any rewards were added to the\n    `vault`, then this would be the token amount per effective stake they could\n    claim."
+              "Ever-increasing accumulator of the amount of rewards per effective stake.\n    Said another way, if a user deposited before any rewards were added to the\n    `vault`, then this would be the token amount per effective stake they could\n    claim."
             ],
             "type": "u128"
           },
           {
             "name": "last_amount",
             "docs": [
-              "latest amount of tokens in the vault"
+              "Last known amount of tokens in the vault"
             ],
             "type": "u64"
           },
@@ -2003,6 +2015,13 @@
             "type": "u64"
           },
           {
+            "name": "rewards_state_precision",
+            "docs": [
+              "Precision level used to store `rewards_state`"
+            ],
+            "type": "u8"
+          },
+          {
             "name": "_buffer",
             "docs": [
               "Buffer for additional fields"
@@ -2010,7 +2029,7 @@
             "type": {
               "array": [
                 "u8",
-                128
+                127
               ]
             }
           }
