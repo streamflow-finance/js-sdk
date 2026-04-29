@@ -1,6 +1,6 @@
 import type { ITransferData } from "../types.js";
 import type { Env, InstructionResult, Invoker } from "./types.js";
-import { createClientFromEnv } from "./types.js";
+import { createClientFromEnv, normalizeInvoker } from "./types.js";
 
 /**
  * Prepare transfer instructions.
@@ -12,7 +12,7 @@ export async function transfer(params: ITransferData, invoker: Invoker, env: Env
   const client = createClientFromEnv(env);
 
   const ixs = await client.prepareTransferInstructions(params, {
-    invoker,
+    invoker: normalizeInvoker(invoker),
   });
 
   return { instructions: ixs };

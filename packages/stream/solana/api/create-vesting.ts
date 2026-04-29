@@ -3,7 +3,7 @@ import BN from "bn.js";
 
 import type { ICreateLinearStreamData } from "../types.js";
 import type { BatchInstructionResult, CreateInstructionResult, Env, Invoker, NativeOptions } from "./types.js";
-import { createClientFromEnv } from "./types.js";
+import { createClientFromEnv, normalizeInvoker } from "./types.js";
 import { create } from "./create.js";
 
 export interface ICreateVestingParams {
@@ -140,13 +140,15 @@ export async function createVesting(
     ...(params.tokenProgramId !== undefined && { tokenProgramId: params.tokenProgramId }),
   };
 
+  const normalizedInvoker = normalizeInvoker(invoker);
+
   const [mainResult, allocResult] = await Promise.all([
     client.buildCreateTransactionInstructions(mainData, {
-      sender: invoker,
+      sender: normalizedInvoker,
       isNative: env.isNative ?? false,
     }),
     client.buildCreateTransactionInstructions(allocData, {
-      sender: invoker,
+      sender: normalizedInvoker,
       isNative: env.isNative ?? false,
     }),
   ]);

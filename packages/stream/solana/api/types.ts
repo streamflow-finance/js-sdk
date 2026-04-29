@@ -10,7 +10,7 @@ import {
   type VersionedTransaction,
 } from "@solana/web3.js";
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { type ComputeLimitEstimate, type ComputePriceEstimate, ICluster } from "@streamflow/common";
+import { type ComputeLimitEstimate, type ComputePriceEstimate, ICluster, pk } from "@streamflow/common";
 import type PQueue from "p-queue";
 
 import { SolanaStreamClient } from "../StreamClient.js";
@@ -129,6 +129,13 @@ export type ExecuteBatchSequentialFn = (
   builtTransactions: BuiltTransaction[],
   env: ExecutionEnv,
 ) => Promise<BatchExecuteResult>;
+
+export function normalizeInvoker(invoker: Invoker): Invoker {
+  if (typeof invoker.publicKey === "string") {
+    return { ...invoker, publicKey: pk(invoker.publicKey) };
+  }
+  return invoker;
+}
 
 export function resolveConnection(env: Env): Connection {
   if ("connection" in env) {

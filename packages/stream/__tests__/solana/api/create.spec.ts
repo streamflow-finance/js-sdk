@@ -266,10 +266,10 @@ describe("create()", () => {
     const result = await create(makeStreamParams(), { publicKey: Keypair.generate().publicKey }, makeEnv());
 
     expect(result.metadataPubKey).toBeInstanceOf(PublicKey);
-    expect(result.metadataPubKey.equals(metadataKeypair.publicKey)).toBe(true);
+    expect(result.metadataPubKey!.equals(metadataKeypair.publicKey)).toBe(true);
   });
 
-  it("normalizes string publicKey via pk()", async () => {
+  it("normalizes string publicKey via normalizeInvoker()", async () => {
     const invokerKp = Keypair.generate();
     mockBuildCreate.mockResolvedValue({
       ixs: [],
@@ -278,7 +278,11 @@ describe("create()", () => {
     });
 
     const create = await importCreate();
-    await create(makeStreamParams(), { publicKey: invokerKp.publicKey.toBase58() }, makeEnv());
+    await create(
+      makeStreamParams(),
+      { publicKey: invokerKp.publicKey.toBase58() } as unknown as { publicKey: PublicKey },
+      makeEnv(),
+    );
 
     expect(mockBuildCreate).toHaveBeenCalledWith(
       expect.anything(),

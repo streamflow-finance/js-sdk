@@ -17,6 +17,7 @@ vi.mock("../../../solana/api/create-batch.js", () => ({
 const mockBuildCreate = vi.fn();
 vi.mock("../../../solana/api/types.js", () => ({
   createClientFromEnv: () => ({ buildCreateTransactionInstructions: mockBuildCreate }),
+  normalizeInvoker: (invoker: unknown) => invoker,
 }));
 
 vi.mock("../../../solana/StreamClient.js", () => ({
