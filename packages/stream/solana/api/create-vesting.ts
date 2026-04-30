@@ -18,6 +18,7 @@ export interface ICreateVestingParams {
   cliffAmount?: BN;
   amountPerPeriod?: BN;
   cancelableBySender?: boolean;
+  canTopup?: boolean;
   automaticWithdrawal?: boolean;
   withdrawalFrequency?: number;
   transferableBySender?: boolean;
@@ -77,7 +78,7 @@ export function buildVestingParams(params: ICreateVestingParams): ICreateLinearS
     cliffAmount,
     amountPerPeriod:
       params.amountPerPeriod ?? computeAmountPerPeriod(params.amount, cliffAmount, duration, params.period),
-    canTopup: false,
+    canTopup: params.canTopup ?? false,
     cancelableByRecipient: false,
     cancelableBySender: params.cancelableBySender ?? false,
     transferableBySender: params.transferableBySender ?? false,
