@@ -3,7 +3,7 @@ import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 
 import type { ITopUpData } from "../types.js";
 import type { Env, InstructionResult, Invoker, NativeOptions } from "./types.js";
-import { createClientFromEnv } from "./types.js";
+import { createClientFromEnv, normalizeInvoker } from "./types.js";
 
 export async function topup(
   params: ITopUpData,
@@ -13,7 +13,7 @@ export async function topup(
   const client = createClientFromEnv(env);
 
   const ixs = await client.prepareTopupInstructions(params, {
-    invoker: invoker as SignerWalletAdapter | Keypair,
+    invoker: normalizeInvoker(invoker) as SignerWalletAdapter | Keypair,
     isNative: env.isNative ?? false,
   });
 

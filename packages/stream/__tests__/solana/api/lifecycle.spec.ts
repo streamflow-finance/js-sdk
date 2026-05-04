@@ -62,7 +62,7 @@ describe("withdraw()", () => {
     const withdraw = await importWithdraw();
     await withdraw(
       { id: "stream123" } as any,
-      { publicKey: invokerKeypair.publicKey.toBase58() },
+      { publicKey: invokerKeypair.publicKey.toBase58() } as unknown as { publicKey: PublicKey },
       makeEnv({ prepareWithdrawInstructions: mockPrepare }),
     );
 

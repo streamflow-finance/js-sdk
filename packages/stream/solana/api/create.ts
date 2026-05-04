@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 
 import type { ICreateStreamData } from "../types.js";
 import type { CreateInstructionResult, Env, Invoker, NativeOptions } from "./types.js";
-import { createClientFromEnv } from "./types.js";
+import { createClientFromEnv, normalizeInvoker } from "./types.js";
 
 export async function create(
   params: ICreateStreamData,
@@ -12,7 +12,7 @@ export async function create(
   const client = createClientFromEnv(env);
 
   const { ixs, metadataId, metadata } = await client.buildCreateTransactionInstructions(params, {
-    sender: invoker,
+    sender: normalizeInvoker(invoker),
     isNative: env.isNative ?? false,
   });
 

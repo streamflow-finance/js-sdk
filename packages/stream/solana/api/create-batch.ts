@@ -2,7 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 
 import type { ICreateMultipleAlignedStreamData, ICreateMultipleLinearStreamData } from "../types.js";
 import type { BatchInstructionResult, Env, Invoker, NativeOptions } from "./types.js";
-import { createClientFromEnv } from "./types.js";
+import { createClientFromEnv, normalizeInvoker } from "./types.js";
 
 export async function createBatch(
   params: ICreateMultipleLinearStreamData | ICreateMultipleAlignedStreamData,
@@ -12,7 +12,7 @@ export async function createBatch(
   const client = createClientFromEnv(env);
 
   const result = await client.buildCreateMultipleTransactionInstructions(params, {
-    sender: invoker,
+    sender: normalizeInvoker(invoker),
     isNative: env.isNative ?? false,
   });
 
