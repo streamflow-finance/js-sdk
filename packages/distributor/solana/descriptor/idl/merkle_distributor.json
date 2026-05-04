@@ -2,7 +2,7 @@
   "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",
   "metadata": {
     "name": "merkle_distributor",
-    "version": "2.0.0",
+    "version": "1.9.0",
     "spec": "0.1.0",
     "description": "A Solana program for distributing tokens according to a Merkle root.",
     "repository": "https://github.com/streamflow-finance/distributor"
@@ -595,15 +595,109 @@
           "writable": true
         },
         {
-          "name": "admin",
+          "name": "authority",
           "docs": [
-            "Only Admin can trigger the clawback of funds"
+            "Signer that authorizes the clawback execution."
           ],
           "writable": true,
           "signer": true
         },
         {
           "name": "mint"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The [System] program."
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "SPL [Token] program."
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "clawback_v2",
+      "discriminator": [
+        21,
+        210,
+        60,
+        179,
+        193,
+        134,
+        82,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "from",
+          "docs": [
+            "Distributor ATA containing the tokens to distribute."
+          ],
+          "writable": true
+        },
+        {
+          "name": "to",
+          "docs": [
+            "The Clawback token account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "even when the caller is `CANCEL_AUTHORITY`."
+          ],
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Signer that authorizes the clawback execution."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "auto_claim_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  65,
+                  117,
+                  116,
+                  111,
+                  67,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -1040,6 +1134,232 @@
       ]
     },
     {
+      "name": "new_claim_by_worker",
+      "discriminator": [
+        181,
+        133,
+        223,
+        117,
+        188,
+        131,
+        243,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true,
+          "relations": [
+            "auto_claim_state"
+          ]
+        },
+        {
+          "name": "auto_claim_state",
+          "docs": [
+            "Auto-claim SOL reserve for the distributor."
+          ],
+          "writable": true
+        },
+        {
+          "name": "claim_status",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  67,
+                  108,
+                  97,
+                  105,
+                  109,
+                  83,
+                  116,
+                  97,
+                  116,
+                  117,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "from",
+          "docs": [
+            "Distributor ATA containing the tokens to distribute."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "distributor"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "distributor.mint",
+                "account": "MerkleDistributor"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "to",
+          "writable": true
+        },
+        {
+          "name": "claimant"
+        },
+        {
+          "name": "admin",
+          "writable": true
+        },
+        {
+          "name": "worker",
+          "docs": [
+            "Worker account, anyone can execute the instruction since distribution is validated by the protocol"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint to claim."
+          ],
+          "relations": [
+            "distributor"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The [Associated Token] program."
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "SPL [Token] program."
+          ]
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The [System] program."
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_unlocked",
+          "type": "u64"
+        },
+        {
+          "name": "amount_locked",
+          "type": "u64"
+        },
+        {
+          "name": "proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "new_distributor",
       "docs": [
         "READ THE FOLLOWING:",
@@ -1361,6 +1681,398 @@
       ]
     },
     {
+      "name": "new_distributor_v2",
+      "discriminator": [
+        45,
+        79,
+        3,
+        238,
+        185,
+        37,
+        253,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "[MerkleDistributor]."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  77,
+                  101,
+                  114,
+                  107,
+                  108,
+                  101,
+                  68,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "arg",
+                "path": "version"
+              }
+            ]
+          }
+        },
+        {
+          "name": "clawback_receiver",
+          "docs": [
+            "Clawback receiver token account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint to distribute."
+          ]
+        },
+        {
+          "name": "token_vault",
+          "docs": [
+            "Token vault"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "distributor"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin wallet, responsible for creating the distributor and paying for the transaction.",
+            "Also has the authority to set the clawback receiver and change itself."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "auto_claim_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  65,
+                  117,
+                  116,
+                  111,
+                  67,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "distributor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "The [System] program."
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "The [Associated Token] program."
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "The [Token] program."
+          ]
+        },
+        {
+          "name": "partner_oracle_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                12,
+                48,
+                148,
+                48,
+                221,
+                89,
+                2,
+                209,
+                180,
+                126,
+                151,
+                216,
+                166,
+                3,
+                112,
+                50,
+                177,
+                192,
+                141,
+                218,
+                37,
+                78,
+                51,
+                109,
+                243,
+                106,
+                174,
+                122,
+                93,
+                121,
+                191,
+                119
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner_oracle",
+          "docs": [
+            "Partner Oracle program that stores fees"
+          ],
+          "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa"
+        }
+      ],
+      "args": [
+        {
+          "name": "version",
+          "type": "u64"
+        },
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "max_total_claim",
+          "type": "u64"
+        },
+        {
+          "name": "total_amount_unlocked",
+          "type": "u64"
+        },
+        {
+          "name": "total_amount_locked",
+          "type": "u64"
+        },
+        {
+          "name": "max_num_nodes",
+          "type": "u64"
+        },
+        {
+          "name": "unlock_period",
+          "type": "u64"
+        },
+        {
+          "name": "start_vesting_ts",
+          "type": "u64"
+        },
+        {
+          "name": "end_vesting_ts",
+          "type": "u64"
+        },
+        {
+          "name": "clawback_start_ts",
+          "type": "u64"
+        },
+        {
+          "name": "claims_closable_by_admin",
+          "type": "bool"
+        },
+        {
+          "name": "claims_closable_by_claimant",
+          "type": "bool"
+        },
+        {
+          "name": "can_update_duration",
+          "type": "bool"
+        },
+        {
+          "name": "claims_limit",
+          "type": "u16"
+        },
+        {
+          "name": "auto_claim",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "realloc_distributor",
+      "discriminator": [
+        167,
+        165,
+        22,
+        244,
+        248,
+        99,
+        33,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "distributor",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  77,
+                  101,
+                  114,
+                  107,
+                  108,
+                  101,
+                  68,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "arg",
+                "path": "version"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "version",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "refund_claim",
       "discriminator": [
         157,
@@ -1434,6 +2146,36 @@
             "The [System] program."
           ],
           "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "request_clawback",
+      "discriminator": [
+        57,
+        57,
+        31,
+        191,
+        239,
+        66,
+        54,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Fee partner signer that may initiate the delayed clawback flow."
+          ],
+          "signer": true
         }
       ],
       "args": []
@@ -1594,9 +2336,52 @@
           }
         }
       ]
+    },
+    {
+      "name": "withdraw_clawback_request",
+      "discriminator": [
+        149,
+        159,
+        253,
+        249,
+        226,
+        250,
+        21,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Fee partner signer that may initiate the delayed clawback flow."
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
+    {
+      "name": "AutoClaimState",
+      "discriminator": [
+        216,
+        43,
+        239,
+        75,
+        58,
+        129,
+        132,
+        12
+      ]
+    },
     {
       "name": "ClaimStatus",
       "discriminator": [
@@ -1813,9 +2598,142 @@
       "code": 6026,
       "name": "NoFeesToClaim",
       "msg": "No fees to claim"
+    },
+    {
+      "code": 6027,
+      "name": "AutoClaimNotPossible",
+      "msg": "Auto-claim is available only for instant airdrops"
+    },
+    {
+      "code": 6028,
+      "name": "AutoClaimEnabled",
+      "msg": "Auto-claim is enabled for this airdrop, manual claims are not possible, clawback v2 is required"
+    },
+    {
+      "code": 6029,
+      "name": "AutoClaimNotEnabled",
+      "msg": "Auto-claim is not enabled for this airdrop"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidAutoClaimTokenAccount",
+      "msg": "Invalid auto-claim recipient token account"
+    },
+    {
+      "code": 6031,
+      "name": "ClawbackRequestAlreadyRequested",
+      "msg": "Clawback has already been requested"
+    },
+    {
+      "code": 6032,
+      "name": "ClawbackRequestNotRequested",
+      "msg": "Clawback has not been requested"
+    },
+    {
+      "code": 6033,
+      "name": "ClawbackRequestDelayPending",
+      "msg": "Clawback request delay has not passed yet"
     }
   ],
   "types": [
+    {
+      "name": "AutoClaimState",
+      "docs": [
+        "Tracks reserved and spent SOL for worker auto-claims."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "distributor",
+            "docs": [
+              "Distributor account this state belongs to."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "tx_fee_lamports",
+            "docs": [
+              "Fixed reimbursement for transaction processing."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "ata_rent_lamports",
+            "docs": [
+              "Fixed reimbursement for ATA creation when it is needed."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "claim_status_rent_lamports",
+            "docs": [
+              "Fixed reimbursement tom cover ClaimStatus account creation."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_funded",
+            "docs": [
+              "Total SOL funded for reimbursements."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_spent",
+            "docs": [
+              "Total SOL reimbursed so far."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "claims_processed",
+            "docs": [
+              "Number of claims processed by the worker."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "ata_creations",
+            "docs": [
+              "Number of ATAs funded by the worker path."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "buffer1",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "buffer2",
+            "docs": [
+              "Buffer for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "ClaimClosedEvent",
       "docs": [
@@ -2237,14 +3155,56 @@
             "type": "u8"
           },
           {
-            "name": "buffer",
+            "name": "auto_claim",
             "docs": [
-              "Buffer for additional fields"
+              "Whether Distributor supports auto-claim"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "align_buffer_1",
+            "docs": [
+              "Extra buffer to keep alignment, may be reused"
             ],
             "type": {
               "array": [
                 "u8",
-                13
+                4
+              ]
+            }
+          },
+          {
+            "name": "fee_partner",
+            "docs": [
+              "Partner wallet whose fee schedule was applied, if different from the creator"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "clawback_request_ts",
+            "docs": [
+              "Timestamp when clawback was requested by the fee partner"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "buffer_1",
+            "docs": [
+              "Buffers for additional fields"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "buffer_2",
+            "type": {
+              "array": [
+                "u8",
+                32
               ]
             }
           }

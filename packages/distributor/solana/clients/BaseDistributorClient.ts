@@ -55,7 +55,9 @@ import type {
   IGetClaimData,
   IGetDistributors,
   IInteractExt,
+  IRequestClawbackData,
   ISearchDistributors,
+  IWithdrawClawbackRequestData,
   ClawbackAccounts,
   NewDistributorAccounts,
   Fees,
@@ -521,7 +523,7 @@ export default abstract class BaseDistributorClient {
       distributor: distributorPublicKey,
       from: distributor.tokenVault,
       to: distributor.clawbackReceiver,
-      admin: extParams.invoker.publicKey,
+      authority: extParams.invoker.publicKey,
       mint: distributor.mint,
       tokenProgram: tokenProgramId,
     };
@@ -555,6 +557,114 @@ export default abstract class BaseDistributorClient {
     );
 
     return { ixs, txId: signature };
+  }
+
+  /**
+   * Requests delayed clawback by the configured fee partner authority.
+   * Once the request is recorded on-chain, clawback can be executed after the
+   * configured delay elapses.
+   */
+  public async requestClawback(
+    data: IRequestClawbackData,
+    extParams: IInteractExt,
+  ): Promise<ITransactionResult> {
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareRequestClawbackInstructions(data, params),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      executionParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  public async prepareRequestClawbackInstructions(
+    data: IRequestClawbackData,
+    extParams: ITransactionExtResolved<IInteractExt>,
+  ): Promise<TransactionInstruction[]> {
+    if (!extParams.invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
+
+    ixs.push(
+      await this.merkleDistributorProgram.methods
+        .requestClawback()
+        .accounts({
+          distributor: new PublicKey(data.id),
+          authority: extParams.invoker.publicKey,
+        })
+        .instruction(),
+    );
+
+    return ixs;
+  }
+
+  /**
+   * Withdraws a previously submitted clawback request, cancelling the delayed clawback flow.
+   */
+  public async withdrawClawbackRequest(
+    data: IWithdrawClawbackRequestData,
+    extParams: IInteractExt,
+  ): Promise<ITransactionResult> {
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareWithdrawClawbackRequestInstructions(data, params),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      executionParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  public async prepareWithdrawClawbackRequestInstructions(
+    data: IWithdrawClawbackRequestData,
+    extParams: ITransactionExtResolved<IInteractExt>,
+  ): Promise<TransactionInstruction[]> {
+    if (!extParams.invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
+
+    ixs.push(
+      await this.merkleDistributorProgram.methods
+        .withdrawClawbackRequest()
+        .accounts({
+          distributor: new PublicKey(data.id),
+          authority: extParams.invoker.publicKey,
+        })
+        .instruction(),
+    );
+
+    return ixs;
   }
 
   public async getClaim(claimStatus: string | PublicKey): Promise<AnyClaimStatus | null> {

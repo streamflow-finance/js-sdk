@@ -1,4 +1,4 @@
-import { type TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, type TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { type ICreateDistributorData, type NewDistributorAccounts, type ClawbackAccounts } from "../types.js";
@@ -10,7 +10,7 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
     accounts: Required<NewDistributorAccounts>,
   ): Promise<TransactionInstruction> {
     this.validateDistributorArgs(data);
-    return this.merkleDistributorProgram.methods
+    let builder = this.merkleDistributorProgram.methods
       .newDistributor(
         new BN(data.version),
         data.root,
@@ -28,8 +28,15 @@ export default class SolanaDistributorClient extends BaseDistributorClient {
         data.claimsLimit ?? null,
       )
       .accounts(accounts)
-      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey })
-      .instruction();
+      .accountsPartial({ partnerOracle: this.partnerOracleProgramId, partnerOracleConfig: this.feeConfigPublicKey });
+
+    if (data.partnerLink) {
+      builder = builder.remainingAccounts([
+        { pubkey: new PublicKey(data.partnerLink.address), isSigner: data.partnerLink.isSigner, isWritable: false },
+      ]);
+    }
+
+    return builder.instruction();
   }
 
   protected async getClawbackInstruction(accounts: ClawbackAccounts): Promise<TransactionInstruction> {
