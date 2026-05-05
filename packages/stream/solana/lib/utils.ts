@@ -100,6 +100,8 @@ export const decodeStream = (buf: Buffer): DecodedStream => {
     oldMetadata: new PublicKey(raw.old_metadata),
     payer: new PublicKey(raw.payer),
     bump: raw.bump,
+    feePartner: new PublicKey(raw.fee_partner),
+    cancelRequestTime: new BN(raw.cancel_request_time, LE),
   };
 };
 

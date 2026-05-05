@@ -653,6 +653,55 @@ export const transferStreamInstruction = async (
   });
 };
 
+interface RequestCancelAccounts {
+  authority: PublicKey;
+  metadata: PublicKey;
+}
+
+export const requestCancelStreamInstruction = async (
+  programId: PublicKey,
+  { authority, metadata }: RequestCancelAccounts,
+): Promise<TransactionInstruction> => {
+  const keys = [
+    { pubkey: authority, isSigner: true, isWritable: false },
+    { pubkey: metadata, isSigner: false, isWritable: true },
+  ];
+
+  const data = Buffer.concat([Buffer.from(await sha256.digest("global:request_cancel")).slice(0, 8), Buffer.alloc(10)]);
+
+  return new TransactionInstruction({
+    keys,
+    programId,
+    data,
+  });
+};
+
+interface WithdrawCancelRequestAccounts {
+  authority: PublicKey;
+  metadata: PublicKey;
+}
+
+export const withdrawCancelRequestInstruction = async (
+  programId: PublicKey,
+  { authority, metadata }: WithdrawCancelRequestAccounts,
+): Promise<TransactionInstruction> => {
+  const keys = [
+    { pubkey: authority, isSigner: true, isWritable: false },
+    { pubkey: metadata, isSigner: false, isWritable: true },
+  ];
+
+  const data = Buffer.concat([
+    Buffer.from(await sha256.digest("global:withdraw_cancel_request")).slice(0, 8),
+    Buffer.alloc(10),
+  ]);
+
+  return new TransactionInstruction({
+    keys,
+    programId,
+    data,
+  });
+};
+
 interface TopupAccounts {
   sender: PublicKey;
   senderTokens: PublicKey;

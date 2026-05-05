@@ -76,6 +76,8 @@ export const streamLayout: BufferLayout.Structure<IStreamLayout> = BufferLayout.
   BufferLayout.blob(32, "old_metadata"),
   BufferLayout.blob(32, "payer"),
   BufferLayout.u8("bump"),
+  BufferLayout.blob(32, "fee_partner"),
+  BufferLayout.blob(8, "cancel_request_time"),
 ]);
 
 export const partnerLayout: BufferLayout.Structure<IPartnerLayout> = BufferLayout.struct([
