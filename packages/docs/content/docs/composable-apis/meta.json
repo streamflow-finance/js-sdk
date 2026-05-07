@@ -1,0 +1,13 @@
+{
+  "title": "Composable APIs",
+  "icon": "Puzzle",
+  "pages": [
+    "index",
+    "create",
+    "create-lock",
+    "create-vesting",
+    "lifecycle-ops",
+    "build-sign-execute",
+    "public-api-client"
+  ]
+}

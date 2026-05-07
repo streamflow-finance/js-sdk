@@ -1,0 +1,6 @@
+{
+  "title": "Batch Creation",
+  "icon": "LayoutList",
+  "defaultOpen": false,
+  "pages": ["index", "guide-batch"]
+}

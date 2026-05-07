@@ -1,0 +1,116 @@
+---
+title: Composable APIs
+description: 3-phase transaction model - get instructions, build, sign, and execute on Solana.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { TypeTable } from "fumadocs-ui/components/type-table";
+
+The composable API is a set of TypeScript functions that wrap `SolanaStreamClient` with intent-specific defaults and a clean 3-phase transaction model.
+
+```ts
+import {
+  createLock, createLockBatch,
+  createVesting, createVestingBatch,
+  withdraw, topup, transfer, cancel, update,
+  buildTransaction, sign, execute, executeBatch, executeBatchSequential,
+} from "@streamflow/stream/solana/api";
+```
+
+## The 3-Phase Transaction Model
+
+<Steps>
+<Step>
+
+### Phase 1 - Get instructions
+
+Call a creation or lifecycle function. It returns an `InstructionResult` with the raw `TransactionInstruction[]`. Nothing is sent on-chain yet.
+
+```ts
+const result = await createLock(params, invoker, env);
+// result: { instructions, signers?, metadataPubKey? }
+```
+
+</Step>
+<Step>
+
+### Phase 2 - Build transaction
+
+Assemble a versioned transaction with a fresh blockhash and compute budget instructions.
+
+```ts
+const built = await buildTransaction(
+  result.instructions,
+  { feePayer: invoker.publicKey, computeLimit: 200_000 },
+  env,
+);
+// built: { transaction, blockhashWithExpiryBlockHeight, context }
+```
+
+</Step>
+<Step>
+
+### Phase 3 - Sign and execute
+
+Sign the transaction, then submit it to the network.
+
+```ts
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+```
+
+</Step>
+</Steps>
+
+## Why composable?
+
+- **Custom fee payer** - pass any wallet as `feePayer` in `buildTransaction`
+- **Custom compute budget** - tune `computeLimit` and `computePrice`
+- **Multi-sig** - collect signatures from multiple parties before executing
+- **Inspect first** - examine instructions before committing to an on-chain action
+- **Batch execution** - build multiple transactions, then send with `executeBatch()` or `executeBatchSequential()`
+
+## Quick reference
+
+The **Type** column shows each function's return type. All functions are async and return a Promise of the listed type.
+
+<TypeTable
+  type={{
+    createLock: {
+      description: "Create a single time-based token lock.",
+      type: "CreateInstructionResult",
+    },
+    createLockBatch: {
+      description: "Create locks for multiple recipients in one flow.",
+      type: "BatchInstructionResult",
+    },
+    createVesting: {
+      description: "Create a vesting stream. Returns BatchInstructionResult when initialAllocation is provided.",
+      type: "CreateInstructionResult | BatchInstructionResult",
+    },
+    createVestingBatch: {
+      description: "Create vesting streams for multiple recipients.",
+      type: "BatchInstructionResult",
+    },
+    withdraw: {
+      description: "Withdraw all or a specified amount of vested tokens.",
+      type: "InstructionResult",
+    },
+    topup: {
+      description: "Add tokens to an active stream (requires canTopup: true).",
+      type: "InstructionResult",
+    },
+    transfer: {
+      description: "Change the recipient wallet (requires transferableBySender: true). Do not pass computeLimit to buildTransaction.",
+      type: "InstructionResult",
+    },
+    cancel: {
+      description: "Terminate a stream early and return unvested tokens (requires cancelableBySender: true).",
+      type: "InstructionResult",
+    },
+    update: {
+      description: "Change release rate or frequency (requires canUpdateRate: true at creation).",
+      type: "InstructionResult",
+    },
+  }}
+/>

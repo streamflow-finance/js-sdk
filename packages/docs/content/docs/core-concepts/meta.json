@@ -1,0 +1,5 @@
+{
+  "title": "Core Concepts",
+  "icon": "Blocks",
+  "pages": ["streams", "locks", "vesting", "batch", "lifecycle"]
+}

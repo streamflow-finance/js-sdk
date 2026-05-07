@@ -1,0 +1,34 @@
+---
+title: What is Streamflow?
+description: DeFi infrastructure for token distribution, vesting, staking, and airdrops on Solana.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Overview
+
+[Streamflow](https://streamflow.finance) is a DeFi protocol on Solana for managing token distribution. It provides on-chain, trustless infrastructure across several core primitives:
+
+| Product | Description |
+|---------|-------------|
+| **Token Locks** | Hold tokens in escrow until a specific date or price condition. Used for team allocations, liquidity locks, and investor cliffs. |
+| **Vesting Streams** | Release tokens gradually on a schedule with optional cliffs, auto-withdrawal, and upfront initial allocations. |
+| **Airdrops** | Merkle-based token distribution with optional vesting schedules. Supports standard, aligned (price-based), and compressed claim flows. |
+| **Staking** | Flexible staking pools with configurable reward pools, reward rates, and lock-up periods. |
+| **Escrow** | Peer-to-peer token trades with on-chain settlement - no intermediary. |
+
+<Callout type="info">
+  This documentation covers `@streamflow/stream` - the package for **Token Locks** and **Vesting Streams**. Documentation for the other products is coming soon.
+</Callout>
+
+## Why use Streamflow?
+
+**On-chain and trustless.** All stream state lives in Solana accounts - no custodian, no off-chain scheduler. The protocol enforces every constraint (unlock dates, vesting schedules, cancelability) at the program level.
+
+**Battle-tested.** Streamflow has secured and distributed hundreds of millions of dollars in tokens across the Solana ecosystem. Dozens of teams - from early-stage projects to established protocols - rely on Streamflow to manage their token vesting, locks, and distribution operations.
+
+**Audited.** Protocol programs are immutable on mainnet. See [Security Audits](/docs/resources/security-audits) for audit reports.
+
+## Application
+
+The Streamflow app at [app.streamflow.finance](https://app.streamflow.finance) provides a UI for all protocol features. The JS SDK gives you programmatic access to the same on-chain programs.

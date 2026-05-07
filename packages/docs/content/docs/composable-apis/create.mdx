@@ -1,0 +1,78 @@
+---
+title: create / createBatch
+description: Low-level stream creation with full ICreateStreamData parameter control.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+`create` and `createBatch` are the lowest-level composable API functions - they accept the raw `ICreateStreamData` / `ICreateMultipleLinearStreamData` params directly without any defaults.
+
+<Callout type="info">
+  For most use cases, prefer `createLock` / `createVesting` / their batch variants - they pre-fill all required flags and enforce protocol constraints automatically.
+</Callout>
+
+## `create`
+
+```ts
+import { create } from "@streamflow/stream/solana/api";
+import type { ICreateStreamData } from "@streamflow/stream";
+
+async function create(
+  params: ICreateStreamData,
+  invoker: Invoker,
+  env: Env & NativeOptions,
+): Promise<CreateInstructionResult>
+```
+
+### When to use
+
+- You need precise control over `amountPerPeriod`, `cliffAmount`, or `period` without the wrappers computing them.
+- You need `canUpdateRate: true` or `canPause: true` - neither is exposed in `ICreateVestingParams` or `ICreateLockParams`.
+- You're creating a price-based (aligned) stream - pass `ICreateAlignedStreamData` with the oracle fields.
+
+### Example
+
+```ts
+import { create } from "@streamflow/stream/solana/api";
+import BN from "bn.js";
+
+const result = await create(
+  {
+    recipient: "RecipientWallet...",
+    tokenId: "TokenMint...",
+    start: Math.floor(Date.now() / 1000) + 10,
+    period: 86400,
+    cliff: Math.floor(Date.now() / 1000) + 10,
+    cliffAmount: new BN(0),
+    amountPerPeriod: new BN(1_000_000),
+    amount: new BN(365_000_000),
+    name: "Custom Stream",
+    canTopup: false,
+    cancelableBySender: true,
+    cancelableByRecipient: false,
+    transferableBySender: false,
+    transferableByRecipient: false,
+    automaticWithdrawal: false,
+    withdrawalFrequency: 0,
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+```
+
+## `createBatch`
+
+```ts
+import { createBatch } from "@streamflow/stream/solana/api";
+import type { ICreateMultipleLinearStreamData, ICreateMultipleAlignedStreamData } from "@streamflow/stream";
+
+async function createBatch(
+  params: ICreateMultipleLinearStreamData | ICreateMultipleAlignedStreamData,
+  invoker: Invoker,
+  env: Env & NativeOptions,
+): Promise<BatchInstructionResult>
+```
+
+Like `create` but for multiple recipients. Shared params at the top level, per-recipient params (`recipient`, `amount`, `name`, `cliffAmount`, `amountPerPeriod`) in the `recipients` array.
+
+Returns `BatchInstructionResult: { setupInstructions, creationBatches }` - same execution pattern as `createLockBatch` and `createVestingBatch`.

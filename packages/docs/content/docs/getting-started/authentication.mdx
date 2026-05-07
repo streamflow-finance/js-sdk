@@ -1,0 +1,74 @@
+---
+title: Authentication & Wallet Setup
+description: Keypairs, wallet adapters, and the Invoker type used for signing.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+Every composable API function takes an `invoker` as its second argument. The invoker is the signer - it authorizes stream creation and lifecycle operations.
+
+## The `Invoker` type
+
+```ts
+type Invoker = Keypair | SignerWalletAdapter | { publicKey: PublicKey };
+```
+
+The SDK accepts any of these three shapes and normalizes the invoker internally before signing.
+
+## Creating an invoker
+
+### Backend (Node.js) - Keypair
+
+<Tabs items={["from file", "from env var"]}>
+  <Tab value="from file">
+    ```ts
+    import { Keypair } from "@solana/web3.js";
+    import fs from "node:fs";
+
+    const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+    const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+    ```
+  </Tab>
+  <Tab value="from env var">
+    ```ts
+    import { Keypair } from "@solana/web3.js";
+
+    const secret = JSON.parse(process.env.KEYPAIR_JSON!);
+    const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="warn">
+  Never commit private keys or keypair files. Use environment variables or a secrets manager in production.
+</Callout>
+
+### Frontend (browser) - Wallet adapter
+
+```ts
+import { useWallet } from "@solana/wallet-adapter-react";
+
+const { wallet } = useWallet();
+const invoker = wallet?.adapter; // SignerWalletAdapter
+```
+
+Pass the adapter directly as the invoker. The `sign()` function will call `adapter.signTransaction()` when executing.
+
+## Signature in `sign()`
+
+```ts
+import { sign } from "@streamflow/stream/solana/api";
+
+// With a Keypair (backend):
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+
+// With a wallet adapter (frontend):
+await sign(built.transaction, [walletAdapter]);
+```
+
+`result.signers` contains the metadata keypair required by stream creation transactions. Always spread it alongside the invoker.
+
+## Roles
+
+The invoker acts as the **stream sender** - it funds the escrow and has authority to cancel or topup (if those flags were set at creation). The recipient is a separate wallet address provided in the stream params.

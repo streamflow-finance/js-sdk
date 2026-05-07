@@ -1,0 +1,113 @@
+---
+title: createVesting / createVestingBatch
+description: ICreateVestingParams, duration resolution, amountPerPeriod formula, and batch vesting.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## `createVesting`
+
+The return type is overloaded based on whether `initialAllocation` is provided:
+
+```ts
+// Without initialAllocation → CreateInstructionResult
+function createVesting(
+  params: ICreateVestingParams & { initialAllocation?: undefined },
+  invoker: Invoker,
+  env: Env & NativeOptions,
+): Promise<CreateInstructionResult>
+
+// With initialAllocation → BatchInstructionResult (2 streams)
+function createVesting(
+  params: ICreateVestingParams & { initialAllocation: { amount: BN } },
+  invoker: Invoker,
+  env: Env & NativeOptions,
+): Promise<BatchInstructionResult>
+```
+
+### `ICreateVestingParams`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `recipient` | `string` | ✓ | Recipient wallet |
+| `tokenId` | `string` | ✓ | Token mint |
+| `amount` | `BN` | ✓ | Total amount to vest |
+| `start` | `number` | ✓ | Unix timestamp when vesting begins |
+| `period` | `number` | ✓ | Seconds per release interval |
+| `name` | `string` | ✓ | Display name |
+| `duration` | `number` | ✓ or `endDate` | Total duration in seconds |
+| `endDate` | `number` | ✓ or `duration` | End Unix timestamp |
+| `cliffAmount` | `BN` | - | Defaults `BN(0)` |
+| `amountPerPeriod` | `BN` | - | Auto-computed if omitted |
+| `cancelableBySender` | `boolean` | - | Defaults `false` |
+| `canTopup` | `boolean` | - | Defaults `false` |
+| `automaticWithdrawal` | `boolean` | - | Defaults `false` |
+| `withdrawalFrequency` | `number` | - | Defaults to `period` when auto-withdrawal on |
+| `transferableBySender` | `boolean` | - | Defaults `false` |
+| `transferableByRecipient` | `boolean` | - | Defaults `false` |
+| `initialAllocation` | `{ amount: BN }` | - | Changes return type |
+| `partner` | `string` | - | Custom fee oracle |
+| `tokenProgramId` | `string \| PublicKey` | - | For Token-2022 |
+
+### Duration resolution
+
+Exactly ONE of `duration` or `endDate` must be provided. `resolveDuration()` throws if both or neither are given:
+
+```
+duration = endDate - start   (if endDate provided)
+duration = duration           (if duration provided)
+```
+
+### `amountPerPeriod` auto-compute (divCeil)
+
+If `amountPerPeriod` is omitted, `computeAmountPerPeriod()` computes it via ceiling division:
+
+```
+remaining  = amount - cliffAmount
+periods    = floor(duration / period)
+result     = ceil(remaining / periods)  // = (remaining + periods - 1) / periods
+```
+
+<Callout type="warn">
+  If `cliffAmount >= amount - 1` and all lock flags are `false`, the stream silently reclassifies as a Lock on-chain with a different fee tier. Keep `cliffAmount` well below the total. See [Stream Classification](/docs/core-concepts/streams#stream-classification) for the full criteria.
+</Callout>
+
+### `initialAllocation` pattern
+
+When `initialAllocation` is provided, `createVesting` calls `buildCreateTransactionInstructions` twice (in parallel), then combines them into one `BatchInstructionResult`:
+
+- `setupInstructions` - ATA creation + WSOL wrap for both streams
+- `creationBatches[0]` - main vesting stream
+- `creationBatches[1]` - allocation stream (lock-like, `amountPerPeriod=BN(2)`, avoids lock classification)
+
+## `createVestingBatch`
+
+```ts
+async function createVestingBatch(
+  params: ICreateVestingBatchParams,
+  invoker: Invoker,
+  env: Env & NativeOptions,
+): Promise<BatchInstructionResult>
+```
+
+Per-recipient fields: `recipient`, `amount`, `name`, `cliffAmount?`, `amountPerPeriod?`. Shared fields: `tokenId`, `start`, `period`, `duration`/`endDate`, plus all optional flags.
+
+`amountPerPeriod` is computed independently per recipient. Provide explicit `r.amountPerPeriod` to skip auto-compute for a specific recipient.
+
+<Callout type="info">
+  `createVestingBatch` does **not** support `initialAllocation`. Use `createVesting` with `initialAllocation` for a single recipient with upfront allocation.
+</Callout>
+
+## Builder variants
+
+```ts
+import { buildVestingParams, buildVestingBatchParams, resolveDuration, computeAmountPerPeriod } from "@streamflow/stream/solana/api";
+
+// Get raw ICreateLinearStreamData without executing
+const data = buildVestingParams(params);
+const batchData = buildVestingBatchParams(params);
+
+// Helpers used internally
+const duration = resolveDuration({ start, endDate }); // or { start, duration }
+const amountPerPeriod = computeAmountPerPeriod(amount, cliffAmount, duration, period);
+```

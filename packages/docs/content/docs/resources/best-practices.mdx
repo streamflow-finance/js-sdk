@@ -1,0 +1,158 @@
+---
+title: Best Practices
+description: Recommended patterns for PublicKey normalization, token amounts, error handling, and avoiding common pitfalls.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
+
+<Accordions type="multiple" defaultValue={["pk", "bn", "signers", "cliff", "transfer", "wrappers", "errors"]}>
+
+<Accordion title="Use pk() for PublicKey normalization" value="pk">
+
+`pk()` from `@streamflow/common` normalizes any `string | PublicKey` to a `PublicKey`. Use it everywhere - never write custom conversion helpers.
+
+```ts
+import { pk } from "@streamflow/common";
+
+const programId = pk("strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m");
+const mint = pk(tokenIdString); // safe even if already a PublicKey
+```
+
+**Why:** `PublicKey` construction throws on invalid strings. `pk()` is the canonical, tested wrapper used throughout every `@streamflow/*` package - roll-your-own alternatives diverge silently.
+
+</Accordion>
+
+<Accordion title="Use getBN() / getNumberFromBN() for all token amounts" value="bn">
+
+Never scale token amounts manually. These utilities from `@streamflow/common` handle all decimal conversions correctly and are the only approved conversion path in the SDK.
+
+```ts
+import { getBN, getNumberFromBN } from "@streamflow/common";
+
+// ✓ correct
+const amount = getBN(50, 6);           // 50 USDC → BN(50_000_000)
+const human  = getNumberFromBN(bn, 9); // BN → human-readable SOL
+
+// ✗ avoid - manual scaling is fragile and error-prone
+const amount = new BN(50 * 1_000_000);
+```
+
+**Why:** Token decimals vary (6 for USDC, 9 for SOL, 0-18 for SPL tokens). Manual arithmetic breaks on large values due to JS number precision limits.
+
+</Accordion>
+
+<Accordion title="Always spread result.signers when signing" value="signers">
+
+Creation functions return a `CreateInstructionResult` with an optional `signers` array containing the metadata keypair (required by the V1 protocol). Always include it in `sign()`.
+
+```ts
+// Non-batch createVesting / createLock
+const result = await createVesting(params, invoker, env);
+const built  = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+await execute(built, env);
+```
+
+The `?? []` guard also makes this pattern safe for lifecycle operations (withdraw, cancel, topup) that return `undefined` signers.
+
+<Callout type="info">
+  When calling `createVesting` with an `initialAllocation`, the return type changes to `BatchInstructionResult` - which has a different shape: `setupInstructions` and `creationBatches[].signers`. The pattern above does not apply to that overload.
+</Callout>
+
+**Why:** Omitting `result.signers` causes the transaction to fail at the RPC with a missing required signer error.
+
+</Accordion>
+
+<Accordion title="Avoid the cliffAmount classification gotcha" value="cliff">
+
+The on-chain program classifies a stream as a **Lock** (not Vesting) when the cliff condition is met AND all lock flags are unset (`canTopup`, `cancelableBySender`, `automaticWithdrawal`, etc. are all `false`). The cliff condition is:
+
+```
+cliffAmount >= depositedAmount - 1
+```
+
+If classification triggers, it silently changes the on-chain stream type and cannot be undone after creation.
+
+```ts
+// ✗ dangerous - may reclassify as Lock on-chain
+createVesting({ amount: getBN(1000, 6), cliffAmount: getBN(999, 6), ... });
+
+// ✓ safe - well below the threshold
+createVesting({ amount: getBN(1000, 6), cliffAmount: getBN(100, 6), ... });
+```
+
+<Callout type="warn">
+  `depositedAmount` is the on-chain value after protocol fees are added, so it is slightly **higher** than your `amount`. Keep `cliffAmount` meaningfully below `amount` to stay safe. There is no client-side warning - verify cliff amounts before creating production streams.
+</Callout>
+
+**Source:** `isCliffCloseToDepositedAmount` and `isTokenLock` in `packages/stream/solana/contractUtils.ts`.
+
+</Accordion>
+
+<Accordion title="Do not pass computeLimit to buildTransaction after transfer()" value="transfer">
+
+`transfer()` calls `prepareTransferInstructions` internally, which embeds a `ComputeBudgetProgram.setComputeUnitLimit` instruction (default: 100001). Passing `computeLimit` to `buildTransaction` would add a duplicate compute budget instruction and cause the transaction to fail.
+
+```ts
+// ✓ correct - omit computeLimit for transfer
+const result = await transfer({ id: streamId, newRecipient: pk(recipient) }, invoker, env);
+const built  = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+
+// ✗ wrong - duplicate compute budget instruction
+const built  = await buildTransaction(result.instructions, { feePayer: invoker.publicKey, computeLimit: 200_000 }, env);
+```
+
+**Source:** JSDoc on `prepareTransferInstructions` in `packages/stream/solana/api/transfer.ts`.
+
+</Accordion>
+
+<Accordion title="Prefer createLock / createVesting over raw create()" value="wrappers">
+
+The composable wrappers enforce protocol constraints, compute `amountPerPeriod` via `computeAmountPerPeriod()`, apply correct lock flags, and validate inputs before sending any RPC request.
+
+```ts
+// ✓ preferred - constraints and math handled for you
+import { createLock, createVesting } from "@streamflow/stream/solana/api";
+
+// ✗ avoid - must manually set all fields correctly
+import { create } from "@streamflow/stream/solana/api";
+```
+
+**Why:** `create()` is a low-level passthrough - passing wrong flag combinations (e.g., `canTopup: true` on a lock) or an incorrect `amountPerPeriod` produces broken on-chain state with no validation error.
+
+</Accordion>
+
+<Accordion title="Use Error#cause for error chaining" value="errors">
+
+Use the `cause` option when wrapping errors. This preserves the original error object and full stack trace through the chain.
+
+```ts
+// ✓ correct - original error and stack preserved
+throw new Error("Failed to create stream", { cause: originalError });
+
+// ✗ avoid - loses original stack, often prints [object Object]
+throw new Error(`Failed to create stream: ${originalError}`);
+```
+
+When catching SDK errors, check for `ContractError` first. `ContractError` is defined in `@streamflow/common` and re-exported from `@streamflow/stream` for convenience.
+
+```ts
+import { ContractError } from "@streamflow/common";
+
+try {
+  await execute(built, env);
+} catch (err) {
+  if (err instanceof ContractError) {
+    console.error("Error code:", err.contractErrorCode); // e.g. "Unauthorized"
+    console.error("Description:", err.description);      // human-readable string, if mapped
+    console.error("Cause:", err.cause);                  // original Error with stack trace
+  } else {
+    throw new Error("Unexpected failure", { cause: err });
+  }
+}
+```
+
+</Accordion>
+
+</Accordions>

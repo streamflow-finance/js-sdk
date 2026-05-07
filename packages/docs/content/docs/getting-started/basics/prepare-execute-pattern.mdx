@@ -1,0 +1,242 @@
+---
+title: prepare* / execute Pattern
+description: How every Streamflow client separates instruction building from transaction execution - across stream, staking, and distributor packages.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+Every write operation in every `@streamflow/*` client follows the same two-step pattern:
+
+1. **`prepare*Instructions()`** - builds `TransactionInstruction[]` without touching the network
+2. **`execute()`** - submits those instructions to the chain
+
+This is the core composability primitive across the entire SDK. It applies to `SolanaStreamClient`, `SolanaStakingClient`, `SolanaDistributorClient`, and `SolanaAlignedDistributorClient` equally.
+
+## Why split prepare from execute?
+
+Separating instruction building from execution lets you:
+
+- **Inspect** instructions before sending
+- **Combine** instructions from multiple protocol operations into one transaction
+- **Use a custom fee payer** - someone other than the signer
+- **Collect multi-sig** - gather signatures from multiple parties before submitting
+- **Test without broadcasting** - simulate with RPC without spending SOL
+
+## Pattern across all clients
+
+### `@streamflow/stream` - SolanaStreamClient
+
+<Tabs items={["High-level (create + submit)", "prepare* + execute"]}>
+<Tab value="High-level (create + submit)">
+
+`client.create()`, `client.withdraw()`, `client.cancel()` etc. sign and submit in one call:
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildVestingParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.mainnet-beta.solana.com",
+  cluster: ICluster.Mainnet,
+});
+
+const invoker = Keypair.fromSecretKey(
+  Uint8Array.from(JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"))),
+);
+
+// One call: builds, signs, submits
+const { txId, metadataId } = await client.create(
+  buildVestingParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000),
+    start: Math.floor(Date.now() / 1000) + 10,
+    period: 86400,
+    duration: 365 * 86400,
+    name: "Employee Vesting",
+    cancelableBySender: true,
+  }),
+  { sender: invoker, isNative: false },
+);
+
+console.log("Stream ID:", metadataId);
+
+// Lifecycle operations follow the same pattern (invoker = sender or recipient depending on operation)
+const { txId: withdrawTxId } = await client.withdraw({ id: metadataId }, { invoker });
+const { txId: topupTxId } = await client.topup({ id: metadataId, amount: new BN(1_000_000) }, { invoker, isNative: false });
+const { txId: cancelTxId } = await client.cancel({ id: metadataId }, { invoker });
+console.log("Withdraw:", withdrawTxId);
+console.log("Topup:", topupTxId);
+console.log("Cancel:", cancelTxId);
+```
+
+</Tab>
+<Tab value="prepare* + execute">
+
+`prepareCreateInstructions()` returns raw instructions. You control signing and submission:
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildVestingParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.mainnet-beta.solana.com",
+  cluster: ICluster.Mainnet,
+});
+
+const invoker = Keypair.fromSecretKey(
+  Uint8Array.from(JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"))),
+);
+
+// Step 1: prepare - returns instructions only, no network call
+// metadataPubKey is PublicKey - call .toBase58() to get the stream ID string
+const { ixs, metadata, metadataPubKey } = await client.prepareCreateInstructions(
+  buildVestingParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000),
+    start: Math.floor(Date.now() / 1000) + 10,
+    period: 86400,
+    duration: 365 * 86400,
+    name: "Employee Vesting",
+  }),
+  {
+    sender: { publicKey: invoker.publicKey }, // prepare* methods require { publicKey }, not Keypair
+    isNative: false,
+  },
+);
+
+// ixs: TransactionInstruction[] - inspect, compose, or add to another tx
+// metadata: Keypair | undefined - must co-sign if present (it's the stream's metadata account)
+// metadataPubKey: PublicKey - call .toBase58() to get the stream ID string
+
+const streamId = metadataPubKey.toBase58();
+
+// Step 2: build, sign, and submit yourself
+const connection = client.getConnection();
+const { blockhash } = await connection.getLatestBlockhash();
+// ... build VersionedTransaction from ixs, sign with invoker + metadata, submit
+
+// Lifecycle operations have matching prepare*Instructions methods:
+// Note: prepare*Instructions use { publicKey } shape for invoker (not Keypair directly)
+const withdrawIxs = await client.prepareWithdrawInstructions(
+  { id: streamId },
+  { invoker: { publicKey: invoker.publicKey } },
+);
+
+const cancelIxs = await client.prepareCancelInstructions(
+  { id: streamId },
+  { invoker: { publicKey: invoker.publicKey } },
+);
+
+const topupIxs = await client.prepareTopupInstructions(
+  { id: streamId, amount: new BN(1_000_000) },
+  { invoker, isNative: false }, // prepareTopupInstructions requires a full Keypair or WalletAdapter, not { publicKey }
+);
+```
+
+</Tab>
+</Tabs>
+
+Full `prepare*Instructions` pairs available on `SolanaStreamClient`:
+
+| Prepare method | Purpose |
+|----------------|---------|
+| `prepareCreateInstructions()` | Create a vesting stream or lock |
+| `prepareWithdrawInstructions()` | Withdraw vested tokens |
+| `prepareCancelInstructions()` | Terminate a stream early |
+| `prepareTopupInstructions()` | Add tokens to extend a stream |
+| `prepareTransferInstructions()` | Change the stream recipient |
+| `prepareUpdateInstructions()` | Update release rate or flags |
+
+<Callout type="warn">
+  `prepareTopupInstructions` requires a full `Keypair` or `SignerWalletAdapter` as the `invoker` - not a bare `{ publicKey }` object. This is different from all other `prepare*Instructions` methods, which accept `{ publicKey }`. The stricter requirement exists because topup may need to wrap SOL.
+</Callout>
+
+### `@streamflow/staking` - SolanaStakingClient
+
+```ts
+import { SolanaStakingClient } from "@streamflow/staking";
+import { ICluster } from "@streamflow/common";
+
+const client = new SolanaStakingClient({
+  clusterUrl: "https://api.mainnet-beta.solana.com",
+  cluster: ICluster.Mainnet,
+});
+
+// High-level: stake + create reward entries atomically
+const { txId } = await client.stakeAndCreateEntries(params, invoker);
+
+// Or: unstake and claim rewards in one operation
+const { txId } = await client.unstakeAndClaim(params, invoker);
+```
+
+Key write operations:
+
+| Method | Purpose |
+|--------|---------|
+| `stake()` / `stakeAndCreateEntries()` | Stake tokens, optionally creating reward entries |
+| `unstake()` / `unstakeAndClaim()` / `unstakeAndClose()` | Exit a staking position |
+| `createRewardPool()` / `fundPool()` | Create or fund a reward pool |
+| `claimRewards()` | Claim accrued rewards |
+| `clawback()` | Recover undistributed funds from a reward pool |
+| `updateRewardPool()` | Modify reward pool parameters |
+
+### `@streamflow/distributor` - SolanaDistributorClient
+
+```ts
+import { StreamflowDistributorSolana } from "@streamflow/distributor";
+import { ICluster } from "@streamflow/common";
+
+const client = new StreamflowDistributorSolana.SolanaDistributorClient({
+  clusterUrl: "https://api.mainnet-beta.solana.com", // Solana RPC endpoint
+  cluster: ICluster.Mainnet,
+  apiUrl: "https://api-public.streamflow.finance",   // Streamflow REST API
+});
+
+// prepare only - get instructions without submitting
+const ixs = await client.prepareClaimInstructions(params, invoker);
+
+// Or convenience method: prepare + execute together
+const { txId } = await client.claim(params, invoker);
+```
+
+Key write operations:
+
+| Prepare | Convenience | Purpose |
+|---------|-------------|---------|
+| `prepareCreateInstructions()` | `create()` | Create a Merkle distributor |
+| `prepareClaimInstructions()` | `claim()` | Claim tokens (standard, aligned, or compressed) |
+| `prepareClawbackInstructions()` | `clawback()` | Recover unclaimed tokens after deadline |
+| `prepareCloseClaimInstructions()` | `closeClaim()` | Close a claim account and reclaim rent |
+
+<Callout type="info">
+  `SolanaAlignedDistributorClient` extends the base client to support price-gated airdrop claims - unlock amounts per period are adjusted according to an on-chain oracle price rather than a fixed schedule.
+</Callout>
+
+## Composable API - 3-phase model (stream only)
+
+`@streamflow/stream/solana/api` provides standalone functions that return instructions and make the 3-phase flow completely explicit. This is the recommended path when you need custom fee payers, wallet adapters, or fine-grained transaction control.
+
+```ts
+import { createVesting, buildTransaction, sign, execute } from "@streamflow/stream/solana/api";
+
+// Phase 1: get instructions
+const result = await createVesting(params, invoker, env);
+
+// Phase 2: build transaction (adds compute budget, fetches blockhash)
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+
+// Phase 3: sign + execute
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+```
+
+See [Composable APIs](/docs/composable-apis) for the full reference.

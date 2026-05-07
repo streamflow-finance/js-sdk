@@ -1,0 +1,142 @@
+---
+title: Time-Based Vesting
+description: Linear token release on a period schedule with optional cliff and auto-withdrawal.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+Time-based vesting releases tokens at regular intervals (`period`). Each period, `amountPerPeriod` tokens become claimable by the recipient. If omitted, `amountPerPeriod` is computed as `ceil((amount - cliffAmount) / (duration / period))`.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `recipient` | `string` | ✓ | Recipient wallet address |
+| `tokenId` | `string` | ✓ | Token mint address |
+| `amount` | `BN` | ✓ | Total amount to vest in smallest units |
+| `start` | `number` | ✓ | Unix timestamp when vesting begins |
+| `period` | `number` | ✓ | Seconds per release interval (e.g. `86400` = daily) |
+| `name` | `string` | ✓ | Display name |
+| `duration` | `number` | ✓ or `endDate` | Total seconds of vesting |
+| `endDate` | `number` | ✓ or `duration` | Unix timestamp when vesting ends |
+| `cliffAmount` | `BN` | - | Defaults `BN(0)` - amount released immediately at `start` |
+| `amountPerPeriod` | `BN` | - | Auto-computed if omitted |
+| `cancelableBySender` | `boolean` | - | Defaults `false` |
+| `canTopup` | `boolean` | - | Defaults `false` |
+| `automaticWithdrawal` | `boolean` | - | Defaults `false` - protocol pushes tokens each period automatically |
+| `withdrawalFrequency` | `number` | - | Defaults to `period` when `automaticWithdrawal: true` |
+| `transferableBySender` | `boolean` | - | Defaults `false` |
+| `transferableByRecipient` | `boolean` | - | Defaults `false` |
+| `partner` | `string` | - | Partner address for custom fee rates |
+| `tokenProgramId` | `string \| PublicKey` | - | For Token-2022 mints |
+| `initialAllocation` | `{ amount: BN }` | - | Creates a second stream for upfront release - changes return type |
+
+<Callout type="warn">
+  Provide exactly **one** of `duration` or `endDate`. Providing both or neither throws an error.
+</Callout>
+
+## Code example
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts title="create-vesting.ts"
+import { Connection, Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import { buildTransaction, createVesting, execute, sign } from "@streamflow/stream/solana/api";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const env = {
+  connection,
+  programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ"), // devnet
+};
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const start = Math.floor(Date.now() / 1000) + 10;
+
+// Phase 1 - get instructions
+const result = await createVesting(
+  {
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
+    start,
+    period: 86400,             // daily release
+    duration: 365 * 86400,     // 1 year vesting
+    cliffAmount: new BN(0),    // no upfront release
+    name: "Employee Vesting",
+    cancelableBySender: true,
+    canTopup: false,
+    automaticWithdrawal: false,
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+
+const streamId = result.metadataPubKey!.toBase58();
+
+// Phase 2 - build transaction, Phase 3 - sign and execute
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+
+console.log("Stream ID:", streamId);
+console.log("Transaction:", signature);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts title="create-vesting.ts"
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildVestingParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const { txId, metadataId } = await client.create(
+  buildVestingParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
+    start,
+    period: 86400,             // daily release
+    duration: 365 * 86400,     // 1 year vesting
+    cliffAmount: new BN(0),    // no upfront release
+    name: "Employee Vesting",
+    cancelableBySender: true,
+    canTopup: false,
+  }),
+  {
+    sender: invoker,
+    isNative: false,
+  },
+);
+
+console.log("Stream ID:", metadataId);
+console.log("Transaction:", txId);
+```
+
+After creation, fetch stream state with `client.getOne({ id: metadataId })` or list all streams for a wallet with `client.get({ address, direction, type })`.
+
+</Tab>
+</Tabs>
+
+## With initial allocation
+
+Providing `initialAllocation` creates two streams atomically and returns `BatchInstructionResult` instead of `CreateInstructionResult`. See [Guide: Create a Vesting Stream](/docs/core-concepts/vesting/guide-create-vesting) for the full pattern.

@@ -1,0 +1,78 @@
+---
+title: Public API Client
+description: createClient - fetch stream contracts by sender or recipient from the Streamflow REST API.
+---
+
+## Overview
+
+The public API client queries the Streamflow REST API to fetch stream contract data without needing an on-chain RPC call.
+
+```ts
+import { createClient } from "@streamflow/stream";
+```
+
+## `createClient`
+
+```ts
+function createClient(options?: ApiClientOptions): ApiClient
+```
+
+### `ApiClientOptions`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `cluster` | `"mainnet" \| "devnet"` | - | Determines the API endpoint. Devnet URL used when omitted. |
+| `apiUrl` | `string` | - | Override the default API URL |
+| `fetchFn` | `typeof fetch` | `fetch` | Custom fetch implementation |
+
+Default API URLs:
+- Mainnet: `https://api-public.streamflow.finance`
+- Devnet: `https://staging-api-public.streamflow.finance`
+
+## `getContracts`
+
+Fetch all streams for a given sender and/or recipient:
+
+```ts
+const client = createClient({ cluster: "mainnet" });
+
+// Fetch by sender
+const bySender = await client.getContracts({ sender: "SenderWallet..." });
+
+// Fetch by recipient
+const byRecipient = await client.getContracts({ recipient: "RecipientWallet..." });
+
+// Fetch by both
+const byBoth = await client.getContracts({
+  sender: "SenderWallet...",
+  recipient: "RecipientWallet...",
+});
+```
+
+Returns `ContractSchema[]`.
+
+## `getContract`
+
+Fetch a single stream by its address (stream ID):
+
+```ts
+const contract = await client.getContract("StreamId...");
+```
+
+Returns `ContractSchema`.
+
+## Full example
+
+```ts
+import { createClient } from "@streamflow/stream";
+
+const client = createClient({ cluster: "mainnet" });
+
+// List all streams sent by a wallet
+const sent = await client.getContracts({ sender: "MyWallet..." });
+console.log(`Found ${sent.length} streams`);
+
+// Fetch a specific stream
+const stream = await client.getContract("StreamId...");
+console.log("Stream status:", stream.status);
+```

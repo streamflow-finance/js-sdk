@@ -1,0 +1,202 @@
+---
+title: "Guide: Create a Lock"
+description: End-to-end walkthrough for creating a time-based token lock - composable API and SolanaStreamClient.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+The composable API returns instructions you build, sign, and execute yourself - ideal when you need a custom fee payer, multi-sig, or wallet adapter.
+
+<Steps>
+<Step>
+
+### Import and set up
+
+```ts
+import { Connection, Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import { buildTransaction, createLock, execute, sign } from "@streamflow/stream/solana/api";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const env = {
+  connection,
+  programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ"), // devnet
+};
+```
+
+</Step>
+<Step>
+
+### Phase 1 - Get instructions
+
+```ts
+// amount must be > 1 in the token's smallest unit
+const amount = new BN(2);
+const unlockDate = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
+const result = await createLock(
+  {
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount,
+    unlockDate,
+    name: "Team Lock Q1",
+    transferableByRecipient: false, // only configurable flag on locks
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+
+const streamId = result.metadataPubKey!.toBase58();
+console.log("Stream ID:", streamId);
+```
+
+<Callout type="info">
+  `result.metadataPubKey` is the on-chain stream ID. Save it - you need it to call `withdraw` after `unlockDate` passes.
+</Callout>
+
+</Step>
+<Step>
+
+### Phase 2 - Build transaction
+
+```ts
+const built = await buildTransaction(
+  result.instructions,
+  { feePayer: invoker.publicKey },
+  env,
+);
+```
+
+</Step>
+<Step>
+
+### Phase 3 - Sign and execute
+
+```ts
+// Always spread result.signers - it contains the metadata keypair required by the protocol
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+
+console.log("Transaction:", signature);
+```
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+`SolanaStreamClient.create()` handles building, signing, and submitting in one call - the pattern used in server-side integrations.
+
+<Steps>
+<Step>
+
+### Import and initialize
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+```
+
+</Step>
+<Step>
+
+### Create the lock
+
+`buildLockParams` from the composable API constructs the raw params that `SolanaStreamClient` expects - all lock-specific flags are auto-set.
+
+```ts
+import { buildLockParams } from "@streamflow/stream/solana/api";
+
+const unlockDate = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
+const { txId, metadataId } = await client.create(
+  buildLockParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(2),  // must be > 1
+    unlockDate,
+    name: "Team Lock Q1",
+    transferableByRecipient: false,
+  }),
+  {
+    sender: invoker,
+    isNative: false,
+  },
+);
+
+console.log("Stream ID:", metadataId);
+console.log("Transaction:", txId);
+```
+
+</Step>
+<Step>
+
+### Fine-grained control (optional)
+
+Use `prepareCreateInstructions()` if you need to inspect, compose, or sign the transaction yourself:
+
+```ts
+const { ixs, metadata, metadataPubKey } = await client.prepareCreateInstructions(
+  buildLockParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(2),
+    unlockDate,
+    name: "Team Lock Q1",
+  }),
+  {
+    sender: { publicKey: invoker.publicKey },
+    isNative: false,
+  },
+);
+
+// ixs: TransactionInstruction[] - add to any transaction
+// metadata: Keypair | undefined - must co-sign if present
+// metadataPubKey: PublicKey - the stream ID (call .toBase58() to get the string)
+```
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+## What's next
+
+After `unlockDate` passes, the recipient withdraws with:
+
+```ts
+// Composable API
+import { withdraw, buildTransaction, sign, execute } from "@streamflow/stream/solana/api";
+const result = await withdraw({ id: streamId }, recipientInvoker, env);
+const built = await buildTransaction(result.instructions, { feePayer: recipientInvoker.publicKey }, env);
+await sign(built.transaction, [recipientInvoker]);
+await execute(built, env);
+
+// SolanaStreamClient
+await client.withdraw({ id: streamId }, { invoker: recipientInvoker });
+```
+
+See [Lifecycle Operations](/docs/core-concepts/lifecycle) for full details.

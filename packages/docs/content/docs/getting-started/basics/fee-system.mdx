@@ -1,0 +1,35 @@
+---
+title: Fee System
+description: Protocol fees charged on stream creation, withdrawal, and cancellation.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Streamflow charges small protocol fees on stream operations. Fees are taken in the streamed token (or SOL for native SOL streams). Lock streams and vesting streams have separate fee tiers - the SDK classifies your stream automatically, so there's nothing extra to configure.
+
+Current fee rates are shown in the Streamflow app as a fee breakdown on the review step before confirming any transaction.
+
+## Referral partner
+
+Each creation function accepts an optional `partner` field. When provided, the on-chain partner program applies the fee schedule negotiated for that address rather than the default rates.
+
+```ts
+await createLock(
+  {
+    recipient,
+    tokenId,
+    amount,
+    unlockDate,
+    name: "Team Lock",
+    partner: "PartnerPublicKeyHere", // optional
+  },
+  invoker,
+  env,
+);
+```
+
+The `partner` field is available on `createVesting`, `createLockBatch`, and `createVestingBatch` as well.
+
+<Callout type="info">
+  If you are building on top of Streamflow and would like a custom fee arrangement, feel free to reach out to the team.
+</Callout>

@@ -1,0 +1,41 @@
+---
+title: llms.txt
+description: Machine-readable URLs for AI tools and LLM context.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## Endpoints
+
+| URL | Content |
+|-----|---------|
+| [`/llms.txt`](/llms.txt) | Index of all pages with titles and descriptions |
+| [`/llms-full.txt`](/llms-full.txt) | Full text of every page concatenated |
+| `/docs/{slug}.mdx` | Individual page as plain Markdown |
+
+## Usage
+
+```bash
+# Full SDK context in one file - paste into any AI chat
+curl https://developers.streamflow.finance/llms-full.txt
+
+# Single page
+curl https://developers.streamflow.finance/docs/composable-apis/create-lock.mdx
+
+# Page index
+curl https://developers.streamflow.finance/llms.txt
+```
+
+Each docs page also has a **Copy as Markdown** and **Open in AI** button in the top-right toolbar.
+
+## Using with AI tools
+
+**Claude / Codex Projects** - add `https://developers.streamflow.finance/llms-full.txt` as a knowledge source so the assistant has full SDK context in every conversation.
+
+**Cursor / Windsurf** - add the docs URL under `@Docs` (or equivalent) and the IDE fetches `/llms.txt` automatically to index available pages.
+
+**Any AI chat** - fetch `llms-full.txt` and paste it directly into the context window before asking questions about the SDK.
+
+<Callout type="info">
+  `/llms.txt` follows the [llms.txt standard](https://llmstxt.org/) - a convention for making documentation machine-readable for AI tools.
+</Callout>

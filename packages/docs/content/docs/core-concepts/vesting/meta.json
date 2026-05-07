@@ -1,0 +1,6 @@
+{
+  "title": "Vesting",
+  "icon": "TrendingUp",
+  "defaultOpen": false,
+  "pages": ["index", "time-based", "price-based", "guide-create-vesting"]
+}
