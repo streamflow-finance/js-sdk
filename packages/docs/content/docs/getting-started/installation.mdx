@@ -3,46 +3,64 @@ title: Installation
 description: Install the Streamflow JS SDK packages
 ---
 
-# Installation
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-Install the SDK packages using your preferred package manager.
+Install `@streamflow/stream` using your preferred package manager.
 
-## Stream Protocol
-
-```bash
-npm i -s @streamflow/stream
-```
-
-```bash
-yarn add @streamflow/stream
-```
-
-```bash
-pnpm add @streamflow/stream
-```
-
-## Distributor Protocol
-
-The distributor package depends on `@streamflow/common`, so install both:
-
-```bash
-npm i -s @streamflow/common @streamflow/distributor
-```
-
-```bash
-yarn add @streamflow/common @streamflow/distributor
-```
-
-```bash
-pnpm add @streamflow/common @streamflow/distributor
-```
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+  <Tab value="npm">
+    ```bash
+    npm install @streamflow/stream
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm add @streamflow/stream
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn add @streamflow/stream
+    ```
+  </Tab>
+  <Tab value="bun">
+    ```bash
+    bun add @streamflow/stream
+    ```
+  </Tab>
+</Tabs>
 
 ## Browser Polyfills
 
 The SDK uses Node.js built-in modules (e.g., `node:crypto`). For browser runtimes, you may need polyfills:
 
-- **Vite** — [vite-plugin-node-polyfills](https://www.npmjs.com/package/vite-plugin-node-polyfills)
-- **Webpack** — [node-polyfill-webpack-plugin](https://www.npmjs.com/package/node-polyfill-webpack-plugin)
-- **Rsbuild** — [rsbuild-plugin-node-polyfill](https://github.com/rspack-contrib/rsbuild-plugin-node-polyfill)
+- **Vite** - [vite-plugin-node-polyfills](https://www.npmjs.com/package/vite-plugin-node-polyfills)
+- **Webpack** - [node-polyfill-webpack-plugin](https://www.npmjs.com/package/node-polyfill-webpack-plugin)
+- **Rsbuild** - [rsbuild-plugin-node-polyfill](https://github.com/rspack-contrib/rsbuild-plugin-node-polyfill)
 
-Note that transitive dependencies may use non-prefixed `node:` imports, so both prefixed and non-prefixed modules should be polyfilled.
+Transitive dependencies may import bare module names (e.g. `crypto`) or `node:`-prefixed names (e.g. `node:crypto`) - ensure the polyfill covers both forms.
+
+## TypeScript configuration
+
+The SDK uses `NodeNext` module resolution internally. If you're using TypeScript, your `tsconfig.json` must use `"moduleResolution": "NodeNext"` (or `"bundler"` for Vite/Webpack projects) - `"node"` will fail to resolve subpath exports like `@streamflow/stream/solana/api`.
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
+  }
+}
+```
+
+For bundler-based projects (Vite, Webpack, Rsbuild):
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  }
+}
+```
+
