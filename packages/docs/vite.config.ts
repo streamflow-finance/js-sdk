@@ -22,4 +22,7 @@ export default defineConfig({
       collections: path.resolve(__dirname, ".source"),
     },
   },
+  ssr: {
+    noExternal: ["lucide-react"],
+  },
 });

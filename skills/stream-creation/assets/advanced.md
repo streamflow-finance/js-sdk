@@ -33,7 +33,7 @@ Deep reference on how lock and vesting params differ at the protocol and on-chai
 | `cancelableByRecipient` | always `false` | always `false` — same |
 | `automaticWithdrawal` | always `false` | user-controlled; `false` for dynamic/price type |
 | `withdrawalFrequency` | `0` | `period` when auto-withdrawal on, else `0` |
-| `canTopup` | always `false` | `true` for linear vesting |
+| `canTopup` | always `false` | user-controlled, defaults `false` |
 | `transferableBySender` | always `false` | user-controlled |
 | `transferableByRecipient` | configurable | user-controlled |
 | `amountPerPeriod` | `BN(1)` (dust) | `divCeil(remaining, periods)` |

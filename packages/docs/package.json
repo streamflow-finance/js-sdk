@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
+    "update-changelog": "npx tsx scripts/update-changelog.ts",
+    "prebuild": "pnpm run update-changelog",
     "build": "react-router build",
     "start": "wrangler dev",
     "deploy": "react-router build && wrangler deploy",

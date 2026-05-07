@@ -52,22 +52,30 @@ function getMdFileNamesInDir(dir: string): string[] {
 
 function extractTitleAndDescription(content: string, filePath: string): { title: string; description: string } {
   const headingMatch = content.match(/^#\s+(.+)$/m);
-  const title = headingMatch ? headingMatch[1].trim() : basename(filePath, ".md");
+  // Strip backslash-escaped underscores that TypeDoc generates (e.g. SOME\_VAR → SOME_VAR)
+  const rawTitle = headingMatch ? headingMatch[1].trim() : basename(filePath, ".md");
+  const title = rawTitle.replace(/\\_/g, "_");
 
   let description = "";
   if (headingMatch) {
     const afterHeading = content.slice(headingMatch.index! + headingMatch[0].length);
+    let inCodeBlock = false;
     for (const line of afterHeading.split("\n")) {
       const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        inCodeBlock = !inCodeBlock;
+        continue;
+      }
+      if (inCodeBlock) continue;
       if (
         trimmed &&
         !trimmed.startsWith("#") &&
         !trimmed.startsWith("---") &&
-        !trimmed.startsWith("```") &&
         !trimmed.startsWith("-") &&
         !trimmed.startsWith("*") &&
         !trimmed.startsWith("[") &&
-        !trimmed.startsWith("|")
+        !trimmed.startsWith("|") &&
+        !trimmed.startsWith("Defined in:")
       ) {
         description = trimmed;
         break;
@@ -113,7 +121,6 @@ function rewriteLinks(content: string, filePath: string, apiDir: string): string
 function escapeYamlString(s: string): string {
   // Strip HTML-like backslash escapes that TypeDoc generates (e.g. \<T\> → <T>)
   let cleaned = s.replace(/\\</g, "<").replace(/\\>/g, ">");
-  // Escape characters that are special in YAML double-quoted strings
   cleaned = cleaned.replace(/\\/g, "\\\\");
   cleaned = cleaned.replace(/"/g, '\\"');
   return cleaned;
@@ -154,13 +161,16 @@ function generateSubdirMeta(dirPath: string): void {
   for (const subdir of getSubdirs(dirPath)) {
     const subdirPath = join(dirPath, subdir);
     const mdFiles = getMdFileNamesInDir(subdirPath);
+    const subdirs = getSubdirs(subdirPath);
 
-    if (mdFiles.length === 0) {
-      generateSubdirMeta(subdirPath);
+    if (mdFiles.length === 0 && subdirs.length === 0) {
       continue;
     }
 
-    const pages = mdFiles.filter((p) => p !== "index");
+    const hasIndex = mdFiles.includes("index");
+    const otherMdFiles = mdFiles.filter((p) => p !== "index");
+    const pages = [...(hasIndex ? ["index"] : []), ...subdirs, ...otherMdFiles];
+
     const title = subdir
       .split(/[-_]/)
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -207,6 +217,24 @@ function escapeMdxBraces(content: string): string {
   return result.join("\n");
 }
 
+function unescapeHeadingUnderscores(content: string): string {
+  // TypeDoc escapes underscores in headings as \_ — strip in heading lines only.
+  return content.replace(/^(#{1,6}\s+.*)$/gm, (line) => line.replace(/\\_/g, "_"));
+}
+
+// TypeDoc prefixes headings with the kind ("# Function: foo") — strip since the sidebar section already communicates it.
+const TYPE_PREFIX_RE =
+  /^(#{1,6})\s+(Function|Variable|Class|Interface|Type Alias|Enumeration|Accessor|Constructor|Namespace):\s+/gm;
+
+function stripTypePrefix(content: string): string {
+  return content.replace(TYPE_PREFIX_RE, "$1 ");
+}
+
+function cleanDefinedInPaths(content: string): string {
+  // "Defined in: [packages/foo/bar/baz.ts:42](...)" → "Defined in: [baz.ts:42](...)"
+  return content.replace(/Defined in: \[packages\/[^\]]+\/([^/:]+\.ts:\d+)\]/g, "Defined in: [$1]");
+}
+
 async function main() {
   console.log("Post-processing API docs...\n");
 
@@ -214,6 +242,9 @@ async function main() {
   const mdFiles = getAllMdFiles(API_DIR);
   for (const file of mdFiles) {
     let content = readFileSync(file, "utf-8");
+    content = unescapeHeadingUnderscores(content);
+    content = stripTypePrefix(content);
+    content = cleanDefinedInPaths(content);
     content = addFrontmatter(content, file);
     content = rewriteLinks(content, file, API_DIR);
     content = escapeMdxBraces(content);
