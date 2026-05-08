@@ -72,7 +72,8 @@ import {
   type IInteractStreamExt,
   type IMultiTransactionResult,
   type IPrepareCreateStreamExt,
-  type IPrepareStreamExt, type IPrepareTopUpstreamExt,
+  type IPrepareStreamExt,
+  type IPrepareTopUpstreamExt,
   type IRequestCancelData,
   type ISearchStreams,
   type ITopUpData,
@@ -88,7 +89,6 @@ import {
   type Stream,
   type StreamClientOptions,
   type StreamClientOptionsWithConnection,
-  type AlignedUnlocksContract,
   StreamDirection,
   StreamType,
 } from "./types.js";
@@ -570,7 +570,9 @@ export class SolanaStreamClient {
     const remainingAccounts = partnerLink
       ? [{ pubkey: new PublicKey(partnerLink.address), isSigner: partnerLink.isSigner, isWritable: false }]
       : [];
-    const createIx = await (remainingAccounts.length > 0 ? createMethod.remainingAccounts(remainingAccounts) : createMethod).instruction();
+    const createIx = await (
+      remainingAccounts.length > 0 ? createMethod.remainingAccounts(remainingAccounts) : createMethod
+    ).instruction();
 
     await this.addTransferHookAccounts(createIx, {
       mint: mintPublicKey,
@@ -1502,10 +1504,7 @@ export class SolanaStreamClient {
    * @param {IInteractStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
    * @returns Transaction result
    */
-  public async requestCancel(
-    data: IRequestCancelData,
-    extParams: IInteractStreamExt,
-  ): Promise<ITransactionResult> {
+  public async requestCancel(data: IRequestCancelData, extParams: IInteractStreamExt): Promise<ITransactionResult> {
     const ixs = await this.prepareRequestCancelInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
