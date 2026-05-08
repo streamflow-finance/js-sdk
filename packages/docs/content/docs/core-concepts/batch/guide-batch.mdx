@@ -51,11 +51,7 @@ const result = await createLockBatch(
 
 ```ts
 if (result.setupInstructions.length > 0) {
-  const setupBuilt = await buildTransaction(
-    result.setupInstructions,
-    { feePayer: invoker.publicKey },
-    env,
-  );
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
   await sign(setupBuilt.transaction, [invoker]);
   await execute(setupBuilt, env);
 }
@@ -68,11 +64,7 @@ if (result.setupInstructions.length > 0) {
 
 ```ts
 for (const batch of result.creationBatches) {
-  const batchBuilt = await buildTransaction(
-    batch.instructions,
-    { feePayer: invoker.publicKey },
-    env,
-  );
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
   await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
   const sig = await execute(batchBuilt, env);
   console.log(`Lock for ${batch.recipient.slice(0, 8)}...: ${batch.metadataPubKey.toBase58()} (tx: ${sig})`);
@@ -100,7 +92,7 @@ const result = await createVestingBatch(
   {
     tokenId: "TokenMintAddress...",
     start,
-    period: 86400,         // daily release
+    period: 86400, // daily release
     duration: 365 * 86400, // 1 year
     cancelableBySender: true,
     recipients: [
@@ -130,11 +122,7 @@ const result = await createVestingBatch(
 
 ```ts
 if (result.setupInstructions.length > 0) {
-  const setupBuilt = await buildTransaction(
-    result.setupInstructions,
-    { feePayer: invoker.publicKey },
-    env,
-  );
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
   await sign(setupBuilt.transaction, [invoker]);
   await execute(setupBuilt, env);
 }
@@ -147,11 +135,7 @@ if (result.setupInstructions.length > 0) {
 
 ```ts
 for (const batch of result.creationBatches) {
-  const batchBuilt = await buildTransaction(
-    batch.instructions,
-    { feePayer: invoker.publicKey },
-    env,
-  );
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
   await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
   const sig = await execute(batchBuilt, env);
   console.log(`Vesting for ${batch.recipient.slice(0, 8)}...: ${batch.metadataPubKey.toBase58()} (tx: ${sig})`);

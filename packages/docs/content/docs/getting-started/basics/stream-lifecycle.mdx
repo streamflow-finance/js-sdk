@@ -17,28 +17,30 @@ Once created, a stream moves through its lifecycle based on time and the operati
 
 Vesting streams are configured with behavioral flags at creation. All default to `false` - opt in to what you need.
 
-| Flag | What it enables | Fixable after creation? |
-|------|-----------------|-------------------------|
-| `canTopup` | Sender can add more tokens to extend the stream | Yes - must be set at creation |
-| `cancelableBySender` | Sender can cancel and reclaim unvested tokens | Can be toggled via `update()` |
-| `transferableBySender` | Sender can move the stream to a new recipient | Can be toggled via `update()` |
-| `transferableByRecipient` | Recipient can transfer their vesting position | Can be toggled via `update()` |
-| `automaticWithdrawal` | A keeper pushes tokens to the recipient each period | Yes - must be set at creation |
+| Flag                      | What it enables                                     | Fixable after creation?       |
+| ------------------------- | --------------------------------------------------- | ----------------------------- |
+| `canTopup`                | Sender can add more tokens to extend the stream     | Yes - must be set at creation |
+| `cancelableBySender`      | Sender can cancel and reclaim unvested tokens       | Can be toggled via `update()` |
+| `transferableBySender`    | Sender can move the stream to a new recipient       | Can be toggled via `update()` |
+| `transferableByRecipient` | Recipient can transfer their vesting position       | Can be toggled via `update()` |
+| `automaticWithdrawal`     | A keeper pushes tokens to the recipient each period | Yes - must be set at creation |
 
 <Callout type="info">
-  `canTopup` and `automaticWithdrawal` must be decided at creation - they cannot be changed afterwards. The cancel and transfer flags can be toggled later via `update()`, but only if the stream was originally created with `canUpdateRate: true`.
+  `canTopup` and `automaticWithdrawal` must be decided at creation - they cannot be changed afterwards. The cancel and
+  transfer flags can be toggled later via `update()`, but only if the stream was originally created with `canUpdateRate:
+  true`.
 </Callout>
 
 **For locks:** `buildLockParams()` hardcodes all flags to `false`. Topup, cancel, and transfer are not available on locks - only `withdraw` after `unlockDate`.
 
 ## Available operations
 
-| Operation | Available when |
-|-----------|----------------|
-| `withdraw` | Always - any time tokens have vested |
-| `topup` | `canTopup: true` was set at creation (vesting only) |
+| Operation  | Available when                                             |
+| ---------- | ---------------------------------------------------------- |
+| `withdraw` | Always - any time tokens have vested                       |
+| `topup`    | `canTopup: true` was set at creation (vesting only)        |
 | `transfer` | `transferableBySender: true` at creation or via `update()` |
-| `cancel` | `cancelableBySender: true` at creation or via `update()` |
+| `cancel`   | `cancelableBySender: true` at creation or via `update()`   |
 
 ## Completion
 

@@ -8,39 +8,40 @@ import { Callout } from "fumadocs-ui/components/callout";
 A price-based lock releases all tokens when an oracle reports that the token price has reached a specified threshold (`maxPrice`). Instead of a time-based `unlockDate`, the protocol polls an on-chain oracle continuously.
 
 <Callout type="info">
-  Price-based locks require `SolanaStreamClient` directly. The `createLock` and `createLockBatch` composable wrappers only support time-based locks.
+  Price-based locks require `SolanaStreamClient` directly. The `createLock` and `createLockBatch` composable wrappers
+  only support time-based locks.
 </Callout>
 
 ## How it works
 
 The protocol classifies a stream as a price-based lock when these fields satisfy the `isDynamicLock()` criteria: `minPrice > 0`, `maxPrice - minPrice <= 1`, `minPercentage === 0`, and `maxPercentage === 100`. You must set all of them explicitly - the SDK does not default any of them.
 
-| Parameter | Required value | Purpose |
-|-----------|----------------|---------|
-| `minPrice` | `maxPrice - 1` | Creates a step function - nothing releases below this |
-| `maxPrice` | target price | Full unlock triggers when oracle price reaches this |
-| `minPercentage` | `0` | 0% releases below `minPrice` |
-| `maxPercentage` | `100` | 100% releases at `maxPrice` |
-| `oracleType` | `"pyth"` or `"switchboard"` | Which oracle program to use |
-| `priceOracle` | oracle account public key | Price feed for the token pair |
+| Parameter       | Required value              | Purpose                                               |
+| --------------- | --------------------------- | ----------------------------------------------------- |
+| `minPrice`      | `maxPrice - 1`              | Creates a step function - nothing releases below this |
+| `maxPrice`      | target price                | Full unlock triggers when oracle price reaches this   |
+| `minPercentage` | `0`                         | 0% releases below `minPrice`                          |
+| `maxPercentage` | `100`                       | 100% releases at `maxPrice`                           |
+| `oracleType`    | `"pyth"` or `"switchboard"` | Which oracle program to use                           |
+| `priceOracle`   | oracle account public key   | Price feed for the token pair                         |
 
 When the oracle reports `currentPrice >= maxPrice`, the entire amount becomes claimable.
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `recipient` | `string` | ✓ | Recipient wallet address |
-| `tokenId` | `string` | ✓ | Token mint address |
-| `amount` | `BN` | ✓ | Amount to lock |
-| `maxPrice` | `number` | ✓ | Price at which full unlock triggers (USD) |
-| `oracleType` | `"pyth" \| "switchboard"` | ✓ | On-chain oracle program to use |
-| `priceOracle` | `string` | ✓ | Oracle account public key for the token's price feed |
-| `name` | `string` | ✓ | Display name |
-| `start` | `number` | ✓ | Unix timestamp when the lock begins |
-| `cliff` | `number` | - | Same as `start` for a lock |
-| `partner` | `string` | - | Partner address for custom fee rates |
-| `tokenProgramId` | `string` | - | For Token-2022 mints |
+| Parameter        | Type                      | Required | Description                                          |
+| ---------------- | ------------------------- | -------- | ---------------------------------------------------- |
+| `recipient`      | `string`                  | ✓        | Recipient wallet address                             |
+| `tokenId`        | `string`                  | ✓        | Token mint address                                   |
+| `amount`         | `BN`                      | ✓        | Amount to lock                                       |
+| `maxPrice`       | `number`                  | ✓        | Price at which full unlock triggers (USD)            |
+| `oracleType`     | `"pyth" \| "switchboard"` | ✓        | On-chain oracle program to use                       |
+| `priceOracle`    | `string`                  | ✓        | Oracle account public key for the token's price feed |
+| `name`           | `string`                  | ✓        | Display name                                         |
+| `start`          | `number`                  | ✓        | Unix timestamp when the lock begins                  |
+| `cliff`          | `number`                  | -        | Same as `start` for a lock                           |
+| `partner`        | `string`                  | -        | Partner address for custom fee rates                 |
+| `tokenProgramId` | `string`                  | -        | For Token-2022 mints                                 |
 
 ## Code example
 
@@ -71,7 +72,7 @@ const { txId, metadataId } = await client.create(
     cliff: start,
     period: 1,
     cliffAmount: new BN(1_000_000_000).subn(1), // amount - 1
-    amountPerPeriod: new BN(1),                  // dust amount
+    amountPerPeriod: new BN(1), // dust amount
 
     // Lock flags - all hardcoded false for locks
     canTopup: false,
@@ -85,11 +86,11 @@ const { txId, metadataId } = await client.create(
     name: "Price Lock - Unlock at $5",
 
     // Price oracle configuration - all four fields required for lock classification
-    maxPrice: 5,            // unlock when oracle price >= $5
-    minPrice: 4,            // must be maxPrice - 1
-    minPercentage: 0,       // must be 0 for lock classification
-    maxPercentage: 100,     // must be 100 for lock classification
-    oracleType: "pyth",     // or "switchboard"
+    maxPrice: 5, // unlock when oracle price >= $5
+    minPrice: 4, // must be maxPrice - 1
+    minPercentage: 0, // must be 0 for lock classification
+    maxPercentage: 100, // must be 100 for lock classification
+    oracleType: "pyth", // or "switchboard"
     // Pyth SOL/USD feed on mainnet:
     priceOracle: "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG",
   },
@@ -104,7 +105,9 @@ console.log("Transaction:", txId);
 ```
 
 <Callout type="warn">
-  `priceOracle` must be the specific oracle feed account for your token pair, not the oracle program ID. For Pyth, find the correct feed address at [pyth.network/price-feeds](https://pyth.network/price-feeds). For Switchboard, use [app.switchboard.xyz](https://app.switchboard.xyz).
+  `priceOracle` must be the specific oracle feed account for your token pair, not the oracle program ID. For Pyth, find
+  the correct feed address at [pyth.network/price-feeds](https://pyth.network/price-feeds). For Switchboard, use
+  [app.switchboard.xyz](https://app.switchboard.xyz).
 </Callout>
 
 ## Querying a price-based lock
@@ -115,13 +118,13 @@ After creation, use `client.getOne()` to read stream state. `stream.isAligned ==
 import { StreamType, isAligned } from "@streamflow/stream";
 
 const stream = await client.getOne({ id: metadataId });
-console.log("Is lock:", stream.type === StreamType.Lock);  // true
-console.log("Is price-based:", stream.isAligned);          // true
+console.log("Is lock:", stream.type === StreamType.Lock); // true
+console.log("Is price-based:", stream.isAligned); // true
 
 if (isAligned(stream)) {
   // AlignedStream - price fields are now available
-  console.log("Max price:", stream.maxPrice);              // 5
-  console.log("Oracle type:", stream.oracleType);          // "pyth"
+  console.log("Max price:", stream.maxPrice); // 5
+  console.log("Oracle type:", stream.oracleType); // "pyth"
   console.log("Oracle:", stream.priceOracle);
 }
 ```

@@ -7,11 +7,11 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 ## Endpoints
 
-| URL | Content |
-|-----|---------|
-| [`/llms.txt`](/llms.txt) | Index of all pages with titles and descriptions |
-| [`/llms-full.txt`](/llms-full.txt) | Full text of every page concatenated |
-| `/docs/{slug}.mdx` | Individual page as plain Markdown |
+| URL                                | Content                                         |
+| ---------------------------------- | ----------------------------------------------- |
+| [`/llms.txt`](/llms.txt)           | Index of all pages with titles and descriptions |
+| [`/llms-full.txt`](/llms-full.txt) | Full text of every page concatenated            |
+| `/docs/{slug}.mdx`                 | Individual page as plain Markdown               |
 
 ## Usage
 
@@ -37,5 +37,6 @@ Each docs page also has a **Copy as Markdown** and **Open in AI** button in the 
 **Any AI chat** - fetch `llms-full.txt` and paste it directly into the context window before asking questions about the SDK.
 
 <Callout type="info">
-  `/llms.txt` follows the [llms.txt standard](https://llmstxt.org/) - a convention for making documentation machine-readable for AI tools.
+  `/llms.txt` follows the [llms.txt standard](https://llmstxt.org/) - a convention for making documentation
+  machine-readable for AI tools.
 </Callout>

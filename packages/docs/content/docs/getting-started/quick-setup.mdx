@@ -9,11 +9,11 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 The SDK exposes two distinct approaches. Pick one and stick with it - they interoperate but don't need to be mixed.
 
-| | Composable API | SolanaStreamClient |
-|---|---|---|
-| Import path | `@streamflow/stream/solana/api` | `@streamflow/stream` |
-| Returns | Instructions only - you build, sign, execute | Signs and submits in one call, or `prepare*()` for full control |
-| Best for | Custom fee payers, multi-sig, wallet adapters | Server-side scripts, backend services, direct integration |
+|             | Composable API                                | SolanaStreamClient                                              |
+| ----------- | --------------------------------------------- | --------------------------------------------------------------- |
+| Import path | `@streamflow/stream/solana/api`               | `@streamflow/stream`                                            |
+| Returns     | Instructions only - you build, sign, execute  | Signs and submits in one call, or `prepare*()` for full control |
+| Best for    | Custom fee payers, multi-sig, wallet adapters | Server-side scripts, backend services, direct integration       |
 
 <Tabs items={["Composable API", "SolanaStreamClient"]}>
 <Tab value="Composable API">
@@ -115,7 +115,8 @@ const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
 ```
 
 <Callout type="warn">
-  This example targets **devnet**. For mainnet, use a private RPC (Helius, QuickNode, Triton) and the mainnet program ID from [Program IDs](/docs/resources/program-ids).
+  This example targets **devnet**. For mainnet, use a private RPC (Helius, QuickNode, Triton) and the mainnet program ID
+  from [Program IDs](/docs/resources/program-ids).
 </Callout>
 
 </Tab>

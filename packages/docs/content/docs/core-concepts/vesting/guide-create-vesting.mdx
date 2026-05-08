@@ -49,9 +49,9 @@ const result = await createVesting(
     tokenId: "TokenMintAddress...",
     amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
     start,
-    period: 86400,             // release daily
-    duration: 365 * 86400,     // over 1 year
-    cliffAmount: new BN(0),    // no upfront release
+    period: 86400, // release daily
+    duration: 365 * 86400, // over 1 year
+    cliffAmount: new BN(0), // no upfront release
     name: "Employee Vesting",
     cancelableBySender: true,
     canTopup: true,
@@ -70,11 +70,7 @@ const streamId = result.metadataPubKey!.toBase58();
 ### Phases 2 and 3 - Build, sign, and execute
 
 ```ts
-const built = await buildTransaction(
-  result.instructions,
-  { feePayer: invoker.publicKey },
-  env,
-);
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
 await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
 const signature = await execute(built, env);
 
@@ -91,7 +87,8 @@ console.log("Transaction:", signature);
 Providing `initialAllocation` creates **two streams atomically**: the main vesting stream and a separate stream for the upfront allocation. The return type changes to `BatchInstructionResult`, and you must send a setup transaction followed by one transaction per stream.
 
 <Callout type="info">
-  The allocation stream uses internal parameters specifically chosen to avoid on-chain lock classification. These are set automatically - you only need to provide the `amount`.
+  The allocation stream uses internal parameters specifically chosen to avoid on-chain lock classification. These are
+  set automatically - you only need to provide the `amount`.
 </Callout>
 
 <Steps>
@@ -106,7 +103,7 @@ const result = await createVesting(
   {
     recipient: "RecipientWalletAddress...",
     tokenId: "TokenMintAddress...",
-    amount: new BN(3_600_000_000),  // 3600 tokens at 6 decimals
+    amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
     start,
     period: 86400,
     duration: 365 * 86400,
@@ -132,11 +129,7 @@ Setup creates associated token accounts and wraps SOL if needed. It must confirm
 
 ```ts
 if (result.setupInstructions.length > 0) {
-  const setupBuilt = await buildTransaction(
-    result.setupInstructions,
-    { feePayer: invoker.publicKey },
-    env,
-  );
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
   await sign(setupBuilt.transaction, [invoker]);
   await execute(setupBuilt, env);
 }
@@ -151,11 +144,7 @@ Each batch has its own metadata keypair and must be submitted as a separate tran
 
 ```ts
 for (const batch of result.creationBatches) {
-  const batchBuilt = await buildTransaction(
-    batch.instructions,
-    { feePayer: invoker.publicKey },
-    env,
-  );
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
   await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
   const sig = await execute(batchBuilt, env);
   console.log("Stream:", batch.metadataPubKey.toBase58(), "Tx:", sig);
@@ -210,9 +199,9 @@ const { txId, metadataId } = await client.create(
     tokenId: "TokenMintAddress...",
     amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
     start,
-    period: 86400,           // daily release
-    duration: 365 * 86400,   // 1 year
-    cliffAmount: new BN(0),  // no cliff
+    period: 86400, // daily release
+    duration: 365 * 86400, // 1 year
+    cliffAmount: new BN(0), // no cliff
     name: "Employee Vesting",
     cancelableBySender: true,
     canTopup: true,

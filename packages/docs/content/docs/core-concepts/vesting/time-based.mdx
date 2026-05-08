@@ -10,27 +10,27 @@ Time-based vesting releases tokens at regular intervals (`period`). Each period,
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `recipient` | `string` | ✓ | Recipient wallet address |
-| `tokenId` | `string` | ✓ | Token mint address |
-| `amount` | `BN` | ✓ | Total amount to vest in smallest units |
-| `start` | `number` | ✓ | Unix timestamp when vesting begins |
-| `period` | `number` | ✓ | Seconds per release interval (e.g. `86400` = daily) |
-| `name` | `string` | ✓ | Display name |
-| `duration` | `number` | ✓ or `endDate` | Total seconds of vesting |
-| `endDate` | `number` | ✓ or `duration` | Unix timestamp when vesting ends |
-| `cliffAmount` | `BN` | - | Defaults `BN(0)` - amount released immediately at `start` |
-| `amountPerPeriod` | `BN` | - | Auto-computed if omitted |
-| `cancelableBySender` | `boolean` | - | Defaults `false` |
-| `canTopup` | `boolean` | - | Defaults `false` |
-| `automaticWithdrawal` | `boolean` | - | Defaults `false` - protocol pushes tokens each period automatically |
-| `withdrawalFrequency` | `number` | - | Defaults to `period` when `automaticWithdrawal: true` |
-| `transferableBySender` | `boolean` | - | Defaults `false` |
-| `transferableByRecipient` | `boolean` | - | Defaults `false` |
-| `partner` | `string` | - | Partner address for custom fee rates |
-| `tokenProgramId` | `string \| PublicKey` | - | For Token-2022 mints |
-| `initialAllocation` | `{ amount: BN }` | - | Creates a second stream for upfront release - changes return type |
+| Parameter                 | Type                  | Required        | Description                                                         |
+| ------------------------- | --------------------- | --------------- | ------------------------------------------------------------------- |
+| `recipient`               | `string`              | ✓               | Recipient wallet address                                            |
+| `tokenId`                 | `string`              | ✓               | Token mint address                                                  |
+| `amount`                  | `BN`                  | ✓               | Total amount to vest in smallest units                              |
+| `start`                   | `number`              | ✓               | Unix timestamp when vesting begins                                  |
+| `period`                  | `number`              | ✓               | Seconds per release interval (e.g. `86400` = daily)                 |
+| `name`                    | `string`              | ✓               | Display name                                                        |
+| `duration`                | `number`              | ✓ or `endDate`  | Total seconds of vesting                                            |
+| `endDate`                 | `number`              | ✓ or `duration` | Unix timestamp when vesting ends                                    |
+| `cliffAmount`             | `BN`                  | -               | Defaults `BN(0)` - amount released immediately at `start`           |
+| `amountPerPeriod`         | `BN`                  | -               | Auto-computed if omitted                                            |
+| `cancelableBySender`      | `boolean`             | -               | Defaults `false`                                                    |
+| `canTopup`                | `boolean`             | -               | Defaults `false`                                                    |
+| `automaticWithdrawal`     | `boolean`             | -               | Defaults `false` - protocol pushes tokens each period automatically |
+| `withdrawalFrequency`     | `number`              | -               | Defaults to `period` when `automaticWithdrawal: true`               |
+| `transferableBySender`    | `boolean`             | -               | Defaults `false`                                                    |
+| `transferableByRecipient` | `boolean`             | -               | Defaults `false`                                                    |
+| `partner`                 | `string`              | -               | Partner address for custom fee rates                                |
+| `tokenProgramId`          | `string \| PublicKey` | -               | For Token-2022 mints                                                |
+| `initialAllocation`       | `{ amount: BN }`      | -               | Creates a second stream for upfront release - changes return type   |
 
 <Callout type="warn">
   Provide exactly **one** of `duration` or `endDate`. Providing both or neither throws an error.
@@ -66,9 +66,9 @@ const result = await createVesting(
     tokenId: "TokenMintAddress...",
     amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
     start,
-    period: 86400,             // daily release
-    duration: 365 * 86400,     // 1 year vesting
-    cliffAmount: new BN(0),    // no upfront release
+    period: 86400, // daily release
+    duration: 365 * 86400, // 1 year vesting
+    cliffAmount: new BN(0), // no upfront release
     name: "Employee Vesting",
     cancelableBySender: true,
     canTopup: false,
@@ -115,9 +115,9 @@ const { txId, metadataId } = await client.create(
     tokenId: "TokenMintAddress...",
     amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
     start,
-    period: 86400,             // daily release
-    duration: 365 * 86400,     // 1 year vesting
-    cliffAmount: new BN(0),    // no upfront release
+    period: 86400, // daily release
+    duration: 365 * 86400, // 1 year vesting
+    cliffAmount: new BN(0), // no upfront release
     name: "Employee Vesting",
     cancelableBySender: true,
     canTopup: false,

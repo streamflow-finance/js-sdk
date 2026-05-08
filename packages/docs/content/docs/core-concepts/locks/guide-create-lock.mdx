@@ -71,11 +71,7 @@ console.log("Stream ID:", streamId);
 ### Phase 2 - Build transaction
 
 ```ts
-const built = await buildTransaction(
-  result.instructions,
-  { feePayer: invoker.publicKey },
-  env,
-);
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
 ```
 
 </Step>
@@ -135,7 +131,7 @@ const { txId, metadataId } = await client.create(
   buildLockParams({
     recipient: "RecipientWalletAddress...",
     tokenId: "TokenMintAddress...",
-    amount: new BN(2),  // must be > 1
+    amount: new BN(2), // must be > 1
     unlockDate,
     name: "Team Lock Q1",
     transferableByRecipient: false,

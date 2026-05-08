@@ -11,10 +11,10 @@ A Streamflow stream is a pair of on-chain accounts: a **metadata account** that 
 
 ## Two stream types
 
-| Type | Release pattern | Functions |
-|------|-----------------|-----------|
-| **Lock** | All-at-once at `unlockDate` | `createLock`, `createLockBatch` |
-| **Vesting** | Gradual per-period release | `createVesting`, `createVestingBatch` |
+| Type        | Release pattern             | Functions                             |
+| ----------- | --------------------------- | ------------------------------------- |
+| **Lock**    | All-at-once at `unlockDate` | `createLock`, `createLockBatch`       |
+| **Vesting** | Gradual per-period release  | `createVesting`, `createVestingBatch` |
 
 Both types use the same underlying on-chain account structure. The difference is in how the protocol parameters are set - specifically `cliffAmount`, `amountPerPeriod`, and `period`.
 
@@ -42,5 +42,7 @@ The protocol does not store a stream type field on-chain. Instead, it derives th
 **A stream is classified as Vesting when any of the above conditions are not met** - at least one flag is `true`, or the cliff amount is meaningfully below the total deposited.
 
 <Callout type="warn">
-  The cliff condition is the easy one to accidentally trigger. A vesting stream with a very large `cliffAmount` (within 1 of the total) will silently reclassify as a Lock if all flags are `false`, and be charged lock fee rates instead of vesting rates. Keep `cliffAmount` well below the total, or set at least one flag to `true`.
+  The cliff condition is the easy one to accidentally trigger. A vesting stream with a very large `cliffAmount` (within
+  1 of the total) will silently reclassify as a Lock if all flags are `false`, and be charged lock fee rates instead of
+  vesting rates. Keep `cliffAmount` well below the total, or set at least one flag to `true`.
 </Callout>

@@ -23,10 +23,10 @@ Withdraw tokens that have vested. Available on any active stream - no creation-t
 
 ```ts
 async function withdraw(
-  params: IWithdrawData,   // { id: string, amount?: BN }
-  invoker: Invoker,        // must be the stream's recipient
+  params: IWithdrawData, // { id: string, amount?: BN }
+  invoker: Invoker, // must be the stream's recipient
   env: Env,
-): Promise<InstructionResult>
+): Promise<InstructionResult>;
 ```
 
 ```ts
@@ -38,6 +38,7 @@ const result = await withdraw({ id: streamId, amount: new BN(100) }, recipientIn
 ```
 
 **Notes:**
+
 - For locks: only works after `unlockDate` has passed
 - The invoker must be the stream's current recipient on-chain
 
@@ -50,10 +51,10 @@ Add tokens to extend a stream's duration. Requires `canTopup: true` at creation.
 
 ```ts
 async function topup(
-  params: ITopUpData,      // { id: string, amount: BN }
-  invoker: Invoker,        // must be the stream's sender
+  params: ITopUpData, // { id: string, amount: BN }
+  invoker: Invoker, // must be the stream's sender
   env: Env & NativeOptions,
-): Promise<InstructionResult>
+): Promise<InstructionResult>;
 ```
 
 ```ts
@@ -65,6 +66,7 @@ const result = await topup(
 ```
 
 **Notes:**
+
 - `isNative` in `env` must match whether the stream was created with native SOL
 - Lock streams have `canTopup: false` hardcoded - topup will fail on locks
 
@@ -77,22 +79,19 @@ Change the stream's recipient to a new wallet. Requires `transferableBySender: t
 
 ```ts
 async function transfer(
-  params: ITransferData,   // { id: string, newRecipient: string }
-  invoker: Invoker,        // must be the stream's sender
+  params: ITransferData, // { id: string, newRecipient: string }
+  invoker: Invoker, // must be the stream's sender
   env: Env,
-): Promise<InstructionResult>
+): Promise<InstructionResult>;
 ```
 
 ```ts
-const result = await transfer(
-  { id: streamId, newRecipient: "NewWalletAddress..." },
-  senderInvoker,
-  env,
-);
+const result = await transfer({ id: streamId, newRecipient: "NewWalletAddress..." }, senderInvoker, env);
 ```
 
 <Callout type="warn">
-  `transfer()` embeds its own `ComputeBudgetProgram` instruction. Do **not** pass `computeLimit` to `buildTransaction` - it would create a duplicate compute budget instruction.
+  `transfer()` embeds its own `ComputeBudgetProgram` instruction. Do **not** pass `computeLimit` to `buildTransaction` -
+  it would create a duplicate compute budget instruction.
 </Callout>
 
 </Tab>
@@ -105,9 +104,9 @@ Terminate the stream early. Returns unvested tokens to the sender. Requires `can
 ```ts
 async function cancel(
   params: { id: string },
-  invoker: Invoker,   // must be the stream's sender
+  invoker: Invoker, // must be the stream's sender
   env: Env,
-): Promise<InstructionResult>
+): Promise<InstructionResult>;
 ```
 
 ```ts
@@ -115,6 +114,7 @@ const result = await cancel({ id: streamId }, senderInvoker, env);
 ```
 
 **Notes:**
+
 - Must be the last operation - all other lifecycle operations fail after cancellation
 - Lock streams have `cancelableBySender: false` hardcoded
 
@@ -127,22 +127,19 @@ Update the stream's release rate and/or permission flags. Requires `canUpdateRat
 
 ```ts
 async function update(
-  params: IUpdateData,   // { id, amountPerPeriod?, enableAutomaticWithdrawal?, withdrawFrequency?: BN, transferableBySender?, transferableByRecipient?, cancelableBySender? }
+  params: IUpdateData, // { id, amountPerPeriod?, enableAutomaticWithdrawal?, withdrawFrequency?: BN, transferableBySender?, transferableByRecipient?, cancelableBySender? }
   invoker: Invoker,
   env: Env,
-): Promise<InstructionResult>
+): Promise<InstructionResult>;
 ```
 
 ```ts
-const result = await update(
-  { id: streamId, amountPerPeriod: new BN(200) },
-  senderInvoker,
-  env,
-);
+const result = await update({ id: streamId, amountPerPeriod: new BN(200) }, senderInvoker, env);
 ```
 
 <Callout type="info">
-  `canUpdateRate` is **not exposed** in `ICreateVestingParams`. Streams created via `createVesting` don't support `update` unless you use `SolanaStreamClient.create()` directly with `canUpdateRate: true`.
+  `canUpdateRate` is **not exposed** in `ICreateVestingParams`. Streams created via `createVesting` don't support
+  `update` unless you use `SolanaStreamClient.create()` directly with `canUpdateRate: true`.
 </Callout>
 
 </Tab>

@@ -8,7 +8,8 @@ import { Callout } from "fumadocs-ui/components/callout";
 `create` and `createBatch` are the lowest-level composable API functions - they accept the raw `ICreateStreamData` / `ICreateMultipleLinearStreamData` params directly without any defaults.
 
 <Callout type="info">
-  For most use cases, prefer `createLock` / `createVesting` / their batch variants - they pre-fill all required flags and enforce protocol constraints automatically.
+  For most use cases, prefer `createLock` / `createVesting` / their batch variants - they pre-fill all required flags
+  and enforce protocol constraints automatically.
 </Callout>
 
 ## `create`
@@ -21,7 +22,7 @@ async function create(
   params: ICreateStreamData,
   invoker: Invoker,
   env: Env & NativeOptions,
-): Promise<CreateInstructionResult>
+): Promise<CreateInstructionResult>;
 ```
 
 ### When to use
@@ -70,7 +71,7 @@ async function createBatch(
   params: ICreateMultipleLinearStreamData | ICreateMultipleAlignedStreamData,
   invoker: Invoker,
   env: Env & NativeOptions,
-): Promise<BatchInstructionResult>
+): Promise<BatchInstructionResult>;
 ```
 
 Like `create` but for multiple recipients. Shared params at the top level, per-recipient params (`recipient`, `amount`, `name`, `cliffAmount`, `amountPerPeriod`) in the `recipients` array.

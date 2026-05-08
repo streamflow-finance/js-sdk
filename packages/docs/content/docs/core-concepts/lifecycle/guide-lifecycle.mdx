@@ -8,7 +8,8 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Callout } from "fumadocs-ui/components/callout";
 
 <Callout type="info">
-  The stream must be created with `cancelableBySender: true`, `canTopup: true`, and `transferableBySender: true` to allow all operations. Locks only support `withdraw`.
+  The stream must be created with `cancelableBySender: true`, `canTopup: true`, and `transferableBySender: true` to
+  allow all operations. Locks only support `withdraw`.
 </Callout>
 
 <Tabs items={["Composable API", "SolanaStreamClient"]}>
@@ -23,7 +24,14 @@ import { Callout } from "fumadocs-ui/components/callout";
 import { Connection, Keypair } from "@solana/web3.js";
 import BN from "bn.js";
 import {
-  buildTransaction, cancel, createVesting, execute, sign, topup, transfer, withdraw,
+  buildTransaction,
+  cancel,
+  createVesting,
+  execute,
+  sign,
+  topup,
+  transfer,
+  withdraw,
 } from "@streamflow/stream/solana/api";
 import { pk } from "@streamflow/common";
 import fs from "node:fs";
@@ -42,7 +50,7 @@ const created = await createVesting(
     tokenId: "TokenMintAddress...",
     amount: new BN(3_600_000_000),
     start,
-    period: 1,           // 1-second periods for quick testing
+    period: 1, // 1-second periods for quick testing
     duration: 3600,
     cliffAmount: new BN(1_000_000), // small upfront amount
     name: "Lifecycle Test",
@@ -72,10 +80,7 @@ All lifecycle functions return `InstructionResult: { instructions }` and follow 
 import type { TransactionInstruction } from "@solana/web3.js";
 import type { Env } from "@streamflow/stream/solana/api";
 
-async function runOp(
-  result: { instructions: TransactionInstruction[] },
-  invoker: Keypair,
-): Promise<string> {
+async function runOp(result: { instructions: TransactionInstruction[] }, invoker: Keypair): Promise<string> {
   const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
   await sign(built.transaction, [invoker]);
   return execute(built, env);
@@ -118,11 +123,7 @@ console.log("Topup:", sig);
 </Callout>
 
 ```ts
-const transferResult = await transfer(
-  { id: streamId, newRecipient: "NewRecipientWallet..." },
-  invoker,
-  env,
-);
+const transferResult = await transfer({ id: streamId, newRecipient: "NewRecipientWallet..." }, invoker, env);
 const built = await buildTransaction(transferResult.instructions, { feePayer: invoker.publicKey }, env);
 await sign(built.transaction, [invoker]);
 const sig = await execute(built, env);
@@ -199,10 +200,7 @@ console.log("Created stream:", streamId, "Tx:", txId);
 ```ts
 await new Promise((r) => setTimeout(r, 15_000));
 
-const { txId } = await client.withdraw(
-  { id: streamId },
-  { invoker },
-);
+const { txId } = await client.withdraw({ id: streamId }, { invoker });
 console.log("Withdraw:", txId);
 ```
 
@@ -212,10 +210,7 @@ console.log("Withdraw:", txId);
 ### Topup
 
 ```ts
-const { txId } = await client.topup(
-  { id: streamId, amount: new BN(100_000_000) },
-  { invoker, isNative: false },
-);
+const { txId } = await client.topup({ id: streamId, amount: new BN(100_000_000) }, { invoker, isNative: false });
 console.log("Topup:", txId);
 ```
 
@@ -225,10 +220,7 @@ console.log("Topup:", txId);
 ### Transfer
 
 ```ts
-const { txId } = await client.transfer(
-  { id: streamId, newRecipient: "NewRecipientWallet..." },
-  { invoker },
-);
+const { txId } = await client.transfer({ id: streamId, newRecipient: "NewRecipientWallet..." }, { invoker });
 console.log("Transfer:", txId);
 ```
 
@@ -238,10 +230,7 @@ console.log("Transfer:", txId);
 ### Cancel
 
 ```ts
-const { txId } = await client.cancel(
-  { id: streamId },
-  { invoker },
-);
+const { txId } = await client.cancel({ id: streamId }, { invoker });
 console.log("Cancel:", txId);
 ```
 

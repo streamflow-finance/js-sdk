@@ -10,10 +10,20 @@ The composable API is a set of TypeScript functions that wrap `SolanaStreamClien
 
 ```ts
 import {
-  createLock, createLockBatch,
-  createVesting, createVestingBatch,
-  withdraw, topup, transfer, cancel, update,
-  buildTransaction, sign, execute, executeBatch, executeBatchSequential,
+  createLock,
+  createLockBatch,
+  createVesting,
+  createVestingBatch,
+  withdraw,
+  topup,
+  transfer,
+  cancel,
+  update,
+  buildTransaction,
+  sign,
+  execute,
+  executeBatch,
+  executeBatchSequential,
 } from "@streamflow/stream/solana/api";
 ```
 
@@ -39,11 +49,7 @@ const result = await createLock(params, invoker, env);
 Assemble a versioned transaction with a fresh blockhash and compute budget instructions.
 
 ```ts
-const built = await buildTransaction(
-  result.instructions,
-  { feePayer: invoker.publicKey, computeLimit: 200_000 },
-  env,
-);
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey, computeLimit: 200_000 }, env);
 // built: { transaction, blockhashWithExpiryBlockHeight, context }
 ```
 
@@ -101,7 +107,8 @@ The **Type** column shows each function's return type. All functions are async a
       type: "InstructionResult",
     },
     transfer: {
-      description: "Change the recipient wallet (requires transferableBySender: true). Do not pass computeLimit to buildTransaction.",
+      description:
+        "Change the recipient wallet (requires transferableBySender: true). Do not pass computeLimit to buildTransaction.",
       type: "InstructionResult",
     },
     cancel: {

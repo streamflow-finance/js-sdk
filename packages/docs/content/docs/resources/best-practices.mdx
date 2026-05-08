@@ -31,8 +31,8 @@ Never scale token amounts manually. These utilities from `@streamflow/common` ha
 import { getBN, getNumberFromBN } from "@streamflow/common";
 
 // ✓ correct
-const amount = getBN(50, 6);           // 50 USDC → BN(50_000_000)
-const human  = getNumberFromBN(bn, 9); // BN → human-readable SOL
+const amount = getBN(50, 6); // 50 USDC → BN(50_000_000)
+const human = getNumberFromBN(bn, 9); // BN → human-readable SOL
 
 // ✗ avoid - manual scaling is fragile and error-prone
 const amount = new BN(50 * 1_000_000);
@@ -49,7 +49,7 @@ Creation functions return a `CreateInstructionResult` with an optional `signers`
 ```ts
 // Non-batch createVesting / createLock
 const result = await createVesting(params, invoker, env);
-const built  = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
 await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
 await execute(built, env);
 ```
@@ -57,7 +57,9 @@ await execute(built, env);
 The `?? []` guard also makes this pattern safe for lifecycle operations (withdraw, cancel, topup) that return `undefined` signers.
 
 <Callout type="info">
-  When calling `createVesting` with an `initialAllocation`, the return type changes to `BatchInstructionResult` - which has a different shape: `setupInstructions` and `creationBatches[].signers`. The pattern above does not apply to that overload.
+  When calling `createVesting` with an `initialAllocation`, the return type changes to `BatchInstructionResult` - which
+  has a different shape: `setupInstructions` and `creationBatches[].signers`. The pattern above does not apply to that
+  overload.
 </Callout>
 
 **Why:** Omitting `result.signers` causes the transaction to fail at the RPC with a missing required signer error.
@@ -83,7 +85,9 @@ createVesting({ amount: getBN(1000, 6), cliffAmount: getBN(100, 6), ... });
 ```
 
 <Callout type="warn">
-  `depositedAmount` is the on-chain value after protocol fees are added, so it is slightly **higher** than your `amount`. Keep `cliffAmount` meaningfully below `amount` to stay safe. There is no client-side warning - verify cliff amounts before creating production streams.
+  `depositedAmount` is the on-chain value after protocol fees are added, so it is slightly **higher** than your
+  `amount`. Keep `cliffAmount` meaningfully below `amount` to stay safe. There is no client-side warning - verify cliff
+  amounts before creating production streams.
 </Callout>
 
 **Source:** `isCliffCloseToDepositedAmount` and `isTokenLock` in `packages/stream/solana/contractUtils.ts`.
@@ -97,10 +101,10 @@ createVesting({ amount: getBN(1000, 6), cliffAmount: getBN(100, 6), ... });
 ```ts
 // ✓ correct - omit computeLimit for transfer
 const result = await transfer({ id: streamId, newRecipient: pk(recipient) }, invoker, env);
-const built  = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
 
 // ✗ wrong - duplicate compute budget instruction
-const built  = await buildTransaction(result.instructions, { feePayer: invoker.publicKey, computeLimit: 200_000 }, env);
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey, computeLimit: 200_000 }, env);
 ```
 
 **Source:** JSDoc on `prepareTransferInstructions` in `packages/stream/solana/api/transfer.ts`.
@@ -145,8 +149,8 @@ try {
 } catch (err) {
   if (err instanceof ContractError) {
     console.error("Error code:", err.contractErrorCode); // e.g. "Unauthorized"
-    console.error("Description:", err.description);      // human-readable string, if mapped
-    console.error("Cause:", err.cause);                  // original Error with stack trace
+    console.error("Description:", err.description); // human-readable string, if mapped
+    console.error("Cause:", err.cause); // original Error with stack trace
   } else {
     throw new Error("Unexpected failure", { cause: err });
   }

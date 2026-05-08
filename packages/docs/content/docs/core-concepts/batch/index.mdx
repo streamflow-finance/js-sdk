@@ -42,8 +42,8 @@ const result = await createVestingBatch(
   {
     tokenId: "TokenMintAddress...",
     start: Math.floor(Date.now() / 1000) + 10,
-    period: 86400,           // daily
-    duration: 365 * 86400,   // 1 year
+    period: 86400, // daily
+    duration: 365 * 86400, // 1 year
     cancelableBySender: true,
     recipients: [
       { recipient: "Wallet1...", amount: new BN(365_000), name: "Vest A" },
@@ -56,7 +56,8 @@ const result = await createVestingBatch(
 ```
 
 <Callout type="info">
-  `createVestingBatch` does **not** support `initialAllocation`. For vesting with an upfront allocation use `createVesting` with `initialAllocation` (single recipient).
+  `createVestingBatch` does **not** support `initialAllocation`. For vesting with an upfront allocation use
+  `createVesting` with `initialAllocation` (single recipient).
 </Callout>
 
 ## Executing batch results

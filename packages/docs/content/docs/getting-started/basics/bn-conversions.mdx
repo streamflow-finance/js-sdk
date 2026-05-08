@@ -8,7 +8,8 @@ import { Callout } from "fumadocs-ui/components/callout";
 Solana stores token amounts as unsigned 64-bit integers (u64) - values up to `2^64 - 1 ≈ 1.8 × 10^19`. JavaScript's `number` type is a 64-bit float with only 53 bits of integer precision (`Number.MAX_SAFE_INTEGER = 2^53 - 1 ≈ 9 × 10^15`). A token with 9 decimals and a supply of just 10 billion would be `10^19` raw units - beyond what JS can represent exactly. `BN` (big number from `bn.js`) handles arbitrary-precision integer arithmetic, eliminating the risk of silent precision loss.
 
 <Callout type="warn">
-  Never pass raw JavaScript numbers to amount fields. Always use `getBN()` or construct a `BN` directly from the smallest-unit integer value.
+  Never pass raw JavaScript numbers to amount fields. Always use `getBN()` or construct a `BN` directly from the
+  smallest-unit integer value.
 </Callout>
 
 ## `getBN` - human amount → BN

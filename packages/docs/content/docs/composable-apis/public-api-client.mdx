@@ -14,18 +14,19 @@ import { createClient } from "@streamflow/stream";
 ## `createClient`
 
 ```ts
-function createClient(options?: ApiClientOptions): ApiClient
+function createClient(options?: ApiClientOptions): ApiClient;
 ```
 
 ### `ApiClientOptions`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `cluster` | `"mainnet" \| "devnet"` | - | Determines the API endpoint. Devnet URL used when omitted. |
-| `apiUrl` | `string` | - | Override the default API URL |
-| `fetchFn` | `typeof fetch` | `fetch` | Custom fetch implementation |
+| Field     | Type                    | Default | Description                                                |
+| --------- | ----------------------- | ------- | ---------------------------------------------------------- |
+| `cluster` | `"mainnet" \| "devnet"` | -       | Determines the API endpoint. Devnet URL used when omitted. |
+| `apiUrl`  | `string`                | -       | Override the default API URL                               |
+| `fetchFn` | `typeof fetch`          | `fetch` | Custom fetch implementation                                |
 
 Default API URLs:
+
 - Mainnet: `https://api-public.streamflow.finance`
 - Devnet: `https://staging-api-public.streamflow.finance`
 

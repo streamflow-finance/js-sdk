@@ -10,6 +10,7 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     A **Lock** releases all tokens at once at a specific date (`unlockDate`). A **Vesting** stream releases tokens gradually over time, period by period.
 
     Technically both use the same on-chain account structure. The difference is in the params: locks set `cliffAmount = amount - 1` and `amountPerPeriod = 1`, so the entire balance is released at the cliff (which equals `start`).
+
   </Accordion>
 
   <Accordion title="Can I change stream flags after creation?">
@@ -24,12 +25,14 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     | `automaticWithdrawal` | No - immutable at creation |
 
     `update()` also accepts `amountPerPeriod` (BN), `enableAutomaticWithdrawal` (boolean toggle), and `withdrawFrequency` (BN). Changing the rate or frequency requires `canUpdateRate: true` to have been set at creation time - this is enforced on-chain. The flag changes (`cancelableBySender`, `transferableBySender`, `transferableByRecipient`) are not gated by `canUpdateRate`.
+
   </Accordion>
 
   <Accordion title="What is initialAllocation in createVesting?">
     When you provide `initialAllocation: { amount: BN }`, the SDK atomically creates **two streams**: the main vesting stream and a separate lock-like stream that releases the allocation amount immediately at start.
 
     This lets you do "10% upfront, 90% vested over 12 months" in one flow. See [Guide: Create a Vesting Stream](/docs/core-concepts/vesting/guide-create-vesting).
+
   </Accordion>
 
   <Accordion title="Why does my vesting stream classify as a Lock?">
@@ -44,6 +47,7 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     Only if all five are `false` does it then check the cliff: if `cliffAmount >= depositedAmount - 1`, it classifies as a lock.
 
     So an accidental lock classification happens when you set a large cliff **and** all five flags are `false`. Keep `cliffAmount` well below `amount`, or set at least one of the flags to `true` if you intend a vesting stream. See [Stream Classification](/docs/core-concepts/streams).
+
   </Accordion>
 
   <Accordion title="Why must amount be greater than 1 for locks?">
@@ -64,6 +68,7 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     ```
 
     `getOne` first tries the on-chain account. If the stream is closed or archived, it automatically falls back to the Tabularium API, so it works for both active and historical streams on mainnet.
+
   </Accordion>
 
   <Accordion title="How do I list all streams for a wallet address?">
@@ -101,6 +106,7 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     - You need `getFees()` to fetch current fee rates
 
     Both approaches use the same on-chain program. `SolanaStreamClient.create()` and `createVesting()` produce identical on-chain results.
+
   </Accordion>
 
   <Accordion title="What is result.signers and why do I need to include it?">
@@ -110,6 +116,7 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     - **Derived address (PDA)** - the address is computed deterministically from on-chain inputs; no keypair is required.
 
     `result.signers` contains the keypair when the random keypair path is used. The composable API (`createLock`, `createVesting`) always takes the keypair path, so you should always spread `result.signers` into the `sign()` call alongside your invoker. If the array is empty (derived address path), spreading it has no effect.
+
   </Accordion>
 
   <Accordion title="Can I use a wallet adapter (frontend) instead of a Keypair?">
@@ -120,11 +127,13 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
     For production (mainnet), use a private RPC provider such as Helius, QuickNode, or Triton. The public endpoint `api.mainnet-beta.solana.com` has strict rate limits that will cause failures under any real load.
 
     For devnet testing, `https://api.devnet.solana.com` is fine.
+
   </Accordion>
 
   <Accordion title="How do I find the stream ID after creation?">
     It's `result.metadataPubKey.toBase58()` from the creation result. Save it - you need it for all lifecycle operations (`withdraw`, `topup`, `transfer`, `cancel`).
 
     For batch creations, each item in `result.creationBatches` has its own `metadataPubKey`.
+
   </Accordion>
 </Accordions>

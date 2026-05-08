@@ -10,38 +10,38 @@ async function createLock(
   params: ICreateLockParams,
   invoker: Invoker,
   env: Env & NativeOptions,
-): Promise<CreateInstructionResult>
+): Promise<CreateInstructionResult>;
 ```
 
 ### `ICreateLockParams`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `recipient` | `string` | ✓ | Recipient wallet address |
-| `tokenId` | `string` | ✓ | Token mint address |
-| `amount` | `BN` | ✓ | Total amount - must be `> 1` |
-| `unlockDate` | `number` | ✓ | Unix timestamp when tokens unlock |
-| `name` | `string` | ✓ | Stream display name |
-| `transferableByRecipient` | `boolean` | - | Defaults `false` |
-| `partner` | `string` | - | Custom fee oracle address |
-| `tokenProgramId` | `string \| PublicKey` | - | For Token-2022 mints |
+| Field                     | Type                  | Required | Description                       |
+| ------------------------- | --------------------- | -------- | --------------------------------- |
+| `recipient`               | `string`              | ✓        | Recipient wallet address          |
+| `tokenId`                 | `string`              | ✓        | Token mint address                |
+| `amount`                  | `BN`                  | ✓        | Total amount - must be `> 1`      |
+| `unlockDate`              | `number`              | ✓        | Unix timestamp when tokens unlock |
+| `name`                    | `string`              | ✓        | Stream display name               |
+| `transferableByRecipient` | `boolean`             | -        | Defaults `false`                  |
+| `partner`                 | `string`              | -        | Custom fee oracle address         |
+| `tokenProgramId`          | `string \| PublicKey` | -        | For Token-2022 mints              |
 
 ### What `buildLockParams()` auto-sets
 
 These values are hardcoded and cannot be overridden via `ICreateLockParams`:
 
-| Field | Value | Why |
-|-------|-------|-----|
-| `period` | `1` | Synthetic minimal period |
-| `cliff` | `= unlockDate` | Cliff equals start (one release point) |
-| `cliffAmount` | `amount - 1` | Entire amount at cliff |
-| `amountPerPeriod` | `BN(1)` | Dust, avoids zero-release classification |
-| `canTopup` | `false` | Required for lock classification |
-| `cancelableBySender` | `false` | Required for lock classification |
-| `cancelableByRecipient` | `false` | Required for lock classification |
-| `transferableBySender` | `false` | Required for lock classification |
-| `automaticWithdrawal` | `false` | Required for lock classification |
-| `withdrawalFrequency` | `0` | No auto-withdrawal; frequency is irrelevant for locks |
+| Field                   | Value          | Why                                                   |
+| ----------------------- | -------------- | ----------------------------------------------------- |
+| `period`                | `1`            | Synthetic minimal period                              |
+| `cliff`                 | `= unlockDate` | Cliff equals start (one release point)                |
+| `cliffAmount`           | `amount - 1`   | Entire amount at cliff                                |
+| `amountPerPeriod`       | `BN(1)`        | Dust, avoids zero-release classification              |
+| `canTopup`              | `false`        | Required for lock classification                      |
+| `cancelableBySender`    | `false`        | Required for lock classification                      |
+| `cancelableByRecipient` | `false`        | Required for lock classification                      |
+| `transferableBySender`  | `false`        | Required for lock classification                      |
+| `automaticWithdrawal`   | `false`        | Required for lock classification                      |
+| `withdrawalFrequency`   | `0`            | No auto-withdrawal; frequency is irrelevant for locks |
 
 ## `createLockBatch`
 
@@ -50,27 +50,27 @@ async function createLockBatch(
   params: ICreateLockBatchParams,
   invoker: Invoker,
   env: Env & NativeOptions,
-): Promise<BatchInstructionResult>
+): Promise<BatchInstructionResult>;
 ```
 
 ### `ICreateLockBatchParams`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `recipients` | `ILockBatchRecipient[]` | ✓ | Per-recipient config |
-| `tokenId` | `string` | ✓ | Token mint address |
-| `unlockDate` | `number` | ✓ | Shared unlock timestamp |
-| `transferableByRecipient` | `boolean` | - | Defaults `false` (shared) |
-| `partner` | `string` | - | Custom fee oracle |
-| `tokenProgramId` | `string \| PublicKey` | - | For Token-2022 |
+| Field                     | Type                    | Required | Description               |
+| ------------------------- | ----------------------- | -------- | ------------------------- |
+| `recipients`              | `ILockBatchRecipient[]` | ✓        | Per-recipient config      |
+| `tokenId`                 | `string`                | ✓        | Token mint address        |
+| `unlockDate`              | `number`                | ✓        | Shared unlock timestamp   |
+| `transferableByRecipient` | `boolean`               | -        | Defaults `false` (shared) |
+| `partner`                 | `string`                | -        | Custom fee oracle         |
+| `tokenProgramId`          | `string \| PublicKey`   | -        | For Token-2022            |
 
 ### `ILockBatchRecipient`
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `recipient` | `string` | ✓ | Wallet address |
-| `amount` | `BN` | ✓ | Amount - must be `> 1` |
-| `name` | `string` | ✓ | Display name |
+| Field       | Type     | Required | Description            |
+| ----------- | -------- | -------- | ---------------------- |
+| `recipient` | `string` | ✓        | Wallet address         |
+| `amount`    | `BN`     | ✓        | Amount - must be `> 1` |
+| `name`      | `string` | ✓        | Display name           |
 
 Returns `BatchInstructionResult: { setupInstructions, creationBatches }`. See [Batch Creation](/docs/core-concepts/batch) for the execution pattern.
 

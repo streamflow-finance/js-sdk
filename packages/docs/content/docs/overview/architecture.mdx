@@ -10,13 +10,13 @@ import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
 
 The Streamflow JS SDK is a pnpm monorepo that publishes 5 Solana protocol packages on npm. Each package targets a specific on-chain protocol.
 
-| Package | Role |
-|---------|------|
-| `@streamflow/common` | Foundation - shared types, BN utilities, Solana transaction pipeline, compute estimation |
-| `@streamflow/stream` | Core vesting and lock protocol - `SolanaStreamClient` + composable API |
-| `@streamflow/staking` | Staking pools and reward distribution - `SolanaStakingClient` |
-| `@streamflow/distributor` | Merkle airdrop protocol - `SolanaDistributorClient`, `SolanaAlignedDistributorClient` |
-| `@streamflow/launchpad` | Token launchpad with dynamic vesting - `SolanaLaunchpadClient` |
+| Package                   | Role                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| `@streamflow/common`      | Foundation - shared types, BN utilities, Solana transaction pipeline, compute estimation |
+| `@streamflow/stream`      | Core vesting and lock protocol - `SolanaStreamClient` + composable API                   |
+| `@streamflow/staking`     | Staking pools and reward distribution - `SolanaStakingClient`                            |
+| `@streamflow/distributor` | Merkle airdrop protocol - `SolanaDistributorClient`, `SolanaAlignedDistributorClient`    |
+| `@streamflow/launchpad`   | Token launchpad with dynamic vesting - `SolanaLaunchpadClient`                           |
 
 ## Dependency graph
 
@@ -42,17 +42,18 @@ The foundation package. All other packages depend on it. Contains no protocol-sp
 
 **Key exports:**
 
-| Export | Description |
-|--------|-------------|
-| `getBN(value, decimals)` / `getNumberFromBN(bn, decimals)` | Canonical BN/decimal conversion used across all packages |
-| `pk(key)` | Normalises `string \| PublicKey` → `PublicKey` |
-| `prepareTransaction`, `signAndExecuteTransaction`, `executeMultipleTransactions` | Full Solana transaction lifecycle helpers |
-| `createAndEstimateTransaction()` | Builds a transaction and estimates compute units via simulation |
-| `checkOrCreateAtaBatch()`, `ata()` | Associated token account helpers |
-| `buildSendThrottler()` | PQueue-based throttler for rate-limited RPC environments |
-| `ICluster`, `ContractError`, `ITransactionResult`, `ComputePriceEstimate` | Shared types used across all packages |
+| Export                                                                           | Description                                                     |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `getBN(value, decimals)` / `getNumberFromBN(bn, decimals)`                       | Canonical BN/decimal conversion used across all packages        |
+| `pk(key)`                                                                        | Normalises `string \| PublicKey` → `PublicKey`                  |
+| `prepareTransaction`, `signAndExecuteTransaction`, `executeMultipleTransactions` | Full Solana transaction lifecycle helpers                       |
+| `createAndEstimateTransaction()`                                                 | Builds a transaction and estimates compute units via simulation |
+| `checkOrCreateAtaBatch()`, `ata()`                                               | Associated token account helpers                                |
+| `buildSendThrottler()`                                                           | PQueue-based throttler for rate-limited RPC environments        |
+| `ICluster`, `ContractError`, `ITransactionResult`, `ComputePriceEstimate`        | Shared types used across all packages                           |
 
 **Subpath exports:**
+
 - `@streamflow/common` - main barrel (types, BN utilities, transaction helpers, ATA)
 - `@streamflow/common/rpc` - priority fee estimation and compute limit estimation
 
@@ -64,22 +65,23 @@ The core protocol package - manages vesting schedules and token locks on-chain. 
 
 `@streamflow/stream` exposes two interfaces via separate import paths:
 
-| Interface | Import path | Use case |
-|-----------|-------------|----------|
-| Class-based (`SolanaStreamClient`) | `@streamflow/stream` | Full parameter control, price-triggered streams, `prepare*Instructions()` pairs |
-| Composable functions | `@streamflow/stream/solana/api` | Intent-specific wrappers with sensible defaults - `createLock`, `createVesting`, lifecycle operations |
+| Interface                          | Import path                     | Use case                                                                                              |
+| ---------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Class-based (`SolanaStreamClient`) | `@streamflow/stream`            | Full parameter control, price-triggered streams, `prepare*Instructions()` pairs                       |
+| Composable functions               | `@streamflow/stream/solana/api` | Intent-specific wrappers with sensible defaults - `createLock`, `createVesting`, lifecycle operations |
 
 **`SolanaStreamClient` methods:**
 
-| Group | Methods |
-|-------|---------|
-| Create | `create()`, `createMultiple()`, `createUnchecked()` |
-| Lifecycle | `withdraw()`, `cancel()`, `topup()`, `transfer()`, `update()` |
+| Group                      | Methods                                                                                                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create                     | `create()`, `createMultiple()`, `createUnchecked()`                                                                                                                                         |
+| Lifecycle                  | `withdraw()`, `cancel()`, `topup()`, `transfer()`, `update()`                                                                                                                               |
 | Prepare (instruction-only) | `prepareCreateInstructions()`, `prepareWithdrawInstructions()`, `prepareCancelInstructions()`, `prepareTopupInstructions()`, `prepareTransferInstructions()`, `prepareUpdateInstructions()` |
-| Query | `getOne()`, `get()`, `searchStreams()` |
-| Fees | `getFees()`, `getDefaultFees()` |
+| Query                      | `getOne()`, `get()`, `searchStreams()`                                                                                                                                                      |
+| Fees                       | `getFees()`, `getDefaultFees()`                                                                                                                                                             |
 
 **Subpath exports:**
+
 - `@streamflow/stream` - `SolanaStreamClient` and all types
 - `@streamflow/stream/solana/api` - composable 3-phase functions (`createLock`, `createVesting`, `buildTransaction`, `sign`, `execute`, and lifecycle operations)
 
@@ -91,24 +93,25 @@ Manages staking pools and reward distribution. Wraps 5 Anchor programs: `stakePo
 
 **Two reward pool variants:**
 
-| Variant | Program | Behaviour |
-|---------|---------|-----------|
-| Fixed APR | `rewardPoolProgram` | Constant reward rate set at pool creation |
+| Variant     | Program                    | Behaviour                                                                                           |
+| ----------- | -------------------------- | --------------------------------------------------------------------------------------------------- |
+| Fixed APR   | `rewardPoolProgram`        | Constant reward rate set at pool creation                                                           |
 | Dynamic APR | `rewardPoolDynamicProgram` | Rate adjusts based on pool participation; `createFundDelegate()` enables automated periodic top-ups |
 
 **`SolanaStakingClient` methods:**
 
-| Group | Methods |
-|-------|---------|
-| Stake Pool | `createStakePool()`, `getStakePool()`, `searchStakePools()` |
-| Staking | `stake()`, `stakeAndCreateEntries()` |
-| Unstaking | `unstake()`, `unstakeAndClaim()`, `unstakeAndClose()`, `closeStakeEntry()` |
-| Reward Pool | `createRewardPool()`, `fundPool()`, `claimRewards()`, `clawback()`, `createRewardEntry()`, `closeRewardEntry()`, `updateRewardPool()` |
-| Fund Delegate | `createFundDelegate()` |
-| Query | `searchStakeEntries()`, `searchRewardPools()`, `searchRewardEntries()` |
-| Fees | `getFee()`, `getDefaultFeeValue()` |
+| Group         | Methods                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Stake Pool    | `createStakePool()`, `getStakePool()`, `searchStakePools()`                                                                           |
+| Staking       | `stake()`, `stakeAndCreateEntries()`                                                                                                  |
+| Unstaking     | `unstake()`, `unstakeAndClaim()`, `unstakeAndClose()`, `closeStakeEntry()`                                                            |
+| Reward Pool   | `createRewardPool()`, `fundPool()`, `claimRewards()`, `clawback()`, `createRewardEntry()`, `closeRewardEntry()`, `updateRewardPool()` |
+| Fund Delegate | `createFundDelegate()`                                                                                                                |
+| Query         | `searchStakeEntries()`, `searchRewardPools()`, `searchRewardEntries()`                                                                |
+| Fees          | `getFee()`, `getDefaultFeeValue()`                                                                                                    |
 
 **Key library helpers:**
+
 - `deriveStakePoolPDA()`, `deriveStakeEntryPDA()`, `deriveRewardPoolPDA()` - PDA derivation
 - `RewardEntryAccumulator`, `calcRewards()`, `calculateRewardAmountFromRate()` - reward math
 - `getStakeWeightAmounts()`, `getFeeAmounts()` - fee and weight utilities
@@ -121,9 +124,9 @@ Merkle tree-based token airdrop protocol. Two client classes sharing a common ab
 
 **Two client variants:**
 
-| Client | Airdrop type |
-|--------|--------------|
-| `SolanaDistributorClient` | Standard - instant or vested token drops via Merkle proof |
+| Client                           | Airdrop type                                                             |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| `SolanaDistributorClient`        | Standard - instant or vested token drops via Merkle proof                |
 | `SolanaAlignedDistributorClient` | Aligned - price-based claim unlocks (oracle-adjusted amounts per period) |
 
 <Callout type="info">
@@ -136,16 +139,17 @@ Merkle tree-based token airdrop protocol. Two client classes sharing a common ab
 
 **Methods (shared via `BaseDistributorClient`):**
 
-| Group | Methods |
-|-------|---------|
-| Create | `create()`, `prepareCreateInstructions()` |
-| Claim | `claim()`, `prepareClaimInstructions()` - 3 overloads: standard, aligned (with price update), compressed |
-| Clawback | `clawback()`, `prepareClawbackInstructions()` |
-| Close | `closeClaim()`, `prepareCloseClaimInstructions()` |
-| Query | `getClaim()`, `getClaims()`, `getDistributors()`, `searchDistributors()` |
-| Fees | `getFees()`, `getDefaultFees()`, `getFeeConfig()` |
+| Group    | Methods                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------- |
+| Create   | `create()`, `prepareCreateInstructions()`                                                                |
+| Claim    | `claim()`, `prepareClaimInstructions()` - 3 overloads: standard, aligned (with price update), compressed |
+| Clawback | `clawback()`, `prepareClawbackInstructions()`                                                            |
+| Close    | `closeClaim()`, `prepareCloseClaimInstructions()`                                                        |
+| Query    | `getClaim()`, `getClaims()`, `getDistributors()`, `searchDistributors()`                                 |
+| Fees     | `getFees()`, `getDefaultFees()`, `getFeeConfig()`                                                        |
 
 **Subpath exports:**
+
 - `@streamflow/distributor` - namespace export
 - `@streamflow/distributor/solana` - named exports of both clients
 
@@ -163,7 +167,7 @@ Supports token IDO launches with configurable pricing curves, vesting caps, and 
 
 ## API pattern
 
-Every write operation across all packages pairs a `prepare*Instructions()` method with an `execute()` call. See [prepare* / execute Pattern](/docs/getting-started/basics/prepare-execute-pattern) for a full explanation.
+Every write operation across all packages pairs a `prepare*Instructions()` method with an `execute()` call. See [prepare\* / execute Pattern](/docs/getting-started/basics/prepare-execute-pattern) for a full explanation.
 
 ## Runtime requirements
 

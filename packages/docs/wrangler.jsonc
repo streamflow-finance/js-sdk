@@ -4,5 +4,5 @@
   "main": "./workers/app.ts",
   "compatibility_date": "2025-04-04",
   "compatibility_flags": ["nodejs_compat"],
-  "routes": [{ "pattern": "developers.streamflow.finance", "custom_domain": true }]
+  "routes": [{ "pattern": "developers.streamflow.finance", "custom_domain": true }],
 }

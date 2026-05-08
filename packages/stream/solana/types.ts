@@ -47,7 +47,7 @@ export interface IBaseStreamConfig {
   canUpdateRate?: boolean;
   partner?: string;
   // signer or PartnerLink PDA used for fee derivation
-  partnerLink?: { address: string, isSigner: boolean };
+  partnerLink?: { address: string; isSigner: boolean };
   tokenProgramId?: string | PublicKey;
 }
 
@@ -458,7 +458,7 @@ export interface IPrepareStreamExt extends Omit<IInteractStreamExt, "invoker"> {
 export interface IPrepareTopUpstreamExt extends ITransactionExt {
   invoker: {
     publicKey: PublicKey | null;
-  }
+  };
   isNative?: boolean;
 }
 

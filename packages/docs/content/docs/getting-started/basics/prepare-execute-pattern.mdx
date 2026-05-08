@@ -44,9 +44,7 @@ const client = new SolanaStreamClient({
   cluster: ICluster.Mainnet,
 });
 
-const invoker = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"))),
-);
+const invoker = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"))));
 
 // One call: builds, signs, submits
 const { txId, metadataId } = await client.create(
@@ -67,7 +65,10 @@ console.log("Stream ID:", metadataId);
 
 // Lifecycle operations follow the same pattern (invoker = sender or recipient depending on operation)
 const { txId: withdrawTxId } = await client.withdraw({ id: metadataId }, { invoker });
-const { txId: topupTxId } = await client.topup({ id: metadataId, amount: new BN(1_000_000) }, { invoker, isNative: false });
+const { txId: topupTxId } = await client.topup(
+  { id: metadataId, amount: new BN(1_000_000) },
+  { invoker, isNative: false },
+);
 const { txId: cancelTxId } = await client.cancel({ id: metadataId }, { invoker });
 console.log("Withdraw:", withdrawTxId);
 console.log("Topup:", topupTxId);
@@ -91,9 +92,7 @@ const client = new SolanaStreamClient({
   cluster: ICluster.Mainnet,
 });
 
-const invoker = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"))),
-);
+const invoker = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"))));
 
 // Step 1: prepare - returns instructions only, no network call
 // metadataPubKey is PublicKey - call .toBase58() to get the stream ID string
@@ -147,17 +146,19 @@ const topupIxs = await client.prepareTopupInstructions(
 
 Full `prepare*Instructions` pairs available on `SolanaStreamClient`:
 
-| Prepare method | Purpose |
-|----------------|---------|
-| `prepareCreateInstructions()` | Create a vesting stream or lock |
-| `prepareWithdrawInstructions()` | Withdraw vested tokens |
-| `prepareCancelInstructions()` | Terminate a stream early |
-| `prepareTopupInstructions()` | Add tokens to extend a stream |
-| `prepareTransferInstructions()` | Change the stream recipient |
-| `prepareUpdateInstructions()` | Update release rate or flags |
+| Prepare method                  | Purpose                         |
+| ------------------------------- | ------------------------------- |
+| `prepareCreateInstructions()`   | Create a vesting stream or lock |
+| `prepareWithdrawInstructions()` | Withdraw vested tokens          |
+| `prepareCancelInstructions()`   | Terminate a stream early        |
+| `prepareTopupInstructions()`    | Add tokens to extend a stream   |
+| `prepareTransferInstructions()` | Change the stream recipient     |
+| `prepareUpdateInstructions()`   | Update release rate or flags    |
 
 <Callout type="warn">
-  `prepareTopupInstructions` requires a full `Keypair` or `SignerWalletAdapter` as the `invoker` - not a bare `{ publicKey }` object. This is different from all other `prepare*Instructions` methods, which accept `{ publicKey }`. The stricter requirement exists because topup may need to wrap SOL.
+  `prepareTopupInstructions` requires a full `Keypair` or `SignerWalletAdapter` as the `invoker` - not a bare `
+  {publicKey}` object. This is different from all other `prepare*Instructions` methods, which accept `{publicKey}`. The
+  stricter requirement exists because topup may need to wrap SOL.
 </Callout>
 
 ### `@streamflow/staking` - SolanaStakingClient
@@ -180,14 +181,14 @@ const { txId } = await client.unstakeAndClaim(params, invoker);
 
 Key write operations:
 
-| Method | Purpose |
-|--------|---------|
-| `stake()` / `stakeAndCreateEntries()` | Stake tokens, optionally creating reward entries |
-| `unstake()` / `unstakeAndClaim()` / `unstakeAndClose()` | Exit a staking position |
-| `createRewardPool()` / `fundPool()` | Create or fund a reward pool |
-| `claimRewards()` | Claim accrued rewards |
-| `clawback()` | Recover undistributed funds from a reward pool |
-| `updateRewardPool()` | Modify reward pool parameters |
+| Method                                                  | Purpose                                          |
+| ------------------------------------------------------- | ------------------------------------------------ |
+| `stake()` / `stakeAndCreateEntries()`                   | Stake tokens, optionally creating reward entries |
+| `unstake()` / `unstakeAndClaim()` / `unstakeAndClose()` | Exit a staking position                          |
+| `createRewardPool()` / `fundPool()`                     | Create or fund a reward pool                     |
+| `claimRewards()`                                        | Claim accrued rewards                            |
+| `clawback()`                                            | Recover undistributed funds from a reward pool   |
+| `updateRewardPool()`                                    | Modify reward pool parameters                    |
 
 ### `@streamflow/distributor` - SolanaDistributorClient
 
@@ -198,7 +199,7 @@ import { ICluster } from "@streamflow/common";
 const client = new StreamflowDistributorSolana.SolanaDistributorClient({
   clusterUrl: "https://api.mainnet-beta.solana.com", // Solana RPC endpoint
   cluster: ICluster.Mainnet,
-  apiUrl: "https://api-public.streamflow.finance",   // Streamflow REST API
+  apiUrl: "https://api-public.streamflow.finance", // Streamflow REST API
 });
 
 // prepare only - get instructions without submitting
@@ -210,15 +211,16 @@ const { txId } = await client.claim(params, invoker);
 
 Key write operations:
 
-| Prepare | Convenience | Purpose |
-|---------|-------------|---------|
-| `prepareCreateInstructions()` | `create()` | Create a Merkle distributor |
-| `prepareClaimInstructions()` | `claim()` | Claim tokens (standard, aligned, or compressed) |
-| `prepareClawbackInstructions()` | `clawback()` | Recover unclaimed tokens after deadline |
-| `prepareCloseClaimInstructions()` | `closeClaim()` | Close a claim account and reclaim rent |
+| Prepare                           | Convenience    | Purpose                                         |
+| --------------------------------- | -------------- | ----------------------------------------------- |
+| `prepareCreateInstructions()`     | `create()`     | Create a Merkle distributor                     |
+| `prepareClaimInstructions()`      | `claim()`      | Claim tokens (standard, aligned, or compressed) |
+| `prepareClawbackInstructions()`   | `clawback()`   | Recover unclaimed tokens after deadline         |
+| `prepareCloseClaimInstructions()` | `closeClaim()` | Close a claim account and reclaim rent          |
 
 <Callout type="info">
-  `SolanaAlignedDistributorClient` extends the base client to support price-gated airdrop claims - unlock amounts per period are adjusted according to an on-chain oracle price rather than a fixed schedule.
+  `SolanaAlignedDistributorClient` extends the base client to support price-gated airdrop claims - unlock amounts per
+  period are adjusted according to an on-chain oracle price rather than a fixed schedule.
 </Callout>
 
 ## Composable API - 3-phase model (stream only)

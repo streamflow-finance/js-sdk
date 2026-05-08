@@ -7,22 +7,22 @@ A lock holds tokens in escrow until a trigger condition is met, then releases th
 
 ## Types
 
-| Type | Trigger | Composable API |
-|------|---------|----------------|
-| [Time-based](/docs/core-concepts/locks/time-based) | Unix timestamp (`unlockDate`) | `createLock`, `createLockBatch` |
-| [Price-based](/docs/core-concepts/locks/price-based) | Oracle price condition | `SolanaStreamClient` directly |
+| Type                                                 | Trigger                       | Composable API                  |
+| ---------------------------------------------------- | ----------------------------- | ------------------------------- |
+| [Time-based](/docs/core-concepts/locks/time-based)   | Unix timestamp (`unlockDate`) | `createLock`, `createLockBatch` |
+| [Price-based](/docs/core-concepts/locks/price-based) | Oracle price condition        | `SolanaStreamClient` directly   |
 
 ## Immutable constraints
 
 These flags are hardcoded by `buildLockParams()` and cannot be overridden:
 
-| Flag | Value | Reason |
-|------|-------|--------|
-| `canTopup` | `false` | Required for lock classification |
-| `cancelableBySender` | `false` | Required for lock classification |
+| Flag                    | Value   | Reason                           |
+| ----------------------- | ------- | -------------------------------- |
+| `canTopup`              | `false` | Required for lock classification |
+| `cancelableBySender`    | `false` | Required for lock classification |
 | `cancelableByRecipient` | `false` | Required for lock classification |
-| `transferableBySender` | `false` | Required for lock classification |
-| `automaticWithdrawal` | `false` | Required for lock classification |
+| `transferableBySender`  | `false` | Required for lock classification |
+| `automaticWithdrawal`   | `false` | Required for lock classification |
 
 The only configurable flag is `transferableByRecipient` - the recipient can optionally transfer the lock to another wallet.
 

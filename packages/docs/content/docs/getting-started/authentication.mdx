@@ -29,6 +29,7 @@ The SDK accepts any of these three shapes and normalizes the invoker internally 
     const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
     const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
     ```
+
   </Tab>
   <Tab value="from env var">
     ```ts
@@ -37,6 +38,7 @@ The SDK accepts any of these three shapes and normalizes the invoker internally 
     const secret = JSON.parse(process.env.KEYPAIR_JSON!);
     const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
     ```
+
   </Tab>
 </Tabs>
 

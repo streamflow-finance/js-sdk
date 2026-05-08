@@ -8,7 +8,8 @@ import { Callout } from "fumadocs-ui/components/callout";
 Price-based vesting scales the per-period release amount based on an oracle-reported price. As the price rises toward `maxPrice`, the release per period increases proportionally from `minPercentage` toward 100%.
 
 <Callout type="info">
-  Price-based vesting requires `SolanaStreamClient` directly. The `createVesting` and `createVestingBatch` composable wrappers only support linear (time-based) vesting.
+  Price-based vesting requires `SolanaStreamClient` directly. The `createVesting` and `createVestingBatch` composable
+  wrappers only support linear (time-based) vesting.
 </Callout>
 
 ## How it works
@@ -23,25 +24,25 @@ Each period, the oracle price is checked against the range `[minPrice, maxPrice]
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `recipient` | `string` | ✓ | Recipient wallet address |
-| `tokenId` | `string` | ✓ | Token mint address |
-| `amount` | `BN` | ✓ | Total amount to vest |
-| `start` | `number` | ✓ | Unix timestamp when vesting begins |
-| `period` | `number` | ✓ | Seconds per release interval |
-| `amountPerPeriod` | `BN` | ✓ | Max release per period (at `maxPrice`) |
-| `minPrice` | `number` | ✓ | Price at which `minPercentage` is released |
-| `maxPrice` | `number` | ✓ | Price at which 100% of `amountPerPeriod` is released |
-| `minPercentage` | `number` | ✓ | Percentage released at `minPrice` (0-100) |
-| `oracleType` | `"pyth" \| "switchboard"` | ✓ | On-chain oracle program |
-| `priceOracle` | `string` | ✓ | Oracle feed account public key |
-| `name` | `string` | ✓ | Display name |
-| `cliff` | `number` | - | Cliff timestamp - defaults to `start` |
-| `cliffAmount` | `BN` | - | Amount released at cliff |
-| `cancelableBySender` | `boolean` | - | Defaults `false` |
-| `canTopup` | `boolean` | - | Defaults `false` |
-| `partner` | `string` | - | Partner address for custom fee rates |
+| Parameter            | Type                      | Required | Description                                          |
+| -------------------- | ------------------------- | -------- | ---------------------------------------------------- |
+| `recipient`          | `string`                  | ✓        | Recipient wallet address                             |
+| `tokenId`            | `string`                  | ✓        | Token mint address                                   |
+| `amount`             | `BN`                      | ✓        | Total amount to vest                                 |
+| `start`              | `number`                  | ✓        | Unix timestamp when vesting begins                   |
+| `period`             | `number`                  | ✓        | Seconds per release interval                         |
+| `amountPerPeriod`    | `BN`                      | ✓        | Max release per period (at `maxPrice`)               |
+| `minPrice`           | `number`                  | ✓        | Price at which `minPercentage` is released           |
+| `maxPrice`           | `number`                  | ✓        | Price at which 100% of `amountPerPeriod` is released |
+| `minPercentage`      | `number`                  | ✓        | Percentage released at `minPrice` (0-100)            |
+| `oracleType`         | `"pyth" \| "switchboard"` | ✓        | On-chain oracle program                              |
+| `priceOracle`        | `string`                  | ✓        | Oracle feed account public key                       |
+| `name`               | `string`                  | ✓        | Display name                                         |
+| `cliff`              | `number`                  | -        | Cliff timestamp - defaults to `start`                |
+| `cliffAmount`        | `BN`                      | -        | Amount released at cliff                             |
+| `cancelableBySender` | `boolean`                 | -        | Defaults `false`                                     |
+| `canTopup`           | `boolean`                 | -        | Defaults `false`                                     |
+| `partner`            | `string`                  | -        | Partner address for custom fee rates                 |
 
 ## Code example
 
@@ -76,15 +77,15 @@ const { txId, metadataId } = await client.create(
     // Schedule
     start,
     cliff: start,
-    period: 86400,             // daily
-    cliffAmount: new BN(0),    // no upfront release
-    amountPerPeriod,           // max per day (at maxPrice)
+    period: 86400, // daily
+    cliffAmount: new BN(0), // no upfront release
+    amountPerPeriod, // max per day (at maxPrice)
 
     // Price oracle configuration
-    minPrice: 1,               // $1 - 20% per period
-    maxPrice: 5,               // $5 - 100% per period
-    minPercentage: 20,         // 20% at minPrice
-    maxPercentage: 100,        // 100% at maxPrice (required)
+    minPrice: 1, // $1 - 20% per period
+    maxPrice: 5, // $5 - 100% per period
+    minPercentage: 20, // 20% at minPrice
+    maxPercentage: 100, // 100% at maxPrice (required)
     oracleType: "pyth",
     // Pyth SOL/USD feed on mainnet:
     priceOracle: "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG",
@@ -111,7 +112,9 @@ console.log("Transaction:", txId);
 ```
 
 <Callout type="warn">
-  `priceOracle` must be the feed account for your specific token pair, not the oracle program ID. Find Pyth feed addresses at [pyth.network/price-feeds](https://pyth.network/price-feeds) and Switchboard feeds at [app.switchboard.xyz](https://app.switchboard.xyz).
+  `priceOracle` must be the feed account for your specific token pair, not the oracle program ID. Find Pyth feed
+  addresses at [pyth.network/price-feeds](https://pyth.network/price-feeds) and Switchboard feeds at
+  [app.switchboard.xyz](https://app.switchboard.xyz).
 </Callout>
 
 ## Querying the stream
@@ -120,7 +123,7 @@ console.log("Transaction:", txId);
 import { isAligned } from "@streamflow/stream";
 
 const stream = await client.getOne({ id: metadataId });
-console.log("Is aligned (price-based):", stream.isAligned);  // true
+console.log("Is aligned (price-based):", stream.isAligned); // true
 
 if (isAligned(stream)) {
   // AlignedStream - price fields are now available

@@ -10,13 +10,13 @@ After a stream is created, five operations are available. Each returns `Instruct
 
 ## Operations overview
 
-| Operation | Gated by | Who calls | Params |
-|-----------|----------|-----------|--------|
-| `withdraw` | Always available | Recipient | `{ id, amount? }` |
-| `topup` | `canTopup: true` | Sender | `{ id, amount }` |
-| `transfer` | `transferableBySender: true` | Sender | `{ id, newRecipient }` |
-| `cancel` | `cancelableBySender: true` | Sender | `{ id }` |
-| `update` | `canUpdateRate: true` | Sender | `{ id, ... }` |
+| Operation  | Gated by                     | Who calls | Params                 |
+| ---------- | ---------------------------- | --------- | ---------------------- |
+| `withdraw` | Always available             | Recipient | `{ id, amount? }`      |
+| `topup`    | `canTopup: true`             | Sender    | `{ id, amount }`       |
+| `transfer` | `transferableBySender: true` | Sender    | `{ id, newRecipient }` |
+| `cancel`   | `cancelableBySender: true`   | Sender    | `{ id }`               |
+| `update`   | `canUpdateRate: true`        | Sender    | `{ id, ... }`          |
 
 ### withdraw
 
@@ -84,7 +84,8 @@ const { txId } = await client.topup(
 Change the recipient wallet. Requires `transferableBySender: true` at creation.
 
 <Callout type="warn">
-  `transfer()` embeds its own `ComputeBudgetProgram` instruction. Do **not** pass `computeLimit` to `buildTransaction` - it would duplicate the compute budget instruction.
+  `transfer()` embeds its own `ComputeBudgetProgram` instruction. Do **not** pass `computeLimit` to `buildTransaction` -
+  it would duplicate the compute budget instruction.
 </Callout>
 
 <Tabs items={["Composable API", "SolanaStreamClient"]}>
@@ -146,7 +147,8 @@ Cancel must be the last operation - all other operations fail after a stream is 
 Change the stream's release rate or permission flags. Requires `canUpdateRate: true` on the stream.
 
 <Callout type="info">
-  `canUpdateRate` is **not exposed** in `ICreateVestingParams`. Streams created via `createVesting` don't support `update` unless you use `SolanaStreamClient.create()` directly with `canUpdateRate: true` in the raw params.
+  `canUpdateRate` is **not exposed** in `ICreateVestingParams`. Streams created via `createVesting` don't support
+  `update` unless you use `SolanaStreamClient.create()` directly with `canUpdateRate: true` in the raw params.
 </Callout>
 
 <Tabs items={["Composable API", "SolanaStreamClient"]}>
@@ -155,11 +157,7 @@ Change the stream's release rate or permission flags. Requires `canUpdateRate: t
 ```ts
 import { update } from "@streamflow/stream/solana/api";
 
-const result = await update(
-  { id: streamId, amountPerPeriod: new BN(200_000) },
-  senderInvoker,
-  env,
-);
+const result = await update({ id: streamId, amountPerPeriod: new BN(200_000) }, senderInvoker, env);
 const built = await buildTransaction(result.instructions, { feePayer: senderInvoker.publicKey }, env);
 await sign(built.transaction, [senderInvoker]);
 await execute(built, env);
