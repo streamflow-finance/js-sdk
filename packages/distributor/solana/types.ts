@@ -45,6 +45,8 @@ export type ClaimLockedAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "cla
 export type ClawbackAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "clawback">;
 export type CloseClaimAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "closeClaim">;
 export type CloseClaimArgs = IdlInstruction<MerkleDistributorIDL, "closeClaim">["args"];
+export type RequestClawbackAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "requestClawback">;
+export type WithdrawClawbackRequestAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "withdrawClawbackRequest">;
 
 /**
  * @type
@@ -79,6 +81,8 @@ export interface ICreateDistributorData {
   claimsClosableByAdmin: boolean;
   claimsClosableByClaimant?: boolean;
   claimsLimit?: number;
+  // signer or PartnerLink PDA used for fee derivation
+  partnerLink?: { address: string; isSigner: boolean };
 }
 
 export interface AlignedDistributorData {
@@ -141,6 +145,10 @@ export interface ICloseClaimData extends Partial<Omit<IClaimData, "id">> {
 export interface IClawbackData {
   id: string;
 }
+
+export type IRequestClawbackData = IClawbackData;
+
+export type IWithdrawClawbackRequestData = IClawbackData;
 
 export interface IGetClaimData {
   id: string;

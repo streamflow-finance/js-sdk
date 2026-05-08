@@ -55,6 +55,8 @@ export interface IStreamLayout {
   old_metadata: Uint8Array;
   payer: Uint8Array;
   bump: number;
+  fee_partner: Uint8Array;
+  cancel_request_time: Uint8Array;
 }
 
 export interface ICreateStreamLayout {

@@ -8,7 +8,7 @@ export type StreamflowAlignedUnlocks = {
   "address": "aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH",
   "metadata": {
     "name": "streamflowAlignedUnlocks",
-    "version": "1.4.0",
+    "version": "1.7.0",
     "spec": "0.1.0",
     "description": "Proxy to update unlock amount within Streamflow vesting protocol according to Token performance and other metrics"
   },
@@ -30,6 +30,388 @@ export type StreamflowAlignedUnlocks = {
           "name": "sender",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "senderTokens",
+          "docs": [
+            "Associated token account address of `sender`.",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "sender"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "recipientTokens",
+          "docs": [
+            "CHECK; Associated token account address of `recipient`.",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "proxyMetadata",
+          "docs": [
+            "Proxy Contract",
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "streamMetadata"
+              },
+            ]
+          }
+        },
+        {
+          "name": "proxyTokens",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "proxyMetadata"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "streamMetadata",
+          "writable": true
+        },
+        {
+          "name": "escrowTokens",
+          "writable": true
+        },
+        {
+          "name": "streamflowTreasury",
+          "writable": true
+        },
+        {
+          "name": "streamflowTreasuryTokens",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "streamflowTreasury"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner",
+          "writable": true
+        },
+        {
+          "name": "partnerTokens",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "partner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89,
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The SPL token mint account.",
+          ],
+          "writable": true
+        },
+        {
+          "name": "streamflowProgram",
+          "address": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"
+        },
+        {
+          "name": "tokenProgram",
+          "docs": [
+            "The SPL program needed in case an associated account",
+            "for the new recipient is being created.",
+          ]
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelV2",
+      "discriminator": [
+        160,
+        58,
+        112,
+        172,
+        233,
+        228,
+        38,
+        140,
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender",
+          "writable": true
         },
         {
           "name": "senderTokens",
@@ -678,7 +1060,8 @@ export type StreamflowAlignedUnlocks = {
           "name": "mint"
         },
         {
-          "name": "feeOracle"
+          "name": "feeOracle",
+          "address": "B743wFVk2pCYhV91cn287e1xY7f1vt4gdY48hhNiuQmT"
         },
         {
           "name": "priceOracle"
@@ -1104,6 +1487,21 @@ export type StreamflowAlignedUnlocks = {
       "code": 6016,
       "name": "invalidFloorPrice",
       "msg": "Provided floor price is invalid, should be less than minimum price"
+    },
+    {
+      "code": 6017,
+      "name": "amountNotUpdated",
+      "msg": "Update won't lead to any changes in unlock schedule"
+    },
+    {
+      "code": 6018,
+      "name": "oldMetadataNotDrained",
+      "msg": "Old metadata account must be drained"
+    },
+    {
+      "code": 6019,
+      "name": "newMetadataMissing",
+      "msg": "New metadata account does not exist"
     },
   ],
   "types": [
