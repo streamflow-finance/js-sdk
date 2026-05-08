@@ -11,8 +11,8 @@ A vesting stream releases tokens gradually over time according to a period-based
 
 | Type                                                   | Trigger                        | Composable API                        |
 | ------------------------------------------------------ | ------------------------------ | ------------------------------------- |
-| [Time-based](/docs/core-concepts/vesting/time-based)   | Clock-driven, period intervals | `createVesting`, `createVestingBatch` |
-| [Price-based](/docs/core-concepts/vesting/price-based) | Oracle price thresholds        | `SolanaStreamClient` directly         |
+| [Time-based](/docs/core-concepts/streams/vesting/time-based)   | Clock-driven, period intervals | `createVesting`, `createVestingBatch` |
+| [Price-based](/docs/core-concepts/streams/vesting/price-based) | Oracle price thresholds        | `SolanaStreamClient` directly         |
 
 ## Key parameters
 
@@ -44,4 +44,4 @@ This ensures all tokens are released by the end of the schedule, with the last p
 
 ## Initial allocation
 
-`createVesting` with `initialAllocation` creates two streams atomically: the main vesting stream and a separate stream for the initial allocation amount. The return type changes to `BatchInstructionResult`. See [Guide: Create a Vesting Stream](/docs/core-concepts/vesting/guide-create-vesting) for the full pattern.
+`createVesting` with `initialAllocation` creates two streams atomically: the main vesting stream and a separate stream for the initial allocation amount. The return type changes to `BatchInstructionResult`. See [Guide: Create a Vesting Stream](/docs/core-concepts/streams/vesting/guide-create-vesting) for the full pattern.

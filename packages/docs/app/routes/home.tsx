@@ -217,7 +217,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
                 description="Locks, vesting, batch creation, lifecycle ops."
               />
               <Card
-                href="/docs/composable-apis"
+                href="/docs/core-concepts/streams/composable-apis"
                 icon={<Zap className="size-4" />}
                 title="Composable APIs"
                 description="3-phase model - instructions, build, sign, execute."

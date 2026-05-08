@@ -9,8 +9,8 @@ A lock holds tokens in escrow until a trigger condition is met, then releases th
 
 | Type                                                 | Trigger                       | Composable API                  |
 | ---------------------------------------------------- | ----------------------------- | ------------------------------- |
-| [Time-based](/docs/core-concepts/locks/time-based)   | Unix timestamp (`unlockDate`) | `createLock`, `createLockBatch` |
-| [Price-based](/docs/core-concepts/locks/price-based) | Oracle price condition        | `SolanaStreamClient` directly   |
+| [Time-based](/docs/core-concepts/streams/locks/time-based)   | Unix timestamp (`unlockDate`) | `createLock`, `createLockBatch` |
+| [Price-based](/docs/core-concepts/streams/locks/price-based) | Oracle price condition        | `SolanaStreamClient` directly   |
 
 ## Immutable constraints
 
