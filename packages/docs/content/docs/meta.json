@@ -1,4 +1,4 @@
 {
   "title": "Streamflow Docs",
-  "pages": ["index", "overview", "getting-started", "core-concepts", "composable-apis", "api", "resources", "ai-tools"]
+  "pages": ["index", "overview", "getting-started", "core-concepts", "api", "resources", "ai-tools"]
 }

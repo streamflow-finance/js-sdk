@@ -2,5 +2,5 @@
   "title": "Basics",
   "icon": "Layers",
   "defaultOpen": false,
-  "pages": ["bn-conversions", "prepare-execute-pattern", "fee-system", "stream-lifecycle"]
+  "pages": ["bn-conversions", "prepare-execute-pattern", "fee-system"]
 }
