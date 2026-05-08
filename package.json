@@ -28,7 +28,7 @@
     "lint": "lerna run lint",
     "tsc:lint": "lerna run tsc:lint",
     "docs:build": "lerna exec -- typedoc",
-    "validate-types": "lerna exec -- attw --pack --profile node16 .",
+    "validate-types": "lerna exec --ignore @streamflow/docs -- attw --pack --profile node16 .",
     "validate-packages": "lerna exec -- publint && pnpm validate-types",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
