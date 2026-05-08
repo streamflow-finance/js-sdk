@@ -49,7 +49,7 @@ const PACKAGES = [
 const EXTERNAL_LINKS = [
   { label: "App", href: "https://app.streamflow.finance" },
   { label: "Website", href: "https://streamflow.finance" },
-  { label: "Legacy Docs", href: "https://docs.streamflow.finance" },
+  { label: "Support Docs", href: "https://docs.streamflow.finance" },
   { label: "Rust SDK", href: "https://docs.rs/streamflow-sdk/latest/streamflow_sdk/" },
   { label: "GitHub", href: "https://github.com/streamflow-finance" },
   { label: "X / Twitter", href: "https://x.com/streamflow_fi" },
