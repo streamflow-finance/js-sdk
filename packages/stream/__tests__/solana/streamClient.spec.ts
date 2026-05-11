@@ -57,7 +57,7 @@ vi.mock("@streamflow/common", async (importOriginal) => {
 });
 
 vi.mock("@solana/spl-token", async (importOriginal) => {
-  const actual = await importOriginal() as Record<string, any>;
+  const actual = (await importOriginal()) as Record<string, any>;
   return {
     ...actual,
     getTransferHook: vi.fn(),
@@ -162,7 +162,9 @@ describe("SolanaStreamClient Transaction Builders", async () => {
   ).calculateTotalAmountToDeposit;
   const mockDecodeStream = vi.mocked(await import("../../solana/lib/utils.js")).decodeStream;
   const mockGetTransferHook = vi.mocked(await import("@solana/spl-token")).getTransferHook;
-  const mockAddExtraAccountMetasForExecute = vi.mocked(await import("@solana/spl-token")).addExtraAccountMetasForExecute;
+  const mockAddExtraAccountMetasForExecute = vi.mocked(
+    await import("@solana/spl-token"),
+  ).addExtraAccountMetasForExecute;
   const { TOKEN_2022_PROGRAM_ID } = await import("@solana/spl-token");
 
   beforeEach(async () => {
@@ -612,7 +614,9 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           },
         );
 
-        expect(result.ixs.at(-1)?.keys).toEqual([{ pubkey: publicKeys.partnerLink, isSigner: true, isWritable: false }]);
+        expect(result.ixs.at(-1)?.keys).toEqual([
+          { pubkey: publicKeys.partnerLink, isSigner: true, isWritable: false },
+        ]);
         expectTransferHookCalls(result.ixs.at(-1), [
           {
             source: publicKeys.senderTokens,

@@ -52,7 +52,7 @@ interface CreateStreamAccounts {
   associatedTokenProgram: PublicKey;
   withdrawor: PublicKey;
   systemProgram: PublicKey;
-  partnerLink?: { pubkey: PublicKey, isSigner: boolean };
+  partnerLink?: { pubkey: PublicKey; isSigner: boolean };
 }
 
 export const createStreamInstruction = async (
@@ -170,7 +170,7 @@ interface CreateUncheckedStreamAccounts {
   tokenProgram: PublicKey;
   withdrawor: PublicKey;
   systemProgram: PublicKey;
-  partnerLink?: { pubkey: PublicKey, isSigner: boolean };
+  partnerLink?: { pubkey: PublicKey; isSigner: boolean };
 }
 
 export const createUncheckedStreamInstruction = async (
