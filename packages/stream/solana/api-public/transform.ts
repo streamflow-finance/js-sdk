@@ -87,6 +87,8 @@ async function toDecodedStream(schema: ContractSchema): Promise<DecodedStream> {
     oldMetadata: PublicKey.default,
     payer,
     bump: schema.bump ? schema.bump : 0,
+    feePartner: partner,
+    cancelRequestTime: toBN(isoToUnix(schema.cancelRequestDt)),
   };
 }
 

@@ -8,7 +8,7 @@ export type AlignedDistributor = {
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "alignedDistributor",
-    "version": "2.0.0",
+    "version": "1.9.0",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
@@ -160,9 +160,9 @@ export type AlignedDistributor = {
         {
           "name": "admin",
           "docs": [
-            "Only Admin can trigger the clawback of funds",
+            "Admin or anybody in case distributor has been clawed back (usually by clawback authority).",
+            "Since receiver is set by the admin, it's generally safe to call clawback by anyone here if the merkle distributor has been clawed back",
           ],
-          "writable": true,
           "signer": true
         },
         {
@@ -1038,6 +1038,16 @@ export type AlignedDistributor = {
       "name": "noFeesToClaim",
       "msg": "No fees to claim"
     },
+    {
+      "code": 6015,
+      "name": "durationNotUpdated",
+      "msg": "Update won't lead to any changes in unlock schedule"
+    },
+    {
+      "code": 6016,
+      "name": "clawbackAlreadyClaimed",
+      "msg": "Clawback already claimed"
+    },
   ],
   "types": [
     {
@@ -1525,14 +1535,56 @@ export type AlignedDistributor = {
             "type": "u8"
           },
           {
-            "name": "buffer",
+            "name": "autoClaim",
             "docs": [
-              "Buffer for additional fields",
+              "Whether Distributor supports auto-claim",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "alignBuffer1",
+            "docs": [
+              "Extra buffer to keep alignment, may be reused",
             ],
             "type": {
               "array": [
                 "u8",
-                13,
+                4,
+              ]
+            }
+          },
+          {
+            "name": "feePartner",
+            "docs": [
+              "Partner wallet whose fee schedule was applied, if different from the creator",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "clawbackRequestTs",
+            "docs": [
+              "Timestamp when clawback was requested by the fee partner",
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "buffer1",
+            "docs": [
+              "Buffers for additional fields",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+          {
+            "name": "buffer2",
+            "type": {
+              "array": [
+                "u8",
+                32,
               ]
             }
           },

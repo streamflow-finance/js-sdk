@@ -8,7 +8,7 @@ export type Streamflow = {
   "address": "strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m",
   "metadata": {
     "name": "streamflow",
-    "version": "0.4.0",
+    "version": "0.6.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
@@ -99,6 +99,10 @@ export type Streamflow = {
         },
         {
           "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "partner",
           "writable": true
         },
       ],
@@ -1129,6 +1133,30 @@ export type Streamflow = {
       "args": []
     },
     {
+      "name": "requestCancel",
+      "discriminator": [
+        244,
+        78,
+        42,
+        227,
+        165,
+        174,
+        94,
+        167,
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+      ],
+      "args": []
+    },
+    {
       "name": "topup",
       "discriminator": [
         126,
@@ -1441,6 +1469,30 @@ export type Streamflow = {
           "type": "u64"
         },
       ]
+    },
+    {
+      "name": "withdrawCancelRequest",
+      "discriminator": [
+        91,
+        137,
+        171,
+        103,
+        142,
+        205,
+        96,
+        75,
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+      ],
+      "args": []
     },
   ]
 };

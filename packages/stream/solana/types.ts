@@ -46,6 +46,8 @@ export interface IBaseStreamConfig {
   canPause?: boolean;
   canUpdateRate?: boolean;
   partner?: string;
+  // signer or PartnerLink PDA used for fee derivation
+  partnerLink?: { address: string, isSigner: boolean };
   tokenProgramId?: string | PublicKey;
 }
 
@@ -97,6 +99,10 @@ export interface IUpdateData extends IInteractData {
 }
 
 export type ICancelData = IInteractData;
+
+export type IRequestCancelData = IInteractData;
+
+export type IWithdrawCancelRequestData = IInteractData;
 
 export interface ITransferData extends IInteractData {
   newRecipient: string;
@@ -223,6 +229,8 @@ export interface LinearStream {
   oldMetadata: PublicKey;
   payer: string;
   bump: number;
+  feePartner: string;
+  cancelRequestTime: number;
 
   type: StreamType;
 
@@ -447,9 +455,15 @@ export interface IPrepareStreamExt extends Omit<IInteractStreamExt, "invoker"> {
   };
 }
 
-export interface ITopUpStreamExt extends ITransactionExt {
-  invoker: SignerWalletAdapter | Keypair;
+export interface IPrepareTopUpstreamExt extends ITransactionExt {
+  invoker: {
+    publicKey: PublicKey | null;
+  }
   isNative?: boolean;
+}
+
+export interface ITopUpStreamExt extends IPrepareTopUpstreamExt {
+  invoker: SignerWalletAdapter | Keypair;
 }
 
 export interface ICreateStreamInstructions {
@@ -553,6 +567,10 @@ export class Contract implements LinearStream {
 
   bump: number;
 
+  feePartner: string;
+
+  cancelRequestTime: number;
+
   type: StreamType;
 
   isAligned: boolean;
@@ -606,6 +624,8 @@ export class Contract implements LinearStream {
     this.oldMetadata = stream.oldMetadata;
     this.payer = stream.payer.toBase58();
     this.bump = stream.bump;
+    this.feePartner = stream.feePartner.toBase58();
+    this.cancelRequestTime = stream.cancelRequestTime.toNumber();
     this.type = buildStreamType(this);
     this.isAligned = false;
   }
@@ -729,6 +749,8 @@ export interface DecodedStream {
   oldMetadata: PublicKey;
   payer: PublicKey;
   bump: number;
+  feePartner: PublicKey;
+  cancelRequestTime: BN;
 }
 
 export interface MetadataRecipientHashMap {
