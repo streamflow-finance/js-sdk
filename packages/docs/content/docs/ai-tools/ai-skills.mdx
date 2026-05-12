@@ -1,0 +1,46 @@
+---
+title: AI Skills
+description: Context files for AI-assisted Streamflow development.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+## Overview
+
+The SDK ships with structured context files under `skills/` that give AI coding assistants accurate knowledge of the Streamflow APIs without requiring them to search through source code.
+
+## Stream creation skill
+
+`skills/stream-creation/SKILL.md` covers everything needed to create streams correctly:
+
+- Which function to call for each use case (`createLock` vs `createVesting`, single vs batch)
+- Full parameter signatures with types and defaults
+- `amountPerPeriod` auto-compute formula and duration rules (`endDate` XOR `duration`)
+- The `initialAllocation` overload and when to use it
+- Classification gotcha - when a vesting stream silently becomes a lock
+
+It also references [`skills/stream-creation/assets/advanced.md`](https://github.com/streamflow-finance/js-sdk/blob/master/skills/stream-creation/assets/advanced.md) for protocol-level details: `StreamType` fee tiers, `isTokenLock()` criteria, and price-triggered stream params.
+
+[View SKILL.md on GitHub](https://github.com/streamflow-finance/js-sdk/blob/master/skills/stream-creation/SKILL.md)
+
+## Using the skill
+
+<Tabs items={["Claude Code", "OpenAI Codex", "Any AI assistant"]}>
+  <Tab value="Claude Code">
+    Skills load automatically when you work on stream-related tasks. Claude Code discovers the `skills/` directory in the repo root and injects the relevant skill into context.
+
+    For your own projects, copy the `skills/` directory to your project root - Claude Code will pick it up automatically.
+
+  </Tab>
+  <Tab value="OpenAI Codex">
+    Add the contents of `SKILL.md` to your project's `AGENTS.md` - Codex reads this file automatically for project-level instructions.
+  </Tab>
+  <Tab value="Any AI assistant">
+    Open [`SKILL.md` on GitHub](https://github.com/streamflow-finance/js-sdk/blob/master/skills/stream-creation/SKILL.md), copy the raw content, and paste it into your chat before asking questions about stream creation. It is plain Markdown and works in any AI assistant - Claude, ChatGPT, Gemini, or any other.
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+  Skills are plain Markdown files - no special tooling required. The format works universally across AI assistants.
+</Callout>

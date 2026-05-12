@@ -14,7 +14,7 @@ import { StreamflowDistributorSolana } from "@streamflow/distributor";
 import { SolanaStakingClient } from "@streamflow/staking";
 import { SolanaLaunchpadClient } from "@streamflow/launchpad";
 // Other entrypoints to test that the package.json is correct
-import {prepareTransaction} from "@streamflow/common";
+import { prepareTransaction } from "@streamflow/common";
 
 // Import IDL files to test import resolving
 import streamflowAlignedUnlocksIDL from "@streamflow/stream/solana/idl/streamflow_aligned_unlocks.json" assert { type: "json" };

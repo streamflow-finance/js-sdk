@@ -40,32 +40,30 @@ export const commonNoExternals = ["p-queue", "p-retry"];
 
 // Helper to create package config. Returns a function so tsup can pass watch options.
 // When watch is true, clean is false to avoid clearing dist during rebuilds.
-export const createPackageConfig = (options: {
-  entry: Record<string, string>;
-  external?: string[];
-  noExternal?: string[];
-}) => (tsupOptions?: Pick<Options, "watch">): Options[] => {
-  const clean = tsupOptions?.watch ? false : true;
-  return [
-    // ESM config
-    {
-      ...baseConfig,
-      clean,
-      entry: options.entry,
-      external: [...commonExternals, ...(options.external || [])],
-      noExternal: [...commonNoExternals, ...(options.noExternal || [])],
-      format: ["esm"],
-      outDir: "dist/esm",
-    },
-    // CJS config
-    {
-      ...baseConfig,
-      clean,
-      entry: options.entry,
-      external: [...commonExternals, ...(options.external || [])],
-      noExternal: [...commonNoExternals, ...(options.noExternal || [])],
-      format: ["cjs"],
-      outDir: "dist/cjs",
-    },
-  ];
-};
+export const createPackageConfig =
+  (options: { entry: Record<string, string>; external?: string[]; noExternal?: string[] }) =>
+  (tsupOptions?: Pick<Options, "watch">): Options[] => {
+    const clean = tsupOptions?.watch ? false : true;
+    return [
+      // ESM config
+      {
+        ...baseConfig,
+        clean,
+        entry: options.entry,
+        external: [...commonExternals, ...(options.external || [])],
+        noExternal: [...commonNoExternals, ...(options.noExternal || [])],
+        format: ["esm"],
+        outDir: "dist/esm",
+      },
+      // CJS config
+      {
+        ...baseConfig,
+        clean,
+        entry: options.entry,
+        external: [...commonExternals, ...(options.external || [])],
+        noExternal: [...commonNoExternals, ...(options.noExternal || [])],
+        format: ["cjs"],
+        outDir: "dist/cjs",
+      },
+    ];
+  };

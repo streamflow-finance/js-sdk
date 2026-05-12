@@ -564,10 +564,7 @@ export default abstract class BaseDistributorClient {
    * Once the request is recorded on-chain, clawback can be executed after the
    * configured delay elapses.
    */
-  public async requestClawback(
-    data: IRequestClawbackData,
-    extParams: IInteractExt,
-  ): Promise<ITransactionResult> {
+  public async requestClawback(data: IRequestClawbackData, extParams: IInteractExt): Promise<ITransactionResult> {
     const executionParams = this.unwrapExecutionParams(extParams);
     const invoker = executionParams.invoker.publicKey;
     invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");

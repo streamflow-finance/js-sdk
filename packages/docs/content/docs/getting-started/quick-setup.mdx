@@ -1,0 +1,208 @@
+---
+title: Quick Setup
+description: Initialize SolanaStreamClient or build the composable API env - two approaches, one protocol.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+The SDK exposes two distinct approaches. Pick one and stick with it - they interoperate but don't need to be mixed.
+
+|             | Composable API                                | SolanaStreamClient                                              |
+| ----------- | --------------------------------------------- | --------------------------------------------------------------- |
+| Import path | `@streamflow/stream/solana/api`               | `@streamflow/stream`                                            |
+| Returns     | Instructions only - you build, sign, execute  | Signs and submits in one call, or `prepare*()` for full control |
+| Best for    | Custom fee payers, multi-sig, wallet adapters | Server-side scripts, backend services, direct integration       |
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+<Steps>
+<Step>
+
+## Install dependencies
+
+```bash
+pnpm add @streamflow/stream @solana/web3.js
+```
+
+</Step>
+<Step>
+
+## Create a Solana Connection
+
+```ts
+import { Connection } from "@solana/web3.js";
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+```
+
+Pass any RPC endpoint. For production, use a private RPC provider.
+
+</Step>
+<Step>
+
+## Build the `env` object
+
+Every composable API function takes an `env` object containing the program ID and either a `Connection` instance or an `rpcUrl` string. `programId` is always required.
+
+```ts
+import { pk } from "@streamflow/common";
+
+// With an existing Connection (recommended)
+const env = {
+  connection,
+  programId: pk("strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"), // mainnet
+};
+```
+
+Alternatively, provide just an RPC URL and a `Connection` is created internally:
+
+```ts
+const env = {
+  rpcUrl: "https://api.mainnet-beta.solana.com",
+  programId: pk("strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"),
+};
+```
+
+<Callout type="info">
+  See [Program IDs](/docs/resources/program-ids) for a full table of mainnet and devnet program addresses.
+</Callout>
+
+</Step>
+<Step>
+
+## Load a keypair or wallet
+
+```ts
+import { Keypair } from "@solana/web3.js";
+import fs from "node:fs";
+
+// Backend: load from file
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+// Frontend: pass wallet adapter directly (SignerWalletAdapter)
+// import { useWallet } from "@solana/wallet-adapter-react";
+// const { wallet } = useWallet();
+// const invoker = wallet.adapter;
+```
+
+</Step>
+</Steps>
+
+## Complete example
+
+```ts title="setup.ts"
+import { Connection, Keypair } from "@solana/web3.js";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+
+const env = {
+  connection,
+  programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ"), // devnet
+};
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+// Pass env and invoker to any composable API function:
+// createLock(params, invoker, { ...env, isNative: false })
+// createVesting(params, invoker, { ...env, isNative: false })
+```
+
+<Callout type="warn">
+  This example targets **devnet**. For mainnet, use a private RPC (Helius, QuickNode, Triton) and the mainnet program ID
+  from [Program IDs](/docs/resources/program-ids).
+</Callout>
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+<Steps>
+<Step>
+
+## Install dependencies
+
+```bash
+pnpm add @streamflow/stream @solana/web3.js
+```
+
+</Step>
+<Step>
+
+## Initialize the client
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+
+// Recommended: object options
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+```
+
+Two alternative forms are also accepted:
+
+```ts
+// Positional args (legacy style)
+const client = new SolanaStreamClient("https://api.devnet.solana.com", ICluster.Devnet);
+
+// Pass an existing Connection
+import { Connection } from "@solana/web3.js";
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const client = new SolanaStreamClient({ connection, cluster: ICluster.Devnet });
+```
+
+`cluster` drives program address resolution. `clusterUrl` is the RPC endpoint.
+
+</Step>
+<Step>
+
+## Load a keypair
+
+```ts
+import { Keypair } from "@solana/web3.js";
+import fs from "node:fs";
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+```
+
+</Step>
+</Steps>
+
+## Complete example
+
+```ts title="setup.ts"
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { Keypair } from "@solana/web3.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+// High-level: signs and submits in one call
+// const { txId, metadataId } = await client.create(params, { sender: invoker });
+
+// Fine-grained: prepare instructions, sign and send yourself
+// const { ixs, metadata } = await client.prepareCreateInstructions(params, { sender: { publicKey: invoker.publicKey } });
+```
+
+The client instance is reusable across all operations. Create it once and pass it around.
+
+<Callout type="info">
+  For mainnet, replace `ICluster.Devnet` with `ICluster.Mainnet` and update `clusterUrl` to your private RPC endpoint.
+</Callout>
+
+</Tab>
+</Tabs>

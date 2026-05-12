@@ -1,0 +1,280 @@
+---
+title: "Guide: Create a Vesting Stream"
+description: End-to-end examples for simple vesting, initial allocation, and class-based creation.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+<Tabs items={["Simple vesting", "With initial allocation"]}>
+<Tab value="Simple vesting">
+
+<Steps>
+<Step>
+
+### Import and set up
+
+```ts
+import { Connection, Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import { buildTransaction, createVesting, execute, sign } from "@streamflow/stream/solana/api";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const env = {
+  connection,
+  programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ"),
+};
+```
+
+</Step>
+<Step>
+
+### Phase 1 - Get instructions
+
+```ts
+const start = Math.floor(Date.now() / 1000) + 10; // 10 seconds from now
+
+const result = await createVesting(
+  {
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
+    start,
+    period: 86400, // release daily
+    duration: 365 * 86400, // over 1 year
+    cliffAmount: new BN(0), // no upfront release
+    name: "Employee Vesting",
+    cancelableBySender: true,
+    canTopup: true,
+    transferableBySender: true,
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+
+const streamId = result.metadataPubKey!.toBase58();
+```
+
+</Step>
+<Step>
+
+### Phases 2 and 3 - Build, sign, and execute
+
+```ts
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+
+console.log("Stream ID:", streamId);
+console.log("Transaction:", signature);
+```
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="With initial allocation">
+
+Providing `initialAllocation` creates **two streams atomically**: the main vesting stream and a separate stream for the upfront allocation. The return type changes to `BatchInstructionResult`, and you must send a setup transaction followed by one transaction per stream.
+
+<Callout type="info">
+  The allocation stream uses internal parameters specifically chosen to avoid on-chain lock classification. These are
+  set automatically - you only need to provide the `amount`.
+</Callout>
+
+<Steps>
+<Step>
+
+### Phase 1 - Get instructions (returns BatchInstructionResult)
+
+```ts
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const result = await createVesting(
+  {
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
+    start,
+    period: 86400,
+    duration: 365 * 86400,
+    name: "Vest + Allocation",
+    cancelableBySender: true,
+    initialAllocation: { amount: new BN(360_000_000) }, // 10% upfront
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+
+// result: { setupInstructions, creationBatches }
+// creationBatches[0] - main vesting stream
+// creationBatches[1] - allocation stream
+```
+
+</Step>
+<Step>
+
+### Send setup transaction first
+
+Setup creates associated token accounts and wraps SOL if needed. It must confirm before the creation batches are sent.
+
+```ts
+if (result.setupInstructions.length > 0) {
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
+  await sign(setupBuilt.transaction, [invoker]);
+  await execute(setupBuilt, env);
+}
+```
+
+</Step>
+<Step>
+
+### Send one transaction per creation batch
+
+Each batch has its own metadata keypair and must be submitted as a separate transaction.
+
+```ts
+for (const batch of result.creationBatches) {
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
+  await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
+  const sig = await execute(batchBuilt, env);
+  console.log("Stream:", batch.metadataPubKey.toBase58(), "Tx:", sig);
+}
+```
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+`client.create()` handles building, signing, and submission in a single call. For the `initialAllocation` pattern, use the composable API instead - it returns a `BatchInstructionResult` giving you control over each transaction in the sequence.
+
+<Steps>
+<Step>
+
+### Import and initialize
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildVestingParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+```
+
+</Step>
+<Step>
+
+### Create the vesting stream
+
+`buildVestingParams` resolves `duration` or `endDate`, computes `amountPerPeriod` via ceiling division, and fills in protocol defaults before passing to the client.
+
+```ts
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const { txId, metadataId } = await client.create(
+  buildVestingParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000), // 3600 tokens at 6 decimals
+    start,
+    period: 86400, // daily release
+    duration: 365 * 86400, // 1 year
+    cliffAmount: new BN(0), // no cliff
+    name: "Employee Vesting",
+    cancelableBySender: true,
+    canTopup: true,
+    transferableBySender: true,
+  }),
+  {
+    sender: invoker,
+    isNative: false,
+  },
+);
+
+console.log("Stream ID:", metadataId);
+console.log("Transaction:", txId);
+```
+
+</Step>
+<Step>
+
+### Fine-grained control (optional)
+
+Use `prepareCreateInstructions()` to get the raw instructions without submitting:
+
+```ts
+const { ixs, metadata, metadataPubKey } = await client.prepareCreateInstructions(
+  buildVestingParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000),
+    start,
+    period: 86400,
+    duration: 365 * 86400,
+    name: "Employee Vesting",
+  }),
+  {
+    sender: { publicKey: invoker.publicKey },
+    isNative: false,
+  },
+);
+
+// ixs: TransactionInstruction[] - compose into your own transaction
+// metadata: Keypair | undefined - co-sign if present
+// metadataPubKey: PublicKey - the stream ID (call .toBase58() to get the string)
+```
+
+</Step>
+<Step>
+
+### Query stream state
+
+After creation, use `getOne()` to read stream state, or `get()` to list all streams for a wallet:
+
+```ts
+import { StreamDirection, StreamType } from "@streamflow/stream";
+
+// Fetch a single stream
+const stream = await client.getOne({ id: metadataId });
+console.log("Recipient:", stream.recipient);
+console.log("Deposited:", stream.depositedAmount.toString());
+console.log("Withdrawn:", stream.withdrawnAmount.toString());
+
+// List all outgoing vesting streams for a sender
+const streams = await client.get({
+  address: invoker.publicKey.toBase58(),
+  direction: StreamDirection.Outgoing,
+  type: StreamType.Vesting,
+});
+for (const [id, stream] of streams) {
+  console.log(id, "->", stream.recipient, stream.depositedAmount.toString());
+}
+```
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>

@@ -14,6 +14,6 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
   },
-  plugins: [dts(), nodePolyfills()],
+  plugins: [dts(), nodePolyfills({ globals: { Buffer: false, global: false, process: false } })],
   cacheDir: "dist/.vite",
 });

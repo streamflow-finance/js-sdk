@@ -1,0 +1,263 @@
+---
+title: "Guide: Full Lifecycle"
+description: Create a vesting stream then run withdraw, topup, transfer, and cancel - both APIs.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="info">
+  The stream must be created with `cancelableBySender: true`, `canTopup: true`, and `transferableBySender: true` to
+  allow all operations. Locks only support `withdraw`.
+</Callout>
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+<Steps>
+<Step>
+
+### Create the stream
+
+```ts
+import { Connection, Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import {
+  buildTransaction,
+  cancel,
+  createVesting,
+  execute,
+  sign,
+  topup,
+  transfer,
+  withdraw,
+} from "@streamflow/stream/solana/api";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const env = { connection, programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ") };
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const created = await createVesting(
+  {
+    recipient: invoker.publicKey.toBase58(), // self, so same keypair can withdraw
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000),
+    start,
+    period: 1, // 1-second periods for quick testing
+    duration: 3600,
+    cliffAmount: new BN(1_000_000), // small upfront amount
+    name: "Lifecycle Test",
+    cancelableBySender: true,
+    canTopup: true,
+    transferableBySender: true,
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+
+const streamId = created.metadataPubKey!.toBase58();
+const createBuilt = await buildTransaction(created.instructions, { feePayer: invoker.publicKey }, env);
+await sign(createBuilt.transaction, [invoker, ...(created.signers ?? [])]);
+await execute(createBuilt, env);
+console.log("Created stream:", streamId);
+```
+
+</Step>
+<Step>
+
+### Helper - run any lifecycle op
+
+All lifecycle functions return `InstructionResult: { instructions }` and follow the same 3-phase pattern:
+
+```ts
+import type { TransactionInstruction } from "@solana/web3.js";
+import type { Env } from "@streamflow/stream/solana/api";
+
+async function runOp(result: { instructions: TransactionInstruction[] }, invoker: Keypair): Promise<string> {
+  const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+  await sign(built.transaction, [invoker]);
+  return execute(built, env);
+}
+```
+
+</Step>
+<Step>
+
+### Withdraw
+
+```ts
+// Wait for some tokens to vest
+await new Promise((r) => setTimeout(r, 15_000));
+
+const sig = await runOp(await withdraw({ id: streamId }, invoker, env), invoker);
+console.log("Withdraw:", sig);
+```
+
+</Step>
+<Step>
+
+### Topup
+
+```ts
+const sig = await runOp(
+  await topup({ id: streamId, amount: new BN(100_000_000) }, invoker, { ...env, isNative: false }),
+  invoker,
+);
+console.log("Topup:", sig);
+```
+
+</Step>
+<Step>
+
+### Transfer
+
+<Callout type="warn">
+  Do **not** pass `computeLimit` to `buildTransaction` for `transfer()` - it embeds its own compute budget instruction.
+</Callout>
+
+```ts
+const transferResult = await transfer({ id: streamId, newRecipient: "NewRecipientWallet..." }, invoker, env);
+const built = await buildTransaction(transferResult.instructions, { feePayer: invoker.publicKey }, env);
+await sign(built.transaction, [invoker]);
+const sig = await execute(built, env);
+console.log("Transfer:", sig);
+```
+
+</Step>
+<Step>
+
+### Cancel
+
+Cancel must be the last operation - all others fail after cancellation. Remaining tokens return to the sender.
+
+```ts
+const sig = await runOp(await cancel({ id: streamId }, invoker, env), invoker);
+console.log("Cancel:", sig);
+```
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+The class-based API has high-level methods (`client.withdraw()`, `client.cancel()`, etc.) that sign and submit in one call, and `prepare*Instructions()` methods for manual transaction control.
+
+<Steps>
+<Step>
+
+### Initialize client and create stream
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildVestingParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const { txId, metadataId: streamId } = await client.create(
+  buildVestingParams({
+    recipient: invoker.publicKey.toBase58(),
+    tokenId: "TokenMintAddress...",
+    amount: new BN(3_600_000_000),
+    start,
+    period: 1,
+    duration: 3600,
+    cliffAmount: new BN(1_000_000),
+    name: "Lifecycle Test",
+    cancelableBySender: true,
+    canTopup: true,
+    transferableBySender: true,
+  }),
+  { sender: invoker, isNative: false },
+);
+
+console.log("Created stream:", streamId, "Tx:", txId);
+```
+
+</Step>
+<Step>
+
+### Withdraw
+
+```ts
+await new Promise((r) => setTimeout(r, 15_000));
+
+const { txId } = await client.withdraw({ id: streamId }, { invoker });
+console.log("Withdraw:", txId);
+```
+
+</Step>
+<Step>
+
+### Topup
+
+```ts
+const { txId } = await client.topup({ id: streamId, amount: new BN(100_000_000) }, { invoker, isNative: false });
+console.log("Topup:", txId);
+```
+
+</Step>
+<Step>
+
+### Transfer
+
+```ts
+const { txId } = await client.transfer({ id: streamId, newRecipient: "NewRecipientWallet..." }, { invoker });
+console.log("Transfer:", txId);
+```
+
+</Step>
+<Step>
+
+### Cancel
+
+```ts
+const { txId } = await client.cancel({ id: streamId }, { invoker });
+console.log("Cancel:", txId);
+```
+
+</Step>
+<Step>
+
+### Fine-grained: prepare instructions without submitting
+
+For multi-sig, custom fee payers, or batching multiple operations:
+
+```ts
+// Returns TransactionInstruction[] only - no signing or submission
+const withdrawIxs = await client.prepareWithdrawInstructions(
+  { id: streamId },
+  { invoker: { publicKey: invoker.publicKey } },
+);
+
+const cancelIxs = await client.prepareCancelInstructions(
+  { id: streamId },
+  { invoker: { publicKey: invoker.publicKey } },
+);
+
+// Compose into your own transaction with @solana/web3.js
+```
+
+</Step>
+</Steps>
+
+</Tab>
+</Tabs>

@@ -1,0 +1,115 @@
+---
+title: Program IDs
+description: On-chain program addresses for all Streamflow protocols on mainnet and devnet.
+---
+
+import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
+
+<Accordions type="multiple" defaultValue={["vesting", "airdrop", "staking"]}>
+
+<Accordion title="Vesting & Locks" value="vesting">
+
+The core on-chain program for token locks, vesting schedules, and streaming payments.
+
+| Name                   | Program ID                                     |
+| ---------------------- | ---------------------------------------------- |
+| Main Program (mainnet) | `strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m`  |
+| Devnet                 | `HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ` |
+
+[Program IDL on Solscan](https://solscan.io/account/strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m#anchorProgramIdl)
+
+**Community & Partner Programs**
+
+Separate deployments of the core Vesting & Locks program for specific partners or with different authority configurations.
+
+| Name                | Program ID                                     |
+| ------------------- | ---------------------------------------------- |
+| Immutable Program   | `strmdbLr6w7QNmsiEXyFwWg3VSfg1GiELgU27P8aCGw`  |
+| Genopets Program    | `DKAxZuf1gggv26Hb7jfnvmUt2ztzmX96bZ1eoDJDsuuD` |
+| Community Program 1 | `3RDjfNqCyetQ7GcXKkMko1qh6BZiuDxrHeo69F9kdgPD` |
+| Community Program 2 | `8e72pYCDaxu3GqMfeQ5r8wFgoZSYk6oua1Qo9XpsZjX`  |
+
+**Non-Linear Vesting**
+
+A proxy protocol that acts as the sender in the Vesting program. Enables vesting schedules where the unlock amount per period changes dynamically rather than being fixed at creation.
+
+| Name            | Program ID                                     |
+| --------------- | ---------------------------------------------- |
+| Current Program | `strn1sS2qKxs7SgJ1xx4trPKSWdqxFim6HFG9ETXiCL`  |
+| Legacy Program  | `9qWEUss4PnL8kTPrnG96BpMqWZTrRo38RsqKapuSsmJK` |
+
+**Price-Based Vesting Unlocks**
+
+A proxy protocol that acts as the sender in the Vesting program. Unlock amounts per period are adjusted according to token market performance rather than a fixed schedule.
+
+| Name                        | Program ID                                    |
+| --------------------------- | --------------------------------------------- |
+| Price-Based Vesting Unlocks | `aSTRM2NKoKxNnkmLWk9sz3k74gKBk9t7bpPrTGxMszH` |
+
+**Tradable Contracts (Escrow)**
+
+A proxy protocol that acts as the recipient in the Vesting program. Allows recipients to list and sell their vesting contracts at a specified price denominated in any token.
+
+| Name               | Program ID                                    |
+| ------------------ | --------------------------------------------- |
+| Tradable Contracts | `strmTRD9k8gA3vCgADVR6rg4h9KyTY5fsjvbT8R3vnP` |
+
+</Accordion>
+
+<Accordion title="Airdrop" value="airdrop">
+
+Instant or vested token distribution to any number of recipients via Merkle proofs. The same program is deployed on mainnet and devnet.
+
+| Name            | Program ID                                    |
+| --------------- | --------------------------------------------- |
+| Airdrop Program | `MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N` |
+
+[Program IDL on Solscan](https://solscan.io/account/MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N#anchorProgramIdl)
+
+**Price-Based Airdrop Unlocks**
+
+A proxy protocol that acts as the sender in the Airdrop program. Enables airdrops with non-linear vesting where unlock amounts per period are driven by token market performance.
+
+| Name                        | Program ID                                    |
+| --------------------------- | --------------------------------------------- |
+| Price-Based Airdrop Unlocks | `aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2` |
+
+</Accordion>
+
+<Accordion title="Staking" value="staking">
+
+SPL token staking with fixed or dynamic APR reward pools and optional on-chain governance via stake-weighted voting.
+
+| Name                      | Program ID                                     |
+| ------------------------- | ---------------------------------------------- |
+| Stake Pool                | `STAKEvGqQTtzJZH6BWDcbpzXXn2BBerPAgQ3EGLN2GH`  |
+| Reward Pool (Fixed APR)   | `RWRDdfRbi3339VgKxTAXg4cjyniF7cbhNbMxZWiSKmj`  |
+| Reward Pool (Dynamic APR) | `RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez`  |
+| Fee Manager               | `FEELzfBhsWXTNJX53zZcDVfRNoFYZQ6cZA3jLiGVL16V` |
+| Governor                  | `GVERNASJFxi8vjjJtwCKYQTeN51XsV1y2B1ap1GtKrKR` |
+
+</Accordion>
+
+</Accordions>
+
+## Usage in code
+
+When using the composable API, pass the program ID in your `env` object:
+
+```ts
+import { pk } from "@streamflow/common";
+
+// Mainnet
+const env = {
+  connection,
+  programId: pk("strmRqUCoQUgGUan5YhzUZa6KqdzwX5L6FpUxfmKg5m"),
+};
+
+// Devnet
+const env = {
+  connection,
+  programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ"),
+};
+```
+
+`SolanaStreamClient` resolves the program ID from the `cluster` argument automatically - you only need to pass `programId` explicitly when using a non-standard program deployment.

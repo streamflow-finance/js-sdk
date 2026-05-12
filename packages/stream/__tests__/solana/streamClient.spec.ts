@@ -37,7 +37,7 @@ Object.defineProperty(globalThis, "crypto", {
 
 // Mock external imports - move mock functions inside factory
 vi.mock("@streamflow/common", async (importOriginal) => {
-  const actual = await importOriginal() as Record<string, any>;
+  const actual = (await importOriginal()) as Record<string, any>;
   return {
     ...actual,
     ata: vi.fn(),
@@ -57,7 +57,7 @@ vi.mock("@streamflow/common", async (importOriginal) => {
 });
 
 vi.mock("@solana/spl-token", async (importOriginal) => {
-  const actual = await importOriginal() as Record<string, any>;
+  const actual = (await importOriginal()) as Record<string, any>;
   return {
     ...actual,
     getTransferHook: vi.fn(),
@@ -143,15 +143,11 @@ describe("SolanaStreamClient Transaction Builders", async () => {
   const mockAta = vi.mocked(await import("@streamflow/common")).ata;
   const mockCheckOrCreateAtaBatch = vi.mocked(await import("@streamflow/common")).checkOrCreateAtaBatch;
   const mockPrepareBaseInstructions = vi.mocked(await import("@streamflow/common")).prepareBaseInstructions;
-  const mockCreateVersionedTransaction = vi.mocked(
-    await import("@streamflow/common"),
-  ).createVersionedTransaction;
+  const mockCreateVersionedTransaction = vi.mocked(await import("@streamflow/common")).createVersionedTransaction;
   const mockPrepareWrappedAccount = vi.mocked(await import("@streamflow/common")).prepareWrappedAccount;
   const mockSignAndExecuteTransaction = vi.mocked(await import("@streamflow/common")).signAndExecuteTransaction;
   const mockExecuteTransaction = vi.mocked(await import("@streamflow/common")).executeTransaction;
-  const mockExecuteMultipleTransactions = vi.mocked(
-    await import("@streamflow/common"),
-  ).executeMultipleTransactions;
+  const mockExecuteMultipleTransactions = vi.mocked(await import("@streamflow/common")).executeMultipleTransactions;
 
   // Access Solana-specific mocked functions
   const mockSignAllTransactionWithRecipients = vi.mocked(
@@ -166,7 +162,9 @@ describe("SolanaStreamClient Transaction Builders", async () => {
   ).calculateTotalAmountToDeposit;
   const mockDecodeStream = vi.mocked(await import("../../solana/lib/utils.js")).decodeStream;
   const mockGetTransferHook = vi.mocked(await import("@solana/spl-token")).getTransferHook;
-  const mockAddExtraAccountMetasForExecute = vi.mocked(await import("@solana/spl-token")).addExtraAccountMetasForExecute;
+  const mockAddExtraAccountMetasForExecute = vi.mocked(
+    await import("@solana/spl-token"),
+  ).addExtraAccountMetasForExecute;
   const { TOKEN_2022_PROGRAM_ID } = await import("@solana/spl-token");
 
   beforeEach(async () => {
@@ -616,7 +614,9 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           },
         );
 
-        expect(result.ixs.at(-1)?.keys).toEqual([{ pubkey: publicKeys.partnerLink, isSigner: true, isWritable: false }]);
+        expect(result.ixs.at(-1)?.keys).toEqual([
+          { pubkey: publicKeys.partnerLink, isSigner: true, isWritable: false },
+        ]);
         expectTransferHookCalls(result.ixs.at(-1), [
           {
             source: publicKeys.senderTokens,

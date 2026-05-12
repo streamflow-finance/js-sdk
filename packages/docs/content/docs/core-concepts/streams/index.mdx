@@ -1,0 +1,48 @@
+---
+title: Streams
+description: How Streamflow streams work on-chain - account structure, the lock/vesting distinction, and how the protocol classifies them at runtime.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+## On-chain structure
+
+A Streamflow stream is a pair of on-chain accounts: a **metadata account** that holds stream parameters, and an **escrow token account** that holds the locked tokens. The metadata account's public key is the stream ID - save it after creation.
+
+## Two stream types
+
+| Type        | Release pattern             | Functions                             |
+| ----------- | --------------------------- | ------------------------------------- |
+| **Lock**    | All-at-once at `unlockDate` | `createLock`, `createLockBatch`       |
+| **Vesting** | Gradual per-period release  | `createVesting`, `createVestingBatch` |
+
+Both types use the same underlying on-chain account structure. The difference is in how the protocol parameters are set - specifically `cliffAmount`, `amountPerPeriod`, and `period`.
+
+## Lock internals
+
+The on-chain protocol has only one stream account type - there is no separate "lock" account. A lock is a vesting stream configured so that all tokens become claimable at a single point in time (`unlockDate`), with no gradual release.
+
+`buildLockParams()` achieves this by setting three synthetic parameters:
+
+- `cliffAmount = total - 1` - releases nearly the entire amount at the cliff date (`unlockDate`), so the recipient can claim everything at once
+- `amountPerPeriod = BN(1)` - the protocol requires a non-zero periodic amount; this dust value makes the remaining 1 unit available immediately after the cliff (given `period = 1`)
+- `period = 1` - the shortest possible period, so the dust release resolves immediately after the cliff
+
+The result: `unlockDate` is the cliff, the cliff releases `total - 1` tokens, and the remaining 1 unit becomes available right after. To the recipient, this is indistinguishable from a full all-at-once unlock.
+
+## Stream classification
+
+The protocol does not store a stream type field on-chain. Instead, it derives the type at runtime using `isTokenLock()`.
+
+**A stream is classified as a Lock when ALL of the following are true:**
+
+- All mutability flags are `false`: `canTopup`, `automaticWithdrawal`, `cancelableBySender`, `cancelableByRecipient`, `transferableBySender`
+- `cliffAmount >= depositedAmount - 1`
+
+**A stream is classified as Vesting when any of the above conditions are not met** - at least one flag is `true`, or the cliff amount is meaningfully below the total deposited.
+
+<Callout type="warn">
+  The cliff condition is the easy one to accidentally trigger. A vesting stream with a very large `cliffAmount` (within
+  1 of the total) will silently reclassify as a Lock if all flags are `false`, and be charged lock fee rates instead of
+  vesting rates. Keep `cliffAmount` well below the total, or set at least one flag to `true`.
+</Callout>

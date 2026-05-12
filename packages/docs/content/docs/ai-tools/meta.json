@@ -1,0 +1,5 @@
+{
+  "title": "AI & Developer Tools",
+  "icon": "Bot",
+  "pages": ["llms-txt", "ai-skills", "get-dev-help"]
+}

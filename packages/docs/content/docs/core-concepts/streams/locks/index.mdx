@@ -1,0 +1,37 @@
+---
+title: Locks
+description: Token locks - all-at-once release at a specific date or price trigger.
+---
+
+A lock holds tokens in escrow until a trigger condition is met, then releases the entire amount at once to the recipient.
+
+## Types
+
+| Type                                                         | Trigger                       | Composable API                  |
+| ------------------------------------------------------------ | ----------------------------- | ------------------------------- |
+| [Time-based](/docs/core-concepts/streams/locks/time-based)   | Unix timestamp (`unlockDate`) | `createLock`, `createLockBatch` |
+| [Price-based](/docs/core-concepts/streams/locks/price-based) | Oracle price condition        | `SolanaStreamClient` directly   |
+
+## Immutable constraints
+
+These flags are hardcoded by `buildLockParams()` and cannot be overridden:
+
+| Flag                    | Value   | Reason                           |
+| ----------------------- | ------- | -------------------------------- |
+| `canTopup`              | `false` | Required for lock classification |
+| `cancelableBySender`    | `false` | Required for lock classification |
+| `cancelableByRecipient` | `false` | Required for lock classification |
+| `transferableBySender`  | `false` | Required for lock classification |
+| `automaticWithdrawal`   | `false` | Required for lock classification |
+
+The only configurable flag is `transferableByRecipient` - the recipient can optionally transfer the lock to another wallet.
+
+## Minimum amount
+
+Lock amount must be `> 1` in the token's smallest unit. This is enforced by `buildLockParams()` which throws if `amount.lten(1)`. The reason: the protocol needs `amountPerPeriod = BN(1)` as a dust release, so the actual claimable amount is `amount - 1`.
+
+## Available lifecycle operations
+
+After creation, only **withdraw** is available. All other operations (topup, transfer, cancel) are disabled by the hardcoded flags above.
+
+Withdraw only works after `unlockDate` has passed - the tokens are locked until that timestamp.

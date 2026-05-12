@@ -183,8 +183,8 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
   let tokenPrice = null;
   try {
     [solPrice, tokenPrice] = await Promise.all([
-        fetchTokenPrice(NATIVE_MINT.toBase58(), cluster),
-        fetchTokenPrice(mintAccount.address.toBase58(), cluster),
+      fetchTokenPrice(NATIVE_MINT.toBase58(), cluster),
+      fetchTokenPrice(mintAccount.address.toBase58(), cluster),
     ]);
   } catch (_) {
     // ignore and fallback

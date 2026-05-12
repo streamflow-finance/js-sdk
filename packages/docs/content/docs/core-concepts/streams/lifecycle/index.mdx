@@ -1,0 +1,210 @@
+---
+title: Lifecycle Operations
+description: Withdraw, topup, transfer, update, and cancel - params, constraints, and return types for both APIs.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+After a stream is created, five operations are available. Each returns `InstructionResult: { instructions }`. Unlike creation, there is no metadata keypair - sign with just the invoker.
+
+## Operations overview
+
+| Operation  | Gated by                     | Who calls | Params                 |
+| ---------- | ---------------------------- | --------- | ---------------------- |
+| `withdraw` | Always available             | Recipient | `{ id, amount? }`      |
+| `topup`    | `canTopup: true`             | Sender    | `{ id, amount }`       |
+| `transfer` | `transferableBySender: true` | Sender    | `{ id, newRecipient }` |
+| `cancel`   | `cancelableBySender: true`   | Sender    | `{ id }`               |
+| `update`   | `canUpdateRate: true`        | Sender    | `{ id, ... }`          |
+
+### withdraw
+
+Withdraw tokens that have vested. Omit `amount` to withdraw everything available.
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts
+import { withdraw, buildTransaction, sign, execute } from "@streamflow/stream/solana/api";
+
+const result = await withdraw({ id: streamId }, recipientInvoker, env);
+const built = await buildTransaction(result.instructions, { feePayer: recipientInvoker.publicKey }, env);
+await sign(built.transaction, [recipientInvoker]);
+await execute(built, env);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts
+const { txId } = await client.withdraw({ id: streamId }, { invoker: recipientKeypair });
+```
+
+</Tab>
+</Tabs>
+
+For locks: only works after `unlockDate` has passed.
+
+### topup
+
+Add tokens to extend the stream's duration. Requires `canTopup: true` at creation.
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts
+import { topup } from "@streamflow/stream/solana/api";
+
+const result = await topup(
+  { id: streamId, amount: new BN(1_000_000) },
+  senderInvoker,
+  { ...env, isNative: false }, // isNative must match the token used at creation
+);
+const built = await buildTransaction(result.instructions, { feePayer: senderInvoker.publicKey }, env);
+await sign(built.transaction, [senderInvoker]);
+await execute(built, env);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts
+const { txId } = await client.topup(
+  { id: streamId, amount: new BN(1_000_000) },
+  { invoker: senderKeypair, isNative: false },
+);
+```
+
+</Tab>
+</Tabs>
+
+### transfer
+
+Change the recipient wallet. Requires `transferableBySender: true` at creation.
+
+<Callout type="warn">
+  `transfer()` embeds its own `ComputeBudgetProgram` instruction. Do **not** pass `computeLimit` to `buildTransaction` -
+  it would duplicate the compute budget instruction.
+</Callout>
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts
+import { transfer } from "@streamflow/stream/solana/api";
+
+const result = await transfer({ id: streamId, newRecipient: "NewWalletAddress..." }, senderInvoker, env);
+// Note: no computeLimit in buildTransaction options
+const built = await buildTransaction(result.instructions, { feePayer: senderInvoker.publicKey }, env);
+await sign(built.transaction, [senderInvoker]);
+await execute(built, env);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts
+const { txId } = await client.transfer(
+  { id: streamId, newRecipient: "NewWalletAddress..." },
+  { invoker: senderKeypair },
+);
+```
+
+</Tab>
+</Tabs>
+
+### cancel
+
+Terminate the stream early. Returns unvested tokens to the sender. Requires `cancelableBySender: true` at creation.
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts
+import { cancel } from "@streamflow/stream/solana/api";
+
+const result = await cancel({ id: streamId }, senderInvoker, env);
+const built = await buildTransaction(result.instructions, { feePayer: senderInvoker.publicKey }, env);
+await sign(built.transaction, [senderInvoker]);
+await execute(built, env);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts
+const { txId } = await client.cancel({ id: streamId }, { invoker: senderKeypair });
+```
+
+</Tab>
+</Tabs>
+
+Cancel must be the last operation - all other operations fail after a stream is cancelled.
+
+### update
+
+Change the stream's release rate or permission flags. Requires `canUpdateRate: true` on the stream.
+
+<Callout type="info">
+  `canUpdateRate` is **not exposed** in `ICreateVestingParams`. Streams created via `createVesting` don't support
+  `update` unless you use `SolanaStreamClient.create()` directly with `canUpdateRate: true` in the raw params.
+</Callout>
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts
+import { update } from "@streamflow/stream/solana/api";
+
+const result = await update({ id: streamId, amountPerPeriod: new BN(200_000) }, senderInvoker, env);
+const built = await buildTransaction(result.instructions, { feePayer: senderInvoker.publicKey }, env);
+await sign(built.transaction, [senderInvoker]);
+await execute(built, env);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts
+const { txId } = await client.update(
+  {
+    id: streamId,
+    amountPerPeriod: new BN(200_000),
+    // other updatable fields:
+    // transferableBySender, transferableByRecipient, cancelableBySender
+    // enableAutomaticWithdrawal, withdrawFrequency
+  },
+  { invoker: senderKeypair },
+);
+```
+
+</Tab>
+</Tabs>
+
+## Querying stream state
+
+Use `SolanaStreamClient` to read current stream data:
+
+```ts
+import { SolanaStreamClient, ICluster, StreamDirection, StreamType } from "@streamflow/stream";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.mainnet-beta.solana.com",
+  cluster: ICluster.Mainnet,
+});
+
+// Fetch a single stream
+const stream = await client.getOne({ id: streamId });
+console.log("Recipient:", stream.recipient);
+console.log("Deposited:", stream.depositedAmount.toString());
+console.log("Withdrawn:", stream.withdrawnAmount.toString());
+console.log("Is cancelled:", stream.closed);
+
+// List all streams for a wallet (returns [streamId, Stream][] tuples)
+const streams = await client.get({
+  address: walletAddress,
+  direction: StreamDirection.Outgoing,
+  type: StreamType.Vesting,
+});
+```

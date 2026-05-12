@@ -1,0 +1,6 @@
+{
+  "title": "Locks",
+  "icon": "Lock",
+  "defaultOpen": false,
+  "pages": ["index", "time-based", "price-based", "guide-create-lock"]
+}

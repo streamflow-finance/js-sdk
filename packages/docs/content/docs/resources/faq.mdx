@@ -1,0 +1,139 @@
+---
+title: FAQ
+description: Common questions about locks, vesting, and the Streamflow JS SDK.
+---
+
+import { Accordions, Accordion } from "fumadocs-ui/components/accordion";
+
+<Accordions>
+  <Accordion title="What's the difference between a Lock and Vesting?">
+    A **Lock** releases all tokens at once at a specific date (`unlockDate`). A **Vesting** stream releases tokens gradually over time, period by period.
+
+    Technically both use the same on-chain account structure. The difference is in the params: locks set `cliffAmount = amount - 1` and `amountPerPeriod = 1`, so the entire balance is released at the cliff (which equals `start`).
+
+  </Accordion>
+
+  <Accordion title="Can I change stream flags after creation?">
+    It depends on the flag:
+
+    | Flag | Mutable after creation? |
+    |------|------------------------|
+    | `cancelableBySender` | Yes - via `update()` |
+    | `transferableBySender` | Yes - via `update()` |
+    | `transferableByRecipient` | Yes - via `update()` |
+    | `canTopup` | No - immutable at creation |
+    | `automaticWithdrawal` | No - immutable at creation |
+
+    `update()` also accepts `amountPerPeriod` (BN), `enableAutomaticWithdrawal` (boolean toggle), and `withdrawFrequency` (BN). Changing the rate or frequency requires `canUpdateRate: true` to have been set at creation time - this is enforced on-chain. The flag changes (`cancelableBySender`, `transferableBySender`, `transferableByRecipient`) are not gated by `canUpdateRate`.
+
+  </Accordion>
+
+  <Accordion title="What is initialAllocation in createVesting?">
+    When you provide `initialAllocation: { amount: BN }`, the SDK atomically creates **two streams**: the main vesting stream and a separate lock-like stream that releases the allocation amount immediately at start.
+
+    This lets you do "10% upfront, 90% vested over 12 months" in one flow. See [Guide: Create a Vesting Stream](/docs/core-concepts/streams/vesting/guide-create-vesting).
+
+  </Accordion>
+
+  <Accordion title="Why does my vesting stream classify as a Lock?">
+    `isTokenLock()` runs a two-step check. First, if **any** of these flags are `true`, it immediately returns `false` (not a lock):
+
+    - `canTopup`
+    - `automaticWithdrawal`
+    - `cancelableBySender`
+    - `cancelableByRecipient`
+    - `transferableBySender`
+
+    Only if all five are `false` does it then check the cliff: if `cliffAmount >= depositedAmount - 1`, it classifies as a lock.
+
+    So an accidental lock classification happens when you set a large cliff **and** all five flags are `false`. Keep `cliffAmount` well below `amount`, or set at least one of the flags to `true` if you intend a vesting stream. See [Stream Classification](/docs/core-concepts/streams).
+
+  </Accordion>
+
+  <Accordion title="Why must amount be greater than 1 for locks?">
+    Lock params set `amountPerPeriod = BN(1)` (a dust release required by the protocol) and `cliffAmount = amount - 1`. If `amount <= 1`, the cliffAmount would be zero or negative, which is invalid.
+  </Accordion>
+
+  <Accordion title="How do I fetch an existing stream by its ID?">
+    Use `SolanaStreamClient.getOne()`:
+
+    ```ts
+    import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+
+    const client = new SolanaStreamClient({
+      clusterUrl: "https://api.mainnet-beta.solana.com",
+      cluster: ICluster.Mainnet,
+    });
+    const stream = await client.getOne({ id: streamPublicKey });
+    ```
+
+    `getOne` first tries the on-chain account. If the stream is closed or archived, it automatically falls back to the Tabularium API, so it works for both active and historical streams on mainnet.
+
+  </Accordion>
+
+  <Accordion title="How do I list all streams for a wallet address?">
+    Use `SolanaStreamClient.get()`:
+
+    ```ts
+    import { SolanaStreamClient, ICluster, StreamType, StreamDirection } from "@streamflow/stream";
+
+    const client = new SolanaStreamClient({
+      clusterUrl: "https://api.mainnet-beta.solana.com",
+      cluster: ICluster.Mainnet,
+    });
+
+    const streams = await client.get({
+      address: walletPublicKey,
+      type: StreamType.All,           // or StreamType.Vesting / StreamType.Lock
+      direction: StreamDirection.All, // or Incoming / Outgoing
+    });
+    // returns [string, Stream][] - pairs of [streamId, streamData]
+    ```
+
+  </Accordion>
+
+  <Accordion title="When should I use the composable API vs SolanaStreamClient directly?">
+    Use the **composable API** (`@streamflow/stream/solana/api`) when:
+    - You need a custom fee payer (someone other than the signer pays gas)
+    - You're using a wallet adapter in a browser app
+    - You need multi-sig - collect signatures before submitting
+    - You want to compose multiple protocol operations into one transaction
+
+    Use **SolanaStreamClient** directly when:
+    - You're building a backend service or script and want one-call simplicity
+    - You need price-based locks or vesting (composable wrappers only support time-based)
+    - You need `getOne()` / `get()` to query stream state
+    - You need `getFees()` to fetch current fee rates
+
+    Both approaches use the same on-chain program. `SolanaStreamClient.create()` and `createVesting()` produce identical on-chain results.
+
+  </Accordion>
+
+  <Accordion title="What is result.signers and why do I need to include it?">
+    Each stream has a metadata account on-chain whose public key becomes the stream ID. This account is initialized in one of two ways:
+
+    - **Random keypair** - a fresh keypair is generated; its public key is the stream ID and the keypair must co-sign the creation transaction to initialize the account.
+    - **Derived address (PDA)** - the address is computed deterministically from on-chain inputs; no keypair is required.
+
+    `result.signers` contains the keypair when the random keypair path is used. The composable API (`createLock`, `createVesting`) always takes the keypair path, so you should always spread `result.signers` into the `sign()` call alongside your invoker. If the array is empty (derived address path), spreading it has no effect.
+
+  </Accordion>
+
+  <Accordion title="Can I use a wallet adapter (frontend) instead of a Keypair?">
+    Yes. The `Invoker` type accepts `Keypair | SignerWalletAdapter | { publicKey: PublicKey }`. Pass your wallet adapter's `adapter` object directly. The `sign()` function calls `adapter.signTransaction()` for you.
+  </Accordion>
+
+  <Accordion title="What RPC endpoint should I use?">
+    For production (mainnet), use a private RPC provider such as Helius, QuickNode, or Triton. The public endpoint `api.mainnet-beta.solana.com` has strict rate limits that will cause failures under any real load.
+
+    For devnet testing, `https://api.devnet.solana.com` is fine.
+
+  </Accordion>
+
+  <Accordion title="How do I find the stream ID after creation?">
+    It's `result.metadataPubKey.toBase58()` from the creation result. Save it - you need it for all lifecycle operations (`withdraw`, `topup`, `transfer`, `cancel`).
+
+    For batch creations, each item in `result.creationBatches` has its own `metadataPubKey`.
+
+  </Accordion>
+</Accordions>

@@ -1,0 +1,135 @@
+---
+title: Price-Based Vesting
+description: Oracle-adjusted release amounts - each period scales based on the token price.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Price-based vesting scales the per-period release amount based on an oracle-reported price. As the price rises toward `maxPrice`, the release per period increases proportionally from `minPercentage` toward 100%.
+
+<Callout type="info">
+  Price-based vesting requires `SolanaStreamClient` directly. The `createVesting` and `createVestingBatch` composable
+  wrappers only support linear (time-based) vesting.
+</Callout>
+
+## How it works
+
+Each period, the oracle price is checked against the range `[minPrice, maxPrice]`. The release fraction scales linearly:
+
+- At `currentPrice <= minPrice`: releases `minPercentage`% of the base `amountPerPeriod`
+- At `currentPrice >= maxPrice`: releases 100% of the base `amountPerPeriod`
+- In between: linear interpolation
+
+`minPercentage` is computed as `(releasesAtMin / releasesAtMax) * 100`. For example, if at min price you want 20% and at max price 100%, set `minPercentage = 20`.
+
+## Parameters
+
+| Parameter            | Type                      | Required | Description                                          |
+| -------------------- | ------------------------- | -------- | ---------------------------------------------------- |
+| `recipient`          | `string`                  | ✓        | Recipient wallet address                             |
+| `tokenId`            | `string`                  | ✓        | Token mint address                                   |
+| `amount`             | `BN`                      | ✓        | Total amount to vest                                 |
+| `start`              | `number`                  | ✓        | Unix timestamp when vesting begins                   |
+| `period`             | `number`                  | ✓        | Seconds per release interval                         |
+| `amountPerPeriod`    | `BN`                      | ✓        | Max release per period (at `maxPrice`)               |
+| `minPrice`           | `number`                  | ✓        | Price at which `minPercentage` is released           |
+| `maxPrice`           | `number`                  | ✓        | Price at which 100% of `amountPerPeriod` is released |
+| `minPercentage`      | `number`                  | ✓        | Percentage released at `minPrice` (0-100)            |
+| `oracleType`         | `"pyth" \| "switchboard"` | ✓        | On-chain oracle program                              |
+| `priceOracle`        | `string`                  | ✓        | Oracle feed account public key                       |
+| `name`               | `string`                  | ✓        | Display name                                         |
+| `cliff`              | `number`                  | -        | Cliff timestamp - defaults to `start`                |
+| `cliffAmount`        | `BN`                      | -        | Amount released at cliff                             |
+| `cancelableBySender` | `boolean`                 | -        | Defaults `false`                                     |
+| `canTopup`           | `boolean`                 | -        | Defaults `false`                                     |
+| `partner`            | `string`                  | -        | Partner address for custom fee rates                 |
+
+## Code example
+
+```ts title="create-price-vesting.ts"
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.mainnet-beta.solana.com",
+  cluster: ICluster.Mainnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const start = Math.floor(Date.now() / 1000);
+
+// Example: vest 36,500 tokens over 365 days (100/day at max price)
+// At min price ($1), release 20% = 20 tokens/day
+// At max price ($5), release 100% = 100 tokens/day
+const amountPerPeriod = new BN(100_000_000); // 100 tokens at 6 decimals per day
+const totalPeriods = 365;
+
+const { txId, metadataId } = await client.create(
+  {
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: amountPerPeriod.muln(totalPeriods), // 36,500 tokens total
+
+    // Schedule
+    start,
+    cliff: start,
+    period: 86400, // daily
+    cliffAmount: new BN(0), // no upfront release
+    amountPerPeriod, // max per day (at maxPrice)
+
+    // Price oracle configuration
+    minPrice: 1, // $1 - 20% per period
+    maxPrice: 5, // $5 - 100% per period
+    minPercentage: 20, // 20% at minPrice
+    maxPercentage: 100, // 100% at maxPrice (required)
+    oracleType: "pyth",
+    // Pyth SOL/USD feed on mainnet:
+    priceOracle: "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG",
+
+    // Flags
+    canTopup: false,
+    cancelableBySender: true,
+    cancelableByRecipient: false,
+    transferableBySender: false,
+    transferableByRecipient: false,
+    automaticWithdrawal: false,
+    withdrawalFrequency: 0,
+
+    name: "Price-Based Vesting",
+  },
+  {
+    sender: invoker,
+    isNative: false,
+  },
+);
+
+console.log("Stream ID:", metadataId);
+console.log("Transaction:", txId);
+```
+
+<Callout type="warn">
+  `priceOracle` must be the feed account for your specific token pair, not the oracle program ID. Find Pyth feed
+  addresses at [pyth.network/price-feeds](https://pyth.network/price-feeds) and Switchboard feeds at
+  [app.switchboard.xyz](https://app.switchboard.xyz).
+</Callout>
+
+## Querying the stream
+
+```ts
+import { isAligned } from "@streamflow/stream";
+
+const stream = await client.getOne({ id: metadataId });
+console.log("Is aligned (price-based):", stream.isAligned); // true
+
+if (isAligned(stream)) {
+  // AlignedStream - price fields are now available
+  console.log("Min price:", stream.minPrice);
+  console.log("Max price:", stream.maxPrice);
+  console.log("Min percentage:", stream.minPercentage);
+  console.log("Oracle type:", stream.oracleType);
+}
+```

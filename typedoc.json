@@ -3,7 +3,8 @@
   "name": "Streamflow SDK",
   "entryPointStrategy": "packages",
   "includeVersion": false,
-  "exclude": ["examples/*"],
+  "exclude": ["examples/*", "packages/docs", "packages/eslint-config"],
+  "gitRevision": "master",
   "tsconfig": "./tsconfig.tsdoc.json",
   "compilerOptions": {
     "noUncheckedIndexedAccess": true

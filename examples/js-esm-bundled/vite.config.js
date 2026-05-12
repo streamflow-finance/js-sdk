@@ -15,9 +15,7 @@ export default defineConfig({
   plugins: [
     nodePolyfills({
       include: ["buffer"],
-      globals: {
-        Buffer: true,
-      },
+      globals: { Buffer: false, global: false, process: false },
     }),
   ],
   cacheDir: "dist/.vite",

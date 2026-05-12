@@ -1,0 +1,81 @@
+---
+title: Batch Creation
+description: Create locks or vesting streams for multiple recipients in a single atomic flow.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Batch functions create streams for multiple recipients in one operation. They always return `BatchInstructionResult` with:
+
+- `setupInstructions` - ATA creation and WSOL wrapping, sent in one transaction before the batches
+- `creationBatches` - one per recipient, each sent as a separate transaction
+
+## Lock batch
+
+`createLockBatch` creates a time-based lock for each recipient. Shared config (token, unlock date) goes at the top level; per-recipient fields (wallet, amount, name) go in the `recipients` array.
+
+```ts
+import { createLockBatch } from "@streamflow/stream/solana/api";
+
+const result = await createLockBatch(
+  {
+    tokenId: "TokenMintAddress...",
+    unlockDate: Math.floor(Date.now() / 1000) + 3600,
+    recipients: [
+      { recipient: "Wallet1...", amount: new BN(1000), name: "Lock A" },
+      { recipient: "Wallet2...", amount: new BN(2000), name: "Lock B" },
+    ],
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+```
+
+## Vesting batch
+
+`createVestingBatch` creates vesting streams for multiple recipients. Per-recipient params include `amount`, `name`, and optionally `cliffAmount` and `amountPerPeriod`. If `amountPerPeriod` is omitted for a recipient, it's auto-computed from their individual amount.
+
+```ts
+import { createVestingBatch } from "@streamflow/stream/solana/api";
+
+const result = await createVestingBatch(
+  {
+    tokenId: "TokenMintAddress...",
+    start: Math.floor(Date.now() / 1000) + 10,
+    period: 86400, // daily
+    duration: 365 * 86400, // 1 year
+    cancelableBySender: true,
+    recipients: [
+      { recipient: "Wallet1...", amount: new BN(365_000), name: "Vest A" },
+      { recipient: "Wallet2...", amount: new BN(730_000), cliffAmount: new BN(100), name: "Vest B" },
+    ],
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+```
+
+<Callout type="info">
+  `createVestingBatch` does **not** support `initialAllocation`. For vesting with an upfront allocation use
+  `createVesting` with `initialAllocation` (single recipient).
+</Callout>
+
+## Executing batch results
+
+Both functions return `BatchInstructionResult`. Send setup first, then each creation batch:
+
+```ts
+// 1. Setup (ATAs, WSOL)
+if (result.setupInstructions.length > 0) {
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
+  await sign(setupBuilt.transaction, [invoker]);
+  await execute(setupBuilt, env);
+}
+
+// 2. One tx per recipient
+for (const batch of result.creationBatches) {
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
+  await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
+  await execute(batchBuilt, env);
+}
+```

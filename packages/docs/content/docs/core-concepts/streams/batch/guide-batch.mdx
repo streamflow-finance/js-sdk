@@ -1,0 +1,242 @@
+---
+title: "Guide: Batch Locks & Vesting"
+description: Full examples for batch lock and vesting creation - composable API and SolanaStreamClient.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+## Lock batch
+
+<Steps>
+<Step>
+
+### Phase 1 - Get instructions
+
+```ts
+import { Connection, Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import { buildTransaction, createLockBatch, execute, sign } from "@streamflow/stream/solana/api";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const env = { connection, programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ") };
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const result = await createLockBatch(
+  {
+    tokenId: "TokenMintAddress...",
+    unlockDate: Math.floor(Date.now() / 1000) + 86400, // 24 hours
+    recipients: [
+      { recipient: "Wallet1Address...", amount: new BN(2), name: "Lock - Alice" },
+      { recipient: "Wallet2Address...", amount: new BN(2), name: "Lock - Bob" },
+      { recipient: "Wallet3Address...", amount: new BN(2), name: "Lock - Carol" },
+    ],
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+```
+
+</Step>
+<Step>
+
+### Send setup transaction
+
+```ts
+if (result.setupInstructions.length > 0) {
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
+  await sign(setupBuilt.transaction, [invoker]);
+  await execute(setupBuilt, env);
+}
+```
+
+</Step>
+<Step>
+
+### Send one transaction per recipient
+
+```ts
+for (const batch of result.creationBatches) {
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
+  await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
+  const sig = await execute(batchBuilt, env);
+  console.log(`Lock for ${batch.recipient.slice(0, 8)}...: ${batch.metadataPubKey.toBase58()} (tx: ${sig})`);
+}
+```
+
+</Step>
+</Steps>
+
+---
+
+## Vesting batch
+
+<Steps>
+<Step>
+
+### Phase 1 - Get instructions
+
+```ts
+import { createVestingBatch } from "@streamflow/stream/solana/api";
+
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const result = await createVestingBatch(
+  {
+    tokenId: "TokenMintAddress...",
+    start,
+    period: 86400, // daily release
+    duration: 365 * 86400, // 1 year
+    cancelableBySender: true,
+    recipients: [
+      {
+        recipient: "Wallet1Address...",
+        amount: new BN(3_650_000_000), // 3650 tokens at 6 decimals - 10/day
+        name: "Vest - Alice",
+        // amountPerPeriod auto-computed: ceil(3650000000 / 365) = 10000001
+      },
+      {
+        recipient: "Wallet2Address...",
+        amount: new BN(7_300_000_000), // 7300 tokens - 20/day
+        cliffAmount: new BN(730_000_000), // 10% upfront at start
+        name: "Vest - Bob",
+      },
+    ],
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+```
+
+</Step>
+<Step>
+
+### Send setup transaction
+
+```ts
+if (result.setupInstructions.length > 0) {
+  const setupBuilt = await buildTransaction(result.setupInstructions, { feePayer: invoker.publicKey }, env);
+  await sign(setupBuilt.transaction, [invoker]);
+  await execute(setupBuilt, env);
+}
+```
+
+</Step>
+<Step>
+
+### Send one transaction per recipient
+
+```ts
+for (const batch of result.creationBatches) {
+  const batchBuilt = await buildTransaction(batch.instructions, { feePayer: invoker.publicKey }, env);
+  await sign(batchBuilt.transaction, [invoker, ...(batch.signers ?? [])]);
+  const sig = await execute(batchBuilt, env);
+  console.log(`Vesting for ${batch.recipient.slice(0, 8)}...: ${batch.metadataPubKey.toBase58()} (tx: ${sig})`);
+}
+```
+
+</Step>
+</Steps>
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+`SolanaStreamClient.create()` in a loop covers most batch use cases. For large batches, use `executeBatch` from the composable API after building all transactions to send them in parallel.
+
+## Lock batch
+
+```ts
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildLockParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const unlockDate = Math.floor(Date.now() / 1000) + 86400;
+
+const recipients = [
+  { address: "Wallet1Address...", amount: new BN(2), name: "Lock - Alice" },
+  { address: "Wallet2Address...", amount: new BN(2), name: "Lock - Bob" },
+  { address: "Wallet3Address...", amount: new BN(2), name: "Lock - Carol" },
+];
+
+const streamIds: string[] = [];
+for (const r of recipients) {
+  const { txId, metadataId } = await client.create(
+    buildLockParams({
+      recipient: r.address,
+      tokenId: "TokenMintAddress...",
+      amount: r.amount,
+      unlockDate,
+      name: r.name,
+    }),
+    { sender: invoker, isNative: false },
+  );
+  streamIds.push(metadataId);
+  console.log(`Lock for ${r.address.slice(0, 8)}...: ${metadataId}`);
+}
+```
+
+---
+
+## Vesting batch
+
+```ts
+import { buildVestingParams } from "@streamflow/stream/solana/api";
+
+const start = Math.floor(Date.now() / 1000) + 10;
+
+const recipients = [
+  {
+    address: "Wallet1Address...",
+    amount: new BN(3_650_000_000),
+    name: "Vest - Alice",
+  },
+  {
+    address: "Wallet2Address...",
+    amount: new BN(7_300_000_000),
+    cliffAmount: new BN(730_000_000),
+    name: "Vest - Bob",
+  },
+];
+
+const streamIds: string[] = [];
+for (const r of recipients) {
+  const { txId, metadataId } = await client.create(
+    buildVestingParams({
+      recipient: r.address,
+      tokenId: "TokenMintAddress...",
+      amount: r.amount,
+      start,
+      period: 86400,
+      duration: 365 * 86400,
+      cliffAmount: r.cliffAmount,
+      name: r.name,
+      cancelableBySender: true,
+    }),
+    { sender: invoker, isNative: false },
+  );
+  streamIds.push(metadataId);
+  console.log(`Vesting for ${r.address.slice(0, 8)}...: ${metadataId}`);
+}
+```
+
+For large batches where you need parallel execution, use `prepareCreateInstructions()` to collect all instructions first, then send them with the composable `executeBatch()`.
+
+</Tab>
+</Tabs>

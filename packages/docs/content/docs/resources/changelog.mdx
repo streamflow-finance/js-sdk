@@ -1,0 +1,28 @@
+---
+title: Changelog
+description: Version history and release notes for the Streamflow JS SDK.
+---
+
+All packages in the monorepo are versioned together - a single version applies to all `@streamflow/*` packages.
+
+Full history: [GitHub Releases](https://github.com/streamflow-finance/js-sdk/releases) · [npm](https://www.npmjs.com/package/@streamflow/stream?activeTab=versions)
+
+{/* RELEASES_START */}
+
+## v12.1.0 — Latest <small>May 5, 2026</small>
+
+- feat: update Contract state, add feePartner (that was used for fee derivation) and cancelRequestTime;
+- feat: expose requestCancel/withdrawCancelRequest instructions;
+
+## v12.0.0 <small>May 4, 2026</small>
+
+- feat: bump distributor IDLs, expose feePartner;
+- feat: pass partnerLink in remaining accounts for custom fee derivation;
+- feat: export clawbackRequest by feePartner;
+- feat!: rename `admin` -> `authority` in clawback since the authority can differ from`admin`; the change does not break previous versions of the sdk since accounts are passed as vectors, it just changes how the account should be referred when calling with the anchor client;
+
+{/* RELEASES_END */}
+
+## Earlier versions
+
+See [GitHub Releases](https://github.com/streamflow-finance/js-sdk/releases) for the full history.

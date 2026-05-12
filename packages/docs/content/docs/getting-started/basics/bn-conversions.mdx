@@ -1,0 +1,70 @@
+---
+title: Token Amounts & BN Conversions
+description: Using getBN and getNumberFromBN for correct decimal scaling on Solana.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Solana stores token amounts as unsigned 64-bit integers (u64) - values up to `2^64 - 1 ≈ 1.8 × 10^19`. JavaScript's `number` type is a 64-bit float with only 53 bits of integer precision (`Number.MAX_SAFE_INTEGER = 2^53 - 1 ≈ 9 × 10^15`). A token with 9 decimals and a supply of just 10 billion would be `10^19` raw units - beyond what JS can represent exactly. `BN` (big number from `bn.js`) handles arbitrary-precision integer arithmetic, eliminating the risk of silent precision loss.
+
+<Callout type="warn">
+  Never pass raw JavaScript numbers to amount fields. Always use `getBN()` or construct a `BN` directly from the
+  smallest-unit integer value.
+</Callout>
+
+## `getBN` - human amount → BN
+
+```ts
+import { getBN } from "@streamflow/common";
+
+// 1 SOL (9 decimals) → BN(1_000_000_000)
+const oneSol = getBN(1, 9);
+
+// 50 USDC (6 decimals) → BN(50_000_000)
+const fiftyUsdc = getBN(50, 6);
+
+// 1.5 tokens (6 decimals) → BN(1_500_000)
+const onePointFive = getBN(1.5, 6);
+```
+
+## `getNumberFromBN` - BN → human amount
+
+```ts
+import { getNumberFromBN } from "@streamflow/common";
+import BN from "bn.js";
+
+const bn = new BN(1_000_000_000);
+
+// → 1 (SOL with 9 decimals)
+const sol = getNumberFromBN(bn, 9);
+
+// → 1000 (USDC with 6 decimals)
+const usdc = getNumberFromBN(bn, 6);
+```
+
+## Using BN directly
+
+When you already know the raw smallest-unit amount, construct `BN` directly:
+
+```ts
+import BN from "bn.js";
+
+// 2 raw units (e.g. for minimal lock amount)
+const minLockAmount = new BN(2);
+
+// 3601 raw units
+const rawAmount = new BN(3601);
+```
+
+## Finding token decimals
+
+Token decimals are stored in the mint account. Use `getAccount` or `getMint` from `@solana/spl-token`:
+
+```ts
+import { getMint } from "@solana/spl-token";
+import { Connection, PublicKey } from "@solana/web3.js";
+
+const connection = new Connection("https://api.mainnet-beta.solana.com");
+const mint = await getMint(connection, new PublicKey("TokenMintAddress..."));
+const decimals = mint.decimals; // e.g. 6 for USDC, 9 for SOL
+```

@@ -1,0 +1,4 @@
+{
+  "title": "Streamflow Docs",
+  "pages": ["index", "overview", "getting-started", "core-concepts", "api", "resources", "ai-tools"]
+}

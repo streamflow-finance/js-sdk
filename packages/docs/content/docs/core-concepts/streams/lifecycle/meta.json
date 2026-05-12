@@ -1,0 +1,6 @@
+{
+  "title": "Lifecycle Operations",
+  "icon": "RefreshCw",
+  "defaultOpen": false,
+  "pages": ["index", "guide-lifecycle"]
+}

@@ -1,0 +1,98 @@
+---
+title: Error Codes
+description: SDK error codes for the Streamflow Vesting & Locks and Aligned Proxy programs.
+---
+
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+When a Streamflow transaction fails on-chain, the SDK wraps the error in a `ContractError`. The `.contractErrorCode` property contains the SDK-defined string name mapped from the raw hex program error in the transaction log.
+
+These codes are defined in `@streamflow/stream` - `ContractErrorCode` for the core Vesting & Locks program and `AlignedProxyErrorCode` for price-based (Aligned) streams.
+
+## Catching errors
+
+```ts
+import { ContractError, ContractErrorCode } from "@streamflow/stream";
+
+try {
+  const result = await withdraw({ id: streamId }, invoker, env);
+} catch (err) {
+  if (err instanceof ContractError) {
+    console.error("Code:", err.contractErrorCode); // e.g. "Unauthorized"
+    console.error("Description:", err.description); // human-readable description if available
+    console.error("Message:", err.message);
+    console.error("Cause:", err.cause); // original on-chain error
+  }
+}
+```
+
+## Error code reference
+
+<Tabs items={["Vesting & Locks", "Price-Based (Aligned)"]}>
+
+<Tab value="Vesting & Locks">
+
+Errors from the core Vesting & Locks program. The SDK matches these by detecting `custom program error: 0xNN` in transaction logs and resolving via `SOLANA_ERROR_MAP`.
+
+| Hex    | Decimal | `contractErrorCode`           | When it happens                                                           |
+| ------ | ------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `0x60` | 96      | `AccountsNotWritable`         | One or more required accounts was not passed as writable                  |
+| `0x61` | 97      | `InvalidMetadata`             | Stream parameters are invalid - check amounts, timestamps, and recipient  |
+| `0x62` | 98      | `InvalidMetadataAccount`      | The metadata account address doesn't match what the program expects       |
+| `0x63` | 99      | `MetadataAccountMismatch`     | Provided accounts don't match the ones stored in the contract             |
+| `0x64` | 100     | `InvalidEscrowAccount`        | The escrow token account address is invalid                               |
+| `0x65` | 101     | `NotAssociated`               | Provided account is not a valid associated token account                  |
+| `0x66` | 102     | `MintMismatch`                | Sender mint does not match the mint stored in the contract                |
+| `0x67` | 103     | `TransferNotAllowed`          | `transfer()` called on a contract where the recipient is not transferable |
+| `0x68` | 104     | `ContractClosed`              | Operation attempted on a stream that has already been closed or cancelled |
+| `0x69` | 105     | `InvalidTreasury`             | Invalid Streamflow treasury accounts supplied                             |
+| `0x70` | 112     | `InvalidTimestamps`           | Start, cliff, or end timestamps are invalid or out of order               |
+| `0x71` | 113     | `InvalidDepositConfiguration` | Lock or vesting configuration is invalid (e.g. cliff exceeds amount)      |
+| `0x72` | 114     | `AmountIsZero`                | Amount must be greater than zero                                          |
+| `0x73` | 115     | `AmountMoreThanAvailable`     | Requested withdrawal amount exceeds what has unlocked                     |
+| `0x74` | 116     | `AmountAvailableIsZero`       | Nothing has vested yet - no tokens are available to withdraw              |
+| `0x80` | 128     | `ArithmeticError`             | Integer overflow or underflow in on-chain calculation                     |
+| `0x81` | 129     | `InvalidMetadataSize`         | Metadata account data is not the expected 1104 bytes                      |
+| `0x82` | 130     | `UninitializedMetadata`       | Metadata state account has not been initialized                           |
+| `0x83` | 131     | `Unauthorized`                | Invoker doesn't have authority for this operation                         |
+| `0x84` | 132     | `SelfTransfer`                | Attempting to transfer a contract back to its original recipient          |
+| `0x85` | 133     | `AlreadyPaused`               | Contract is already paused                                                |
+| `0x86` | 134     | `NotPaused`                   | Contract is not paused - cannot unpause                                   |
+| `0x87` | 135     | `MetadataNotRentExempt`       | Metadata account does not have enough SOL to be rent-exempt               |
+
+</Tab>
+
+<Tab value="Price-Based (Aligned)">
+
+Errors from the Aligned Proxy program, which handles price-based vesting and locks. These fire when using `SolanaStreamClient` with oracle-driven streams.
+
+| Hex      | Decimal | `contractErrorCode`           | When it happens                                             |
+| -------- | ------- | ----------------------------- | ----------------------------------------------------------- |
+| `0x1770` | 6000    | `Unauthorized`                | Invoker doesn't have authority for this operation           |
+| `0x1771` | 6001    | `ArithmeticError`             | Integer overflow or underflow in calculation                |
+| `0x1772` | 6002    | `UnsupportedTokenExtensions`  | Token mint uses Token Extensions that are not supported     |
+| `0x1773` | 6003    | `PeriodTooShort`              | Period must be at least 30 seconds                          |
+| `0x1774` | 6004    | `InvalidTickSize`             | Percentage tick size is invalid                             |
+| `0x1775` | 6005    | `InvalidPercentageBoundaries` | Percentage unlock boundaries are invalid                    |
+| `0x1776` | 6006    | `InvalidPriceBoundaries`      | Price boundaries (min/max) are invalid                      |
+| `0x1777` | 6007    | `UnsupportedOracle`           | The specified oracle type is not supported                  |
+| `0x1778` | 6008    | `InvalidOracleAccount`        | Oracle account address is invalid                           |
+| `0x1779` | 6009    | `InvalidOraclePrice`          | Oracle returned an invalid or stale price                   |
+| `0x177a` | 6010    | `InvalidStreamMetadata`       | Stream metadata is invalid for this aligned proxy operation |
+| `0x177b` | 6011    | `AmountAlreadyUpdated`        | Release amount has already been updated this period         |
+| `0x177c` | 6012    | `AllFundsUnlocked`            | All funds are already unlocked - nothing left to release    |
+
+<Callout type="info">
+  The SDK's `extractSolanaErrorCode` regex currently only parses 2-digit hex program errors (`0x60`-`0x99`). Aligned
+  Proxy errors (`0x1770`+) in transaction logs will not be resolved to a named code automatically - check the raw
+  transaction log for the hex code and map it using the table above.
+</Callout>
+
+</Tab>
+
+</Tabs>
+
+## Source
+
+These codes are defined in `packages/stream/solana/types.ts` (`ContractErrorCode`, `AlignedProxyErrorCode`) and mapped in `packages/stream/solana/constants.ts` (`SOLANA_ERROR_MAP`). See the [SDK Reference](/docs/api/stream) for the full type documentation.

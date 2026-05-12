@@ -1,0 +1,120 @@
+---
+title: Time-Based Locks
+description: Tokens locked until a Unix timestamp - single cliff release via createLock or SolanaStreamClient.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+A time-based lock holds tokens in escrow until a specific Unix timestamp (`unlockDate`). Once that timestamp has passed, the recipient can call `withdraw()` to receive the tokens.
+
+## Parameters
+
+| Parameter                 | Type                  | Required | Description                                 |
+| ------------------------- | --------------------- | -------- | ------------------------------------------- |
+| `recipient`               | `string`              | ✓        | Recipient wallet address                    |
+| `tokenId`                 | `string`              | ✓        | Token mint address                          |
+| `amount`                  | `BN`                  | ✓        | Amount in smallest units - must be `> 1`    |
+| `unlockDate`              | `number`              | ✓        | Unix timestamp (seconds) when tokens unlock |
+| `name`                    | `string`              | ✓        | Display name for the stream                 |
+| `transferableByRecipient` | `boolean`             | -        | Defaults `false`                            |
+| `partner`                 | `string`              | -        | Partner address for custom fee rates        |
+| `tokenProgramId`          | `string \| PublicKey` | -        | For Token-2022 mints                        |
+
+<Callout type="warn">
+  `amount` must be greater than 1 in the token's smallest unit. `buildLockParams()` sets `cliffAmount = amount - 1`, so `amount <= 1` would produce a zero or negative cliff amount.
+</Callout>
+
+## Code example
+
+<Tabs items={["Composable API", "SolanaStreamClient"]}>
+<Tab value="Composable API">
+
+```ts title="create-lock.ts"
+import { Connection, Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import { buildTransaction, createLock, execute, sign } from "@streamflow/stream/solana/api";
+import { pk } from "@streamflow/common";
+import fs from "node:fs";
+
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const env = {
+  connection,
+  programId: pk("HqDGZjaVRXJ9MGRQEw7qDc2rAr6iH1n1kAQdCZaCMfMZ"), // devnet
+};
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+// Phase 1 - get instructions
+const result = await createLock(
+  {
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(2), // must be > 1
+    unlockDate: Math.floor(Date.now() / 1000) + 86400, // 24 hours
+    name: "Team Lock",
+    transferableByRecipient: false,
+  },
+  invoker,
+  { ...env, isNative: false },
+);
+
+const streamId = result.metadataPubKey!.toBase58();
+
+// Phase 2 - build transaction
+const built = await buildTransaction(result.instructions, { feePayer: invoker.publicKey }, env);
+
+// Phase 3 - sign and execute
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+
+console.log("Stream ID:", streamId);
+console.log("Transaction:", signature);
+```
+
+</Tab>
+<Tab value="SolanaStreamClient">
+
+```ts title="create-lock.ts"
+import { SolanaStreamClient, ICluster } from "@streamflow/stream";
+import { buildLockParams } from "@streamflow/stream/solana/api";
+import { Keypair } from "@solana/web3.js";
+import BN from "bn.js";
+import fs from "node:fs";
+
+const client = new SolanaStreamClient({
+  clusterUrl: "https://api.devnet.solana.com",
+  cluster: ICluster.Devnet,
+});
+
+const secret = JSON.parse(fs.readFileSync(process.env.KEYPAIR_PATH!, "utf-8"));
+const invoker = Keypair.fromSecretKey(Uint8Array.from(secret));
+
+const { txId, metadataId } = await client.create(
+  buildLockParams({
+    recipient: "RecipientWalletAddress...",
+    tokenId: "TokenMintAddress...",
+    amount: new BN(2),
+    unlockDate: Math.floor(Date.now() / 1000) + 86400, // 24 hours
+    name: "Team Lock",
+    transferableByRecipient: false,
+  }),
+  {
+    sender: invoker,
+    isNative: false,
+  },
+);
+
+console.log("Stream ID:", metadataId);
+console.log("Transaction:", txId);
+```
+
+</Tab>
+</Tabs>
+
+## After creation
+
+The stream ID (`metadataPubKey` / `metadataId`) is used for all subsequent operations. For locks, only `withdraw` is available - and only after `unlockDate` has passed.
+
+See [Guide: Create a Lock](/docs/core-concepts/streams/locks/guide-create-lock) for the full end-to-end walkthrough with setup steps.

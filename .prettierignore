@@ -1,2 +1,5 @@
 *.md
 pnpm-lock.yaml
+**/descriptor/**
+packages/docs/.react-router/**
+packages/docs/.source/**

@@ -1,0 +1,47 @@
+---
+title: Vesting
+description: Gradual token release on a configurable schedule with optional cliff and initial allocation.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+A vesting stream releases tokens gradually over time according to a period-based schedule. The recipient can withdraw earned tokens at any time, or optionally have them pushed automatically via `automaticWithdrawal`.
+
+## Types
+
+| Type                                                           | Trigger                        | Composable API                        |
+| -------------------------------------------------------------- | ------------------------------ | ------------------------------------- |
+| [Time-based](/docs/core-concepts/streams/vesting/time-based)   | Clock-driven, period intervals | `createVesting`, `createVestingBatch` |
+| [Price-based](/docs/core-concepts/streams/vesting/price-based) | Oracle price thresholds        | `SolanaStreamClient` directly         |
+
+## Key parameters
+
+| Parameter               | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `start`                 | Unix timestamp when vesting begins                      |
+| `period`                | Seconds between each release (e.g. `86400` = daily)     |
+| `duration` OR `endDate` | Total vesting window - provide exactly one              |
+| `amount`                | Total tokens to vest                                    |
+| `cliffAmount`           | Amount released at `start` (optional, defaults `BN(0)`) |
+
+## Amount per period (auto-computed)
+
+If you omit `amountPerPeriod`, it's computed via ceiling division:
+
+```
+remaining  = amount - cliffAmount
+periods    = floor(duration / period)
+result     = ceil(remaining / periods)
+```
+
+This ensures all tokens are released by the end of the schedule, with the last period potentially getting slightly less.
+
+<Callout type="warn">
+  If `cliffAmount >= amount - 1` **and** all of `canTopup`, `automaticWithdrawal`, `cancelableBySender`,
+  `cancelableByRecipient`, `transferableBySender` are `false`, the stream reclassifies as a Lock on-chain and is charged
+  lock fee rates. Keep cliff amounts well below the total, or set at least one of those flags to `true`.
+</Callout>
+
+## Initial allocation
+
+`createVesting` with `initialAllocation` creates two streams atomically: the main vesting stream and a separate stream for the initial allocation amount. The return type changes to `BatchInstructionResult`. See [Guide: Create a Vesting Stream](/docs/core-concepts/streams/vesting/guide-create-vesting) for the full pattern.

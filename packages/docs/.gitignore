@@ -1,0 +1,20 @@
+# Generated API docs (build artifacts)
+content/docs/api/
+
+# Fumadocs MDX generated
+.source/
+
+# React Router v7
+build/
+.react-router/
+
+# Dependencies
+node_modules/
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+worker-configuration.d.ts

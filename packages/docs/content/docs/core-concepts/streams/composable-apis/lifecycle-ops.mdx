@@ -1,0 +1,146 @@
+---
+title: Lifecycle Operations
+description: withdraw, topup, transfer, cancel, and update - signatures, params, and constraints.
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+All lifecycle functions return `InstructionResult: { instructions }`. Use the same 3-phase pattern as creation.
+
+```ts
+import { withdraw, topup, transfer, cancel, update } from "@streamflow/stream/solana/api";
+```
+
+## Operations
+
+<Tabs items={["withdraw", "topup", "transfer", "cancel", "update"]}>
+<Tab value="withdraw">
+
+### withdraw
+
+Withdraw tokens that have vested. Available on any active stream - no creation-time flag required.
+
+```ts
+async function withdraw(
+  params: IWithdrawData, // { id: string, amount?: BN }
+  invoker: Invoker, // must be the stream's recipient
+  env: Env,
+): Promise<InstructionResult>;
+```
+
+```ts
+// Withdraw all available tokens (omit amount)
+const result = await withdraw({ id: streamId }, recipientInvoker, env);
+
+// Withdraw a specific amount
+const result = await withdraw({ id: streamId, amount: new BN(100) }, recipientInvoker, env);
+```
+
+**Notes:**
+
+- For locks: only works after `unlockDate` has passed
+- The invoker must be the stream's current recipient on-chain
+
+</Tab>
+<Tab value="topup">
+
+### topup
+
+Add tokens to extend a stream's duration. Requires `canTopup: true` at creation.
+
+```ts
+async function topup(
+  params: ITopUpData, // { id: string, amount: BN }
+  invoker: Invoker, // must be the stream's sender
+  env: Env & NativeOptions,
+): Promise<InstructionResult>;
+```
+
+```ts
+const result = await topup(
+  { id: streamId, amount: new BN(500) },
+  senderInvoker,
+  { ...env, isNative: false }, // isNative must match the token used at creation
+);
+```
+
+**Notes:**
+
+- `isNative` in `env` must match whether the stream was created with native SOL
+- Lock streams have `canTopup: false` hardcoded - topup will fail on locks
+
+</Tab>
+<Tab value="transfer">
+
+### transfer
+
+Change the stream's recipient to a new wallet. Requires `transferableBySender: true` at creation.
+
+```ts
+async function transfer(
+  params: ITransferData, // { id: string, newRecipient: string }
+  invoker: Invoker, // must be the stream's sender
+  env: Env,
+): Promise<InstructionResult>;
+```
+
+```ts
+const result = await transfer({ id: streamId, newRecipient: "NewWalletAddress..." }, senderInvoker, env);
+```
+
+<Callout type="warn">
+  `transfer()` embeds its own `ComputeBudgetProgram` instruction. Do **not** pass `computeLimit` to `buildTransaction` -
+  it would create a duplicate compute budget instruction.
+</Callout>
+
+</Tab>
+<Tab value="cancel">
+
+### cancel
+
+Terminate the stream early. Returns unvested tokens to the sender. Requires `cancelableBySender: true` at creation.
+
+```ts
+async function cancel(
+  params: { id: string },
+  invoker: Invoker, // must be the stream's sender
+  env: Env,
+): Promise<InstructionResult>;
+```
+
+```ts
+const result = await cancel({ id: streamId }, senderInvoker, env);
+```
+
+**Notes:**
+
+- Must be the last operation - all other lifecycle operations fail after cancellation
+- Lock streams have `cancelableBySender: false` hardcoded
+
+</Tab>
+<Tab value="update">
+
+### update
+
+Update the stream's release rate and/or permission flags. Requires `canUpdateRate: true` on the stream.
+
+```ts
+async function update(
+  params: IUpdateData, // { id, amountPerPeriod?, enableAutomaticWithdrawal?, withdrawFrequency?: BN, transferableBySender?, transferableByRecipient?, cancelableBySender? }
+  invoker: Invoker,
+  env: Env,
+): Promise<InstructionResult>;
+```
+
+```ts
+const result = await update({ id: streamId, amountPerPeriod: new BN(200) }, senderInvoker, env);
+```
+
+<Callout type="info">
+  `canUpdateRate` is **not exposed** in `ICreateVestingParams`. Streams created via `createVesting` don't support
+  `update` unless you use `SolanaStreamClient.create()` directly with `canUpdateRate: true`.
+</Callout>
+
+</Tab>
+</Tabs>

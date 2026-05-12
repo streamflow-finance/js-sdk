@@ -1,0 +1,5 @@
+{
+  "title": "Overview",
+  "icon": "BookOpen",
+  "pages": ["what-is-streamflow", "architecture"]
+}

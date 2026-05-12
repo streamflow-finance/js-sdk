@@ -1,0 +1,5 @@
+{
+  "title": "Resources",
+  "icon": "BookMarked",
+  "pages": ["program-ids", "best-practices", "error-codes", "security-audits", "faq", "changelog", "legal"]
+}

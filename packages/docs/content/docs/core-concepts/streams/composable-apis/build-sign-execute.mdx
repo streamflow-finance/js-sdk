@@ -1,0 +1,117 @@
+---
+title: buildTransaction / sign / execute
+description: Full reference for the 3-phase transaction helpers - options, types, and batch execution.
+---
+
+## `buildTransaction`
+
+```ts
+async function buildTransaction(
+  instructions: TransactionInstruction[],
+  options: BuildTransactionOptions,
+  env: Env,
+): Promise<BuiltTransaction>;
+```
+
+Fetches the latest blockhash, prepends compute budget instructions, and assembles a `VersionedTransaction`.
+
+### `BuildTransactionOptions`
+
+| Field          | Type                                               | Description                                                                 |
+| -------------- | -------------------------------------------------- | --------------------------------------------------------------------------- |
+| `feePayer`     | `PublicKey`                                        | Transaction fee payer. **Required** - `buildTransaction` throws if omitted. |
+| `computeLimit` | `number \| ComputeLimitEstimate \| "autoSimulate"` | Compute unit limit                                                          |
+| `computePrice` | `number \| ComputePriceEstimate`                   | Priority fee in microlamports                                               |
+
+### `BuiltTransaction`
+
+| Field                            | Type                             | Description                         |
+| -------------------------------- | -------------------------------- | ----------------------------------- |
+| `transaction`                    | `VersionedTransaction`           | The assembled, unsigned transaction |
+| `blockhashWithExpiryBlockHeight` | `BlockhashWithExpiryBlockHeight` | For blockhash expiry tracking       |
+| `context`                        | `Context`                        | Slot context at time of fetch       |
+
+---
+
+## `sign`
+
+```ts
+async function sign(
+  transaction: VersionedTransaction,
+  signers: (SignerWalletAdapter | Keypair | { publicKey: PublicKey })[],
+): Promise<VersionedTransaction>;
+```
+
+Signs the transaction with all provided signers in order. Returns the same transaction reference - always use the return value to be safe with wallet adapters.
+
+**Always spread `result.signers`** alongside the invoker for creation transactions - it holds the metadata keypair that the protocol requires as a co-signer:
+
+```ts
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+```
+
+---
+
+## `execute`
+
+```ts
+async function execute(builtTx: BuiltTransaction, env: ExecutionEnv): Promise<TransactionSignature>;
+```
+
+Submits the signed transaction and waits for confirmation. Returns the transaction signature.
+
+### `ExecutionEnv`
+
+Extends `Env` with optional execution controls:
+
+| Field           | Type      | Description                |
+| --------------- | --------- | -------------------------- |
+| `queue`         | `PQueue`  | Custom rate-limiting queue |
+| `sendRate`      | `number`  | Max sends per second       |
+| `throttler`     | `PQueue`  | Throttling queue           |
+| `skipPreflight` | `boolean` | Skip preflight simulation  |
+
+---
+
+## `executeBatch`
+
+```ts
+async function executeBatch(builtTransactions: BuiltTransaction[], env: ExecutionEnv): Promise<BatchExecuteResult>;
+```
+
+Executes multiple transactions in parallel. Returns `{ signatures: string[], errors: Error[] }`. Errors are collected - a failed transaction does not stop the others.
+
+---
+
+## `executeBatchSequential`
+
+```ts
+async function executeBatchSequential(
+  builtTransactions: BuiltTransaction[],
+  env: ExecutionEnv,
+): Promise<BatchExecuteResult>;
+```
+
+Executes transactions one at a time in order. Use when order matters (e.g. setup → creation batches) and `executeBatch` parallel execution is not appropriate.
+
+---
+
+## Full example
+
+```ts
+import { buildTransaction, sign, execute } from "@streamflow/stream/solana/api";
+
+// After getting result from createLock / createVesting / etc.
+const built = await buildTransaction(
+  result.instructions,
+  {
+    feePayer: invoker.publicKey,
+    computeLimit: 200_000,
+    computePrice: 1_000, // 1000 microlamports priority fee
+  },
+  env,
+);
+
+await sign(built.transaction, [invoker, ...(result.signers ?? [])]);
+const signature = await execute(built, env);
+```
