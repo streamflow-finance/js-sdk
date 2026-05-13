@@ -29,7 +29,7 @@ export const deriveStreamMetadataPDA = (
   nonce: number,
 ): PublicKey => {
   return PublicKey.findProgramAddressSync(
-    [METADATA_SEED, mint.toBuffer(), sender.toBuffer(), new BN(nonce).toArrayLike(Buffer, "le", 4)],
+    [METADATA_SEED, mint.toBuffer(), sender.toBuffer(), new BN(nonce).toArrayLike(Buffer, "be", 4)],
     programId,
   )[0];
 };
