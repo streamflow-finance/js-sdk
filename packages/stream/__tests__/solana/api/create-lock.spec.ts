@@ -46,7 +46,7 @@ describe("buildLockParams()", () => {
     const result = buildLockParams(baseParams());
 
     expect(result.period).toBe(1);
-    expect(result.cliffAmount.eq(new BN(999_999_999))).toBe(true);
+    expect(result.cliffAmount.eq(new BN(1_000_000_000))).toBe(true);
     expect(result.amountPerPeriod.eq(new BN(1))).toBe(true);
     expect(result.start).toBe(1700000000);
     expect(result.cliff).toBe(1700000000);
@@ -101,18 +101,18 @@ describe("buildLockParams()", () => {
     expect(streamType).toBe(StreamType.Lock);
   });
 
-  it("throws for amount = 1", async () => {
+  it("accepts amount = 1", async () => {
     const buildLockParams = await importBuildLockParams();
     const params = { ...baseParams(), amount: new BN(1) };
 
-    expect(() => buildLockParams(params)).toThrow("Lock amount must be greater than 1");
+    expect(() => buildLockParams(params)).not.toThrow();
   });
 
   it("throws for amount = 0", async () => {
     const buildLockParams = await importBuildLockParams();
     const params = { ...baseParams(), amount: new BN(0) };
 
-    expect(() => buildLockParams(params)).toThrow("Lock amount must be greater than 1");
+    expect(() => buildLockParams(params)).toThrow("Lock amount must be greater than or equal to 1");
   });
 });
 
@@ -149,7 +149,7 @@ describe("createLock()", () => {
 
     expect(actualParams.period).toBe(1);
     expect(actualParams.amountPerPeriod.eq(new BN(1))).toBe(true);
-    expect(actualParams.cliffAmount.eq(params.amount.subn(1))).toBe(true);
+    expect(actualParams.cliffAmount.eq(params.amount)).toBe(true);
     expect(actualParams.recipient).toBe(params.recipient);
     expect(actualInvoker).toBe(invoker);
     expect(actualEnv).toBe(env);
@@ -180,7 +180,7 @@ describe("buildLockBatchParams()", () => {
 
     expect(result.recipients).toHaveLength(3);
     for (let i = 0; i < 3; i++) {
-      expect(result.recipients[i].cliffAmount.eq(amounts[i].subn(1))).toBe(true);
+      expect(result.recipients[i].cliffAmount.eq(amounts[i])).toBe(true);
       expect(result.recipients[i].amountPerPeriod.eq(new BN(1))).toBe(true);
     }
     expect(result.period).toBe(1);
@@ -274,20 +274,20 @@ describe("createLockBatch()", () => {
     );
   });
 
-  it("throws when any recipient has amount <= 1", async () => {
+  it("throws when any recipient has amount = 0", async () => {
     const createLockBatch = await importCreateLockBatch();
 
     const params = {
       recipients: [
         { recipient: Keypair.generate().publicKey.toBase58(), amount: new BN(5000), name: "Lock A" },
-        { recipient: Keypair.generate().publicKey.toBase58(), amount: new BN(1), name: "Lock B" },
+        { recipient: Keypair.generate().publicKey.toBase58(), amount: new BN(0), name: "Lock B" },
       ],
       tokenId: Keypair.generate().publicKey.toBase58(),
       unlockDate: 1700000000,
     };
 
     await expect(createLockBatch(params, { publicKey: Keypair.generate().publicKey }, makeEnv())).rejects.toThrow(
-      "Lock amount must be greater than 1",
+      "Lock amount must be greater than or equal to 1",
     );
   });
 });

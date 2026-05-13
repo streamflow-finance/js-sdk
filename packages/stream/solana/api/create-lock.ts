@@ -17,8 +17,8 @@ export interface ICreateLockParams {
 }
 
 export function buildLockParams(params: ICreateLockParams): ICreateLinearStreamData {
-  if (params.amount.lten(1)) {
-    throw new Error("Lock amount must be greater than 1");
+  if (params.amount.ltn(1)) {
+    throw new Error("Lock amount must be greater than or equal to 1");
   }
 
   return {
@@ -28,7 +28,7 @@ export function buildLockParams(params: ICreateLockParams): ICreateLinearStreamD
     start: params.unlockDate,
     cliff: params.unlockDate,
     period: 1,
-    cliffAmount: params.amount.subn(1),
+    cliffAmount: params.amount,
     amountPerPeriod: new BN(1),
     name: params.name,
     canTopup: false,

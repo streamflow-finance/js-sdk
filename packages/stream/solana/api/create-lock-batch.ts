@@ -40,7 +40,7 @@ export function buildLockBatchParams(params: ICreateLockBatchParams): ICreateMul
         recipient: r.recipient,
         amount: r.amount,
         name: r.name,
-        cliffAmount: r.amount.subn(1),
+        cliffAmount: r.amount,
         amountPerPeriod: new BN(1),
       }),
     ),
@@ -57,8 +57,8 @@ export async function createLockBatch(
   }
 
   for (const r of params.recipients) {
-    if (r.amount.lten(1)) {
-      throw new Error("Lock amount must be greater than 1");
+    if (r.amount.ltn(1)) {
+      throw new Error("Lock amount must be greater than or equal to 1");
     }
   }
 
