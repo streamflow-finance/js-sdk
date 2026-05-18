@@ -30,7 +30,7 @@ type EnvBase = {
   client?: SolanaStreamClient;
 };
 
-type EnvWithConnection = EnvBase & { connection: Connection };
+type EnvWithConnection = EnvBase & { connection: Connection; cluster: ICluster };
 
 type EnvWithRpcUrl = EnvBase & { rpcUrl: string; cluster?: ICluster };
 
@@ -149,8 +149,13 @@ export function resolveConnection(env: Env): Connection {
 export function createClientFromEnv(env: Env): SolanaStreamClient {
   if (env.client) return env.client;
 
-  const rpcUrl = "connection" in env ? env.connection.rpcEndpoint : env.rpcUrl;
-  const cluster = "cluster" in env ? env.cluster : ICluster.Mainnet;
+  if ("connection" in env) {
+    return new SolanaStreamClient({
+      connection: env.connection,
+      cluster: env.cluster,
+      programId: env.programId.toBase58(),
+    });
+  }
 
-  return new SolanaStreamClient(rpcUrl, cluster, env.commitment, env.programId.toBase58());
+  return new SolanaStreamClient(env.rpcUrl, env.cluster ?? ICluster.Mainnet, env.commitment, env.programId.toBase58());
 }
