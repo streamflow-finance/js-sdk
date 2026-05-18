@@ -26,14 +26,27 @@ export async function executeBatch(
   builtTransactions: BuiltTransaction[],
   env: ExecutionEnv,
 ): Promise<BatchExecuteResult> {
+  if (builtTransactions.length === 0) {
+    return { signatures: [], errors: [] };
+  }
+
+  const first = builtTransactions[0]!;
+  const firstBlockhash = first.blockhashWithExpiryBlockHeight.blockhash;
+  for (const btx of builtTransactions) {
+    if (btx.blockhashWithExpiryBlockHeight.blockhash !== firstBlockhash) {
+      throw new Error("All transactions in executeBatch must share the same blockhash");
+    }
+  }
+
   const connection = resolveConnection(env);
 
+  // Parallel execution requires a shared blockhash; use executeBatchSequential for mixed blockhashes.
   const results = await executeMultipleTransactions(
     connection,
     builtTransactions.map((btx) => btx.transaction),
     {
-      hash: builtTransactions[0]!.blockhashWithExpiryBlockHeight,
-      context: builtTransactions[0]!.context,
+      hash: first.blockhashWithExpiryBlockHeight,
+      context: first.context,
       commitment: env.commitment,
     },
     {
