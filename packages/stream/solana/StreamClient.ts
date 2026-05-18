@@ -213,9 +213,9 @@ export class SolanaStreamClient {
         sendThrottler: sendThrottler ?? buildSendThrottler(sendRate),
       };
     } else if ("connection" in optionsOrClusterUrl) {
-      const { connection, cluster, programId = "", sendScheduler } = optionsOrClusterUrl;
+      const { connection, cluster, commitment, programId = "", sendScheduler } = optionsOrClusterUrl;
       this.connection = connection;
-      this.commitment = "confirmed";
+      this.commitment = commitment ?? "confirmed";
       this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
       this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
       this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);

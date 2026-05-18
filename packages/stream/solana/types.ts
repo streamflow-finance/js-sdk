@@ -393,6 +393,7 @@ export interface StreamClientOptions {
 export interface StreamClientOptionsWithConnection {
   connection: Connection;
   cluster: ICluster;
+  commitment?: Commitment | ConnectionConfig;
   programId?: string;
   sendScheduler?: PQueue | TransactionSchedulingOptions;
 }

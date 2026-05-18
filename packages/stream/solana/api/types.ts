@@ -153,6 +153,7 @@ export function createClientFromEnv(env: Env): SolanaStreamClient {
     return new SolanaStreamClient({
       connection: env.connection,
       cluster: env.cluster,
+      commitment: env.commitment,
       programId: env.programId.toBase58(),
     });
   }
