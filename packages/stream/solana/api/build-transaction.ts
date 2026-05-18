@@ -12,8 +12,8 @@ export async function buildTransaction(
   const connection = resolveConnection(env);
 
   const computeBudgetIxs = prepareBaseInstructions(connection, {
-    computePrice: options.computePrice && typeof options.computePrice === "function" ? undefined : options.computePrice,
-    computeLimit: options.computeLimit && typeof options.computeLimit !== "number" ? undefined : options.computeLimit,
+    computePrice: typeof options.computePrice === "function" ? undefined : options.computePrice,
+    computeLimit: typeof options.computeLimit !== "number" ? undefined : options.computeLimit,
   });
 
   const allIxs = [...computeBudgetIxs, ...instructions];
