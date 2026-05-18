@@ -39,6 +39,7 @@ export async function executeBatch(
     {
       sendRate: env.sendRate,
       sendThrottler: env.throttler,
+      skipSimulation: env.skipPreflight,
     },
   );
 

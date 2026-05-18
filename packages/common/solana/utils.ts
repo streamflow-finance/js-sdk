@@ -249,7 +249,7 @@ export async function executeMultipleTransactions(
   connection: Connection,
   txs: (Transaction | VersionedTransaction)[],
   confirmationParams: ConfirmationParams,
-  { sendRate = 1, sendThrottler, ...throttlingParams }: ThrottleParams,
+  { sendRate = 1, sendThrottler, ...throttlingParams }: TransactionExecutionParams,
 ): Promise<PromiseSettledResult<string>[]> {
   if (!sendThrottler) {
     sendThrottler = buildSendThrottler(sendRate);
