@@ -111,8 +111,8 @@ export async function createVesting(
     return create(buildVestingParams(params), invoker, env);
   }
 
-  if (!params.initialAllocation.amount.gtn(0)) {
-    throw new Error("Initial allocation amount must be greater than zero");
+  if (!params.initialAllocation.amount.gtn(1)) {
+    throw new Error("Initial allocation amount must be greater than 1");
   }
 
   const client = createClientFromEnv(env);

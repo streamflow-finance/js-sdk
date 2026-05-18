@@ -460,7 +460,28 @@ describe("createVesting() — with initial allocation", () => {
     const env = makeEnv();
 
     await expect(createVesting(params, invoker, env)).rejects.toThrow(
-      "Initial allocation amount must be greater than zero",
+      "Initial allocation amount must be greater than 1",
+    );
+  });
+
+  it("throws when initialAllocation amount is 1", async () => {
+    const createVesting = await importCreateVesting();
+
+    const params = {
+      recipient: Keypair.generate().publicKey.toBase58(),
+      tokenId: Keypair.generate().publicKey.toBase58(),
+      amount: new BN(1_000_000_000_000),
+      start: 1700000000,
+      period: 86400,
+      name: "Test Vesting",
+      duration: 1209600,
+      initialAllocation: { amount: new BN(1) },
+    };
+    const invoker = { publicKey: Keypair.generate().publicKey };
+    const env = makeEnv();
+
+    await expect(createVesting(params, invoker, env)).rejects.toThrow(
+      "Initial allocation amount must be greater than 1",
     );
   });
 });
