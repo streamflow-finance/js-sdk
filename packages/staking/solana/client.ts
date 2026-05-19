@@ -67,6 +67,7 @@ import type {
   FeeValue,
   FundPoolArgs,
   IInteractExt,
+  IPrepareExt,
   RewardEntry,
   RewardPool,
   StakeAndCreateEntriesArgs,
@@ -260,12 +261,11 @@ export class SolanaStakingClient {
       nonce,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateStakePoolArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const { stakePoolProgram } = this.programs;
-    const creator = extParams.invoker.publicKey;
+    const creator = this.getInvokerPublicKey(extParams.invoker);
     const v2ParamsSet = maxTotalStakeCumulative !== undefined || expiryTs !== undefined || autoUnstake !== undefined;
-    invariant(creator, "Undefined invoker publicKey");
     const createInstruction = await (
       v2ParamsSet
         ? stakePoolProgram.methods.createPoolV2(
@@ -332,7 +332,7 @@ export class SolanaStakingClient {
 
   async prepareStakeAndCreateEntriesInstructions(
     data: StakeAndCreateEntriesArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -359,13 +359,12 @@ export class SolanaStakingClient {
 
   async prepareStakeInstructions(
     { nonce, amount, duration, stakePool, stakePoolMint, tokenProgramId = TOKEN_PROGRAM_ID }: StakeArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
       .stake(nonce, amount, duration)
@@ -411,7 +410,7 @@ export class SolanaStakingClient {
 
   async prepareUnstakeAndClaimInstructions(
     data: UnstakeAndClaimArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -460,7 +459,7 @@ export class SolanaStakingClient {
 
   async prepareUnstakeAndCloseInstructions(
     data: UnstakeAndCloseArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -487,13 +486,12 @@ export class SolanaStakingClient {
 
   async prepareUnstakeInstructions(
     { stakePool, stakePoolMint, nonce, tokenProgramId = TOKEN_PROGRAM_ID, shouldClose = false }: UnstakeArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const stakeEntryKey = deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, nonce);
     const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
@@ -519,10 +517,9 @@ export class SolanaStakingClient {
     };
   }
 
-  async prepareCloseStakeEntryInstructions({ stakePool, nonce }: CloseStakeEntryArgs, extParams: IInteractExt) {
+  async prepareCloseStakeEntryInstructions({ stakePool, nonce }: CloseStakeEntryArgs, extParams: IPrepareExt) {
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const stakeEntryKey = deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, nonce);
     const instruction = await stakePoolProgram.methods
       .closeEntry()
@@ -556,11 +553,10 @@ export class SolanaStakingClient {
       lastClaimPeriodOpt,
       tokenProgramId = TOKEN_PROGRAM_ID,
     }: CreateRewardPoolArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const { rewardPoolProgram } = this.programs;
-    const creator = extParams.invoker.publicKey;
-    invariant(creator, "Undefined invoker publicKey");
+    const creator = this.getInvokerPublicKey(extParams.invoker);
     const instruction = await rewardPoolProgram.methods
       .createPool(nonce, rewardAmount, rewardPeriod, permissionless, lastClaimPeriodOpt)
       .accounts({
@@ -597,12 +593,11 @@ export class SolanaStakingClient {
       governor,
       vote,
     }: ClaimRewardPoolArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const rewardPoolKey = deriveRewardPoolPDA(
       rewardPoolProgram.programId,
       pk(stakePool),
@@ -648,11 +643,10 @@ export class SolanaStakingClient {
       nonce,
       rewardPoolType = "fixed",
     }: FundPoolArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const existingFee = await this.getFeeValueIfExists(staker);
     const rewardMintPk = pk(rewardMint);
     const tokenProgramPk = pk(tokenProgramId);
@@ -662,7 +656,7 @@ export class SolanaStakingClient {
             this.connection,
             [STREAMFLOW_TREASURY_PUBLIC_KEY],
             rewardMintPk,
-            extParams.invoker,
+            { publicKey: staker },
             tokenProgramPk,
           )
         : null;
@@ -695,11 +689,10 @@ export class SolanaStakingClient {
 
   async prepareClawbackInstructions(
     { nonce, rewardMint, stakePool, tokenProgramId = TOKEN_PROGRAM_ID }: ClawbackRewardPoolArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const { rewardPoolProgram } = this.programs;
-    const authority = extParams.invoker.publicKey;
-    invariant(authority, "Undefined invoker publicKey");
+    const authority = this.getInvokerPublicKey(extParams.invoker);
     const rewardMintPk = pk(rewardMint);
     const tokenProgramPk = pk(tokenProgramId);
     const rewardPoolPda = deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), rewardMintPk, nonce);
@@ -728,12 +721,11 @@ export class SolanaStakingClient {
 
   async prepareCreateRewardEntryInstructions(
     { stakePool, rewardPoolNonce, depositNonce, rewardMint, rewardPoolType = "fixed" }: CreateRewardEntryArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const instruction = await rewardPoolProgram.methods
       .createEntry()
       .accounts({
@@ -762,11 +754,10 @@ export class SolanaStakingClient {
 
   async prepareCloseRewardEntryInstructions(
     { stakePool, rewardPoolNonce, depositNonce, rewardMint, rewardPoolType = "fixed" }: CreateRewardEntryArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const staker = this.getInvokerPublicKey(extParams.invoker);
     const instruction = await rewardPoolProgram.methods
       .closeEntry(depositNonce)
       .accounts({
@@ -791,11 +782,10 @@ export class SolanaStakingClient {
 
   async prepareCreateFundDelegateInstructions(
     { rewardPool, startTs, period, expiryTs, tokenProgramId = TOKEN_PROGRAM_ID }: CreateFundDelegateArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ): Promise<CreateFundDelegatePrepareResult> {
     const { rewardPoolDynamicProgram } = this.programs;
-    const authority = extParams.invoker.publicKey;
-    invariant(authority, "Undefined invoker publicKey");
+    this.getInvokerPublicKey(extParams.invoker);
     const rewardPoolPk = pk(rewardPool);
     const rewardPoolData = await rewardPoolDynamicProgram.account.rewardPool.fetch(rewardPoolPk);
     const mint = rewardPoolData.mint;
@@ -825,11 +815,10 @@ export class SolanaStakingClient {
 
   async prepareUpdateRewardPoolInstructions(
     { rewardPool, rewardAmount, rewardPeriod, stakePool }: UpdateRewardPoolArgs,
-    extParams: IInteractExt,
+    extParams: IPrepareExt,
   ) {
     const { rewardPoolProgram } = this.programs;
-    const invoker = extParams.invoker.publicKey;
-    invariant(invoker, "Undefined invoker publicKey");
+    const invoker = this.getInvokerPublicKey(extParams.invoker);
     const instruction = await rewardPoolProgram.methods
       .updatePool(rewardAmount, rewardPeriod)
       .accountsPartial({
@@ -909,6 +898,11 @@ export class SolanaStakingClient {
       }
       throw err;
     }
+  }
+
+  private getInvokerPublicKey(invoker: IPrepareExt["invoker"]): PublicKey {
+    invariant(invoker.publicKey, "Undefined invoker publicKey");
+    return pk(invoker.publicKey);
   }
 
   private getRewardProgram(type: "fixed"): Program<RewardPoolProgramType>;
