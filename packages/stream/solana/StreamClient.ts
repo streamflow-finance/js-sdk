@@ -1723,7 +1723,9 @@ export class SolanaStreamClient {
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
-    const { mint, partner, senderTokens, escrowTokens, partnerFeePercent, streamflowFeePercent } = decodeStream(escrow?.data);
+    const { mint, partner, senderTokens, escrowTokens, partnerFeePercent, streamflowFeePercent } = decodeStream(
+      escrow?.data,
+    );
 
     const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
     const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
