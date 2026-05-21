@@ -432,7 +432,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       instruction: unknown,
       calls: ReadonlyArray<{ source: PublicKey; destination: unknown; owner: unknown }>,
     ) => {
-      calls.forEach(({ source, destination }, index) => {
+      calls.forEach(({ source, destination, owner }, index) => {
         expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
           index + 1,
           (instance as any).connection,
@@ -441,7 +441,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           source,
           publicKeys.mint,
           destination,
-          source,
+          owner,
           1n,
           "confirmed",
         );
@@ -507,17 +507,17 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           {
             source: decodedStream.escrowTokens,
             destination: decodedStream.recipientTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.streamflowTreasuryTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.partnerTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
         ]);
       });
@@ -540,22 +540,22 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           {
             source: decodedStream.escrowTokens,
             destination: decodedStream.recipientTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.streamflowTreasuryTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.partnerTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: decodedStream.senderTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
         ]);
       });
@@ -652,22 +652,22 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.recipientTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.streamflowTreasuryTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.partnerTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.proxyTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: publicKeys.proxyTokens,
