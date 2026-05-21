@@ -33,7 +33,7 @@ export async function createAndEstimateTransaction<
 >(
   createFn: CreateFn,
   extParams: ParamsT,
-  select: (result: Awaited<ReturnType<CreateFn>>) => TransactionInstruction[]
+  select: (result: Awaited<ReturnType<CreateFn>>) => TransactionInstruction[],
 ): Promise<Awaited<ReturnType<CreateFn>>>;
 
 export async function createAndEstimateTransaction<

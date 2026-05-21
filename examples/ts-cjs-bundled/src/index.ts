@@ -5,7 +5,7 @@ import { StreamflowDistributorSolana } from "@streamflow/distributor";
 import { SolanaLaunchpadClient } from "@streamflow/launchpad";
 // Other entrypoints to test that the package.json is correct
 import type { MerkleDistributor } from "@streamflow/distributor/solana";
-import {prepareTransaction} from "@streamflow/common";
+import { prepareTransaction } from "@streamflow/common";
 
 // Import IDL files to test import resolving
 // Note: Using require for JSON imports in CJS context

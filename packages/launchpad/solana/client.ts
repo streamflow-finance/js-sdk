@@ -21,7 +21,7 @@ import {
   signAndExecuteTransaction,
   prepareBaseInstructions,
 } from "@streamflow/common";
-import {  
+import {
   type OracleType,
   deriveTestOraclePDA,
   deriveContractPDA,
@@ -121,7 +121,7 @@ export class SolanaLaunchpadClient {
     this.dynamicVestingId = pk(
       programIds?.dynamicVesting ? programIds.dynamicVesting : ALIGNED_UNLOCKS_PROGRAM_ID[cluster],
     );
-    this.vestingId = pk(programIds?.vesting ? programIds.vesting :  STREAM_PROGRAM_ID[cluster]);
+    this.vestingId = pk(programIds?.vesting ? programIds.vesting : STREAM_PROGRAM_ID[cluster]);
     this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
     this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
   }

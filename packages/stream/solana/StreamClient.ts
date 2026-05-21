@@ -72,7 +72,8 @@ import {
   type IInteractStreamExt,
   type IMultiTransactionResult,
   type IPrepareCreateStreamExt,
-  type IPrepareStreamExt, type IPrepareTopUpstreamExt,
+  type IPrepareStreamExt,
+  type IPrepareTopUpstreamExt,
   type IRequestCancelData,
   type ISearchStreams,
   type ITopUpData,
@@ -87,6 +88,7 @@ import {
   type OracleType,
   type Stream,
   type StreamClientOptions,
+  type StreamClientOptionsWithConnection,
   StreamDirection,
   StreamType,
 } from "./types.js";
@@ -152,7 +154,9 @@ const ALIGNED_METADATA_ACC_SIZE = 320;
  * @property clusterUrl cluster url
  * @interface ClientCreationOptions
  */
-export type ClientCreationOptions = Omit<StreamClientOptions, "sendRate" | "sendThrottler">;
+export type ClientCreationOptions =
+  | Omit<StreamClientOptions, "sendRate" | "sendThrottler">
+  | StreamClientOptionsWithConnection;
 
 export class SolanaStreamClient {
   private readonly connection: Connection;
@@ -208,6 +212,23 @@ export class SolanaStreamClient {
       this.schedulingParams = {
         sendThrottler: sendThrottler ?? buildSendThrottler(sendRate),
       };
+    } else if ("connection" in optionsOrClusterUrl) {
+      const { connection, cluster, commitment, programId = "", sendScheduler } = optionsOrClusterUrl;
+      this.connection = connection;
+      this.commitment = commitment ?? "confirmed";
+      this.programId = programId !== "" ? new PublicKey(programId) : new PublicKey(PROGRAM_ID[cluster]);
+      this.partnerOracleProgramId = new PublicKey(PARTNER_ORACLE_PROGRAM_ID[cluster]);
+      this.feeOraclePublicKey = new PublicKey(FEE_ORACLE_PUBLIC_KEY[cluster]);
+      const schedulingOptions = sendScheduler && "sendRate" in sendScheduler ? sendScheduler : undefined;
+      const sendThrottler = !sendScheduler
+        ? buildSendThrottler(1)
+        : "sendRate" in sendScheduler
+          ? buildSendThrottler(sendScheduler.sendRate ?? 1, sendScheduler.sendInterval)
+          : sendScheduler;
+      this.schedulingParams = {
+        ...schedulingOptions,
+        sendThrottler,
+      };
     } else {
       const {
         clusterUrl,
@@ -238,7 +259,10 @@ export class SolanaStreamClient {
     } as AlignedUnlocksProgramType;
     this.alignedProxyProgram = new Program(alignedUnlocksProgram, { connection: this.connection });
     this.apiClient = createClient(
-      typeof optionsOrClusterUrl === "object" && optionsOrClusterUrl.cluster !== ICluster.Mainnet
+      typeof optionsOrClusterUrl === "object" &&
+        ("connection" in optionsOrClusterUrl
+          ? optionsOrClusterUrl.cluster !== ICluster.Mainnet
+          : optionsOrClusterUrl.cluster !== ICluster.Mainnet)
         ? { cluster: "devnet" }
         : { cluster: "mainnet" },
     );
@@ -546,7 +570,9 @@ export class SolanaStreamClient {
     const remainingAccounts = partnerLink
       ? [{ pubkey: new PublicKey(partnerLink.address), isSigner: partnerLink.isSigner, isWritable: false }]
       : [];
-    const createIx = await (remainingAccounts.length > 0 ? createMethod.remainingAccounts(remainingAccounts) : createMethod).instruction();
+    const createIx = await (
+      remainingAccounts.length > 0 ? createMethod.remainingAccounts(remainingAccounts) : createMethod
+    ).instruction();
 
     await this.addTransferHookAccounts(createIx, {
       mint: mintPublicKey,
@@ -1478,10 +1504,7 @@ export class SolanaStreamClient {
    * @param {IInteractStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
    * @returns Transaction result
    */
-  public async requestCancel(
-    data: IRequestCancelData,
-    extParams: IInteractStreamExt,
-  ): Promise<ITransactionResult> {
+  public async requestCancel(data: IRequestCancelData, extParams: IInteractStreamExt): Promise<ITransactionResult> {
     const ixs = await this.prepareRequestCancelInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
@@ -1892,9 +1915,7 @@ export class SolanaStreamClient {
 
       // filter out aligned unlocks and store them in a separate object
       allIncomingAccounts.forEach((account, index) => {
-        if (
-          this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender)
-        ) {
+        if (this.isAlignedUnlock(account.pubkey, allIncomingStreams[index].sender)) {
           alignedDecoded[account.pubkey.toBase58()] = allIncomingStreams[index];
         } else {
           streams[account.pubkey.toBase58()] = new Contract(allIncomingStreams[index]);

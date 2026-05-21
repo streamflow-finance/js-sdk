@@ -1,5 +1,14 @@
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import type { PublicKey, Keypair, VersionedTransaction, TransactionInstruction, AccountInfo, Commitment, ConnectionConfig } from "@solana/web3.js";
+import type {
+  Connection,
+  PublicKey,
+  Keypair,
+  VersionedTransaction,
+  TransactionInstruction,
+  AccountInfo,
+  Commitment,
+  ConnectionConfig,
+} from "@solana/web3.js";
 import { getNumberFromBN } from "@streamflow/common";
 import type { ITransactionExt, ICluster } from "@streamflow/common";
 import type BN from "bn.js";
@@ -38,7 +47,7 @@ export interface IBaseStreamConfig {
   canUpdateRate?: boolean;
   partner?: string;
   // signer or PartnerLink PDA used for fee derivation
-  partnerLink?: { address: string, isSigner: boolean };
+  partnerLink?: { address: string; isSigner: boolean };
   tokenProgramId?: string | PublicKey;
 }
 
@@ -376,6 +385,19 @@ export interface StreamClientOptions {
   sendScheduler?: PQueue | TransactionSchedulingOptions;
 }
 
+/**
+ * StreamClient options that accept a pre-existing Connection instance.
+ * Useful when you already have a connection (e.g. shared across multiple clients)
+ * and want to avoid creating a duplicate one internally.
+ */
+export interface StreamClientOptionsWithConnection {
+  connection: Connection;
+  cluster: ICluster;
+  commitment?: Commitment | ConnectionConfig;
+  programId?: string;
+  sendScheduler?: PQueue | TransactionSchedulingOptions;
+}
+
 type AlignedUnlocksTypes = IdlTypes<AlignedUnlocksIDL>;
 type AlignedUnlocksAccounts = IdlAccounts<AlignedUnlocksIDL>;
 
@@ -420,7 +442,7 @@ export interface ICreateStreamExt extends ICreateExt, ITransactionExtWithInstruc
 export interface IPrepareCreateStreamExt extends Omit<ICreateStreamExt, "sender"> {
   sender: {
     publicKey: PublicKey | null;
-  }
+  };
 }
 
 export interface IInteractStreamExt extends ITransactionExtWithInstructions {
@@ -431,13 +453,13 @@ export interface IInteractStreamExt extends ITransactionExtWithInstructions {
 export interface IPrepareStreamExt extends Omit<IInteractStreamExt, "invoker"> {
   invoker: {
     publicKey: PublicKey | null;
-  }
+  };
 }
 
 export interface IPrepareTopUpstreamExt extends ITransactionExt {
   invoker: {
     publicKey: PublicKey | null;
-  }
+  };
   isNative?: boolean;
 }
 

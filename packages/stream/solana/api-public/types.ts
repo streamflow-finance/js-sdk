@@ -74,7 +74,7 @@ export interface ContractSchema {
   nonce: number | null;
   payer: string | null;
   bump: number | null;
-  feePartner: string | null,
+  feePartner: string | null;
   cancelRequestDt: string | null;
   dynamicContract: DynamicContractSchema | null;
 }

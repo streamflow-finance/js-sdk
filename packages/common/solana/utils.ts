@@ -240,16 +240,14 @@ export async function executeTransaction(
  * @param connection - Solana client connection
  * @param txs - Transactions
  * @param confirmationParams - Confirmation Params that will be used for execution
- * @param throttleParams - rate or throttler instance to throttle TX sending - to not spam the blockchain too much
- * @param throttleParams.sendRate - rate
- * @param throttleParams.sendThrottler -  throttler instance
+ * @param params - execution params: sendRate, sendThrottler, skipSimulation
  * @returns Raw Promise Results - should be handled by the consumer and unwrapped accordingly
  */
 export async function executeMultipleTransactions(
   connection: Connection,
   txs: (Transaction | VersionedTransaction)[],
   confirmationParams: ConfirmationParams,
-  { sendRate = 1, sendThrottler, ...throttlingParams }: ThrottleParams,
+  { sendRate = 1, sendThrottler, skipSimulation, ...throttlingParams }: TransactionExecutionParams,
 ): Promise<PromiseSettledResult<string>[]> {
   if (!sendThrottler) {
     sendThrottler = buildSendThrottler(sendRate);
@@ -260,6 +258,7 @@ export async function executeMultipleTransactions(
         ...throttlingParams,
         sendRate: sendRate,
         sendThrottler: sendThrottler,
+        skipSimulation,
       }),
     ),
   );
