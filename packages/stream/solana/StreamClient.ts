@@ -1187,7 +1187,7 @@ export class SolanaStreamClient {
     const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
 
     if (prepareInstructions.length > 0) {
-      const prepareTx = signedBatch.shift();
+      const prepareTx = signedBatch.pop();
       await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, this.schedulingParams);
     }
 
@@ -1304,9 +1304,9 @@ export class SolanaStreamClient {
       mintAccount,
       tokenProgramId,
       potentialTransfers: [
-        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: recipientTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: partnerTokens, owner: escrowTokens },
       ],
     });
 
@@ -1418,10 +1418,10 @@ export class SolanaStreamClient {
       mintAccount,
       tokenProgramId,
       potentialTransfers: [
-        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: proxyTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: recipientTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: partnerTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: proxyTokens, owner: escrowTokens },
         { source: proxyTokens, destination: senderTokens, owner: proxyMetadata },
       ],
     });
@@ -1486,10 +1486,10 @@ export class SolanaStreamClient {
       mintAccount,
       tokenProgramId,
       potentialTransfers: [
-        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: senderTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: recipientTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: partnerTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: senderTokens, owner: escrowTokens },
       ],
     });
 
@@ -1723,12 +1723,14 @@ export class SolanaStreamClient {
     if (!escrow?.data) {
       throw new Error("Couldn't get account info");
     }
-    const { mint, partner, senderTokens, escrowTokens } = decodeStream(escrow?.data);
+    const { mint, partner, senderTokens, escrowTokens, partnerFeePercent, streamflowFeePercent } = decodeStream(
+      escrow?.data,
+    );
 
     const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
     const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
     const partnerTokens = await ata(mint, partner, tokenProgramId);
-    const totalFee = await this.getTotalFee({ address: partner.toBase58() });
+    const totalFee = partnerFeePercent + streamflowFeePercent;
     const totalAmountToTransfer = calculateTotalAmountToDeposit(amount, totalFee);
 
     if (isNative) {

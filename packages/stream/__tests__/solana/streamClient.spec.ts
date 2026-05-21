@@ -507,17 +507,17 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           {
             source: decodedStream.escrowTokens,
             destination: decodedStream.recipientTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.streamflowTreasuryTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.partnerTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
         ]);
       });
@@ -540,22 +540,22 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           {
             source: decodedStream.escrowTokens,
             destination: decodedStream.recipientTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.streamflowTreasuryTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.partnerTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: decodedStream.senderTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
         ]);
       });
@@ -652,22 +652,22 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.recipientTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.streamflowTreasuryTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.partnerTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: decodedStream.escrowTokens,
             destination: publicKeys.proxyTokens,
-            owner: publicKeys.stream,
+            owner: decodedStream.escrowTokens,
           },
           {
             source: publicKeys.proxyTokens,
