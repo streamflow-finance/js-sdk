@@ -1304,9 +1304,9 @@ export class SolanaStreamClient {
       mintAccount,
       tokenProgramId,
       potentialTransfers: [
-        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: recipientTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: partnerTokens, owner: escrowTokens },
       ],
     });
 
@@ -1418,10 +1418,10 @@ export class SolanaStreamClient {
       mintAccount,
       tokenProgramId,
       potentialTransfers: [
-        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: proxyTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: recipientTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: partnerTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: proxyTokens, owner: escrowTokens },
         { source: proxyTokens, destination: senderTokens, owner: proxyMetadata },
       ],
     });
@@ -1486,10 +1486,10 @@ export class SolanaStreamClient {
       mintAccount,
       tokenProgramId,
       potentialTransfers: [
-        { source: escrowTokens, destination: recipientTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: partnerTokens, owner: streamPublicKey },
-        { source: escrowTokens, destination: senderTokens, owner: streamPublicKey },
+        { source: escrowTokens, destination: recipientTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: partnerTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: senderTokens, owner: escrowTokens },
       ],
     });
 
