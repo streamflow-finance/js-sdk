@@ -1187,7 +1187,7 @@ export class SolanaStreamClient {
     const signedBatch: BatchItem[] = await signAllTransactionWithRecipients(sender, batch);
 
     if (prepareInstructions.length > 0) {
-      const prepareTx = signedBatch.shift();
+      const prepareTx = signedBatch.pop();
       await sendAndConfirmStreamRawTransaction(this.connection, prepareTx!, { hash, context }, this.schedulingParams);
     }
 
