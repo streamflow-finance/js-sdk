@@ -432,7 +432,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       instruction: unknown,
       calls: ReadonlyArray<{ source: PublicKey; destination: unknown; owner: unknown }>,
     ) => {
-      calls.forEach(({ source, destination, owner }, index) => {
+      calls.forEach(({ source, destination }, index) => {
         expect(mockAddExtraAccountMetasForExecute).toHaveBeenNthCalledWith(
           index + 1,
           (instance as any).connection,
@@ -441,7 +441,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           source,
           publicKeys.mint,
           destination,
-          owner,
+          source,
           1n,
           "confirmed",
         );
