@@ -1,0 +1,56 @@
+name: Setup Node.js
+description: Checkout, setup pnpm, Node.js, npm, install deps, and configure git identity
+
+inputs:
+  ref:
+    description: Git ref to checkout
+    required: false
+    default: ""
+  node-version:
+    description: Node.js version
+    required: false
+    default: "22.14.0"
+  npm-version:
+    description: npm version to pin
+    required: false
+    default: "11.15.0"
+  pnpm-version:
+    description: pnpm version
+    required: false
+    default: "9"
+  registry-url:
+    description: npm registry URL
+    required: false
+    default: "https://registry.npmjs.org/"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        ref: ${{ inputs.ref }}
+    - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      with:
+        version: ${{ inputs.pnpm-version }}
+    - name: Use Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+        registry-url: ${{ inputs.registry-url }}
+    - name: Pin npm to ${{ inputs.npm-version }}
+      shell: bash
+      env:
+        NPM_VERSION: ${{ inputs.npm-version }}
+      run: npm install -g npm@"$NPM_VERSION"
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install
+    - name: Git Identity
+      shell: bash
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

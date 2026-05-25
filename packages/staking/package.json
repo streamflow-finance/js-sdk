@@ -2,6 +2,11 @@
   "name": "@streamflow/staking",
   "version": "12.2.1",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamflow-finance/js-sdk.git",
+    "directory": "packages/staking"
+  },
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.js",
