@@ -17,7 +17,7 @@ runs:
   using: composite
   steps:
     - name: Create Git Tag
-      uses: pkgdeps/git-tag-action@00821b688297ad5792cf50e6aaa0d4404bec49d0 # v2
+      uses: pkgdeps/git-tag-action@a5a161774bace8b4e1969dd850c67a7421f1b710 # v3.0.1
       with:
         version: ${{ inputs.version }}
         github_token: ${{ inputs.github-token }}
@@ -25,7 +25,7 @@ runs:
         git_commit_sha: ${{ github.sha }}
         git_tag_prefix: "v"
     - name: Create Release
-      uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77 # v1
+      uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
       with:
         tag_name: v${{ inputs.version }}
         name: v${{ inputs.version }}
