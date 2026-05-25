@@ -1,0 +1,68 @@
+name: Resolve Publish Version
+description: Determine release type (stable/alpha/skip), version, and dist tag
+
+outputs:
+  release_type:
+    description: "stable, alpha, or skip"
+    value: ${{ steps.resolve.outputs.release_type }}
+  version:
+    description: "Resolved version string"
+    value: ${{ steps.resolve.outputs.version }}
+  dist_tag:
+    description: "npm dist-tag (latest or alpha)"
+    value: ${{ steps.resolve.outputs.dist_tag }}
+  pr_number:
+    description: "PR number for commenting"
+    value: ${{ steps.resolve.outputs.pr_number }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve version
+      id: resolve
+      shell: bash
+      run: |
+        BASE_VERSION=$(node -p 'require("./lerna.json").version')
+        SHORT_SHA=$(git rev-parse --short HEAD)
+
+        if [ "$EVENT_NAME" = "pull_request" ] && [ "$PR_MERGED" = "true" ]; then
+          echo "release_type=stable" >> $GITHUB_OUTPUT
+          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "dist_tag=latest" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUM}" >> $GITHUB_OUTPUT
+        elif [ "$EVENT_NAME" = "pull_request" ]; then
+          BRANCH="$HEAD_REF"
+          if [[ "$BRANCH" == alpha/* ]]; then
+            message=$(git log -1 --pretty=%B | head -n 1)
+            if [[ "$message" != *'[skip alpha]'* ]]; then
+              ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUM}.${SHORT_SHA}"
+              echo "release_type=alpha" >> $GITHUB_OUTPUT
+              echo "version=$ALPHA_VERSION" >> $GITHUB_OUTPUT
+              echo "dist_tag=alpha" >> $GITHUB_OUTPUT
+              echo "pr_number=${PR_NUM}" >> $GITHUB_OUTPUT
+            else
+              echo "release_type=skip" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "release_type=skip" >> $GITHUB_OUTPUT
+          fi
+        elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          PR_NUMBER="$INPUT_PR"
+          if [ -n "$PR_NUMBER" ]; then
+            ALPHA_VERSION="${BASE_VERSION}-alpha.p${PR_NUMBER}.${SHORT_SHA}"
+            echo "release_type=alpha" >> $GITHUB_OUTPUT
+            echo "version=$ALPHA_VERSION" >> $GITHUB_OUTPUT
+            echo "dist_tag=alpha" >> $GITHUB_OUTPUT
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "release_type=skip" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "release_type=skip" >> $GITHUB_OUTPUT
+        fi
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        PR_MERGED: ${{ github.event.pull_request.merged }}
+        HEAD_REF: ${{ github.head_ref }}
+        PR_NUM: ${{ github.event.pull_request.number }}
+        INPUT_PR: ${{ github.event.inputs.pr_number }}

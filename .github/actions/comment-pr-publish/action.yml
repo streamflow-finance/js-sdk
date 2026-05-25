@@ -1,0 +1,81 @@
+name: Comment PR on Publish
+description: Post or update a PR comment with publish results
+
+inputs:
+  release-type:
+    description: "stable or alpha"
+    required: true
+  version:
+    description: "Published version string"
+    required: true
+  pr-number:
+    description: "PR number to comment on"
+    required: false
+    default: ""
+  github-token:
+    description: "GitHub token"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Comment on PR (stable)
+      if: inputs.release-type == 'stable'
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+      env:
+        RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const releaseUrl = process.env.RELEASE_URL;
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `${releaseUrl} is released 🎉`
+          });
+    - name: Comment on PR (alpha)
+      if: inputs.release-type == 'alpha'
+      uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+      continue-on-error: true
+      env:
+        PR_NUMBER: ${{ inputs.pr-number }}
+        ALPHA_VERSION: ${{ inputs.version }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const prNumber = process.env.PR_NUMBER || (context.issue && context.issue.number);
+          const alphaVersion = process.env.ALPHA_VERSION;
+          if (!prNumber) {
+            core.warning('No PR number available to comment on.');
+            return;
+          }
+          const sentinel = '<!-- alpha-publish-comment -->';
+          const allComments = await github.paginate(github.rest.issues.listComments, {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber
+          });
+          const botComment = allComments.find(comment =>
+            comment.user.login === 'github-actions[bot]' &&
+            comment.body.includes(sentinel)
+          );
+          const commentBody = `${sentinel}\nAlpha versions of packages are published 📦\n\n` +
+            `PR: #${prNumber}\n` +
+            `Version: ${alphaVersion}\n` +
+            `NPM: https://www.npmjs.com/package/@streamflow/common/v/${alphaVersion}`;
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: commentBody
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+          }

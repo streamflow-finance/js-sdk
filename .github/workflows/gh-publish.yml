@@ -1,122 +1,115 @@
 name: Publish to NPM Registry
 
 on:
-  # When Release Pull Request is merged
   pull_request:
-    branches:
-      - master
-      - v6
-      - v7
-    types: [closed]
+    branches: [master, v6, v7]
+    types: [closed, opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number (for manual alpha)"
+        required: true
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
-  contents: write # for checkout and tag
-  pull-requests: write # for comments
-  packages: write # for publish
+  contents: write
+  pull-requests: write
 
 jobs:
+  resolve-version:
+    runs-on: ubuntu-latest
+    outputs:
+      release_type: ${{ steps.resolve.outputs.release_type }}
+      version: ${{ steps.resolve.outputs.version }}
+      dist_tag: ${{ steps.resolve.outputs.dist_tag }}
+      pr_number: ${{ steps.resolve.outputs.pr_number }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: ./.github/actions/resolve-version
+        id: resolve
+
   tests:
+    if: needs.resolve-version.outputs.release_type != 'skip'
+    needs: resolve-version
     uses: ./.github/workflows/version-tests.yml
 
   all-tests-pass:
+    if: needs.resolve-version.outputs.release_type != 'skip'
     runs-on: ubuntu-latest
-    needs: tests
+    needs: [tests, resolve-version]
     steps:
       - run: echo "All tests completed"
 
   publish:
-    if: github.event.pull_request.merged == true
-    needs: all-tests-pass
+    if: needs.resolve-version.outputs.release_type != 'skip'
+    needs: [all-tests-pass, resolve-version]
     runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup-node
         with:
-          version: 9
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "pnpm"
-          registry-url: https://registry.npmjs.org/
-      - name: Install dependencies
-        run: pnpm install
-      - name: 📦 Build packages
+          ref: ${{ needs.resolve-version.outputs.release_type == 'stable' && github.sha || '' }}
+      - name: Version bump (alpha)
+        if: needs.resolve-version.outputs.release_type == 'alpha'
+        run: pnpm version-all "${{ needs.resolve-version.outputs.version }}" -y
+      - name: Commit version bump (alpha)
+        if: needs.resolve-version.outputs.release_type == 'alpha'
+        run: |
+          git add -A
+          git commit -m "chore: version bump to ${{ needs.resolve-version.outputs.version }} [skip ci]" --no-verify || echo "No changes to commit"
+          # Intentionally not pushed — lerna reads local package.jsons for from-package publish
+      - name: Build packages
         run: pnpm build
-      - name: Git Identity
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Validate NPM Token
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
-          npm whoami
-          if [ $? -ne 0 ]; then
-            echo "::error::NPM token validation failed. Please check your NPM_PUBLISH_TOKEN secret."
-            exit 1
-          fi
-          echo "NPM token validated successfully."
-          rm -f .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-      - name: Set Current Version
+      - name: Set Current Version (stable)
+        if: needs.resolve-version.outputs.release_type == 'stable'
         run: |
           CURRENT_VERSION=$(node -p 'require("./lerna.json").version')
           echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
-      - name: Tag Check
+      - name: Tag Check (stable)
+        if: needs.resolve-version.outputs.release_type == 'stable'
         id: tag_check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GET_API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/tags/v${CURRENT_VERSION}"
           http_status_code=$(curl -LI $GET_API_URL -o /dev/null -w '%{http_code}\n' -s \
             -H "Authorization: token ${GITHUB_TOKEN}")
           if [ "$http_status_code" -ne "404" ] ; then
-            echo "::set-output name=exists_tag::true"
+            echo "exists=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=exists_tag::false"
+            echo "exists=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish
-        if: steps.tag_check.outputs.exists_tag == 'false'
-        run: |
-          npm run publish
+      - name: Publish (alpha)
+        if: needs.resolve-version.outputs.release_type == 'alpha'
+        run: npm run publish -- --dist-tag ${{ needs.resolve-version.outputs.dist_tag }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-      - name: Create Git Tag
-        if: steps.tag_check.outputs.exists_tag == 'false'
-        uses: pkgdeps/git-tag-action@v2
+          NPM_CONFIG_PROVENANCE: true
+      - name: Publish (stable)
+        if: needs.resolve-version.outputs.release_type == 'stable' && steps.tag_check.outputs.exists != 'true'
+        run: npm run publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+      - name: Create Tag and Release (stable)
+        if: needs.resolve-version.outputs.release_type == 'stable' && steps.tag_check.outputs.exists != 'true'
+        id: release
+        uses: ./.github/actions/create-release
         with:
           version: ${{ env.CURRENT_VERSION }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_repo: ${{ github.repository }}
-          git_commit_sha: ${{ github.sha }}
-          git_tag_prefix: "v"
-      - name: Create Release
-        id: create_release
-        if: steps.tag_check.outputs.exists_tag == 'false' && github.event.pull_request.merged == true
-        uses: softprops/action-gh-release@v1
+          release-body: ${{ github.event.pull_request.body }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/comment-pr-publish
+        if: needs.resolve-version.outputs.release_type == 'alpha' || (needs.resolve-version.outputs.release_type == 'stable' && steps.tag_check.outputs.exists != 'true')
         with:
-          tag_name: v${{ env.CURRENT_VERSION }}
-          name: v${{ env.CURRENT_VERSION }}
-          body: |
-            ${{ github.event.pull_request.body }}
-          draft: false
-          prerelease: false
-      - name: Comment release URL
-        uses: actions/github-script@v4
-        env:
-          RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/v${{ env.CURRENT_VERSION }}
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const releaseUrl = process.env.RELEASE_URL;
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `${releaseUrl} is released 🎉`
-            })
+          release-type: ${{ needs.resolve-version.outputs.release_type }}
+          version: ${{ needs.resolve-version.outputs.version }}
+          pr-number: ${{ needs.resolve-version.outputs.pr_number }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

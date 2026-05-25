@@ -1,0 +1,35 @@
+name: Create Git Tag and Release
+description: Create git tag and GitHub release
+
+inputs:
+  version:
+    description: "Version string (without v prefix)"
+    required: true
+  release-body:
+    description: "Release body text"
+    required: false
+    default: ""
+  github-token:
+    description: "GitHub token"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Create Git Tag
+      uses: pkgdeps/git-tag-action@00821b688297ad5792cf50e6aaa0d4404bec49d0 # v2
+      with:
+        version: ${{ inputs.version }}
+        github_token: ${{ inputs.github-token }}
+        github_repo: ${{ github.repository }}
+        git_commit_sha: ${{ github.sha }}
+        git_tag_prefix: "v"
+    - name: Create Release
+      uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77 # v1
+      with:
+        tag_name: v${{ inputs.version }}
+        name: v${{ inputs.version }}
+        body: |
+          ${{ inputs.release-body }}
+        draft: false
+        prerelease: false
