@@ -8,6 +8,10 @@
     "directory": "packages/launchpad"
   },
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
