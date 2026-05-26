@@ -4,7 +4,7 @@
   "description": "ESLint configuration for Streamflow protocol.",
   "homepage": "https://github.com/streamflow-finance/js-sdk/",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "license": "ISC",
   "main": "index.js",
