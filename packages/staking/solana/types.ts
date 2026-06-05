@@ -1,6 +1,6 @@
 import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { type Keypair } from "@solana/web3.js";
+import { type Keypair, type PublicKey } from "@solana/web3.js";
 import { type ITransactionExt, type ITransactionResult, type IPrepareResult } from "@streamflow/common";
 import type BN from "bn.js";
 
@@ -15,7 +15,25 @@ export type RewardPool = IdlAccounts<RewardPoolIDL>["rewardPool"];
 export type FeeValue = IdlAccounts<FeeManagerIDL>["feeValue"];
 export type DefaultFeeValueConfig = IdlAccounts<FeeManagerIDL>["config"];
 
-export interface IInteractExt extends ITransactionExt {
+/**
+ * Parameters required for building (but not signing) Solana instructions.
+ *
+ * Only an `invoker.publicKey` is needed — pass any object that exposes one,
+ * such as a wallet adapter, a `Keypair`, or a bare `{ publicKey }` shape for
+ * contexts where the private key is not available (e.g. backend tx builders,
+ * read-only providers).
+ */
+export interface IPrepareExt extends ITransactionExt {
+  invoker: { publicKey: string | PublicKey | null };
+}
+
+/**
+ * Parameters required for building AND signing/sending Solana transactions.
+ *
+ * Extends {@link IPrepareExt} by requiring a signer (wallet adapter or Keypair)
+ * for the invoker. Used by methods that call `execute()` internally.
+ */
+export interface IInteractExt extends IPrepareExt {
   invoker: SignerWalletAdapter | Keypair;
 }
 
