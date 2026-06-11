@@ -8,7 +8,7 @@ export type RewardPoolDynamic = {
   "address": "RWRDyfZa6Rk9UYi85yjYYfGmoUqffLqjo6vZdFawEez",
   "metadata": {
     "name": "rewardPoolDynamic",
-    "version": "2.6.0",
+    "version": "2.7.0",
     "spec": "0.1.0",
     "description": "Reward pools with dynamic rewards distribution"
   },
@@ -1568,6 +1568,11 @@ export type RewardPoolDynamic = {
       "name": "alreadyFunded",
       "msg": "Fund already happened for the current period"
     },
+    {
+      "code": 6021,
+      "name": "invalidRewardsStatePrecision",
+      "msg": "Rewards state precision is invalid"
+    },
   ],
   "types": [
     {
@@ -1877,6 +1882,13 @@ export type RewardPoolDynamic = {
             "type": "bool"
           },
           {
+            "name": "rewardsStatePrecision",
+            "docs": [
+              "Precision level used to store `rewards_state`",
+            ],
+            "type": "u8"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -1884,7 +1896,7 @@ export type RewardPoolDynamic = {
             "type": {
               "array": [
                 "u8",
-                31,
+                30,
               ]
             }
           },
@@ -1990,14 +2002,14 @@ export type RewardPoolDynamic = {
           {
             "name": "rewardsState",
             "docs": [
-              "Ever increasing accumulator of the amount of rewards per effective stake.\n    Said another way, if a user deposited before any rewards were added to the\n    `vault`, then this would be the token amount per effective stake they could\n    claim.",
+              "Ever-increasing accumulator of the amount of rewards per effective stake.\n    Said another way, if a user deposited before any rewards were added to the\n    `vault`, then this would be the token amount per effective stake they could\n    claim.",
             ],
             "type": "u128"
           },
           {
             "name": "lastAmount",
             "docs": [
-              "latest amount of tokens in the vault",
+              "Last known amount of tokens in the vault",
             ],
             "type": "u64"
           },
@@ -2009,6 +2021,13 @@ export type RewardPoolDynamic = {
             "type": "u64"
           },
           {
+            "name": "rewardsStatePrecision",
+            "docs": [
+              "Precision level used to store `rewards_state`",
+            ],
+            "type": "u8"
+          },
+          {
             "name": "buffer",
             "docs": [
               "Buffer for additional fields",
@@ -2016,7 +2035,7 @@ export type RewardPoolDynamic = {
             "type": {
               "array": [
                 "u8",
-                128,
+                127,
               ]
             }
           },
