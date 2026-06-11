@@ -1,6 +1,6 @@
 import { type Address, type IdlAccounts } from "@coral-xyz/anchor";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
-import { type Keypair } from "@solana/web3.js";
+import { type Keypair, type PublicKey } from "@solana/web3.js";
 import { type ITransactionExt, type ITransactionResult, type IPrepareResult } from "@streamflow/common";
 import type BN from "bn.js";
 
@@ -17,6 +17,11 @@ export type DefaultFeeValueConfig = IdlAccounts<FeeManagerIDL>["config"];
 
 export interface IInteractExt extends ITransactionExt {
   invoker: SignerWalletAdapter | Keypair;
+}
+
+export interface IInteractWithAurhorityExt extends IInteractExt {
+  // an authority public key used for transactions where payer/signer
+  authority?: PublicKey;
 }
 
 export interface BaseStakePoolArgs {
