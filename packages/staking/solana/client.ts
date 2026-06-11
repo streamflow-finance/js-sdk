@@ -67,6 +67,7 @@ import type {
   FeeValue,
   FundPoolArgs,
   IInteractExt,
+  IInteractWithAurhorityExt,
   RewardEntry,
   RewardPool,
   StakeAndCreateEntriesArgs,
@@ -332,7 +333,7 @@ export class SolanaStakingClient {
 
   async prepareStakeAndCreateEntriesInstructions(
     data: StakeAndCreateEntriesArgs,
-    extParams: IInteractExt,
+    extParams: IInteractWithAurhorityExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
@@ -359,13 +360,14 @@ export class SolanaStakingClient {
 
   async prepareStakeInstructions(
     { nonce, amount, duration, stakePool, stakePoolMint, tokenProgramId = TOKEN_PROGRAM_ID }: StakeArgs,
-    extParams: IInteractExt,
+    extParams: IInteractWithAurhorityExt,
   ): Promise<{
     ixs: TransactionInstruction[];
   }> {
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const invoker = extParams.invoker.publicKey;
+    invariant(invoker, "Undefined invoker publicKey");
+    const staker = extParams.authority ?? invoker;
     const poolMintAccountKey = getAssociatedTokenAddressSync(pk(stakePoolMint), staker, true, pk(tokenProgramId));
     const instruction = await stakePoolProgram.methods
       .stake(nonce, amount, duration)
@@ -374,7 +376,7 @@ export class SolanaStakingClient {
         tokenProgram: tokenProgramId,
         from: poolMintAccountKey,
         authority: staker,
-        payer: staker,
+        payer: invoker,
       })
       .instruction();
 
@@ -716,7 +718,10 @@ export class SolanaStakingClient {
     return { ixs: [instruction] };
   }
 
-  async createRewardEntry(data: CreateRewardEntryArgs, extParams: IInteractExt): Promise<ITransactionResult> {
+  async createRewardEntry(
+    data: CreateRewardEntryArgs,
+    extParams: IInteractWithAurhorityExt,
+  ): Promise<ITransactionResult> {
     const { ixs } = await this.prepareCreateRewardEntryInstructions(data, extParams);
     const { signature } = await this.execute(ixs, extParams);
 
@@ -728,16 +733,17 @@ export class SolanaStakingClient {
 
   async prepareCreateRewardEntryInstructions(
     { stakePool, rewardPoolNonce, depositNonce, rewardMint, rewardPoolType = "fixed" }: CreateRewardEntryArgs,
-    extParams: IInteractExt,
+    extParams: IInteractWithAurhorityExt,
   ) {
     const rewardPoolProgram = this.getRewardProgram(rewardPoolType);
     const { stakePoolProgram } = this.programs;
-    const staker = extParams.invoker.publicKey;
-    invariant(staker, "Undefined invoker publicKey");
+    const invoker = extParams.invoker.publicKey;
+    invariant(invoker, "Undefined invoker publicKey");
+    const staker = extParams.authority ?? invoker;
     const instruction = await rewardPoolProgram.methods
       .createEntry()
       .accounts({
-        payer: staker,
+        payer: invoker,
         authority: staker,
         stakeEntry: deriveStakeEntryPDA(stakePoolProgram.programId, pk(stakePool), staker, depositNonce),
         rewardPool: deriveRewardPoolPDA(rewardPoolProgram.programId, pk(stakePool), pk(rewardMint), rewardPoolNonce),
