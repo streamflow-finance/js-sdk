@@ -8,7 +8,7 @@ export type AlignedDistributor = {
   "address": "aMERKpFAWoChCi5oZwPvgsSCoGpZKBiU7fi76bdZjt2",
   "metadata": {
     "name": "alignedDistributor",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "spec": "0.1.0",
     "description": "Proxy for merkle distributor that updates Vesting duration according to token market performance."
   },
@@ -1277,6 +1277,69 @@ export type AlignedDistributor = {
       }
     },
     {
+      "name": "kycConfig",
+      "docs": [
+        "Configuration for kyc-gated (claim) Airdrops.",
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "isSet",
+            "docs": [
+              "Whether KYC is required to claim the Airdrop",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "credential",
+            "docs": [
+              "SAS Credential account used to create attestations",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "schema",
+            "docs": [
+              "SAS Schema account that attestation must conform to",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "nonceLen",
+            "docs": [
+              "Length of the custom nonce portion; zero means the claimant address is used directly.",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "Optional custom nonce portion used as sha256(\"claimant_address:nonce\") for SAS attestation nonce.",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer for additional fields",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+        ]
+      }
+    },
+    {
       "name": "merkleDistributor",
       "docs": [
         "State for the account which distributes tokens.",
@@ -1568,10 +1631,18 @@ export type AlignedDistributor = {
             "type": "u64"
           },
           {
-            "name": "buffer1",
+            "name": "kycConfig",
             "docs": [
               "Buffers for additional fields",
             ],
+            "type": {
+              "defined": {
+                "name": "kycConfig"
+              }
+            }
+          },
+          {
+            "name": "buffer1",
             "type": {
               "array": [
                 "u8",
@@ -1581,6 +1652,15 @@ export type AlignedDistributor = {
           },
           {
             "name": "buffer2",
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+          {
+            "name": "buffer3",
             "type": {
               "array": [
                 "u8",

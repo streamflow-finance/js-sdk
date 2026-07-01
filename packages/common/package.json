@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/common",
-  "version": "12.4.0",
+  "version": "12.5.0",
   "description": "Common utilities and types used by streamflow packages.",
   "repository": {
     "type": "git",
