@@ -364,7 +364,7 @@ export default abstract class BaseDistributorClient {
       attestation = getAttestationPda({
         credential: distributor.kycConfig.credential,
         schema: distributor.kycConfig.schema,
-        nonce: getAttestationNonce({
+        nonce: await getAttestationNonce({
           claimant: extParams.invoker.publicKey,
           nonce: distributor.kycConfig.nonce.slice(0, distributor.kycConfig.nonceLen),
         }),

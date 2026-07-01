@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import { translateError } from "@coral-xyz/anchor";
 import { type TransferFeeConfig } from "@solana/spl-token";
 import { type Connection, PublicKey } from "@solana/web3.js";
@@ -64,16 +63,25 @@ export function getKycNonceBytes(nonce?: KycNonce): Buffer | null {
   return Buffer.from(nonceBytes);
 }
 
-export function getAttestationNonce({ claimant, nonce }: { claimant: PublicKey; nonce?: KycNonce }): PublicKey {
+export async function getAttestationNonce({
+  claimant,
+  nonce,
+}: {
+  claimant: PublicKey;
+  nonce?: KycNonce;
+}): Promise<PublicKey> {
   const nonceBytes = getKycNonceBytes(nonce);
 
   if (!nonceBytes || nonceBytes.length === 0) {
     return claimant;
   }
 
-  const hash = createHash("sha256").update(`${claimant.toString()}:`).update(nonceBytes).digest();
+  const hash = await globalThis.crypto.subtle.digest(
+    "SHA-256",
+    Buffer.concat([Buffer.from(`${claimant.toString()}:`), nonceBytes]),
+  );
 
-  return new PublicKey(hash);
+  return new PublicKey(new Uint8Array(hash));
 }
 
 export function getAttestationPda({
