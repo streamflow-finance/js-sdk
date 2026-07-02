@@ -5,7 +5,14 @@ import {
   getTransferFeeConfig,
   NATIVE_MINT,
 } from "@solana/spl-token";
-import type { AccountInfo, Commitment, ConnectionConfig, MemcmpFilter, TransactionInstruction } from "@solana/web3.js";
+import type {
+  AccountInfo,
+  AccountMeta,
+  Commitment,
+  ConnectionConfig,
+  MemcmpFilter,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ICluster,
@@ -52,6 +59,8 @@ import type {
   ICreateDistributorData,
   ICreateDistributorResult,
   ICreateExt,
+  IDisableKycData,
+  IEnableKycData,
   IGetClaimData,
   IGetDistributors,
   IInteractExt,
@@ -62,11 +71,15 @@ import type {
   NewDistributorAccounts,
   Fees,
   FeeConfig,
+  KycConfig,
 } from "../types.js";
 import {
   calculateAmountWithTransferFees,
+  getAttestationNonce,
+  getAttestationPda,
   getClaimantStatusPda,
   getDistributorPda,
+  getKycNonceBytes,
   wrappedSignAndExecuteTransaction,
 } from "../utils.js";
 
@@ -346,20 +359,34 @@ export default abstract class BaseDistributorClient {
       extParams.invoker.publicKey,
     );
     const claimStatus = await this.getClaim(claimStatusPublicKey);
+    let attestation = data.attestation;
+    if (!attestation && distributor.kycConfig.isSet) {
+      attestation = getAttestationPda({
+        credential: distributor.kycConfig.credential,
+        schema: distributor.kycConfig.schema,
+        nonce: await getAttestationNonce({
+          claimant: extParams.invoker.publicKey,
+          nonce: distributor.kycConfig.nonce.slice(0, distributor.kycConfig.nonceLen),
+        }),
+      });
+    }
+    const remainingAccounts = this.getClaimRemainingAccounts(data, attestation);
 
     if (!claimStatus) {
-      ixs.push(
-        await this.merkleDistributorProgram.methods
-          .newClaim(new BN(data.amountUnlocked), new BN(data.amountLocked), data.proof)
-          .accounts({
-            distributor: distributorPublicKey,
-            to: invokerTokens,
-            claimant: extParams.invoker.publicKey,
-            tokenProgram: tokenProgramId,
-            program: this.programId,
-          })
-          .instruction(),
-      );
+      let newClaimMethod = this.merkleDistributorProgram.methods
+        .newClaim(new BN(data.amountUnlocked), new BN(data.amountLocked), data.proof)
+        .accounts({
+          distributor: distributorPublicKey,
+          to: invokerTokens,
+          claimant: extParams.invoker.publicKey,
+          tokenProgram: tokenProgramId,
+          program: this.programId,
+        });
+      if (remainingAccounts.length > 0) {
+        newClaimMethod = newClaimMethod.remainingAccounts(remainingAccounts);
+      }
+
+      ixs.push(await newClaimMethod.instruction());
     }
 
     const nowTs = new BN(Math.floor(Date.now() / 1000));
@@ -371,17 +398,18 @@ export default abstract class BaseDistributorClient {
         distributor.programVersion >= SOL_FEE_PROGRAM_VERSION
           ? this.merkleDistributorProgram.methods.claimLockedV2
           : this.merkleDistributorProgram.methods.claimLocked;
-      ixs.push(
-        await claimMethod()
-          .accounts({
-            distributor: distributorPublicKey,
-            to: invokerTokens,
-            claimant: extParams.invoker.publicKey,
-            tokenProgram: tokenProgramId,
-            program: this.programId,
-          })
-          .instruction(),
-      );
+      let claimLockedMethod = claimMethod().accounts({
+        distributor: distributorPublicKey,
+        to: invokerTokens,
+        claimant: extParams.invoker.publicKey,
+        tokenProgram: tokenProgramId,
+        program: this.programId,
+      });
+      if (remainingAccounts.length > 0) {
+        claimLockedMethod = claimLockedMethod.remainingAccounts(remainingAccounts);
+      }
+
+      ixs.push(await claimLockedMethod.instruction());
     }
 
     if (distributor.programVersion >= SOL_FEE_PROGRAM_VERSION) {
@@ -484,6 +512,102 @@ export default abstract class BaseDistributorClient {
           distributor: distributorPublicKey,
           claimant: claimantPublicKey,
           program: this.programId,
+        })
+        .instruction(),
+    );
+
+    return ixs;
+  }
+
+  public async enableKyc(data: IEnableKycData, extParams: IInteractExt): Promise<ITransactionResult> {
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareEnableKycInstructions(data, params),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      executionParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  public async prepareEnableKycInstructions(
+    data: IEnableKycData,
+    extParams: ITransactionExtResolved<IInteractExt>,
+  ): Promise<TransactionInstruction[]> {
+    if (!extParams.invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
+
+    ixs.push(
+      await this.merkleDistributorProgram.methods
+        .enableKyc(getKycNonceBytes(data.nonce))
+        .accounts({
+          distributor: pk(data.id),
+          admin: extParams.invoker.publicKey,
+          credential: pk(data.credential),
+          schema: pk(data.schema),
+        })
+        .instruction(),
+    );
+
+    return ixs;
+  }
+
+  public async disableKyc(data: IDisableKycData, extParams: IInteractExt): Promise<ITransactionResult> {
+    const executionParams = this.unwrapExecutionParams(extParams);
+    const invoker = executionParams.invoker.publicKey;
+    invariant(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
+    const ixs = await createAndEstimateTransaction(
+      (params) => this.prepareDisableKycInstructions(data, params),
+      executionParams,
+    );
+    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, invoker);
+    const signature = await wrappedSignAndExecuteTransaction(
+      this.connection,
+      executionParams.invoker,
+      tx,
+      {
+        hash,
+        context,
+        commitment: this.getCommitment(),
+      },
+      { sendThrottler: this.sendThrottler, skipSimulation: executionParams.skipSimulation },
+    );
+
+    return { ixs, txId: signature };
+  }
+
+  public async prepareDisableKycInstructions(
+    data: IDisableKycData,
+    extParams: ITransactionExtResolved<IInteractExt>,
+  ): Promise<TransactionInstruction[]> {
+    if (!extParams.invoker.publicKey) {
+      throw new Error("Invoker's PublicKey is not available, check passed wallet adapter!");
+    }
+
+    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, extParams);
+
+    ixs.push(
+      await this.merkleDistributorProgram.methods
+        .disableKyc()
+        .accounts({
+          distributor: pk(data.id),
+          admin: extParams.invoker.publicKey,
         })
         .instruction(),
     );
@@ -668,6 +792,13 @@ export default abstract class BaseDistributorClient {
     return this.connection.getAccountInfo(pk(claimStatus)).then((account) => this.decodeClaimStatus(account));
   }
 
+  public async getKycConfig(distributor: string | PublicKey): Promise<KycConfig> {
+    const distributorAccount = await this.merkleDistributorProgram.account.merkleDistributor.fetch(pk(distributor));
+    invariant(distributorAccount, "Distributor account not found");
+
+    return distributorAccount.kycConfig;
+  }
+
   public async getClaims(data: IGetClaimData[]): Promise<(AnyClaimStatus | null)[]> {
     const claimStatusPublicKeys = data.map(({ id, recipient }) => {
       return getClaimantStatusPda(this.programId, new PublicKey(id), new PublicKey(recipient));
@@ -767,6 +898,29 @@ export default abstract class BaseDistributorClient {
 
   protected unwrapExecutionParams<T extends IInteractExt>(extParams: T): ReturnType<typeof unwrapExecutionParams<T>> {
     return unwrapExecutionParams(extParams, this.connection);
+  }
+
+  /**
+   * Claim support multiple remaining accounts:
+   * - attestation when an Airdrop requires a KYC;
+   * - partner link accounts for custom fee derivation;
+   */
+  private getClaimRemainingAccounts(data: IClaimData, attestation?: string | PublicKey): AccountMeta[] {
+    const remainingAccounts: AccountMeta[] = [];
+
+    if (attestation) {
+      remainingAccounts.push({ pubkey: pk(attestation), isSigner: false, isWritable: false });
+    }
+
+    if (data.partnerLink) {
+      remainingAccounts.push({
+        pubkey: pk(data.partnerLink.address),
+        isSigner: data.partnerLink.isSigner,
+        isWritable: false,
+      });
+    }
+
+    return remainingAccounts;
   }
 
   private decodeClaimStatus(account: AccountInfo<Buffer> | null): AnyClaimStatus | null {

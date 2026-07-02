@@ -18,10 +18,12 @@ export const DISTRIBUTOR_PREFIX = Buffer.from("MerkleDistributor", "utf-8");
 export const ALIGNED_DISTRIBUTOR_PREFIX = Buffer.from("aligned-distributor", "utf-8");
 export const TEST_ORACLE_PREFIX = Buffer.from("test-oracle", "utf-8");
 export const CLAIM_STATUS_PREFIX = Buffer.from("ClaimStatus", "utf-8");
+export const ATTESTATION_PREFIX = Buffer.from("attestation", "utf-8");
 export const ALIGNED_PRECISION_FACTOR_POW = 9;
 
 export const AIRDROP_CLAIM_FEE = BigInt(10_000_000);
 export const STREAMFLOW_TREASURY_PUBLIC_KEY = new PublicKey("5SEpbdjFK5FxwTvfsGMXVQTD2v4M2c5tyRTxhdsPkgDw");
+export const SOLANA_ATTESTATION_SERVICE_PROGRAM_ID = new PublicKey("22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG");
 
 export const ONE_IN_BASIS_POINTS = BigInt(10_000);
 

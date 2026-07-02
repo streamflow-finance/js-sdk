@@ -8,7 +8,7 @@ export type MerkleDistributor = {
   "address": "MErKy6nZVoVAkryxAejJz2juifQ4ArgLgHmaJCQkU7N",
   "metadata": {
     "name": "merkleDistributor",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "spec": "0.1.0",
     "description": "A Solana program for distributing tokens according to a Merkle root.",
     "repository": "https://github.com/streamflow-finance/distributor"
@@ -933,6 +933,81 @@ export type MerkleDistributor = {
         },
       ],
       "args": []
+    },
+    {
+      "name": "disableKyc",
+      "discriminator": [
+        204,
+        167,
+        59,
+        181,
+        11,
+        7,
+        254,
+        148,
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer.",
+          ],
+          "writable": true,
+          "signer": true
+        },
+      ],
+      "args": []
+    },
+    {
+      "name": "enableKyc",
+      "discriminator": [
+        28,
+        10,
+        11,
+        99,
+        6,
+        44,
+        96,
+        77,
+      ],
+      "accounts": [
+        {
+          "name": "distributor",
+          "docs": [
+            "The [MerkleDistributor].",
+          ],
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer.",
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "credential"
+        },
+        {
+          "name": "schema"
+        },
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": {
+            "option": "bytes"
+          }
+        },
+      ]
     },
     {
       "name": "newClaim",
@@ -2640,6 +2715,31 @@ export type MerkleDistributor = {
       "name": "clawbackRequestDelayPending",
       "msg": "Clawback request delay has not passed yet"
     },
+    {
+      "code": 6034,
+      "name": "missingAttestation",
+      "msg": "Attestation is required for this Distributor"
+    },
+    {
+      "code": 6035,
+      "name": "invalidAttestation",
+      "msg": "Invalid attestation account"
+    },
+    {
+      "code": 6036,
+      "name": "attestationExpired",
+      "msg": "Attestation has expired"
+    },
+    {
+      "code": 6037,
+      "name": "invalidAttestationCredentialSchema",
+      "msg": "Invalid attestation credential or schema"
+    },
+    {
+      "code": 6038,
+      "name": "kycNonceTooLong",
+      "msg": "KYC nonce is too long"
+    },
   ],
   "types": [
     {
@@ -2897,6 +2997,69 @@ export type MerkleDistributor = {
               "defined": {
                 "name": "state"
               }
+            }
+          },
+        ]
+      }
+    },
+    {
+      "name": "kycConfig",
+      "docs": [
+        "Configuration for kyc-gated (claim) Airdrops.",
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "isSet",
+            "docs": [
+              "Whether KYC is required to claim the Airdrop",
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "credential",
+            "docs": [
+              "SAS Credential account used to create attestations",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "schema",
+            "docs": [
+              "SAS Schema account that attestation must conform to",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "nonceLen",
+            "docs": [
+              "Length of the custom nonce portion; zero means the claimant address is used directly.",
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "docs": [
+              "Optional custom nonce portion used as sha256(\"claimant_address:nonce\") for SAS attestation nonce.",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer for additional fields",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
             }
           },
         ]
@@ -3194,10 +3357,18 @@ export type MerkleDistributor = {
             "type": "u64"
           },
           {
-            "name": "buffer1",
+            "name": "kycConfig",
             "docs": [
               "Buffers for additional fields",
             ],
+            "type": {
+              "defined": {
+                "name": "kycConfig"
+              }
+            }
+          },
+          {
+            "name": "buffer1",
             "type": {
               "array": [
                 "u8",
@@ -3207,6 +3378,15 @@ export type MerkleDistributor = {
           },
           {
             "name": "buffer2",
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+          {
+            "name": "buffer3",
             "type": {
               "array": [
                 "u8",

@@ -6,13 +6,15 @@ import { Buffer } from "buffer";
 
 import {
   ALIGNED_DISTRIBUTOR_PREFIX,
+  ATTESTATION_PREFIX,
   CLAIM_STATUS_PREFIX,
   DISTRIBUTOR_PREFIX,
   MERKLE_DISTRIBUTOR_ERRORS,
   ONE_IN_BASIS_POINTS,
+  SOLANA_ATTESTATION_SERVICE_PROGRAM_ID,
   TEST_ORACLE_PREFIX,
 } from "./constants.js";
-import type { AnyClaimStatus, CompressedClaimStatus } from "./types.js";
+import type { AnyClaimStatus, CompressedClaimStatus, KycNonce } from "./types.js";
 
 export const getAlignedDistributorPda = (programId: PublicKey, distributor: PublicKey): PublicKey => {
   return PublicKey.findProgramAddressSync([ALIGNED_DISTRIBUTOR_PREFIX, distributor.toBuffer()], programId)[0];
@@ -40,6 +42,63 @@ export function getClaimantStatusPda(programId: PublicKey, distributor: PublicKe
 
   // Finding the PDA
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
+}
+
+export function getKycNonceBytes(nonce?: KycNonce): Buffer | null {
+  if (nonce == null) {
+    return null;
+  }
+
+  if (typeof nonce === "string") {
+    return Buffer.from(nonce);
+  }
+
+  const nonceBytes = Array.from(nonce);
+  for (const byte of nonceBytes) {
+    if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
+      throw new Error("KYC nonce must contain only bytes");
+    }
+  }
+
+  return Buffer.from(nonceBytes);
+}
+
+export async function getAttestationNonce({
+  claimant,
+  nonce,
+}: {
+  claimant: PublicKey;
+  nonce?: KycNonce;
+}): Promise<PublicKey> {
+  const nonceBytes = getKycNonceBytes(nonce);
+
+  if (!nonceBytes || nonceBytes.length === 0) {
+    return claimant;
+  }
+
+  const hash = await globalThis.crypto.subtle.digest(
+    "SHA-256",
+    Buffer.concat([Buffer.from(`${claimant.toString()}:`), nonceBytes]),
+  );
+
+  return new PublicKey(new Uint8Array(hash));
+}
+
+export function getAttestationPda({
+  credential,
+  schema,
+  nonce,
+  programId = SOLANA_ATTESTATION_SERVICE_PROGRAM_ID,
+}: {
+  credential: PublicKey;
+  schema: PublicKey;
+  nonce: PublicKey;
+  programId?: PublicKey;
+}): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [ATTESTATION_PREFIX, credential.toBuffer(), schema.toBuffer(), nonce.toBuffer()],
+    programId,
+  )[0];
 }
 
 export function getEventAuthorityPda(programId: PublicKey): PublicKey {

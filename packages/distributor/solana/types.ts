@@ -1,3 +1,4 @@
+import { type Buffer } from "buffer";
 import { type SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import type { Keypair, PublicKey } from "@solana/web3.js";
 import type {
@@ -35,6 +36,7 @@ export type CompressedClaimStatus = MerkleDistributorAccountTypes["compressedCla
  * @inline
  */
 export type MerkleDistributor = MerkleDistributorAccountTypes["merkleDistributor"];
+export type KycConfig = MerkleDistributorAccountTypes["kycConfig"];
 
 export type NewDistributorAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "newDistributor">;
 export type NewDistributorArgs = IdlArgsOfMethod<MerkleDistributorIDL, "newDistributor">;
@@ -42,6 +44,8 @@ export type NewClaimAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "newCla
 export type NewClaimArgs = IdlInstruction<MerkleDistributorIDL, "newClaim">["args"];
 export type ClaimLockedV2Accounts = IdlAccountsOfMethod<MerkleDistributorIDL, "claimLockedV2">;
 export type ClaimLockedAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "claimLocked">;
+export type EnableKycAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "enableKyc">;
+export type DisableKycAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "disableKyc">;
 export type ClawbackAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "clawback">;
 export type CloseClaimAccounts = IdlAccountsOfMethod<MerkleDistributorIDL, "closeClaim">;
 export type CloseClaimArgs = IdlInstruction<MerkleDistributorIDL, "closeClaim">["args"];
@@ -84,6 +88,8 @@ export interface ICreateDistributorData {
   // signer or PartnerLink PDA used for fee derivation
   partnerLink?: { address: string; isSigner: boolean };
 }
+
+export type KycNonce = Buffer | number[] | string | null;
 
 export interface AlignedDistributorData {
   sender: string;
@@ -135,6 +141,19 @@ export interface IClaimData {
   amountLocked: BN;
   claimableAmount: BN;
   proof: Array<Array<number>>;
+  attestation?: string | PublicKey;
+  partnerLink?: { address: string; isSigner: boolean };
+}
+
+export interface IEnableKycData {
+  id: string;
+  credential: string | PublicKey;
+  schema: string | PublicKey;
+  nonce?: KycNonce;
+}
+
+export interface IDisableKycData {
+  id: string;
 }
 
 export interface ICloseClaimData extends Partial<Omit<IClaimData, "id">> {
