@@ -23,7 +23,7 @@ export type Streamflow = {
         219,
         236,
         220,
-        190,
+        190
       ],
       "accounts": [
         {
@@ -76,7 +76,7 @@ export type Streamflow = {
         },
         {
           "name": "tokenProgram"
-        },
+        }
       ],
       "args": []
     },
@@ -90,7 +90,7 @@ export type Streamflow = {
         136,
         232,
         70,
-        137,
+        137
       ],
       "accounts": [
         {
@@ -104,9 +104,65 @@ export type Streamflow = {
         {
           "name": "partner",
           "writable": true
-        },
+        }
       ],
       "args": []
+    },
+    {
+      "name": "claimRoutedFee",
+      "discriminator": [
+        21,
+        196,
+        95,
+        101,
+        117,
+        238,
+        89,
+        30
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "escrowTokens",
+          "writable": true
+        },
+        {
+          "name": "streamflowTreasury",
+          "writable": true
+        },
+        {
+          "name": "streamflowTreasuryTokens",
+          "writable": true
+        },
+        {
+          "name": "senderTokens",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "destination",
+          "type": {
+            "defined": {
+              "name": "routedFeeDestination"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "create",
@@ -118,7 +174,7 @@ export type Streamflow = {
         5,
         28,
         7,
-        119,
+        119
       ],
       "accounts": [
         {
@@ -144,7 +200,7 @@ export type Streamflow = {
             "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
             "pid",
             ")",
-            "```",
+            "```"
           ],
           "writable": true
         },
@@ -199,7 +255,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -255,7 +311,7 @@ export type Streamflow = {
           "type": {
             "array": [
               "u8",
-              64,
+              64
             ]
           }
         },
@@ -274,7 +330,7 @@ export type Streamflow = {
           "type": {
             "option": "bool"
           }
-        },
+        }
       ]
     },
     {
@@ -287,7 +343,7 @@ export type Streamflow = {
         140,
         186,
         80,
-        195,
+        195
       ],
       "accounts": [
         {
@@ -325,7 +381,7 @@ export type Streamflow = {
             "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
             "pid",
             ")",
-            "```",
+            "```"
           ],
           "writable": true
         },
@@ -356,7 +412,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -412,7 +468,7 @@ export type Streamflow = {
           "type": {
             "array": [
               "u8",
-              64,
+              64
             ]
           }
         },
@@ -435,7 +491,7 @@ export type Streamflow = {
         {
           "name": "canUpdateRate",
           "type": "bool"
-        },
+        }
       ]
     },
     {
@@ -448,7 +504,7 @@ export type Streamflow = {
         113,
         197,
         168,
-        104,
+        104
       ],
       "accounts": [
         {
@@ -486,7 +542,7 @@ export type Streamflow = {
             "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
             "pid",
             ")",
-            "```",
+            "```"
           ],
           "writable": true
         },
@@ -517,7 +573,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -573,7 +629,7 @@ export type Streamflow = {
           "type": {
             "array": [
               "u8",
-              64,
+              64
             ]
           }
         },
@@ -600,7 +656,7 @@ export type Streamflow = {
         {
           "name": "nonce",
           "type": "u32"
-        },
+        }
       ]
     },
     {
@@ -613,7 +669,7 @@ export type Streamflow = {
         20,
         111,
         159,
-        22,
+        22
       ],
       "accounts": [
         {
@@ -656,7 +712,7 @@ export type Streamflow = {
             "&[b\"strm-met\", mint.as_ref(), payer.as_ref(), nonce.to_be_bytes().as_ref()],",
             "pid",
             ")",
-            "```",
+            "```"
           ],
           "writable": true
         },
@@ -687,7 +743,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -743,7 +799,7 @@ export type Streamflow = {
           "type": {
             "array": [
               "u8",
-              64,
+              64
             ]
           }
         },
@@ -766,7 +822,7 @@ export type Streamflow = {
         {
           "name": "canUpdateRate",
           "type": "bool"
-        },
+        }
       ]
     },
     {
@@ -779,7 +835,7 @@ export type Streamflow = {
         255,
         170,
         153,
-        94,
+        94
       ],
       "accounts": [
         {
@@ -822,7 +878,7 @@ export type Streamflow = {
             "&[b\"strm-met\", mint.as_ref(), payer.as_ref(), nonce.to_be_bytes().as_ref()],",
             "pid",
             ")",
-            "```",
+            "```"
           ],
           "writable": true
         },
@@ -853,7 +909,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -909,7 +965,7 @@ export type Streamflow = {
           "type": {
             "array": [
               "u8",
-              64,
+              64
             ]
           }
         },
@@ -936,7 +992,7 @@ export type Streamflow = {
         {
           "name": "nonce",
           "type": "u32"
-        },
+        }
       ]
     },
     {
@@ -949,7 +1005,7 @@ export type Streamflow = {
         95,
         139,
         49,
-        180,
+        180
       ],
       "accounts": [
         {
@@ -975,7 +1031,7 @@ export type Streamflow = {
             "&[b\"strm-met\", mint.as_ref(), sender.as_ref(), nonce.to_be_bytes().as_ref()],",
             "pid",
             ")",
-            "```",
+            "```"
           ],
           "writable": true
         },
@@ -1030,7 +1086,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -1086,7 +1142,7 @@ export type Streamflow = {
           "type": {
             "array": [
               "u8",
-              64,
+              64
             ]
           }
         },
@@ -1105,7 +1161,7 @@ export type Streamflow = {
         {
           "name": "nonce",
           "type": "u32"
-        },
+        }
       ]
     },
     {
@@ -1118,7 +1174,7 @@ export type Streamflow = {
         74,
         121,
         193,
-        47,
+        47
       ],
       "accounts": [
         {
@@ -1128,31 +1184,7 @@ export type Streamflow = {
         {
           "name": "metadata",
           "writable": true
-        },
-      ],
-      "args": []
-    },
-    {
-      "name": "requestCancel",
-      "discriminator": [
-        244,
-        78,
-        42,
-        227,
-        165,
-        174,
-        94,
-        167,
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        },
+        }
       ],
       "args": []
     },
@@ -1166,7 +1198,7 @@ export type Streamflow = {
         225,
         151,
         99,
-        77,
+        77
       ],
       "accounts": [
         {
@@ -1215,13 +1247,13 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
           "name": "amount",
           "type": "u64"
-        },
+        }
       ]
     },
     {
@@ -1234,7 +1266,7 @@ export type Streamflow = {
         105,
         166,
         20,
-        138,
+        138
       ],
       "accounts": [
         {
@@ -1271,7 +1303,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": []
     },
@@ -1285,7 +1317,7 @@ export type Streamflow = {
         109,
         58,
         215,
-        239,
+        239
       ],
       "accounts": [
         {
@@ -1308,7 +1340,7 @@ export type Streamflow = {
         },
         {
           "name": "tokenProgram"
-        },
+        }
       ],
       "args": []
     },
@@ -1322,7 +1354,7 @@ export type Streamflow = {
         10,
         141,
         188,
-        255,
+        255
       ],
       "accounts": [
         {
@@ -1332,7 +1364,7 @@ export type Streamflow = {
         {
           "name": "metadata",
           "writable": true
-        },
+        }
       ],
       "args": []
     },
@@ -1346,7 +1378,7 @@ export type Streamflow = {
         158,
         63,
         253,
-        127,
+        127
       ],
       "accounts": [
         {
@@ -1365,7 +1397,7 @@ export type Streamflow = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
+        }
       ],
       "args": [
         {
@@ -1403,7 +1435,7 @@ export type Streamflow = {
           "type": {
             "option": "bool"
           }
-        },
+        }
       ]
     },
     {
@@ -1416,7 +1448,7 @@ export type Streamflow = {
         148,
         109,
         161,
-        34,
+        34
       ],
       "accounts": [
         {
@@ -1461,39 +1493,30 @@ export type Streamflow = {
         },
         {
           "name": "tokenProgram"
-        },
+        }
       ],
       "args": [
         {
           "name": "amount",
           "type": "u64"
-        },
+        }
       ]
-    },
+    }
+  ],
+  "types": [
     {
-      "name": "withdrawCancelRequest",
-      "discriminator": [
-        91,
-        137,
-        171,
-        103,
-        142,
-        205,
-        96,
-        75,
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        },
-      ],
-      "args": []
-    },
+      "name": "routedFeeDestination",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "treasury"
+          },
+          {
+            "name": "sender"
+          }
+        ]
+      }
+    }
   ]
 };
-
