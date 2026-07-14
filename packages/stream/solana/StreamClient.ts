@@ -57,6 +57,7 @@ import {
   Contract,
   type DecodedStream,
   type ICancelData,
+  type IClaimRoutedFeeData,
   ICluster,
   type ICreateAlignedStreamData,
   type ICreateMultiError,
@@ -74,7 +75,6 @@ import {
   type IPrepareCreateStreamExt,
   type IPrepareStreamExt,
   type IPrepareTopUpstreamExt,
-  type IRequestCancelData,
   type ISearchStreams,
   type ITopUpData,
   type ITopUpStreamExt,
@@ -82,7 +82,6 @@ import {
   type ITransactionResult,
   type ITransferData,
   type IUpdateData,
-  type IWithdrawCancelRequestData,
   type IWithdrawData,
   type MetadataRecipientHashMap,
   type OracleType,
@@ -122,15 +121,14 @@ import {
 } from "./constants.js";
 import {
   cancelStreamInstruction,
+  claimRoutedFeeStreamInstruction,
   createStreamInstruction,
   createStreamV2Instruction,
   createUncheckedStreamInstruction,
   createUncheckedStreamV2Instruction,
-  requestCancelStreamInstruction,
   topupStreamInstruction,
   transferStreamInstruction,
   updateStreamInstruction,
-  withdrawCancelRequestInstruction,
   withdrawStreamInstruction,
 } from "./instructions.js";
 import type { IPartnerLayout } from "./instructionTypes.js";
@@ -1499,13 +1497,13 @@ export class SolanaStreamClient {
   }
 
   /**
-   * Requests cancellation of a stream by the fee partner authority.
-   * @param {IRequestCancelData} data - Request cancel parameters including stream ID
+   * Claims routed fee from the stream and routes it to the requested destination.
+   * @param {IClaimRoutedFeeData} data - Routed fee claim parameters including stream ID and destination
    * @param {IInteractStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
    * @returns Transaction result
    */
-  public async requestCancel(data: IRequestCancelData, extParams: IInteractStreamExt): Promise<ITransactionResult> {
-    const ixs = await this.prepareRequestCancelInstructions(data, extParams);
+  public async claimRoutedFee(data: IClaimRoutedFeeData, extParams: IInteractStreamExt): Promise<ITransactionResult> {
+    const ixs = await this.prepareClaimRoutedFeeInstructions(data, extParams);
     const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
     const signature = await signAndExecuteTransaction(
       this.connection,
@@ -1523,14 +1521,14 @@ export class SolanaStreamClient {
   }
 
   /**
-   * Creates Transaction Instructions for request_cancel
-   * @param {IRequestCancelData} data - Request cancel parameters including stream ID
+   * Creates transaction instructions for claim_routed_fee.
+   * @param {IClaimRoutedFeeData} data - Routed fee claim parameters including stream ID and destination
    * @param {IPrepareStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
    * @returns Transaction instructions
    */
-  public async prepareRequestCancelInstructions(
-    { id }: IRequestCancelData,
-    { invoker, computePrice, computeLimit }: IPrepareStreamExt,
+  public async prepareClaimRoutedFeeInstructions(
+    { id, destination }: IClaimRoutedFeeData,
+    { invoker, checkTokenAccounts, computePrice, computeLimit }: IPrepareStreamExt,
   ): Promise<TransactionInstruction[]> {
     assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
 
@@ -1539,66 +1537,43 @@ export class SolanaStreamClient {
       computeLimit,
     });
 
-    ixs.push(
-      await requestCancelStreamInstruction(this.programId, {
-        authority: invoker.publicKey,
-        metadata: new PublicKey(id),
-      }),
+    const streamPublicKey = new PublicKey(id);
+    const streamAccount = await this.connection.getAccountInfo(streamPublicKey);
+    invariant(streamAccount?.data, "Couldn't get account info");
+
+    const { sender, mint, escrowTokens } = decodeStream(streamAccount.data);
+    const { mint: mintAccount, tokenProgramId } = await getMintAndProgram(this.connection, mint);
+    const streamflowTreasuryTokens = await ata(mint, STREAMFLOW_TREASURY_PUBLIC_KEY, tokenProgramId);
+    const senderTokens = await ata(mint, sender, tokenProgramId);
+    const ataIxs = await this.getCreateATAInstructions(
+      [sender, STREAMFLOW_TREASURY_PUBLIC_KEY],
+      mint,
+      invoker,
+      checkTokenAccounts,
+      tokenProgramId,
     );
 
-    return ixs;
-  }
-
-  /**
-   * Withdraws a previously submitted cancel request.
-   * @param {IWithdrawCancelRequestData} data - Withdraw cancel request parameters including stream ID
-   * @param {IInteractStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
-   * @returns Transaction result
-   */
-  public async withdrawCancelRequest(
-    data: IWithdrawCancelRequestData,
-    extParams: IInteractStreamExt,
-  ): Promise<ITransactionResult> {
-    const ixs = await this.prepareWithdrawCancelRequestInstructions(data, extParams);
-    const { tx, hash, context } = await prepareTransaction(this.connection, ixs, extParams.invoker.publicKey);
-    const signature = await signAndExecuteTransaction(
-      this.connection,
-      extParams.invoker,
-      tx,
-      {
-        hash,
-        context,
-        commitment: this.getCommitment(),
-      },
-      this.schedulingParams,
-    );
-
-    return { ixs, txId: signature };
-  }
-
-  /**
-   * Creates Transaction Instructions for withdraw_cancel_request
-   * @param {IWithdrawCancelRequestData} data - Withdraw cancel request parameters including stream ID
-   * @param {IPrepareStreamExt} extParams - Transaction configuration including invoker wallet and compute settings
-   * @returns Transaction instructions
-   */
-  public async prepareWithdrawCancelRequestInstructions(
-    { id }: IWithdrawCancelRequestData,
-    { invoker, computePrice, computeLimit }: IPrepareStreamExt,
-  ): Promise<TransactionInstruction[]> {
-    assertHasPublicKey(invoker, "Invoker's PublicKey is not available, check passed wallet adapter!");
-
-    const ixs: TransactionInstruction[] = prepareBaseInstructions(this.connection, {
-      computePrice,
-      computeLimit,
+    const claimRoutedFeeIx = await claimRoutedFeeStreamInstruction(destination, this.programId, {
+      authority: invoker.publicKey,
+      metadata: streamPublicKey,
+      escrowTokens,
+      streamflowTreasury: STREAMFLOW_TREASURY_PUBLIC_KEY,
+      streamflowTreasuryTokens,
+      senderTokens,
+      mint,
+      tokenProgram: tokenProgramId,
+    });
+    await this.addTransferHookAccounts(claimRoutedFeeIx, {
+      mint,
+      mintAccount,
+      tokenProgramId,
+      potentialTransfers: [
+        { source: escrowTokens, destination: streamflowTreasuryTokens, owner: escrowTokens },
+        { source: escrowTokens, destination: senderTokens, owner: escrowTokens },
+      ],
     });
 
-    ixs.push(
-      await withdrawCancelRequestInstruction(this.programId, {
-        authority: invoker.publicKey,
-        metadata: new PublicKey(id),
-      }),
-    );
+    ixs.push(...ataIxs, claimRoutedFeeIx);
 
     return ixs;
   }

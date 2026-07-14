@@ -4,7 +4,7 @@ import { TransactionInstruction } from "@solana/web3.js";
 import type BN from "bn.js";
 
 import * as Layout from "./layout.js";
-import type { IUpdateData } from "./types.js";
+import type { IUpdateData, RoutedFeeDestination } from "./types.js";
 
 const sha256 = {
   digest: async (data: string): Promise<Uint8Array> => {
@@ -654,45 +654,45 @@ export const transferStreamInstruction = async (
   });
 };
 
-interface RequestCancelAccounts {
+interface ClaimRoutedFeeAccounts {
   authority: PublicKey;
   metadata: PublicKey;
+  escrowTokens: PublicKey;
+  streamflowTreasury: PublicKey;
+  streamflowTreasuryTokens: PublicKey;
+  senderTokens: PublicKey;
+  mint: PublicKey;
+  tokenProgram: PublicKey;
 }
 
-export const requestCancelStreamInstruction = async (
+export const claimRoutedFeeStreamInstruction = async (
+  destination: RoutedFeeDestination,
   programId: PublicKey,
-  { authority, metadata }: RequestCancelAccounts,
+  {
+    authority,
+    metadata,
+    escrowTokens,
+    streamflowTreasury,
+    streamflowTreasuryTokens,
+    senderTokens,
+    mint,
+    tokenProgram,
+  }: ClaimRoutedFeeAccounts,
 ): Promise<TransactionInstruction> => {
   const keys = [
     { pubkey: authority, isSigner: true, isWritable: false },
     { pubkey: metadata, isSigner: false, isWritable: true },
-  ];
-
-  const data = Buffer.concat([Buffer.from(await sha256.digest("global:request_cancel")).slice(0, 8), Buffer.alloc(10)]);
-
-  return new TransactionInstruction({
-    keys,
-    programId,
-    data,
-  });
-};
-
-interface WithdrawCancelRequestAccounts {
-  authority: PublicKey;
-  metadata: PublicKey;
-}
-
-export const withdrawCancelRequestInstruction = async (
-  programId: PublicKey,
-  { authority, metadata }: WithdrawCancelRequestAccounts,
-): Promise<TransactionInstruction> => {
-  const keys = [
-    { pubkey: authority, isSigner: true, isWritable: false },
-    { pubkey: metadata, isSigner: false, isWritable: true },
+    { pubkey: escrowTokens, isSigner: false, isWritable: true },
+    { pubkey: streamflowTreasury, isSigner: false, isWritable: true },
+    { pubkey: streamflowTreasuryTokens, isSigner: false, isWritable: true },
+    { pubkey: senderTokens, isSigner: false, isWritable: true },
+    { pubkey: mint, isSigner: false, isWritable: true },
+    { pubkey: tokenProgram, isSigner: false, isWritable: false },
   ];
 
   const data = Buffer.concat([
-    Buffer.from(await sha256.digest("global:withdraw_cancel_request")).slice(0, 8),
+    Buffer.from(await sha256.digest("global:claim_routed_fee")).slice(0, 8),
+    Buffer.from([destination === "treasury" ? 0 : 1]),
     Buffer.alloc(10),
   ]);
 
