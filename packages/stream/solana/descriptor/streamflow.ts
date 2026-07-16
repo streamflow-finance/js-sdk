@@ -109,6 +109,62 @@ export type Streamflow = {
       "args": []
     },
     {
+      "name": "claimRoutedFee",
+      "discriminator": [
+        21,
+        196,
+        95,
+        101,
+        117,
+        238,
+        89,
+        30,
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "escrowTokens",
+          "writable": true
+        },
+        {
+          "name": "streamflowTreasury",
+          "writable": true
+        },
+        {
+          "name": "streamflowTreasuryTokens",
+          "writable": true
+        },
+        {
+          "name": "senderTokens",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+      ],
+      "args": [
+        {
+          "name": "destination",
+          "type": {
+            "defined": {
+              "name": "routedFeeDestination"
+            }
+          }
+        },
+      ]
+    },
+    {
       "name": "create",
       "discriminator": [
         24,
@@ -1133,30 +1189,6 @@ export type Streamflow = {
       "args": []
     },
     {
-      "name": "requestCancel",
-      "discriminator": [
-        244,
-        78,
-        42,
-        227,
-        165,
-        174,
-        94,
-        167,
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        },
-      ],
-      "args": []
-    },
-    {
       "name": "topup",
       "discriminator": [
         126,
@@ -1470,30 +1502,21 @@ export type Streamflow = {
         },
       ]
     },
+  ],
+  "types": [
     {
-      "name": "withdrawCancelRequest",
-      "discriminator": [
-        91,
-        137,
-        171,
-        103,
-        142,
-        205,
-        96,
-        75,
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        },
-      ],
-      "args": []
+      "name": "routedFeeDestination",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "treasury"
+          },
+          {
+            "name": "sender"
+          },
+        ]
+      }
     },
   ]
 };
-

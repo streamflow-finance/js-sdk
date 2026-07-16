@@ -580,6 +580,60 @@ describe("SolanaStreamClient Transaction Builders", async () => {
           },
         ]);
       });
+
+      test("adds transfer hook validation accounts to claim routed fee instructions", async () => {
+        const decodedStream = setupDecodedStreamInstruction(
+          publicKeys.streamflowTreasuryTokens,
+          publicKeys.senderTokens,
+        );
+        const ataIx = { keys: [], programId: publicKeys.partnerLink, data: Buffer.alloc(0) } as any;
+        mockCheckOrCreateAtaBatch.mockResolvedValueOnce([ataIx]);
+
+        const result = await instance.prepareClaimRoutedFeeInstructions(
+          { id: publicKeys.stream.toBase58(), destination: "sender" },
+          {
+            invoker: { publicKey: publicKeys.invoker },
+            checkTokenAccounts: true,
+          },
+        );
+
+        expect(result.at(0)).toBe(ataIx);
+        const claimIx = result.at(-1)!;
+        expect(claimIx.keys[0].pubkey).toEqual(publicKeys.invoker);
+        expect(claimIx.keys[1].pubkey).toEqual(publicKeys.stream);
+        expect(claimIx.keys[2].pubkey).toEqual(decodedStream.escrowTokens);
+        expect(claimIx.keys[4].pubkey).toEqual(publicKeys.streamflowTreasuryTokens);
+        expect(claimIx.keys[5].pubkey).toEqual(publicKeys.senderTokens);
+        expect(claimIx.keys[6].pubkey).toEqual(decodedStream.mint);
+        expect(claimIx.data[8]).toBe(1); // sender destination enum variant
+        expectTransferHookCalls(claimIx, [
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.streamflowTreasuryTokens,
+            owner: decodedStream.escrowTokens,
+          },
+          {
+            source: decodedStream.escrowTokens,
+            destination: publicKeys.senderTokens,
+            owner: decodedStream.escrowTokens,
+          },
+        ]);
+      });
+
+      test("encodes treasury destination for claim routed fee instructions", async () => {
+        setupDecodedStreamInstruction(publicKeys.streamflowTreasuryTokens, publicKeys.senderTokens);
+
+        const result = await instance.prepareClaimRoutedFeeInstructions(
+          { id: publicKeys.stream.toBase58(), destination: "treasury" },
+          {
+            invoker: { publicKey: publicKeys.invoker },
+            checkTokenAccounts: false,
+          },
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0].data[8]).toBe(0); // treasury destination enum variant
+      });
     });
 
     describe("transfer hook: aligned", () => {

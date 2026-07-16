@@ -100,9 +100,11 @@ export interface IUpdateData extends IInteractData {
 
 export type ICancelData = IInteractData;
 
-export type IRequestCancelData = IInteractData;
+export type RoutedFeeDestination = "treasury" | "sender";
 
-export type IWithdrawCancelRequestData = IInteractData;
+export interface IClaimRoutedFeeData extends IInteractData {
+  destination: RoutedFeeDestination;
+}
 
 export interface ITransferData extends IInteractData {
   newRecipient: string;

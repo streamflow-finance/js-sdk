@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/staking",
-  "version": "12.5.0",
+  "version": "13.0.0",
   "description": "JavaScript SDK to interact with Streamflow Staking protocol.",
   "repository": {
     "type": "git",

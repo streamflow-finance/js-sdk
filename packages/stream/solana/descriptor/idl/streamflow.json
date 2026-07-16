@@ -103,6 +103,62 @@
       "args": []
     },
     {
+      "name": "claim_routed_fee",
+      "discriminator": [
+        21,
+        196,
+        95,
+        101,
+        117,
+        238,
+        89,
+        30
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "escrow_tokens",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury",
+          "writable": true
+        },
+        {
+          "name": "streamflow_treasury_tokens",
+          "writable": true
+        },
+        {
+          "name": "sender_tokens",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "destination",
+          "type": {
+            "defined": {
+              "name": "RoutedFeeDestination"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "create",
       "discriminator": [
         24,
@@ -1127,30 +1183,6 @@
       "args": []
     },
     {
-      "name": "request_cancel",
-      "discriminator": [
-        244,
-        78,
-        42,
-        227,
-        165,
-        174,
-        94,
-        167
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "topup",
       "discriminator": [
         126,
@@ -1463,30 +1495,22 @@
           "type": "u64"
         }
       ]
-    },
+    }
+  ],
+  "types": [
     {
-      "name": "withdraw_cancel_request",
-      "discriminator": [
-        91,
-        137,
-        171,
-        103,
-        142,
-        205,
-        96,
-        75
-      ],
-      "accounts": [
-        {
-          "name": "authority",
-          "signer": true
-        },
-        {
-          "name": "metadata",
-          "writable": true
-        }
-      ],
-      "args": []
+      "name": "RoutedFeeDestination",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Treasury"
+          },
+          {
+            "name": "Sender"
+          }
+        ]
+      }
     }
   ]
 }
