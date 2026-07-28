@@ -2,7 +2,7 @@
   "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa",
   "metadata": {
     "name": "partner_oracle",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
@@ -99,6 +99,67 @@
       "args": [
         {
           "name": "pubkey",
+          "type": "pubkey"
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "AirdropFees"
+        }
+      }
+    },
+    {
+      "name": "airdrop_get_fees_v2",
+      "docs": [
+        "Get fees for a given partner account, supporting PartnerLink validation against the requesting partner."
+      ],
+      "discriminator": [
+        100,
+        222,
+        113,
+        243,
+        61,
+        7,
+        94,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "account"
+        }
+      ],
+      "args": [
+        {
+          "name": "requesting_partner",
           "type": "pubkey"
         }
       ],
@@ -392,6 +453,131 @@
       ]
     },
     {
+      "name": "create_partner_link",
+      "discriminator": [
+        55,
+        149,
+        227,
+        112,
+        157,
+        58,
+        162,
+        249
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "docs": [
+            "Wallet whose fees may be reused through the created link."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partner_link",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              },
+              {
+                "kind": "arg",
+                "path": "linked_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "linked_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "remove_partner_link",
+      "discriminator": [
+        134,
+        88,
+        18,
+        153,
+        228,
+        40,
+        167,
+        250
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partner_link",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              },
+              {
+                "kind": "arg",
+                "path": "linked_wallet"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "linked_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "vesting_get_fees",
       "discriminator": [
         239,
@@ -429,6 +615,59 @@
       "args": [
         {
           "name": "pubkey",
+          "type": "pubkey"
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "VestingFees"
+        }
+      }
+    },
+    {
+      "name": "vesting_get_fees_v2",
+      "docs": [
+        "Get fees for a given partner account, supporting PartnerLink validation against the requesting partner."
+      ],
+      "discriminator": [
+        215,
+        108,
+        181,
+        92,
+        123,
+        161,
+        112,
+        130
+      ],
+      "accounts": [
+        {
+          "name": "partners",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "account"
+        }
+      ],
+      "args": [
+        {
+          "name": "requesting_partner",
           "type": "pubkey"
         }
       ],
@@ -597,6 +836,10 @@
         {
           "name": "token_fee_percent",
           "type": "f32"
+        },
+        {
+          "name": "token_lock_token_fee_percent",
+          "type": "f32"
         }
       ]
     },
@@ -661,6 +904,10 @@
         {
           "name": "token_fee_percent",
           "type": "f32"
+        },
+        {
+          "name": "token_lock_token_fee_percent",
+          "type": "f32"
         }
       ]
     }
@@ -678,6 +925,19 @@
         128,
         16
       ]
+    },
+    {
+      "name": "PartnerLink",
+      "discriminator": [
+        114,
+        220,
+        250,
+        94,
+        181,
+        182,
+        195,
+        222
+      ]
     }
   ],
   "errors": [
@@ -690,6 +950,11 @@
       "code": 6001,
       "name": "ArithmeticError",
       "msg": "Arithmetic Error (overflow/underflow)"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPartnerLink",
+      "msg": "Provided partner link does not match the requesting partner"
     },
     {
       "code": 6100,
@@ -950,6 +1215,40 @@
       }
     },
     {
+      "name": "PartnerLink",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner_pubkey",
+            "docs": [
+              "Partner wallet whose fee config should be used."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "linked_pubkey",
+            "docs": [
+              "Wallet that may use the partner's fees through this link."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer for future-compatible upgrades."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "VestingFees",
       "type": {
         "kind": "struct",
@@ -968,6 +1267,10 @@
           },
           {
             "name": "token_fee_percent",
+            "type": "f32"
+          },
+          {
+            "name": "token_lock_token_fee_percent",
             "type": "f32"
           }
         ]
