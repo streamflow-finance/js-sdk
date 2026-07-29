@@ -1,6 +1,6 @@
 {
   "name": "@streamflow/stream",
-  "version": "13.3.0",
+  "version": "13.3.1",
   "description": "JavaScript SDK to interact with Streamflow protocol.",
   "repository": {
     "type": "git",
