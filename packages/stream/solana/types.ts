@@ -152,6 +152,8 @@ export interface IFees {
   autoClaimFeeSol?: number;
   // fee paid in token % paid on contract creation and claimed to the treasury with every claim
   streamflowFee: number;
+  // fee paid in token % for token lock creation, used instead of streamflowFee
+  streamflowLockFee: number;
   // referral fee, not used right now
   partnerFee: number;
 }

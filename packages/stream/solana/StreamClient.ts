@@ -2087,6 +2087,7 @@ export class SolanaStreamClient {
       creationFeeSol: Number(partner.creation_fee),
       autoClaimFeeSol: Number(partner.auto_claim_fee),
       streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
+      streamflowLockFee: Number(partner.token_lock_token_fee_percent.toFixed(4)),
       partnerFee: 0,
     };
   }
@@ -2110,6 +2111,7 @@ export class SolanaStreamClient {
         creationFeeSol: DEFAULT_CREATION_FEE_SOL,
         autoClaimFeeSol: DEFAULT_AUTO_CLAIM_FEE_SOL,
         streamflowFee: DEFAULT_STREAMFLOW_FEE,
+        streamflowLockFee: DEFAULT_STREAMFLOW_FEE,
         partnerFee: 0,
       }
     );

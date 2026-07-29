@@ -161,4 +161,5 @@ export interface IPartnerLayout {
   creation_fee: number;
   auto_claim_fee: number;
   token_fee_percent: number;
+  token_lock_token_fee_percent: number;
 }
