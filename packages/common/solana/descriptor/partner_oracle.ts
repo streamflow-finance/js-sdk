@@ -8,7 +8,7 @@ export type PartnerOracle = {
   "address": "pardpVtPjC8nLj1Dwncew62mUzfChdCX1EaoZe8oCAa",
   "metadata": {
     "name": "partnerOracle",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
@@ -105,6 +105,67 @@ export type PartnerOracle = {
       "args": [
         {
           "name": "pubkey",
+          "type": "pubkey"
+        },
+      ],
+      "returns": {
+        "defined": {
+          "name": "airdropFees"
+        }
+      }
+    },
+    {
+      "name": "airdropGetFeesV2",
+      "docs": [
+        "Get fees for a given partner account, supporting PartnerLink validation against the requesting partner.",
+      ],
+      "discriminator": [
+        100,
+        222,
+        113,
+        243,
+        61,
+        7,
+        94,
+        145,
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "docs": [
+            "Account that stores the config",
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                ]
+              },
+            ]
+          }
+        },
+        {
+          "name": "account"
+        },
+      ],
+      "args": [
+        {
+          "name": "requestingPartner",
           "type": "pubkey"
         },
       ],
@@ -398,6 +459,131 @@ export type PartnerOracle = {
       ]
     },
     {
+      "name": "createPartnerLink",
+      "discriminator": [
+        55,
+        149,
+        227,
+        112,
+        157,
+        58,
+        162,
+        249,
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "docs": [
+            "Wallet whose fees may be reused through the created link.",
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partnerLink",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              },
+              {
+                "kind": "arg",
+                "path": "linkedWallet"
+              },
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+      ],
+      "args": [
+        {
+          "name": "linkedWallet",
+          "type": "pubkey"
+        },
+      ]
+    },
+    {
+      "name": "removePartnerLink",
+      "discriminator": [
+        134,
+        88,
+        18,
+        153,
+        228,
+        40,
+        167,
+        250,
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partnerLink",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  108,
+                  105,
+                  110,
+                  107,
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              },
+              {
+                "kind": "arg",
+                "path": "linkedWallet"
+              },
+            ]
+          }
+        },
+      ],
+      "args": [
+        {
+          "name": "linkedWallet",
+          "type": "pubkey"
+        },
+      ]
+    },
+    {
       "name": "vestingGetFees",
       "discriminator": [
         239,
@@ -435,6 +621,59 @@ export type PartnerOracle = {
       "args": [
         {
           "name": "pubkey",
+          "type": "pubkey"
+        },
+      ],
+      "returns": {
+        "defined": {
+          "name": "vestingFees"
+        }
+      }
+    },
+    {
+      "name": "vestingGetFeesV2",
+      "docs": [
+        "Get fees for a given partner account, supporting PartnerLink validation against the requesting partner.",
+      ],
+      "discriminator": [
+        215,
+        108,
+        181,
+        92,
+        123,
+        161,
+        112,
+        130,
+      ],
+      "accounts": [
+        {
+          "name": "partners",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  114,
+                  109,
+                  95,
+                  102,
+                  101,
+                  101,
+                  115,
+                ]
+              },
+            ]
+          }
+        },
+        {
+          "name": "account"
+        },
+      ],
+      "args": [
+        {
+          "name": "requestingPartner",
           "type": "pubkey"
         },
       ],
@@ -604,6 +843,10 @@ export type PartnerOracle = {
           "name": "tokenFeePercent",
           "type": "f32"
         },
+        {
+          "name": "tokenLockTokenFeePercent",
+          "type": "f32"
+        },
       ]
     },
     {
@@ -668,6 +911,10 @@ export type PartnerOracle = {
           "name": "tokenFeePercent",
           "type": "f32"
         },
+        {
+          "name": "tokenLockTokenFeePercent",
+          "type": "f32"
+        },
       ]
     },
   ],
@@ -685,6 +932,19 @@ export type PartnerOracle = {
         16,
       ]
     },
+    {
+      "name": "partnerLink",
+      "discriminator": [
+        114,
+        220,
+        250,
+        94,
+        181,
+        182,
+        195,
+        222,
+      ]
+    },
   ],
   "errors": [
     {
@@ -696,6 +956,11 @@ export type PartnerOracle = {
       "code": 6001,
       "name": "arithmeticError",
       "msg": "Arithmetic Error (overflow/underflow)"
+    },
+    {
+      "code": 6002,
+      "name": "invalidPartnerLink",
+      "msg": "Provided partner link does not match the requesting partner"
     },
     {
       "code": 6100,
@@ -956,6 +1221,40 @@ export type PartnerOracle = {
       }
     },
     {
+      "name": "partnerLink",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partnerPubkey",
+            "docs": [
+              "Partner wallet whose fee config should be used.",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "linkedPubkey",
+            "docs": [
+              "Wallet that may use the partner's fees through this link.",
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "buffer",
+            "docs": [
+              "Buffer for future-compatible upgrades.",
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32,
+              ]
+            }
+          },
+        ]
+      }
+    },
+    {
       "name": "vestingFees",
       "type": {
         "kind": "struct",
@@ -974,6 +1273,10 @@ export type PartnerOracle = {
           },
           {
             "name": "tokenFeePercent",
+            "type": "f32"
+          },
+          {
+            "name": "tokenLockTokenFeePercent",
             "type": "f32"
           },
         ]
