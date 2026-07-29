@@ -169,8 +169,12 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
   cluster: ICluster;
   apiUrl: string;
   apiKey?: string;
+  /** On-chain claim_max_fee from the distributor account (in lamports). When provided, used as
+   *  the authoritative upper bound and as a safe fallback when price data is unavailable. */
+  claimMaxFeeLamports?: number;
 }): Promise<bigint> {
-  const { distributorAddress, mintAccount, claimableAmount, cluster, apiUrl, apiKey } = params;
+  const { distributorAddress, mintAccount, claimableAmount, cluster, apiUrl, apiKey, claimMaxFeeLamports } = params;
+  const maxFeeBigint = claimMaxFeeLamports !== undefined ? BigInt(claimMaxFeeLamports) : undefined;
   let apiFeesResponse = undefined;
 
   try {
@@ -199,7 +203,7 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
   const claimFeeDynamic = response?.claimFeeDynamic ?? defaultAPIFeesResponse.claimFeeDynamic;
 
   if (!tokenPrice?.value || !solPrice?.value) {
-    return MINIMUM_FEE_FALLBACK;
+    return maxFeeBigint ?? MINIMUM_FEE_FALLBACK;
   }
 
   const baseLamports = calculateClaimableLamportsFromPrices({
@@ -209,9 +213,11 @@ export async function resolveAirdropFeeLamportsUsingApi(params: {
     tokenDecimals: mintAccount.decimals,
   });
 
+  const maxPriceOverride = maxFeeBigint !== undefined ? lamportsToSolString(maxFeeBigint) : claimFeeDynamic!.maxPrice;
+
   return calculateDynamicFeeFromSolParams({
     minPrice: claimFeeDynamic!.minPrice,
-    maxPrice: claimFeeDynamic!.maxPrice,
+    maxPrice: maxPriceOverride,
     allocationFactor: claimFeeDynamic!.allocationFactor,
     claimableLamports: baseLamports,
   });
