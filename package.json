@@ -67,7 +67,7 @@
   },
   "version": "4.0.1",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs,cts,json,yml,yaml}": "prettier --write"
