@@ -231,7 +231,13 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
     structs.push(BufferLayout.u8("cancelable_by_sender_exists"));
     structs.push(BufferLayout.u8("cancelable_by_sender"));
   } else {
-    structs.push(BufferLayout.u8("cancelable_by_sender"));
+    structs.push(BufferLayout.u8("cancelable_by_sender_exists"));
+  }
+  if (values.stream_name) {
+    structs.push(BufferLayout.u8("stream_name_exists"));
+    structs.push(BufferLayout.blob(64, "stream_name"));
+  } else {
+    structs.push(BufferLayout.u8("stream_name_exists"));
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return BufferLayout.struct<any>(structs).encode(
@@ -248,6 +254,8 @@ export const encodeUpdateStream = (values: IUpdateStreamLayout, data: Buffer): n
       transferable_by_recipient: values.transferable_by_recipient ?? 0,
       cancelable_by_sender_exists: values.cancelable_by_sender !== undefined ? 1 : 0,
       cancelable_by_sender: values.cancelable_by_sender ?? 0,
+      stream_name_exists: values.stream_name ? 1 : 0,
+      stream_name: values.stream_name ?? 0,
     },
     data,
   );

@@ -4,6 +4,7 @@ import { TransactionInstruction } from "@solana/web3.js";
 import type BN from "bn.js";
 
 import * as Layout from "./layout.js";
+import { encodeStreamName } from "./lib/utils.js";
 import type { IUpdateData, RoutedFeeDestination } from "./types.js";
 
 const sha256 = {
@@ -98,9 +99,6 @@ export const createStreamInstruction = async (
 
   let bufferData = Buffer.alloc(Layout.createStreamLayout.span);
 
-  const encodedUIntArray = new TextEncoder().encode(data.name);
-  const streamNameBuffer = Buffer.alloc(64).fill(encodedUIntArray, 0, encodedUIntArray.byteLength);
-
   const decodedData = {
     start_time: data.start.toArrayLike(Buffer, "le", 8),
     net_amount_deposited: data.depositedAmount.toArrayLike(Buffer, "le", 8),
@@ -118,7 +116,7 @@ export const createStreamInstruction = async (
     can_update_rate: Number(data.canUpdateRate),
     _can_update_rate_discriminator: 1,
     pausable: Number(data.canPause),
-    stream_name: streamNameBuffer,
+    stream_name: encodeStreamName(data.name),
     withdraw_frequency: data.withdrawFrequency.toArrayLike(Buffer, "le", 8),
   };
   const encodeLength = Layout.createStreamLayout.encode(decodedData, bufferData);
@@ -530,6 +528,7 @@ export const updateStreamInstruction = async (
     transferable_by_recipient:
       params.transferableByRecipient !== undefined ? Number(params.transferableByRecipient) : undefined,
     cancelable_by_sender: params.cancelableBySender !== undefined ? Number(params.cancelableBySender) : undefined,
+    stream_name: params.name !== undefined ? encodeStreamName(params.name) : undefined,
   };
   const encodeLength = Layout.encodeUpdateStream(decodedData, data);
   data = data.slice(0, encodeLength);

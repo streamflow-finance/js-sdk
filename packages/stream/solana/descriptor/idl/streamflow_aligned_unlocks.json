@@ -1965,6 +1965,17 @@
             "type": {
               "option": "bool"
             }
+          },
+          {
+            "name": "stream_name",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  64
+                ]
+              }
+            }
           }
         ]
       }

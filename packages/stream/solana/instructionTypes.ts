@@ -150,6 +150,7 @@ export interface IUpdateStreamLayout {
   transferable_by_sender?: number;
   transferable_by_recipient?: number;
   cancelable_by_sender?: number;
+  stream_name?: Uint8Array;
 }
 
 export interface ITopupStreamLayout {
