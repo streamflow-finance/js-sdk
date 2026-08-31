@@ -49,6 +49,25 @@ export const calculateTotalAmountToDeposit = (depositedAmount: BN, totalFee: num
   return depositedAmount.mul(totalFeeNormalized.add(FEE_MULTIPLIER)).div(FEE_MULTIPLIER);
 };
 
+/**
+ * Encode a contract name into the fixed 64 byte buffer the protocol stores it in.
+ * @param name contract name, up to 64 bytes once utf-8 encoded
+ * @returns right padded 64 byte buffer
+ */
+export const encodeStreamName = (name: string): Buffer => {
+  const encoded = new TextEncoder().encode(name);
+  return Buffer.alloc(64).fill(encoded, 0, encoded.byteLength);
+};
+
+/**
+ * Encode a contract name into an Array - used to pass as anchor param
+ * @param name contract name, up to 64 bytes once utf-8 encoded
+ * @returns array of numbers
+ */
+export const encodeStreamNameAsArray = (name: string): Array<number> => {
+  return Array.from(encodeStreamName(name));
+};
+
 export const decodeStream = (buf: Buffer): DecodedStream => {
   const raw = streamLayout.decode(buf);
 

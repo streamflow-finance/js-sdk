@@ -94,6 +94,7 @@ import {
 import {
   calculateTotalAmountToDeposit,
   decodeStream,
+  encodeStreamNameAsArray,
   extractSolanaErrorCode,
   sendAndConfirmStreamRawTransaction,
   signAllTransactionWithRecipients,
@@ -516,9 +517,6 @@ export class SolanaStreamClient {
       );
     }
 
-    const encodedUIntArray = new TextEncoder().encode(streamName);
-    const streamNameArray = Array.from(encodedUIntArray);
-
     const createMethod = this.alignedProxyProgram.methods
       .create({
         startTime: new BN(start),
@@ -533,7 +531,7 @@ export class SolanaStreamClient {
         cancelableBySender,
         canTopup,
         oracleType: (!!oracleType ? { [oracleType]: {} } : { none: {} }) as OracleType,
-        streamName: streamNameArray,
+        streamName: encodeStreamNameAsArray(streamName),
         minPrice: typeof minPrice === "number" ? getBN(minPrice, ALIGNED_PRECISION_FACTOR_POW) : minPrice,
         maxPrice: typeof maxPrice === "number" ? getBN(maxPrice, ALIGNED_PRECISION_FACTOR_POW) : maxPrice,
         minPercentage:
@@ -2049,6 +2047,7 @@ export class SolanaStreamClient {
               transferableBySender: data.transferableBySender ?? null,
               transferableByRecipient: data.transferableByRecipient ?? null,
               cancelableBySender: data.cancelableBySender ?? null,
+              streamName: data.name !== undefined ? encodeStreamNameAsArray(data.name) : null,
             })
             .accounts({ sender: invoker.publicKey, streamMetadata: streamPublicKey, withdrawor: WITHDRAWOR_PUBLIC_KEY })
             .accountsPartial({ streamflowProgram: this.programId })

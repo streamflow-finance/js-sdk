@@ -15,9 +15,9 @@ inputs:
     required: false
     default: "11.15.0"
   pnpm-version:
-    description: pnpm version
+    description: pnpm version (empty = use the "packageManager" field in package.json)
     required: false
-    default: "9"
+    default: ""
   registry-url:
     description: npm registry URL
     required: false

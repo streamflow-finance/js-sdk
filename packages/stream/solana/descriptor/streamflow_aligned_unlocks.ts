@@ -1972,6 +1972,17 @@ export type StreamflowAlignedUnlocks = {
               "option": "bool"
             }
           },
+          {
+            "name": "streamName",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  64,
+                ]
+              }
+            }
+          },
         ]
       }
     },

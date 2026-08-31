@@ -96,6 +96,7 @@ export interface IUpdateData extends IInteractData {
   transferableBySender?: boolean;
   transferableByRecipient?: boolean;
   cancelableBySender?: boolean;
+  name?: string;
 }
 
 export type ICancelData = IInteractData;
