@@ -66,6 +66,7 @@
     "vitest": "^2.1.9"
   },
   "version": "4.0.1",
+  "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=18"
   },

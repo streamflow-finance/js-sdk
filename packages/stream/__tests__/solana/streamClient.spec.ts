@@ -125,8 +125,9 @@ vi.mock("@coral-xyz/anchor", () => ({
   })),
 }));
 
-// Mock Solana-specific utils
-vi.mock("../../solana/lib/utils.js", () => ({
+// Mock Solana-specific utils, some utils are safe to reuse
+vi.mock("../../solana/lib/utils.js", async (importOriginal) => ({
+  ...(await importOriginal()),
   signAllTransactionWithRecipients: vi.fn(),
   sendAndConfirmStreamRawTransaction: vi.fn(),
   extractSolanaErrorCode: vi.fn(),
