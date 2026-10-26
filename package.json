@@ -68,7 +68,7 @@
   "version": "4.0.1",
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=18"
+    "node": ">=26.12.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js,cjs,mjs,cts,json,yml,yaml}": "prettier --write"
