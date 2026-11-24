@@ -3,6 +3,7 @@ import BN from "bn.js";
 import {
   type AlignedStream,
   type ICreateAlignedStreamData,
+  type ICreateLinearStreamData,
   type ICreateStreamData,
   type Stream,
   StreamType,
@@ -124,6 +125,54 @@ export const isTokenLock = (streamData: {
   }
 
   return false;
+};
+
+/**
+ * Whether the program charges a linear create the token-lock fee instead of the stream fee.
+ * Keep in sync with the program's `is_strict_token_lock`, which runs on the create's own params
+ * (a `start` of 0 sets both `start` and `cliff` to the current time); `isTokenLock` classifies a
+ * decoded stream instead.
+ */
+export const isStrictTokenLockCreate = (
+  data: Pick<
+    ICreateLinearStreamData,
+    | "canTopup"
+    | "automaticWithdrawal"
+    | "cancelableBySender"
+    | "cancelableByRecipient"
+    | "transferableBySender"
+    | "amount"
+    | "cliffAmount"
+    | "amountPerPeriod"
+    | "cliff"
+    | "start"
+    | "period"
+  >,
+  now: number = Math.floor(Date.now() / 1000),
+): boolean => {
+  if (
+    data.canTopup ||
+    data.automaticWithdrawal ||
+    data.cancelableBySender ||
+    data.cancelableByRecipient ||
+    data.transferableBySender
+  ) {
+    return false;
+  }
+  if (!isCliffCloseToDepositedAmount({ depositedAmount: data.amount, cliffAmount: data.cliffAmount })) {
+    return false;
+  }
+  if (data.cliffAmount.gt(data.amount) || data.amountPerPeriod.isZero()) {
+    return false;
+  }
+
+  const remaining = data.amount.sub(data.cliffAmount);
+  const periodsLeft = remaining.add(data.amountPerPeriod).subn(1).div(data.amountPerPeriod);
+  const cliff = data.start === 0 ? now : data.cliff;
+  const unlockStart = cliff > 0 ? cliff : data.start;
+  const end = new BN(unlockStart).add(periodsLeft.mul(new BN(data.period)));
+  const cliffEndGap = end.sub(new BN(cliff));
+  return !cliffEndGap.isNeg() && cliffEndGap.lten(MAX_CLIFF_END_GAP_SECONDS);
 };
 
 export const buildStreamType = (streamData: {

@@ -41,6 +41,7 @@ import {
   invariant,
   type IProgramAccount,
   isDev,
+  pk,
   prepareBaseInstructions,
   prepareTransaction,
   prepareWrappedAccount,
@@ -141,11 +142,44 @@ import {
   deriveStreamMetadataPDA,
   deriveTestOraclePDA,
 } from "./lib/derive-accounts.js";
-import { isCreateAlignedStreamData } from "./contractUtils.js";
+import { isCreateAlignedStreamData, isStrictTokenLockCreate } from "./contractUtils.js";
 import { createClient, transformContract } from "./api-public/index.js";
 
 const METADATA_ACC_SIZE = 1104;
 const ALIGNED_METADATA_ACC_SIZE = 320;
+// Anchor discriminator of the partner oracle's `PartnerLink` account, absent from its bundled IDL.
+const PARTNER_LINK_DISCRIMINATOR = Buffer.from([114, 220, 250, 94, 181, 182, 195, 222]);
+const PARTNER_LINK_SIZE = 8 + 32 + 32 + 32;
+
+type CreateFeeRates = Pick<IFees, "streamflowFee" | "streamflowLockFee">;
+
+/** `partner_pubkey` and `linked_pubkey` of a PartnerLink account, or `null` for any other account. */
+const decodePartnerLink = (data: Buffer): { partnerPubkey: PublicKey; linkedPubkey: PublicKey } | null =>
+  data.length >= PARTNER_LINK_SIZE && data.subarray(0, 8).equals(PARTNER_LINK_DISCRIMINATOR)
+    ? { partnerPubkey: new PublicKey(data.subarray(8, 40)), linkedPubkey: new PublicKey(data.subarray(40, 72)) }
+    : null;
+
+const findFees = (partners: IPartnerLayout[], address: string): IFees | null => {
+  const filteredPartners = partners.filter((partner) => new PublicKey(partner.pubkey).toString() === address);
+  if (filteredPartners.length === 0) {
+    return null;
+  }
+  if (filteredPartners.length > 1) {
+    throw new Error("More than one partner found, fees fetching is not possible.");
+  }
+  const partner = filteredPartners[0];
+  return {
+    creationFeeSol: Number(partner.creation_fee),
+    autoClaimFeeSol: Number(partner.auto_claim_fee),
+    streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
+    streamflowLockFee: Number(partner.token_lock_token_fee_percent.toFixed(4)),
+    partnerFee: 0,
+  };
+};
+
+/** Token fee percent the program adds on top of a create's amount: a strict token lock pays the lock rate. */
+const getWrapFeePercent = (rates: CreateFeeRates, data: Parameters<typeof isStrictTokenLockCreate>[0]): number =>
+  isStrictTokenLockCreate(data) ? rates.streamflowLockFee : rates.streamflowFee;
 
 /**
  * Solana Client creation options
@@ -321,10 +355,8 @@ export class SolanaStreamClient {
     // CRITICAL: SOL wrapping must happen BEFORE stream creation instructions
     // This ensures the WSOL account exists and has sufficient balance when stream creation executes
     if (isNative) {
-      const totalFee = await this.getTotalFee({
-        address: partnerPublicKey.toString(),
-      });
-      const totalAmount = calculateTotalAmountToDeposit(amount, totalFee);
+      const rates = await this.getCreateFeeRates(data.partnerLink, sender.publicKey);
+      const totalAmount = calculateTotalAmountToDeposit(amount, getWrapFeePercent(rates, data));
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
 
@@ -814,7 +846,20 @@ export class SolanaStreamClient {
       computeLimit,
     });
     if (isNative) {
-      const totalFee = await this.getTotalFee({ address: partnerPublicKey.toString() });
+      const rates = await this.getCreateFeeRates(partnerLink, sender.publicKey);
+      const totalFee = getWrapFeePercent(rates, {
+        start,
+        amount: depositedAmount,
+        period,
+        cliff,
+        cliffAmount,
+        amountPerPeriod,
+        canTopup,
+        automaticWithdrawal,
+        cancelableBySender,
+        cancelableByRecipient,
+        transferableBySender,
+      });
       const totalAmount = calculateTotalAmountToDeposit(depositedAmount, totalFee);
       ixs.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, totalAmount)));
     }
@@ -933,6 +978,9 @@ export class SolanaStreamClient {
       throw new Error("Recipients array is empty!");
     }
 
+    // Every recipient shares the sender and partner link, so they share the fee row.
+    const wrapFeeRates = isNative ? await this.getCreateFeeRates(data.partnerLink, sender.publicKey) : undefined;
+
     for (let i = 0; i < recipients.length; i++) {
       const recipientData = recipients[i];
       const createStreamData = { ...streamParams, ...recipientData };
@@ -942,8 +990,8 @@ export class SolanaStreamClient {
       };
 
       const wrapInstructions: TransactionInstruction[] = [];
-      if (isNative) {
-        const totalFee = await this.getTotalFee({ address: partnerPublicKey.toString() });
+      if (wrapFeeRates) {
+        const totalFee = getWrapFeePercent(wrapFeeRates, createStreamData);
         const recipientAmount = calculateTotalAmountToDeposit(recipientData.amount, totalFee);
         wrapInstructions.push(...(await prepareWrappedAccount(this.connection, sender.publicKey, recipientAmount)));
       }
@@ -2069,26 +2117,48 @@ export class SolanaStreamClient {
    * @returns Fees
    */
   public async getFees({ address }: IGetFeesData): Promise<IFees | null> {
+    const partners = await this.getFeeRows();
+    return partners ? findFees(partners, address) : null;
+  }
+
+  private async getFeeRows(): Promise<IPartnerLayout[] | null> {
     const data = await this.connection.getAccountInfo(this.feeOraclePublicKey);
-    if (!data) {
-      return null;
+    return data ? (borsh.deserialize(PARTNERS_SCHEMA, data.data) as unknown as IPartnerLayout[]) : null;
+  }
+
+  /**
+   * Fee rates the program applies to a create from `sender` with `partnerLink`, used to size the WSOL wrap.
+   * Mirrors `resolve_vesting_partner`: a `partnerLink` counts if it signs or the partner oracle owns it, and a
+   * PartnerLink account stands for its partner. A link to another wallet fails the program's lookup, which then
+   * charges its hardcoded fallback and skips the sender's own row. Otherwise the sender's own row, then the
+   * partner's, then the default row. `partner` only takes a share and never picks the row.
+   */
+  private async getCreateFeeRates(
+    partnerLink: ICreateStreamData["partnerLink"],
+    sender: PublicKey,
+  ): Promise<CreateFeeRates> {
+    const fallback = { streamflowFee: DEFAULT_STREAMFLOW_FEE, streamflowLockFee: DEFAULT_STREAMFLOW_FEE };
+    let linkedPartner: string | undefined;
+    if (partnerLink?.isSigner) {
+      linkedPartner = pk(partnerLink.address).toBase58();
+    } else if (partnerLink) {
+      const address = pk(partnerLink.address);
+      const account = await this.connection.getAccountInfo(address);
+      if (account?.owner.equals(this.partnerOracleProgramId)) {
+        const link = decodePartnerLink(account.data);
+        if (link && !link.linkedPubkey.equals(sender)) {
+          return fallback;
+        }
+        linkedPartner = (link?.partnerPubkey ?? address).toBase58();
+      }
     }
-    const partners = borsh.deserialize(PARTNERS_SCHEMA, data.data) as unknown as IPartnerLayout[];
-    const filteredPartners = partners.filter((partner) => new PublicKey(partner.pubkey).toString() === address);
-    if (filteredPartners.length === 0) {
-      return null;
-    }
-    if (filteredPartners.length > 1) {
-      throw new Error("More than one partner found, fees fetching is not possible.");
-    }
-    const partner = filteredPartners[0];
-    return {
-      creationFeeSol: Number(partner.creation_fee),
-      autoClaimFeeSol: Number(partner.auto_claim_fee),
-      streamflowFee: Number(partner.token_fee_percent.toFixed(4)),
-      streamflowLockFee: Number(partner.token_lock_token_fee_percent.toFixed(4)),
-      partnerFee: 0,
-    };
+    const partners = (await this.getFeeRows()) ?? [];
+    return (
+      findFees(partners, sender.toBase58()) ??
+      (linkedPartner ? findFees(partners, linkedPartner) : null) ??
+      findFees(partners, WITHDRAWOR) ??
+      fallback
+    );
   }
 
   /**

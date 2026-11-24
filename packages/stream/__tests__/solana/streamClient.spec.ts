@@ -135,6 +135,18 @@ vi.mock("../../solana/lib/utils.js", async (importOriginal) => ({
   decodeStream: vi.fn(),
 }));
 
+const feeRow = (owner: PublicKey, tokenFeePercent: number, tokenLockFeePercent: number) => ({
+  pubkey: owner.toBytes(),
+  creation_fee: 160_000_000,
+  auto_claim_fee: 250_000_000,
+  token_fee_percent: tokenFeePercent,
+  token_lock_token_fee_percent: tokenLockFeePercent,
+});
+const defaultFeeRow = feeRow(new PublicKey("wdrwhnCv4pzW8beKsbPa4S2UDZrXenjg16KJdKSpb5u"), 0.19, 0.5);
+const PARTNER_LINK_DISCRIMINATOR = Buffer.from([114, 220, 250, 94, 181, 182, 195, 222]);
+const partnerLinkData = (partner: PublicKey, linked: PublicKey) =>
+  Buffer.concat([PARTNER_LINK_DISCRIMINATOR, partner.toBuffer(), linked.toBuffer(), Buffer.alloc(32)]);
+
 describe("SolanaStreamClient Transaction Builders", async () => {
   let instance: SolanaStreamClient;
 
@@ -316,9 +328,7 @@ describe("SolanaStreamClient Transaction Builders", async () => {
         isNative: true,
       };
 
-      // Mock getTotalFee method
-      const mockGetTotalFee = vi.fn().mockResolvedValue(new BN(1000));
-      (instance as any).getTotalFee = mockGetTotalFee;
+      (instance as any).getFeeRows = vi.fn().mockResolvedValue([defaultFeeRow]);
 
       // Act
       const result = await instance.buildCreateTransaction(mockData, mockExtParams);
@@ -328,9 +338,127 @@ describe("SolanaStreamClient Transaction Builders", async () => {
       expect(result).toHaveProperty("metadataId");
       expect(result).toHaveProperty("hash");
       expect(result).toHaveProperty("context");
-      expect(mockGetTotalFee).toHaveBeenCalledWith({
-        address: expect.any(String),
+      expect(mockCalculateTotalAmountToDeposit).toHaveBeenCalledWith(mockData.amount, 0.19);
+    });
+  });
+
+  describe("native SOL wrap fee", () => {
+    const sender = createTestPublicKey(21);
+    const signingPartner = createTestPublicKey(22);
+    const linkedPartner = createTestPublicKey(23);
+    const partnerLinkAccount = createTestPublicKey(24);
+    const referrer = createTestPublicKey(25);
+    const unlock = Math.floor(Date.now() / 1000) + 3600;
+    const amount = new BN(1_000_000_000);
+    const lockRecipient = (seed: number) => ({
+      recipient: createTestPublicKey(seed).toBase58(),
+      name: "Lock",
+      amount,
+      cliffAmount: amount,
+      amountPerPeriod: amount,
+    });
+    const lockSchedule = {
+      tokenId: "So11111111111111111111111111111111111111112",
+      period: 1,
+      start: unlock,
+      cliff: unlock,
+      cancelableBySender: false,
+      cancelableByRecipient: false,
+      transferableBySender: false,
+      transferableByRecipient: false,
+      canTopup: false,
+      automaticWithdrawal: false,
+      withdrawalFrequency: 0,
+    };
+    const tokenLock = { ...lockSchedule, ...lockRecipient(26) };
+
+    const stubFeeTable = (rows: ReturnType<typeof feeRow>[]) => {
+      const getFeeRows = vi.fn().mockResolvedValue([...rows, defaultFeeRow]);
+      (instance as any).getFeeRows = getFeeRows;
+      return getFeeRows;
+    };
+    const stubOracleAccount = (data: Buffer) =>
+      (instance as any).connection.getAccountInfo.mockResolvedValue({
+        owner: (instance as any).partnerOracleProgramId,
+        data,
       });
+    const wrapFeeFor = async (data: Record<string, unknown>, rows: ReturnType<typeof feeRow>[] = []) => {
+      stubFeeTable(rows);
+      await instance.buildCreateTransaction({ ...tokenLock, ...data } as any, {
+        sender: { publicKey: sender },
+        isNative: true,
+      });
+      return mockCalculateTotalAmountToDeposit.mock.calls[0]?.[1];
+    };
+    const linkTo = (address: PublicKey, isSigner: boolean) => ({ address: address.toBase58(), isSigner });
+
+    test("charges a strict token lock the lock fee, not the stream fee", async () => {
+      expect(await wrapFeeFor({})).toBe(0.5);
+    });
+
+    test("charges a lock starting now (start 0) the lock fee, as the program resets its cliff to now", async () => {
+      expect(await wrapFeeFor({ start: 0, cliff: 0 })).toBe(0.5);
+    });
+
+    test("charges a cancelable stream the stream fee", async () => {
+      expect(await wrapFeeFor({ cancelableBySender: true })).toBe(0.19);
+    });
+
+    test("prices from the sender's own row before a signing partner link", async () => {
+      const rows = [feeRow(sender, 0.1, 0.3), feeRow(signingPartner, 0.1, 0.7)];
+
+      expect(await wrapFeeFor({ partnerLink: linkTo(signingPartner, true) }, rows)).toBe(0.3);
+    });
+
+    test("prices from a signing partner link's row when the sender has none", async () => {
+      const rows = [feeRow(signingPartner, 0.1, 0.7)];
+
+      expect(await wrapFeeFor({ partnerLink: linkTo(signingPartner, true) }, rows)).toBe(0.7);
+    });
+
+    test("resolves the sender's PartnerLink account to its partner's row", async () => {
+      stubOracleAccount(partnerLinkData(linkedPartner, sender));
+      const rows = [feeRow(linkedPartner, 0.1, 0.4)];
+
+      expect(await wrapFeeFor({ partnerLink: linkTo(partnerLinkAccount, false) }, rows)).toBe(0.4);
+    });
+
+    test("charges the program's hardcoded fallback for a PartnerLink of another wallet, ignoring every row", async () => {
+      stubOracleAccount(partnerLinkData(linkedPartner, referrer));
+      const rows = [feeRow(sender, 0.01, 0.01), feeRow(linkedPartner, 0.05, 0.05)];
+
+      expect(await wrapFeeFor({ partnerLink: linkTo(partnerLinkAccount, false) }, rows)).toBe(0.19);
+    });
+
+    test("prices an oracle-owned account that is not a PartnerLink from its own key", async () => {
+      stubOracleAccount(
+        Buffer.concat([Buffer.alloc(8), linkedPartner.toBuffer(), sender.toBuffer(), Buffer.alloc(32)]),
+      );
+      const rows = [feeRow(partnerLinkAccount, 0.1, 0.6), feeRow(linkedPartner, 0.1, 0.4)];
+
+      expect(await wrapFeeFor({ partnerLink: linkTo(partnerLinkAccount, false) }, rows)).toBe(0.6);
+    });
+
+    test("never prices from a referrer passed as partner", async () => {
+      const rows = [feeRow(referrer, 0.1, 0.2)];
+
+      expect(await wrapFeeFor({ partner: referrer.toBase58() }, rows)).toBe(0.5);
+    });
+
+    test("reads the fee table once for a whole batch", async () => {
+      const getFeeRows = stubFeeTable([]);
+      const recipients = [31, 32, 33].map(lockRecipient);
+
+      await instance.buildCreateMultipleTransactionInstructions(
+        { ...lockSchedule, recipients } as any,
+        {
+          sender: { publicKey: sender },
+          isNative: true,
+        } as any,
+      );
+
+      expect(getFeeRows).toHaveBeenCalledTimes(1);
+      expect(mockCalculateTotalAmountToDeposit.mock.calls.map((call) => call[1])).toEqual([0.5, 0.5, 0.5]);
     });
   });
 
