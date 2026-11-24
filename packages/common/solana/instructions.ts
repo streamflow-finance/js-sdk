@@ -1,7 +1,7 @@
 import {
   getAssociatedTokenAddress,
   NATIVE_MINT,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createSyncNativeInstruction,
 } from "@solana/spl-token";
 import type { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
@@ -17,10 +17,12 @@ export const prepareWrappedAccount = async (
 
   const accInfo = await connection.getParsedAccountInfo(tokenAccount);
 
+  // Idempotent: a caller may create the same account in an earlier transaction built from the same
+  // snapshot, e.g. stream creation's partner token account when the partner is the sender.
   const instructions =
     (accInfo.value?.lamports ?? 0) > 0
       ? []
-      : [createAssociatedTokenAccountInstruction(senderAddress, tokenAccount, senderAddress, NATIVE_MINT)];
+      : [createAssociatedTokenAccountIdempotentInstruction(senderAddress, tokenAccount, senderAddress, NATIVE_MINT)];
 
   return [
     ...instructions,

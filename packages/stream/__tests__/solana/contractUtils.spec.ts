@@ -1,7 +1,7 @@
 import BN from "bn.js";
 import { describe, expect, test } from "vitest";
 
-import { buildStreamType, isTokenLock } from "../../solana/contractUtils.js";
+import { buildStreamType, isStrictTokenLockCreate, isTokenLock } from "../../solana/contractUtils.js";
 import { StreamType } from "../../solana/types.js";
 
 const baseLockPermissions = {
@@ -191,5 +191,41 @@ describe("buildStreamType", () => {
       cliffAmount: new BN(999_999),
     });
     expect(result).toBe(StreamType.Lock);
+  });
+});
+
+describe("isStrictTokenLockCreate", () => {
+  const now = 1_700_000_000;
+  const lock = {
+    ...baseLockPermissions,
+    amount: new BN(1_000_000),
+    cliffAmount: new BN(1_000_000),
+    amountPerPeriod: new BN(1_000_000),
+    period: 1,
+    start: now + 3600,
+    cliff: now + 3600,
+  };
+
+  test.each([
+    ["a full-cliff lock", {}, true],
+    ["a cliff one unit short of the deposit", { cliffAmount: new BN(999_999), amountPerPeriod: new BN(1) }, true],
+    ["a cliff two units short of the deposit", { cliffAmount: new BN(999_998), amountPerPeriod: new BN(1) }, false],
+    ["a last unit released two seconds after the cliff", { cliffAmount: new BN(999_999), period: 2 }, false],
+    ["a vesting schedule", { cliffAmount: new BN(0), amountPerPeriod: new BN(1_000), period: 60 }, false],
+    ["a cancelable lock", { cancelableBySender: true }, false],
+    ["a lock that can be topped up", { canTopup: true }, false],
+    ["a lock with automatic withdrawal", { automaticWithdrawal: true }, false],
+    ["a lock transferable by the sender", { transferableBySender: true }, false],
+    ["a cliff above the deposit", { cliffAmount: new BN(1_000_001) }, false],
+    ["a full-cliff lock starting now (start 0, cliff 0)", { cliff: 0, start: 0 }, true],
+    ["start 0 with a future cliff, which the program resets to now", { start: 0, cliff: now + 3600 }, true],
+    [
+      "start 0 releasing the last unit two seconds later",
+      { start: 0, cliff: 0, cliffAmount: new BN(999_999), period: 2 },
+      false,
+    ],
+    ["no cliff with a future start", { cliff: 0 }, false],
+  ])("%s", (_name, overrides, expected) => {
+    expect(isStrictTokenLockCreate({ ...lock, ...overrides }, now)).toBe(expected);
   });
 });
