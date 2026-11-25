@@ -9,7 +9,7 @@ inputs:
   node-version:
     description: Node.js version
     required: false
-    default: "22.14.0"
+    default: "26.12.1"
   npm-version:
     description: npm version to pin
     required: false
